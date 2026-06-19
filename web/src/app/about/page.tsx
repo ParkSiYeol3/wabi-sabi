@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ImageIcon } from "lucide-react";
 import { Container } from "@/components/container";
+import { InstagramFeed } from "@/components/instagram-feed";
 
 export const metadata: Metadata = {
   title: "About",
@@ -69,6 +70,8 @@ export default function AboutPage() {
           </div>
         </Container>
       </section>
+
+      <InstagramFeed />
     </>
   );
 }
