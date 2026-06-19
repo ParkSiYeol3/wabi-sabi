@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/container";
 import { ProductCard, type ProductCardData } from "@/components/product-card";
+import { AddToCartButton } from "@/components/add-to-cart-button";
 import { categories } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -44,6 +45,10 @@ export default function ShopPage() {
         {placeholder.map((p) => (
           <li key={p.id}>
             <ProductCard product={p} />
+            <AddToCartButton
+              product={{ id: p.id, name: p.name, price: p.price, image: p.image }}
+              className="mt-3 w-full"
+            />
           </li>
         ))}
       </ul>
