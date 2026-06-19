@@ -15,6 +15,64 @@ function firstImage(images: unknown): string | null {
     : null;
 }
 
+function imageList(images: unknown): string[] {
+  return Array.isArray(images)
+    ? images.filter((i): i is string => typeof i === "string")
+    : [];
+}
+
+export interface ProductDetail {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+  description: string | null;
+  material: string | null;
+  size: string | null;
+  care: string | null;
+  images: string[];
+  category: { slug: string; name_en: string; name_ko: string } | null;
+}
+
+// WSB-010: 상품 상세 단건 조회 (없거나 비활성 → null).
+export async function getProduct(id: string): Promise<ProductDetail | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select(
+      "id, name, price, stock, description, material, size, care, images, categories(slug, name_en, name_ko)",
+    )
+    .eq("id", id)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  const row = data as unknown as {
+    id: string;
+    name: string;
+    price: number;
+    stock: number;
+    description: string | null;
+    material: string | null;
+    size: string | null;
+    care: string | null;
+    images: unknown;
+    categories: { slug: string; name_en: string; name_ko: string } | null;
+  };
+  return {
+    id: row.id,
+    name: row.name,
+    price: row.price,
+    stock: row.stock,
+    description: row.description,
+    material: row.material,
+    size: row.size,
+    care: row.care,
+    images: imageList(row.images),
+    category: row.categories,
+  };
+}
+
 // WSB-007: 카테고리별 상품 조회 (공개 — RLS는 is_active=true 만 노출).
 export async function getProducts(
   categorySlug?: string,
