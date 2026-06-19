@@ -49,8 +49,17 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <AuthProvider>
+          {/* 키보드 사용자용 본문 바로가기 (a11y) */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-wabi-fg focus:px-4 focus:py-2 focus:text-sm focus:text-white"
+          >
+            본문으로 건너뛰기
+          </a>
           <SiteHeader />
-          <main className="flex-1">{children}</main>
+          <main id="main-content" className="flex-1">
+            {children}
+          </main>
           <SiteFooter />
         </AuthProvider>
       </body>
