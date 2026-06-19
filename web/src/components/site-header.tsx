@@ -7,11 +7,14 @@ import { nav, site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { useCart, cartCount } from "@/store/cart";
 import { useMounted } from "@/hooks/use-mounted";
+import { useAuthStore } from "@/store/auth";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const count = useCart(cartCount);
   const mounted = useMounted();
+  const user = useAuthStore((s) => s.user);
+  const accountHref = mounted && user ? "/mypage" : "/auth";
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-wabi-border bg-wabi-bg/90 backdrop-blur">
@@ -50,8 +53,8 @@ export function SiteHeader() {
             )}
           </Link>
           <Link
-            href="/auth"
-            aria-label="로그인 / 내 계정"
+            href={accountHref}
+            aria-label={mounted && user ? "마이페이지" : "로그인"}
             className="rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted"
           >
             <User className="size-5" strokeWidth={1.5} />
