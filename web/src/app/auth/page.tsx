@@ -21,6 +21,18 @@ function AuthForm() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
+  async function onOAuth(provider: "kakao" | "google") {
+    setError(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirect)}`,
+      },
+    });
+    if (error) setError(error.message);
+  }
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -160,6 +172,31 @@ function AuthForm() {
           {loading ? "처리 중…" : tab === "login" ? "로그인" : "회원가입"}
         </Button>
       </form>
+
+      {/* 소셜 로그인 (WSB-002) */}
+      <div className="mt-8">
+        <div className="flex items-center gap-3 text-xs text-wabi-fg-muted">
+          <span className="h-px flex-1 bg-wabi-border" />
+          또는
+          <span className="h-px flex-1 bg-wabi-border" />
+        </div>
+        <div className="mt-4 space-y-2">
+          <button
+            type="button"
+            onClick={() => onOAuth("kakao")}
+            className="w-full bg-[#FEE500] py-2.5 text-sm font-medium text-[#191600] transition-opacity hover:opacity-90"
+          >
+            카카오로 계속하기
+          </button>
+          <button
+            type="button"
+            onClick={() => onOAuth("google")}
+            className="w-full border border-wabi-border py-2.5 text-sm font-medium transition-colors hover:bg-wabi-muted"
+          >
+            Google로 계속하기
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
