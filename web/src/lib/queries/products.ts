@@ -21,6 +21,39 @@ function imageList(images: unknown): string[] {
     : [];
 }
 
+// WSB-012: 같은 카테고리 관련 상품 추천 (자기 제외).
+export async function getRelatedProducts(
+  categorySlug: string,
+  excludeId: string,
+  limit = 4,
+): Promise<ProductCardData[]> {
+  const supabase = await createClient();
+  const { data: cat } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("slug", categorySlug)
+    .single();
+  if (!cat) return [];
+
+  const { data } = await supabase
+    .from("products")
+    .select("id, name, price, images, categories(slug, name_en)")
+    .eq("is_active", true)
+    .eq("category_id", cat.id)
+    .neq("id", excludeId)
+    .order("created_at", { ascending: false })
+    .limit(limit)
+    .returns<ProductRow[]>();
+
+  return (data ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    image: firstImage(p.images),
+    category: p.categories?.name_en,
+  }));
+}
+
 export interface ProductDetail {
   id: string;
   name: string;
