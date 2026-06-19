@@ -5,7 +5,9 @@ import { notFound } from "next/navigation";
 import { ImageIcon } from "lucide-react";
 import { Container } from "@/components/container";
 import { ProductDetailActions } from "@/components/product-detail-actions";
+import { WishlistButton } from "@/components/wishlist-button";
 import { getProduct } from "@/lib/queries/products";
+import { createClient } from "@/lib/supabase/server";
 
 const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
 
@@ -31,6 +33,22 @@ export default async function ProductDetailPage({
   const { id } = await params;
   const product = await getProduct(id);
   if (!product) notFound();
+
+  // 위시리스트 초기 상태 (로그인 시)
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  let wished = false;
+  if (user) {
+    const { data } = await supabase
+      .from("wishlist")
+      .select("id")
+      .eq("product_id", id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    wished = !!data;
+  }
 
   const main = product.images[0] ?? null;
   const specs = [
@@ -92,7 +110,10 @@ export default async function ProductDetailPage({
               {product.category.name_en}
             </Link>
           )}
-          <h1 className="mt-2 text-2xl font-semibold">{product.name}</h1>
+          <div className="mt-2 flex items-start justify-between gap-4">
+            <h1 className="text-2xl font-semibold">{product.name}</h1>
+            <WishlistButton productId={product.id} initial={wished} />
+          </div>
           <p className="mt-4 text-xl">{won(product.price)}</p>
 
           {product.description && (

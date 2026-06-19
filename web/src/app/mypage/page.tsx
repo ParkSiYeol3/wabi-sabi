@@ -128,10 +128,15 @@ export default async function MyPage() {
         </form>
       </section>
 
-      {/* 바로가기 — 주문내역(#12)·위시리스트(#8)는 준비 중 */}
-      <section className="mt-14 flex gap-4 text-sm text-wabi-fg-muted/60">
-        <span>주문 내역 (준비 중)</span>
-        <span>위시리스트 (준비 중)</span>
+      {/* 바로가기 — 주문내역(#12)은 준비 중 */}
+      <section className="mt-14 flex gap-4 text-sm">
+        <span className="text-wabi-fg-muted/60">주문 내역 (준비 중)</span>
+        <a
+          href="/mypage/wishlist"
+          className="text-wabi-fg-muted hover:text-wabi-fg"
+        >
+          위시리스트 →
+        </a>
       </section>
     </Container>
   );
