@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit — PR 자동 코드 리뷰 (https://coderabbit.ai)
+language: "ko-KR"
+early_access: false
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  review_status: true
+  poem: false
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "main"
+  path_filters:
+    - "!**/node_modules/**"
+    - "!**/.next/**"
+    - "!**/package-lock.json"
+    - "!**/*.lock"
+  path_instructions:
+    - path: "web/src/**/*.{ts,tsx}"
+      instructions: >
+        Next.js 16 App Router + React 19. 다음을 중점 점검:
+        보안(입력검증·RLS·인증·Supabase 키 노출), 접근성(aria·label·키보드),
+        성능(불필요 리렌더·이미지 최적화·서버/클라이언트 경계),
+        타입 안정성(any 지양). 1인 풀스택이라 리뷰어가 없으니 꼼꼼히.
+    - path: "web/supabase/**/*.sql"
+      instructions: >
+        RLS 정책 누락·권한 과다 부여·SQL 인젝션 위험·인덱스 적정성 점검.
+  tools:
+    eslint:
+      enabled: true
+
+chat:
+  auto_reply: true
