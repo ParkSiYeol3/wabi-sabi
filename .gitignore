@@ -1,0 +1,21 @@
+# dependencies / build
+web/node_modules/
+web/.next/
+web/out/
+node_modules/
+
+# env (절대 커밋 금지 — Supabase·Figma 토큰)
+.env
+.env.*
+!.env.example
+web/.env
+web/.env.*
+!web/.env.example
+
+# misc
+.DS_Store
+*.log
+/tmp/
+
+# Figma 추출 원본 이미지(대용량) — 필요시 별도 보관
+/tmp/wabi_img/
