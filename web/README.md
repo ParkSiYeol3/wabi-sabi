@@ -37,7 +37,9 @@ supabase/         migrations/{0001_init,0002_rls}.sql · seed.sql
 - **2026-06-18 GitHub 준비**: 루트로 git 통합(.env 미추적 확인), gh CLI 설치. .github PR/이슈 템플릿, docs/github-issues-plan.md(WSB 이슈 16건).
 - **2026-06-19 GitHub 연동 완료**: repo `ParkSiYeol3/wabi-sabi`(private) 생성·push. 라벨 10종 + WSB 이슈 16건(#1~#16) 등록. PR 흐름 시연 → #17(a11y 스킵 링크, feat/a11y-skip-link, OPEN).
 - **2026-06-19 CI·코드리뷰**: GitHub Actions `ci.yml`(PR마다 ESLint+tsc+build, Node22) — main·#17 통과. CodeRabbit `.coderabbit.yaml`(한국어 자동 리뷰, 보안·a11y·성능 중점). 앱 설치·동작 확인(#17 리뷰 완료). PR #17 머지.
-- **2026-06-19 장바구니(WSB-013, #9)**: Zustand 영속 store(`store/cart.ts`, localStorage), AddToCartButton, 헤더 수량 배지(useSyncExternalStore 수화가드), /cart 라인아이템(수량/삭제/합계). 비회원 가능. lint·build 통과.
+- **2026-06-19 장바구니(WSB-013, #9)**: Zustand 영속 store(`store/cart.ts`, localStorage), AddToCartButton, 헤더 수량 배지(useSyncExternalStore 수화가드), /cart 라인아이템(수량/삭제/합계). 비회원 가능. lint·build 통과. → #18 머지.
+- **2026-06-19 Supabase 실연동 시작**: .env.local 채움(URL+publishable anon key), apply_all.sql로 8테이블+RLS+카테고리 시드 적용(검증: categories 4·orders RLS 빈배열). seed_products.sql 샘플 상품 8.
+- **2026-06-19 상품조회(WSB-007, #3)**: `lib/queries/products.ts` 서버 조회, /shop을 실 DB 조회+카테고리 필터(searchParams, 동적 라우트)로 교체, 빈 상태 처리. 플레이스홀더 제거.
 
 ## 라우트
 | 경로 | 내용 | 상태 |
