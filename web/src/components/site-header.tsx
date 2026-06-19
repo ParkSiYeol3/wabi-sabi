@@ -5,13 +5,17 @@ import Link from "next/link";
 import { Menu, X, ShoppingBag, User } from "lucide-react";
 import { nav, site } from "@/lib/site";
 import { cn } from "@/lib/utils";
+import { useCart, cartCount } from "@/store/cart";
+import { useMounted } from "@/hooks/use-mounted";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const count = useCart(cartCount);
+  const mounted = useMounted();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-wabi-border bg-wabi-bg/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-5">
+      <div className="mx-auto flex h-16 max-w-300 items-center justify-between px-5">
         {/* 로고 */}
         <Link href="/" className="flex items-center gap-2" aria-label={`${site.name} 홈`}>
           <span className="font-serif-jp text-lg leading-none">わ</span>
@@ -35,10 +39,15 @@ export function SiteHeader() {
         <div className="flex items-center gap-1">
           <Link
             href="/cart"
-            aria-label="장바구니"
-            className="rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted"
+            aria-label={`장바구니${mounted && count > 0 ? ` (${count}개)` : ""}`}
+            className="relative rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted"
           >
             <ShoppingBag className="size-5" strokeWidth={1.5} />
+            {mounted && count > 0 && (
+              <span className="absolute right-0.5 top-0.5 flex min-w-4 items-center justify-center rounded-full bg-wabi-accent px-1 text-[10px] leading-4 text-white">
+                {count}
+              </span>
+            )}
           </Link>
           <Link
             href="/auth"
