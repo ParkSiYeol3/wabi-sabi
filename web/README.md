@@ -36,6 +36,7 @@ supabase/         migrations/{0001_init,0002_rls}.sql · seed.sql
 - **2026-06-18 SEO·에러처리**: not-found(404)·error 바운더리·robots.ts·sitemap.ts 추가. 11라우트 빌드.
 - **2026-06-18 GitHub 준비**: 루트로 git 통합(.env 미추적 확인), gh CLI 설치. .github PR/이슈 템플릿, docs/github-issues-plan.md(WSB 이슈 16건).
 - **2026-06-19 GitHub 연동 완료**: repo `ParkSiYeol3/wabi-sabi`(private) 생성·push. 라벨 10종 + WSB 이슈 16건(#1~#16) 등록. PR 흐름 시연 → #17(a11y 스킵 링크, feat/a11y-skip-link, OPEN).
+- **2026-06-19 CI·코드리뷰**: GitHub Actions `ci.yml`(PR마다 ESLint+tsc+build, Node22) — main·#17 통과. CodeRabbit `.coderabbit.yaml`(한국어 자동 리뷰, 보안·a11y·성능 중점). ⚠️ CodeRabbit GitHub App은 coderabbit.ai에서 repo에 설치 필요(수동).
 
 ## 라우트
 | 경로 | 내용 | 상태 |
