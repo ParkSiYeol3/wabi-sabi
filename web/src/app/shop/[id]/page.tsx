@@ -4,9 +4,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ImageIcon } from "lucide-react";
 import { Container } from "@/components/container";
+import { ProductCard } from "@/components/product-card";
 import { ProductDetailActions } from "@/components/product-detail-actions";
 import { WishlistButton } from "@/components/wishlist-button";
-import { getProduct } from "@/lib/queries/products";
+import { getProduct, getRelatedProducts } from "@/lib/queries/products";
 import { createClient } from "@/lib/supabase/server";
 
 const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
@@ -49,6 +50,10 @@ export default async function ProductDetailPage({
       .maybeSingle();
     wished = !!data;
   }
+
+  const related = product.category
+    ? await getRelatedProducts(product.category.slug, product.id)
+    : [];
 
   const main = product.images[0] ?? null;
   const specs = [
@@ -146,6 +151,20 @@ export default async function ProductDetailPage({
           )}
         </div>
       </div>
+
+      {/* 관련 상품 (WSB-012) */}
+      {related.length > 0 && (
+        <section className="mt-20">
+          <h2 className="text-lg font-medium">관련 상품</h2>
+          <ul className="mt-6 grid grid-cols-2 gap-6 md:grid-cols-4">
+            {related.map((p) => (
+              <li key={p.id}>
+                <ProductCard product={p} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </Container>
   );
 }
