@@ -128,9 +128,14 @@ export default async function MyPage() {
         </form>
       </section>
 
-      {/* 바로가기 — 주문내역(#12)은 준비 중 */}
+      {/* 바로가기 */}
       <section className="mt-14 flex gap-4 text-sm">
-        <span className="text-wabi-fg-muted/60">주문 내역 (준비 중)</span>
+        <a
+          href="/mypage/orders"
+          className="text-wabi-fg-muted hover:text-wabi-fg"
+        >
+          주문 내역 →
+        </a>
         <a
           href="/mypage/wishlist"
           className="text-wabi-fg-muted hover:text-wabi-fg"
