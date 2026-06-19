@@ -33,6 +33,8 @@ supabase/         migrations/{0001_init,0002_rls}.sql · seed.sql
 - **2026-06-18 기반 셋업**: create-next-app, Supabase 클라이언트 3종, Zustand 인증, 디자인토큰, DB 마이그레이션+RLS+seed. 빌드·타입체크 통과.
 - **2026-06-18 패키지**: shadcn/ui 수동 구성(stone), button/input/card.
 - **2026-06-18 UI 퍼블리싱**: 공통 헤더/푸터, Container·ProductCard, 페이지 6종(홈·shop·about·contact·cart·auth) 시안대로 구현. 상품은 플레이스홀더(Supabase 연동 전).
+- **2026-06-18 SEO·에러처리**: not-found(404)·error 바운더리·robots.ts·sitemap.ts 추가. 11라우트 빌드.
+- **2026-06-18 GitHub 준비**: 루트로 git 통합(.env 미추적 확인), gh CLI 설치. .github PR/이슈 템플릿, docs/github-issues-plan.md(WSB 이슈 16건). gh auth 후 repo·이슈·PR 등록 예정.
 
 ## 라우트
 | 경로 | 내용 | 상태 |
