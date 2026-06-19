@@ -42,7 +42,8 @@ supabase/         migrations/{0001_init,0002_rls}.sql · seed.sql
 - **2026-06-19 상품조회(WSB-007, #3)**: `lib/queries/products.ts` 서버 조회, /shop을 실 DB 조회+카테고리 필터(searchParams, 동적 라우트)로 교체, 빈 상태 처리. 플레이스홀더 제거. → #19 머지. 샘플 상품 8 시드 확인.
 - **2026-06-19 인증(WSB-001/003, #2)**: /auth 폼 → Supabase signInWithPassword/signUp 연결. 비번 확인·길이 검증, 에러/확인메일 안내, redirect 파라미터(useSearchParams+Suspense), 가입 시 name→profiles 트리거. → #20 머지. (메모: dev에선 Supabase "Confirm email" OFF 권장 — 내장메일 rate limit 회피.)
 - **2026-06-19 상품상세(WSB-010, #6)**: `/shop/[id]` 동적 라우트, `getProduct` 단건조회, 이미지갤러리·가격·설명·스펙(소재/사이즈/주의), 수량선택+장바구니/바로구매(재고한도), generateMetadata, 없으면 notFound. next.config remotePatterns(Supabase Storage). 실상품 렌더·404 확인. → #21 머지.
-- **2026-06-19 마이페이지·로그아웃(WSB-004, #11)**: `/mypage` 보호 라우트(미로그인→/auth redirect), 내 정보(이메일·이름수정), 배송지 CRUD(추가/삭제, Server Actions+RLS), 로그아웃 버튼. 헤더 user 아이콘 로그인 시 /mypage(수화 가드). 주문내역(#12)·위시리스트(#8)는 준비중 표기.
+- **2026-06-19 마이페이지·로그아웃(WSB-004, #11)**: `/mypage` 보호 라우트(미로그인→/auth redirect), 내 정보(이메일·이름수정), 배송지 CRUD(추가/삭제, Server Actions+RLS), 로그아웃 버튼. 헤더 user 아이콘 로그인 시 /mypage(수화 가드). 주문내역(#12)·위시리스트(#8)는 준비중 표기. → #22 머지.
+- **2026-06-19 검색·정렬(WSB-008/009, #4/#5)**: getProducts에 q(ilike)·sort(신상/낮은가격/높은가격) 추가. /shop 검색 폼·정렬 링크·카테고리(파라미터 상호 유지). 검색·정렬 동작 확인.
 
 ## 라우트
 | 경로 | 내용 | 상태 |
