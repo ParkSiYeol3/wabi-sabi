@@ -73,18 +73,28 @@ export async function getProduct(id: string): Promise<ProductDetail | null> {
   };
 }
 
-// WSB-007: 카테고리별 상품 조회 (공개 — RLS는 is_active=true 만 노출).
-export async function getProducts(
-  categorySlug?: string,
-): Promise<ProductCardData[]> {
+export type ProductSort = "newest" | "price_asc" | "price_desc";
+
+export interface ProductQuery {
+  category?: string;
+  q?: string;
+  sort?: ProductSort;
+}
+
+// WSB-007/008/009: 카테고리·검색·정렬 (공개 — RLS는 is_active=true 만 노출).
+export async function getProducts({
+  category,
+  q,
+  sort = "newest",
+}: ProductQuery = {}): Promise<ProductCardData[]> {
   const supabase = await createClient();
 
   let categoryId: string | undefined;
-  if (categorySlug) {
+  if (category) {
     const { data: cat } = await supabase
       .from("categories")
       .select("id")
-      .eq("slug", categorySlug)
+      .eq("slug", category)
       .single();
     if (!cat) return [];
     categoryId = cat.id;
@@ -93,10 +103,16 @@ export async function getProducts(
   let query = supabase
     .from("products")
     .select("id, name, price, images, categories(slug, name_en)")
-    .eq("is_active", true)
-    .order("created_at", { ascending: false });
+    .eq("is_active", true);
 
   if (categoryId) query = query.eq("category_id", categoryId);
+  if (q && q.trim()) query = query.ilike("name", `%${q.trim()}%`);
+
+  // 정렬
+  if (sort === "price_asc") query = query.order("price", { ascending: true });
+  else if (sort === "price_desc")
+    query = query.order("price", { ascending: false });
+  else query = query.order("created_at", { ascending: false });
 
   const { data, error } = await query.returns<ProductRow[]>();
   if (error || !data) return [];
