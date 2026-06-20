@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { loadTossPayments } from "@tosspayments/tosspayments-sdk";
 import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +10,10 @@ import { useCart, cartTotal } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { useMounted } from "@/hooks/use-mounted";
 import { won } from "@/lib/orders";
+import { createPendingOrder } from "./actions";
 
-const GIFT_PRICE = 3000; // 선물 포장 추가금
+const GIFT_PRICE = 3000;
+const CLIENT_KEY = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY;
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -20,9 +23,9 @@ export default function CheckoutPage() {
   const subtotal = useCart(cartTotal);
 
   const [gift, setGift] = useState(false);
-  const [notice, setNotice] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // 로그인·장바구니 가드 (마운트 후 판단)
   useEffect(() => {
     if (!mounted) return;
     if (!user) router.replace("/auth?redirect=/checkout");
@@ -39,20 +42,68 @@ export default function CheckoutPage() {
 
   const total = subtotal + (gift ? GIFT_PRICE : 0);
 
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+
+    if (!CLIENT_KEY) {
+      setError(
+        "토스페이먼츠 키가 설정되지 않았습니다 (.env.local NEXT_PUBLIC_TOSS_CLIENT_KEY).",
+      );
+      return;
+    }
+
+    const fd = new FormData(e.currentTarget);
+    const delivery = {
+      recipient: String(fd.get("recipient") || ""),
+      phone: String(fd.get("phone") || ""),
+      postcode: String(fd.get("postcode") || ""),
+      address: String(fd.get("address") || ""),
+      detail: String(fd.get("detail") || ""),
+      memo: String(fd.get("memo") || ""),
+    };
+    const giftInput = {
+      enabled: gift,
+      sender: String(fd.get("sender") || ""),
+      message: String(fd.get("message") || ""),
+    };
+
+    setLoading(true);
+    try {
+      const res = await createPendingOrder(
+        items.map((i) => ({ id: i.id, quantity: i.quantity })),
+        delivery,
+        giftInput,
+      );
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+
+      const toss = await loadTossPayments(CLIENT_KEY);
+      const payment = toss.payment({ customerKey: user!.id });
+      await payment.requestPayment({
+        method: "CARD",
+        amount: { currency: "KRW", value: res.amount },
+        orderId: res.orderId,
+        orderName: res.orderName,
+        successUrl: `${window.location.origin}/checkout/success`,
+        failUrl: `${window.location.origin}/checkout/fail`,
+        customerEmail: user!.email ?? undefined,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "결제 요청 실패");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <Container className="py-16">
       <h1 className="text-2xl font-semibold tracking-wide">주문/결제</h1>
 
       <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_360px]">
-        {/* 좌: 입력 폼 */}
-        <form
-          className="space-y-12"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setNotice(true); // TODO: 토스페이먼츠 결제창 호출 (WSB-014~019)
-          }}
-        >
-          {/* 배송지 */}
+        <form className="space-y-12" onSubmit={onSubmit}>
           <section>
             <h2 className="text-lg font-medium">배송지</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -60,28 +111,15 @@ export default function CheckoutPage() {
               <Input name="phone" required placeholder="연락처" className="rounded-none" />
               <Input name="postcode" placeholder="우편번호" className="rounded-none" />
               <Input name="address" required placeholder="주소" className="rounded-none" />
-              <Input
-                name="detail"
-                placeholder="상세주소"
-                className="rounded-none sm:col-span-2"
-              />
-              <Input
-                name="memo"
-                placeholder="배송 메모 (선택)"
-                className="rounded-none sm:col-span-2"
-              />
+              <Input name="detail" placeholder="상세주소" className="rounded-none sm:col-span-2" />
+              <Input name="memo" placeholder="배송 메모 (선택)" className="rounded-none sm:col-span-2" />
             </div>
           </section>
 
-          {/* 선물 포장 (WSB) */}
           <section>
             <h2 className="text-lg font-medium">선물 포장</h2>
             <label className="mt-4 flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={gift}
-                onChange={(e) => setGift(e.target.checked)}
-              />
+              <input type="checkbox" checked={gift} onChange={(e) => setGift(e.target.checked)} />
               선물 포장하기 (+{won(GIFT_PRICE)})
             </label>
             {gift && (
@@ -97,21 +135,21 @@ export default function CheckoutPage() {
             )}
           </section>
 
-          {notice && (
-            <p className="text-sm text-wabi-fg" role="status">
-              토스페이먼츠 결제 연동은 준비 중입니다 (WSB-014~019). 결제창은 곧 연결됩니다.
+          {error && (
+            <p className="text-sm text-red-600" role="alert">
+              {error}
             </p>
           )}
 
           <Button
             type="submit"
+            disabled={loading}
             className="w-full rounded-none bg-wabi-accent py-6 text-base hover:bg-wabi-accent/90"
           >
-            토스페이먼츠로 {won(total)} 결제
+            {loading ? "처리 중…" : `토스페이먼츠로 ${won(total)} 결제`}
           </Button>
         </form>
 
-        {/* 우: 주문 요약 */}
         <aside className="h-fit border border-wabi-border p-6">
           <h2 className="text-lg font-medium">주문 요약</h2>
           <ul className="mt-4 space-y-3 text-sm">
