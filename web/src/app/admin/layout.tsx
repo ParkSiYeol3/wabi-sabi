@@ -1,0 +1,37 @@
+import Link from "next/link";
+import { Container } from "@/components/container";
+import { requireAdmin } from "@/lib/admin";
+import { adminConfigured } from "@/lib/supabase/admin";
+
+export default async function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  await requireAdmin();
+
+  return (
+    <Container className="py-12">
+      <div className="flex items-center justify-between border-b border-wabi-border pb-4">
+        <h1 className="text-xl font-semibold">Admin</h1>
+        <nav className="flex gap-5 text-sm" aria-label="어드민 메뉴">
+          <Link href="/admin/products" className="hover:underline">
+            상품
+          </Link>
+          <Link href="/admin/orders" className="hover:underline">
+            주문
+          </Link>
+        </nav>
+      </div>
+
+      {!adminConfigured() && (
+        <p className="mt-4 border border-wabi-border bg-wabi-subtle p-3 text-xs text-wabi-fg-muted">
+          ⚠️ <code>SUPABASE_SERVICE_ROLE_KEY</code> 미설정 — 쓰기 작업(생성/수정/삭제)은
+          .env.local에 service_role 키를 넣어야 동작합니다.
+        </p>
+      )}
+
+      <div className="mt-8">{children}</div>
+    </Container>
+  );
+}
