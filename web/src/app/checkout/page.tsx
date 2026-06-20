@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { loadTossPayments } from "@tosspayments/tosspayments-sdk";
+import {
+  loadTossPayments,
+  type TossPaymentsWidgets,
+} from "@tosspayments/tosspayments-sdk";
 import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,12 +28,60 @@ export default function CheckoutPage() {
   const [gift, setGift] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [widgetReady, setWidgetReady] = useState(false);
 
+  const widgetsRef = useRef<TossPaymentsWidgets | null>(null);
+  const total = subtotal + (gift ? GIFT_PRICE : 0);
+
+  // 로그인·장바구니 가드
   useEffect(() => {
     if (!mounted) return;
     if (!user) router.replace("/auth?redirect=/checkout");
     else if (items.length === 0) router.replace("/cart");
   }, [mounted, user, items.length, router]);
+
+  // 결제위젯 렌더 (1회)
+  useEffect(() => {
+    if (!mounted || !user || items.length === 0 || !CLIENT_KEY) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const toss = await loadTossPayments(CLIENT_KEY);
+        const widgets = toss.widgets({ customerKey: user.id });
+        await widgets.setAmount({ currency: "KRW", value: total });
+        await Promise.all([
+          widgets.renderPaymentMethods({
+            selector: "#payment-method",
+            variantKey: "DEFAULT",
+          }),
+          widgets.renderAgreement({
+            selector: "#agreement",
+            variantKey: "AGREEMENT",
+          }),
+        ]);
+        if (cancelled) return;
+        widgetsRef.current = widgets;
+        setWidgetReady(true);
+      } catch (err) {
+        if (!cancelled)
+          setError(err instanceof Error ? err.message : "결제위젯 로드 실패");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // 1회 초기화 — total 변경은 아래 effect에서 setAmount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted, user, items.length]);
+
+  // 금액 변경 시 위젯 갱신
+  useEffect(() => {
+    if (widgetReady && widgetsRef.current) {
+      widgetsRef.current.setAmount({ currency: "KRW", value: total });
+    }
+  }, [total, widgetReady]);
 
   if (!mounted || !user || items.length === 0) {
     return (
@@ -40,16 +91,16 @@ export default function CheckoutPage() {
     );
   }
 
-  const total = subtotal + (gift ? GIFT_PRICE : 0);
-
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
 
     if (!CLIENT_KEY) {
-      setError(
-        "토스페이먼츠 키가 설정되지 않았습니다 (.env.local NEXT_PUBLIC_TOSS_CLIENT_KEY).",
-      );
+      setError("토스페이먼츠 키 미설정 (.env.local NEXT_PUBLIC_TOSS_CLIENT_KEY).");
+      return;
+    }
+    if (!widgetsRef.current) {
+      setError("결제위젯이 아직 준비되지 않았습니다.");
       return;
     }
 
@@ -79,12 +130,7 @@ export default function CheckoutPage() {
         setError(res.error);
         return;
       }
-
-      const toss = await loadTossPayments(CLIENT_KEY);
-      const payment = toss.payment({ customerKey: user!.id });
-      await payment.requestPayment({
-        method: "CARD",
-        amount: { currency: "KRW", value: res.amount },
+      await widgetsRef.current.requestPayment({
         orderId: res.orderId,
         orderName: res.orderName,
         successUrl: `${window.location.origin}/checkout/success`,
@@ -102,8 +148,12 @@ export default function CheckoutPage() {
     <Container className="py-16">
       <h1 className="text-2xl font-semibold tracking-wide">주문/결제</h1>
 
-      <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_360px]">
-        <form className="space-y-12" onSubmit={onSubmit}>
+      <form
+        className="mt-10 grid gap-12 lg:grid-cols-[1fr_380px]"
+        onSubmit={onSubmit}
+      >
+        {/* 좌: 배송지·선물·결제수단 */}
+        <div className="space-y-12">
           <section>
             <h2 className="text-lg font-medium">배송지</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -135,21 +185,19 @@ export default function CheckoutPage() {
             )}
           </section>
 
-          {error && (
-            <p className="text-sm text-red-600" role="alert">
-              {error}
-            </p>
-          )}
+          <section>
+            <h2 className="text-lg font-medium">결제 수단</h2>
+            {!CLIENT_KEY && (
+              <p className="mt-3 text-sm text-red-600">
+                토스페이먼츠 키 미설정 — .env.local에 NEXT_PUBLIC_TOSS_CLIENT_KEY 추가.
+              </p>
+            )}
+            <div id="payment-method" className="mt-4" />
+            <div id="agreement" className="mt-2" />
+          </section>
+        </div>
 
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-none bg-wabi-accent py-6 text-base hover:bg-wabi-accent/90"
-          >
-            {loading ? "처리 중…" : `토스페이먼츠로 ${won(total)} 결제`}
-          </Button>
-        </form>
-
+        {/* 우: 주문 요약 + 결제 버튼 */}
         <aside className="h-fit border border-wabi-border p-6">
           <h2 className="text-lg font-medium">주문 요약</h2>
           <ul className="mt-4 space-y-3 text-sm">
@@ -178,8 +226,22 @@ export default function CheckoutPage() {
               <dd>{won(total)}</dd>
             </div>
           </dl>
+
+          {error && (
+            <p className="mt-4 text-sm text-red-600" role="alert">
+              {error}
+            </p>
+          )}
+
+          <Button
+            type="submit"
+            disabled={loading || !widgetReady}
+            className="mt-6 w-full rounded-none bg-wabi-accent py-6 text-base hover:bg-wabi-accent/90"
+          >
+            {loading ? "처리 중…" : `${won(total)} 결제하기`}
+          </Button>
         </aside>
-      </div>
+      </form>
     </Container>
   );
 }

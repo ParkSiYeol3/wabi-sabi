@@ -50,7 +50,8 @@ supabase/         migrations/{0001_init,0002_rls}.sql · seed.sql
 - **2026-06-20 체크아웃 UI(WSB-014~019, #10)**: /checkout 클라이언트(로그인·장바구니 가드), 배송지 폼·선물포장(+메시지카드)·주문요약·합계. 결제 버튼은 토스페이먼츠 연동 전 안내(실 결제·주문생성은 후속). → #27 머지.
 - **2026-06-20 소셜로그인(WSB-002, #15)**: /auth 카카오·구글 버튼 + /auth/callback(code→세션). provider 활성화는 대시보드. → #29 머지.
 - **2026-06-20 어드민(WSB-023~026, #14)**: /admin 가드(ADMIN_EMAILS env), 상품 CRUD·재고·노출, 주문 조회·송장 입력. 쓰기는 service_role 클라이언트(lib/supabase/admin) — 키 미설정 시 안내. RLS 우회는 서버 전용.
-- **2026-06-20 토스 결제(WSB-014~019, #10)**: @tosspayments/tosspayments-sdk. createPendingOrder(서버, DB 가격 재검증·재고확인→orders/order_items/gift_options insert) → requestPayment → /checkout/success(토스 confirm API 승인 검증 → confirm_order RPC: paid+재고차감) / /checkout/fail. 마이그레이션 0003(insert 정책+RPC). **실행 전: 0003 적용 + .env.local 토스 test키 필요.** 운영 전 웹훅·service_role 확정 TODO.
+- **2026-06-20 토스 결제(WSB-014~019, #10)**: @tosspayments/tosspayments-sdk. createPendingOrder(서버, DB 가격 재검증·재고확인→orders/order_items/gift_options insert) → /checkout/success(토스 confirm API 승인 검증 → confirm_order RPC: paid+재고차감) / /checkout/fail. 마이그레이션 0003(insert 정책+RPC). **실행 전: 0003 적용 + .env.local 토스 test키 필요.** 운영 전 웹훅·service_role 확정 TODO.
+- **2026-06-21 결제위젯 전환(#10)**: 결제창(redirect) → **결제위젯**(인페이지 결제수단+약관 UI). widgets.renderPaymentMethods/renderAgreement, setAmount(금액 변경 시 갱신), requestPayment. 실 사업용 — test키로 개발, 가맹점 계약 후 라이브키 교체.
 
 ## 라우트
 | 경로 | 내용 | 상태 |
