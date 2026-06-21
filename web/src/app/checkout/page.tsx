@@ -22,6 +22,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const mounted = useMounted();
   const user = useAuthStore((s) => s.user);
+  const authLoading = useAuthStore((s) => s.loading);
   const items = useCart((s) => s.items);
   const subtotal = useCart(cartTotal);
 
@@ -33,12 +34,12 @@ export default function CheckoutPage() {
   const widgetsRef = useRef<TossPaymentsWidgets | null>(null);
   const total = subtotal + (gift ? GIFT_PRICE : 0);
 
-  // 로그인·장바구니 가드
+  // 로그인·장바구니 가드 (인증 로딩 끝난 뒤 판단 — 레이스 방지)
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || authLoading) return;
     if (!user) router.replace("/auth?redirect=/checkout");
     else if (items.length === 0) router.replace("/cart");
-  }, [mounted, user, items.length, router]);
+  }, [mounted, authLoading, user, items.length, router]);
 
   // 결제위젯 렌더 (1회)
   useEffect(() => {
@@ -83,7 +84,7 @@ export default function CheckoutPage() {
     }
   }, [total, widgetReady]);
 
-  if (!mounted || !user || items.length === 0) {
+  if (!mounted || authLoading || !user || items.length === 0) {
     return (
       <Container className="py-16">
         <span className="sr-only">로딩 중</span>
