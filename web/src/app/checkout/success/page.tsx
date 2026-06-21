@@ -42,10 +42,10 @@ export default async function CheckoutSuccessPage({
   let message = "결제 정보가 올바르지 않습니다.";
 
   if (paymentKey && orderId && amount) {
+    const supabase = await createClient();
     const confirm = await confirmTossPayment(paymentKey, orderId, Number(amount));
     if (confirm.ok) {
       // 토스 승인 성공 → 주문 확정(paid) + 재고 차감
-      const supabase = await createClient();
       const { error } = await supabase.rpc("confirm_order", {
         p_order_id: orderId,
       });
@@ -55,7 +55,17 @@ export default async function CheckoutSuccessPage({
         message = "주문 확정 처리 중 오류가 발생했습니다.";
       }
     } else {
-      message = confirm.error ?? "결제 승인 실패";
+      // 새로고침 등으로 토스 재승인 실패해도, 이미 결제된 주문이면 성공 처리(멱등)
+      const { data: order } = await supabase
+        .from("orders")
+        .select("status")
+        .eq("id", orderId)
+        .maybeSingle();
+      if (order?.status === "paid") {
+        success = true;
+      } else {
+        message = confirm.error ?? "결제 승인 실패";
+      }
     }
   }
 
