@@ -1,15 +1,31 @@
 import type { MetadataRoute } from "next";
+import { getProducts } from "@/lib/queries/products";
 
 const BASE = "https://wasa.kr";
 
-// 정적 라우트. TODO(WSB-007): Supabase 연동 후 상품 상세 URL 동적 추가.
-export default function sitemap(): MetadataRoute.Sitemap {
-  const routes = ["", "/shop", "/about", "/contact"];
+// 정적 라우트 + 활성 상품 상세 URL (WSB-007/010 SEO).
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
-  return routes.map((path) => ({
-    url: `${BASE}${path}`,
-    lastModified: now,
-    changeFrequency: path === "" ? "weekly" : "monthly",
-    priority: path === "" ? 1 : 0.7,
-  }));
+
+  const staticRoutes: MetadataRoute.Sitemap = [
+    { url: BASE, lastModified: now, changeFrequency: "weekly", priority: 1 },
+    { url: `${BASE}/shop`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    { url: `${BASE}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+  ];
+
+  let productRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const products = await getProducts();
+    productRoutes = products.map((p) => ({
+      url: `${BASE}/shop/${p.id}`,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }));
+  } catch {
+    // Supabase 미가용 시 정적 경로만
+  }
+
+  return [...staticRoutes, ...productRoutes];
 }
