@@ -12,6 +12,7 @@ export async function createProduct(formData: FormData) {
   const price = Number(formData.get("price") || 0);
   const stock = Number(formData.get("stock") || 0);
   const categoryId = String(formData.get("category_id") || "") || null;
+  const isMonthly = formData.get("is_monthly") === "on";
   if (!name || price < 0) return;
 
   const supabase = createAdminClient();
@@ -20,7 +21,21 @@ export async function createProduct(formData: FormData) {
     price,
     stock,
     category_id: categoryId,
+    is_monthly: isMonthly,
   });
+  revalidatePath("/admin/products");
+}
+
+export async function toggleMonthly(formData: FormData) {
+  await requireAdmin();
+  if (!adminConfigured()) return;
+
+  const id = String(formData.get("id") || "");
+  const monthly = String(formData.get("is_monthly")) === "true";
+  if (!id) return;
+
+  const supabase = createAdminClient();
+  await supabase.from("products").update({ is_monthly: !monthly }).eq("id", id);
   revalidatePath("/admin/products");
 }
 
