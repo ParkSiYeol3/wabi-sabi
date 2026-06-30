@@ -27,6 +27,9 @@ export default async function AdminLayout({
           <Link href="/admin/inquiries" className="hover:underline">
             문의
           </Link>
+          <Link href="/admin/reviews" className="hover:underline">
+            리뷰
+          </Link>
         </nav>
       </div>
 

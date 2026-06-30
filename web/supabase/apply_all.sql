@@ -238,3 +238,25 @@ create policy "inquiries read"
 create policy "inquiries insert own"
   on public.inquiries for insert
   with check (auth.uid() = user_id);
+
+
+-- ── REVIEWS (0007) ─────────────────────────────────────────
+create table if not exists public.reviews (
+  id uuid primary key default gen_random_uuid (),
+  product_id uuid not null references public.products (id) on delete cascade,
+  user_id uuid not null references public.profiles (id) on delete cascade,
+  author_name text not null,
+  rating int not null check (rating between 1 and 5),
+  body text not null,
+  created_at timestamptz not null default now(),
+  unique (product_id, user_id)
+);
+create index if not exists reviews_product_created_idx on public.reviews (product_id, created_at desc);
+create index if not exists reviews_created_at_idx on public.reviews (created_at desc);
+alter table public.reviews enable row level security;
+create policy "reviews public read"
+  on public.reviews for select using (true);
+create policy "reviews insert own"
+  on public.reviews for insert with check (auth.uid() = user_id);
+create policy "reviews delete own"
+  on public.reviews for delete using (auth.uid() = user_id);

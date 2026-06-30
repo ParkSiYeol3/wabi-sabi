@@ -7,6 +7,7 @@ import { Container } from "@/components/container";
 import { ProductCard } from "@/components/product-card";
 import { ProductDetailActions } from "@/components/product-detail-actions";
 import { WishlistButton } from "@/components/wishlist-button";
+import { ReviewSection } from "@/components/review-section";
 import { getProduct, getRelatedProducts } from "@/lib/queries/products";
 import { createClient } from "@/lib/supabase/server";
 
@@ -151,6 +152,9 @@ export default async function ProductDetailPage({
           )}
         </div>
       </div>
+
+      {/* 리뷰 (형님 피드백) */}
+      <ReviewSection productId={product.id} currentUserId={user?.id ?? null} />
 
       {/* 관련 상품 (WSB-012) */}
       {related.length > 0 && (

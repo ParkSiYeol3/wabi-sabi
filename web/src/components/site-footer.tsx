@@ -21,6 +21,9 @@ export function SiteFooter() {
           <Link href="/inquiry" className="hover:text-white">
             문의
           </Link>
+          <Link href="/review" className="hover:text-white">
+            리뷰
+          </Link>
         </nav>
         <p className="mt-6 text-xs text-white/50">
           © {new Date().getFullYear()} {site.name}. All rights reserved.
