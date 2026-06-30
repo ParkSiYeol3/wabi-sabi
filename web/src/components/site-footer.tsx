@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { site } from "@/lib/site";
 
 export function SiteFooter() {
@@ -10,6 +11,14 @@ export function SiteFooter() {
             {site.name}
           </span>
         </div>
+        <nav
+          className="mt-6 flex items-center justify-center gap-5 text-xs text-white/70"
+          aria-label="고객 안내"
+        >
+          <Link href="/notice" className="hover:text-white">
+            공지사항
+          </Link>
+        </nav>
         <p className="mt-6 text-xs text-white/50">
           © {new Date().getFullYear()} {site.name}. All rights reserved.
         </p>

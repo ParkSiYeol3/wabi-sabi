@@ -203,3 +203,16 @@ on conflict (slug) do update
   set name_ko = excluded.name_ko,
       name_en = excluded.name_en,
       sort_order = excluded.sort_order;
+
+
+-- ── NOTICES (0005) ─────────────────────────────────────────
+create table if not exists public.notices (
+  id uuid primary key default gen_random_uuid (),
+  title text not null,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists notices_created_at_idx on public.notices (created_at desc);
+alter table public.notices enable row level security;
+create policy "notices public read"
+  on public.notices for select using (true);
