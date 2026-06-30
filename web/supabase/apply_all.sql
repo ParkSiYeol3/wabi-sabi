@@ -216,3 +216,25 @@ create index if not exists notices_created_at_idx on public.notices (created_at 
 alter table public.notices enable row level security;
 create policy "notices public read"
   on public.notices for select using (true);
+
+
+-- ── INQUIRIES (0006) ───────────────────────────────────────
+create table if not exists public.inquiries (
+  id uuid primary key default gen_random_uuid (),
+  user_id uuid not null references public.profiles (id) on delete cascade,
+  title text not null,
+  body text not null,
+  is_secret boolean not null default false,
+  answer text,
+  answered_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists inquiries_created_at_idx on public.inquiries (created_at desc);
+create index if not exists inquiries_user_id_idx on public.inquiries (user_id);
+alter table public.inquiries enable row level security;
+create policy "inquiries read"
+  on public.inquiries for select
+  using (is_secret = false or auth.uid() = user_id);
+create policy "inquiries insert own"
+  on public.inquiries for insert
+  with check (auth.uid() = user_id);
