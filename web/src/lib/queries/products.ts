@@ -122,8 +122,11 @@ export async function getProducts({
 }: ProductQuery = {}): Promise<ProductCardData[]> {
   const supabase = await createClient();
 
+  // category="monthly" 는 종류가 아니라 이 달의 상품 필터(is_monthly).
+  const monthly = category === "monthly";
+
   let categoryId: string | undefined;
-  if (category) {
+  if (category && !monthly) {
     const { data: cat } = await supabase
       .from("categories")
       .select("id")
@@ -138,6 +141,7 @@ export async function getProducts({
     .select("id, name, price, images, categories(slug, name_en)")
     .eq("is_active", true);
 
+  if (monthly) query = query.eq("is_monthly", true);
   if (categoryId) query = query.eq("category_id", categoryId);
   if (q && q.trim()) query = query.ilike("name", `%${q.trim()}%`);
 
