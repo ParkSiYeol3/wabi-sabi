@@ -22,9 +22,17 @@ export const nav = [
   { label: "Contact", href: "/contact" },
 ] as const;
 
+// Shop 물건 종류 7종 (category_id). All=전체보기, monthly=이 달의 상품(is_monthly 플래그)은
+// 카테고리가 아니라 Shop 탭에서 별도 처리한다. (src/app/shop/page.tsx)
 export const categories = [
-  { slug: "tableware", ko: "식기", en: "Tableware" },
-  { slug: "objects", ko: "오브제", en: "Objects" },
+  { slug: "plate", ko: "접시", en: "Plate" },
+  { slug: "bowl", ko: "볼", en: "Bowl" },
+  { slug: "cup", ko: "컵", en: "Cup" },
+  { slug: "cutlery", ko: "커트러리", en: "Cutlery" },
+  { slug: "life", ko: "리빙", en: "Life" },
+  { slug: "gift", ko: "선물", en: "Gift" },
   { slug: "craft", ko: "공예", en: "Craft" },
-  { slug: "gifts", ko: "선물", en: "Gifts" },
 ] as const;
+
+// 이 달의 상품 — Shop 탭에서 카테고리와 같은 줄에 노출하되 필터는 is_monthly 로 동작.
+export const MONTHLY_SLUG = "monthly";
