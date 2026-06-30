@@ -24,7 +24,7 @@ export default function Home() {
       <section className="bg-wabi-subtle">
         <div className="mx-auto flex max-w-[1200px] flex-col items-center px-5 py-28 text-center md:py-36">
           <span className="font-serif-jp text-4xl md:text-6xl">わび-さび</span>
-          <h1 className="mt-6 text-2xl font-bold tracking-[0.15em] md:text-3xl">
+          <h1 className="mt-6 text-xl font-bold tracking-[0.15em] md:text-2xl">
             {site.name}
           </h1>
           <p className="mt-3 text-sm tracking-wide text-wabi-fg-muted">
