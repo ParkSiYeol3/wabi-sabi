@@ -7,6 +7,7 @@ import {
   createProduct,
   updateStock,
   toggleActive,
+  toggleMonthly,
   deleteProduct,
 } from "./actions";
 
@@ -16,6 +17,7 @@ type Product = {
   price: number;
   stock: number;
   is_active: boolean;
+  is_monthly: boolean;
 };
 type Category = { id: string; name_ko: string; name_en: string };
 
@@ -25,7 +27,7 @@ export default async function AdminProductsPage() {
 
   const { data: products } = await db
     .from("products")
-    .select("id, name, price, stock, is_active")
+    .select("id, name, price, stock, is_active, is_monthly")
     .order("created_at", { ascending: false })
     .returns<Product[]>();
 
@@ -72,6 +74,10 @@ export default async function AdminProductsPage() {
               </option>
             ))}
           </select>
+          <label className="flex items-center gap-2 text-sm text-wabi-fg-muted">
+            <input type="checkbox" name="is_monthly" className="size-4" />
+            이 달의 상품
+          </label>
           <Button
             type="submit"
             className="rounded-none bg-wabi-accent hover:bg-wabi-accent/90 sm:col-span-2 lg:col-span-1"
@@ -93,6 +99,7 @@ export default async function AdminProductsPage() {
                 <th className="py-2">상품명</th>
                 <th className="py-2">가격</th>
                 <th className="py-2">재고</th>
+                <th className="py-2">이 달의 상품</th>
                 <th className="py-2">노출</th>
                 <th className="py-2">삭제</th>
               </tr>
@@ -114,6 +121,19 @@ export default async function AdminProductsPage() {
                       />
                       <button type="submit" className="text-xs underline">
                         저장
+                      </button>
+                    </form>
+                  </td>
+                  <td className="py-3">
+                    <form action={toggleMonthly}>
+                      <input type="hidden" name="id" value={p.id} />
+                      <input
+                        type="hidden"
+                        name="is_monthly"
+                        value={String(p.is_monthly)}
+                      />
+                      <button type="submit" className="text-xs underline">
+                        {p.is_monthly ? "지정됨" : "지정"}
                       </button>
                     </form>
                   </td>

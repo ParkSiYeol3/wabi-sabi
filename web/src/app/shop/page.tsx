@@ -5,7 +5,7 @@ import { Container } from "@/components/container";
 import { ProductCard } from "@/components/product-card";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { Input } from "@/components/ui/input";
-import { categories } from "@/lib/site";
+import { categories, MONTHLY_SLUG } from "@/lib/site";
 import { getProducts, type ProductSort } from "@/lib/queries/products";
 import { cn } from "@/lib/utils";
 
@@ -74,6 +74,12 @@ export default async function ShopPage({
       <nav className="mt-6 flex flex-wrap gap-2" aria-label="카테고리">
         <FilterLink href={buildQuery(sp, { category: undefined })} active={!sp.category}>
           전체
+        </FilterLink>
+        <FilterLink
+          href={buildQuery(sp, { category: MONTHLY_SLUG })}
+          active={sp.category === MONTHLY_SLUG}
+        >
+          이 달의 상품
         </FilterLink>
         {categories.map((c) => (
           <FilterLink

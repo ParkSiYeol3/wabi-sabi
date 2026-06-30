@@ -56,8 +56,10 @@ create table public.products (
   care text,            -- 주의사항
   images jsonb not null default '[]'::jsonb, -- 멀티이미지 URL 배열
   is_active boolean not null default true,
+  is_monthly boolean not null default false, -- 이 달의 상품 (Shop monthly 탭)
   created_at timestamptz not null default now()
 );
+create index on public.products (is_monthly) where is_monthly;
 
 -- ── ORDERS ─────────────────────────────────────────────────
 create table public.orders (
@@ -188,13 +190,19 @@ create policy "own addresses all"
 
 
 -- seed
--- 카테고리 시드 (브리핑 IA)
+-- 카테고리 시드 — Shop 물건 종류 7종 (형님 피드백 IA)
 insert into public.categories (slug, name_ko, name_en, sort_order) values
-  ('tableware', '식기',   'Tableware', 1),
-  ('objects',   '오브제', 'Objects',   2),
-  ('craft',     '공예',   'Craft',     3),
-  ('gifts',     '선물',   'Gifts',     4)
-on conflict (slug) do nothing;
+  ('plate',   '접시',     'Plate',   1),
+  ('bowl',    '볼',       'Bowl',    2),
+  ('cup',     '컵',       'Cup',     3),
+  ('cutlery', '커트러리', 'Cutlery', 4),
+  ('life',    '리빙',     'Life',    5),
+  ('gift',    '선물',     'Gift',    6),
+  ('craft',   '공예',     'Craft',   7)
+on conflict (slug) do update
+  set name_ko = excluded.name_ko,
+      name_en = excluded.name_en,
+      sort_order = excluded.sort_order;
 
 
 -- ── NOTICES (0005) ─────────────────────────────────────────
