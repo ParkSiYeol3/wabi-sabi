@@ -21,6 +21,9 @@ export default async function AdminLayout({
           <Link href="/admin/orders" className="hover:underline">
             주문
           </Link>
+          <Link href="/admin/notices" className="hover:underline">
+            공지
+          </Link>
         </nav>
       </div>
 
