@@ -18,6 +18,9 @@ export function SiteFooter() {
           <Link href="/notice" className="hover:text-white">
             공지사항
           </Link>
+          <Link href="/inquiry" className="hover:text-white">
+            문의
+          </Link>
         </nav>
         <p className="mt-6 text-xs text-white/50">
           © {new Date().getFullYear()} {site.name}. All rights reserved.
