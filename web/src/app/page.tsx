@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ImageIcon, Clock, MapPin, AtSign, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,11 +24,25 @@ export default function Home() {
       {/* ── Hero ───────────────────────────────────────────── */}
       <section className="bg-wabi-subtle">
         <div className="mx-auto flex max-w-[1200px] flex-col items-center px-5 py-28 text-center md:py-36">
-          <span className="font-serif-jp text-4xl md:text-6xl">わび-さび</span>
-          <h1 className="mt-6 text-xl font-bold tracking-[0.15em] md:text-2xl">
-            {site.name}
+          <Image
+            src="/brand/logo-mark.png"
+            alt=""
+            width={560}
+            height={278}
+            priority
+            className="h-20 w-auto md:h-28"
+          />
+          <h1 className="mt-8">
+            <Image
+              src="/brand/logo-wordmark.png"
+              alt={`${site.name} — わび-さび`}
+              width={720}
+              height={239}
+              priority
+              className="h-10 w-auto md:h-12"
+            />
           </h1>
-          <p className="mt-3 text-sm tracking-wide text-wabi-fg-muted">
+          <p className="mt-5 text-sm tracking-wide text-wabi-fg-muted">
             {site.tagline}
           </p>
           <p className="mt-1 text-xs tracking-wide text-wabi-fg-muted">
