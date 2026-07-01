@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Menu, X, ShoppingBag, User } from "lucide-react";
 import { nav, site } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -20,8 +21,15 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 w-full border-b border-wabi-border bg-wabi-bg/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-300 items-center justify-between px-5">
         {/* 로고 */}
-        <Link href="/" className="flex items-center gap-2" aria-label={`${site.name} 홈`}>
-          <span className="font-serif-jp text-lg leading-none">わ</span>
+        <Link href="/" className="flex items-center gap-2.5" aria-label={`${site.name} 홈`}>
+          <Image
+            src="/brand/logo-mark.png"
+            alt=""
+            width={560}
+            height={278}
+            priority
+            className="h-6 w-auto"
+          />
           <span className="text-sm font-bold tracking-[0.2em]">{site.name}</span>
         </Link>
 
