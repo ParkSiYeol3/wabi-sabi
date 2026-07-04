@@ -2,7 +2,9 @@
 -- 기존 confirm_order 는 authenticated 가 직접 호출 가능 → 결제 없이 본인 pending 주문을
 -- paid 로 전환 가능(재고 차감 포함). 실행 권한 회수 + 서버(service_role) 전용 함수로 교체.
 
-revoke execute on function public.confirm_order(uuid) from authenticated;
+-- ⚠ Postgres 함수는 생성 시 PUBLIC 에 EXECUTE 기본 부여 — authenticated 만 revoke 해도
+-- PUBLIC 경유로 실행 가능. 구 함수는 더 이상 사용처가 없으므로 아예 제거한다.
+drop function if exists public.confirm_order(uuid);
 
 -- 서버 전용 확정: 금액 검증 + 멱등. service_role 만 호출(권한 부여 안 함).
 create or replace function public.confirm_order_paid(p_order_id uuid, p_amount int)
