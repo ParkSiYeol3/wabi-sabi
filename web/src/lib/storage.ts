@@ -2,13 +2,20 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const PRODUCT_BUCKET = "product-images";
 
-// 상품 이미지 업로드 → 공개 URL 배열 반환. (어드민 service_role 전용)
+export interface UploadResult {
+  urls: string[];
+  // 실패 파일 — 조용히 삼키지 않고 UI 까지 전달한다 (버킷 용량 초과 등).
+  failures: { name: string; reason: string }[];
+}
+
+// 상품 이미지 업로드 → 공개 URL + 실패 목록 반환. (어드민 service_role 전용)
 export async function uploadProductImages(
   productId: string,
   files: File[],
-): Promise<string[]> {
+): Promise<UploadResult> {
   const supabase = createAdminClient();
   const urls: string[] = [];
+  const failures: { name: string; reason: string }[] = [];
 
   for (const file of files) {
     if (!file || file.size === 0) continue;
@@ -24,12 +31,15 @@ export async function uploadProductImages(
         contentType: file.type || "image/png",
         upsert: false,
       });
-    if (error) continue;
+    if (error) {
+      failures.push({ name: file.name, reason: error.message });
+      continue;
+    }
 
     const { data } = supabase.storage.from(PRODUCT_BUCKET).getPublicUrl(path);
     urls.push(data.publicUrl);
   }
-  return urls;
+  return { urls, failures };
 }
 
 // 공개 URL → 버킷 내부 경로 추출 (삭제용). 실패 시 null.
