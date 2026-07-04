@@ -1,6 +1,27 @@
 import type { NextConfig } from "next";
 
-// 보안 헤더 (보안_체크리스트 P1) — CSP 는 토스 위젯·Supabase 허용 목록 검증 후 별도 도입.
+const SUPABASE_HOST = "zeqtfrwjnlckyinjxjcu.supabase.co";
+
+// CSP (#58) — 1단계 Report-Only: 위반을 브라우저 콘솔로만 보고(차단 없음).
+// 프로드에서 결제·이미지 업로드·OAuth 플로우 위반 0 확인 후 강제 전환(후속 PR).
+// 허용 근거: 토스 결제위젯(*.tosspayments.com — script/iframe/API/이미지),
+// Supabase(REST·Storage·Realtime). 우편번호는 수동 입력이라 외부 스크립트 없음.
+// script-src 'unsafe-inline' 은 Next.js 인라인 스크립트 필요 — nonce 전환 후속 검토.
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://*.tosspayments.com",
+  "style-src 'self' 'unsafe-inline'",
+  `img-src 'self' data: blob: https://${SUPABASE_HOST} https://*.tosspayments.com`,
+  "font-src 'self' data:",
+  `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST} https://*.tosspayments.com`,
+  "frame-src https://*.tosspayments.com",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join("; ");
+
+// 보안 헤더 (보안_체크리스트 P1)
 const securityHeaders = [
   // HTTPS 강제 (2년, 서브도메인 포함)
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
@@ -12,6 +33,8 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   // 미사용 브라우저 권한 차단 (결제 위젯은 payment 필요)
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(self)" },
+  // CSP 1단계 — 검증 완료 후 Content-Security-Policy 로 전환
+  { key: "Content-Security-Policy-Report-Only", value: csp },
 ];
 
 const nextConfig: NextConfig = {
@@ -29,7 +52,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "zeqtfrwjnlckyinjxjcu.supabase.co",
+        hostname: SUPABASE_HOST,
         pathname: "/storage/v1/object/public/**",
       },
     ],
