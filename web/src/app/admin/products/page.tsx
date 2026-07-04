@@ -1,16 +1,14 @@
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { won } from "@/lib/orders";
+import { ProductCreateForm } from "@/components/admin/product-create-form";
+import { ProductImageAdder } from "@/components/admin/product-image-adder";
 import {
-  createProduct,
   updateStock,
   toggleActive,
   toggleMonthly,
   deleteProduct,
-  addProductImages,
   removeProductImage,
 } from "./actions";
 
@@ -43,62 +41,10 @@ export default async function AdminProductsPage() {
 
   return (
     <div className="space-y-10">
-      {/* 새 상품 */}
+      {/* 새 상품 — 클라이언트 폼: 실패 시 입력값 유지 + 결과 메시지 */}
       <section>
         <h2 className="text-lg font-medium">새 상품 등록</h2>
-        <form
-          action={createProduct}
-          className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
-        >
-          <Input name="name" required placeholder="상품명" className="rounded-none" />
-          <Input
-            name="price"
-            type="number"
-            min={0}
-            required
-            placeholder="가격"
-            className="rounded-none"
-          />
-          <Input
-            name="stock"
-            type="number"
-            min={0}
-            defaultValue={0}
-            placeholder="재고"
-            className="rounded-none"
-          />
-          <select
-            name="category_id"
-            className="border border-wabi-border bg-transparent px-3 text-sm"
-          >
-            <option value="">카테고리 없음</option>
-            {categories?.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name_ko} ({c.name_en})
-              </option>
-            ))}
-          </select>
-          <label className="flex items-center gap-2 text-sm text-wabi-fg-muted">
-            <input type="checkbox" name="is_monthly" className="size-4" />
-            이 달의 상품
-          </label>
-          <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted sm:col-span-2 lg:col-span-3">
-            상품 이미지 (여러 장 가능, png/jpg/webp)
-            <input
-              type="file"
-              name="images"
-              multiple
-              accept="image/png,image/jpeg,image/webp"
-              className="cursor-pointer text-sm file:mr-3 file:cursor-pointer file:border file:border-wabi-border file:bg-transparent file:px-3 file:py-1.5 file:text-xs file:text-wabi-fg file:transition-colors hover:file:border-wabi-fg hover:file:bg-wabi-muted"
-            />
-          </label>
-          <Button
-            type="submit"
-            className="rounded-none bg-wabi-accent hover:bg-wabi-accent/90 sm:col-span-2 lg:col-span-1"
-          >
-            등록
-          </Button>
-        </form>
+        <ProductCreateForm categories={categories ?? []} />
       </section>
 
       {/* 목록 */}
@@ -146,25 +92,7 @@ export default async function AdminProductsPage() {
                           </form>
                         </span>
                       ))}
-                      <form
-                        action={addProductImages}
-                        className="flex flex-col gap-1"
-                      >
-                        <input type="hidden" name="id" value={p.id} />
-                        <input
-                          type="file"
-                          name="images"
-                          multiple
-                          accept="image/png,image/jpeg,image/webp"
-                          className="w-36 cursor-pointer text-[10px] file:mr-2 file:cursor-pointer file:border file:border-wabi-border file:bg-transparent file:px-2 file:py-1 file:text-[10px] file:text-wabi-fg file:transition-colors hover:file:border-wabi-fg hover:file:bg-wabi-muted"
-                        />
-                        <button
-                          type="submit"
-                          className="cursor-pointer self-start text-xs text-wabi-accent underline transition-opacity hover:opacity-70"
-                        >
-                          이미지 추가
-                        </button>
-                      </form>
+                      <ProductImageAdder productId={p.id} />
                     </div>
                   </td>
                   <td className="py-3">{p.name}</td>
