@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Container } from "@/components/container";
+import { CancelOrderButton } from "@/components/cancel-order-button";
 import { createClient } from "@/lib/supabase/server";
 import { statusLabel, won } from "@/lib/orders";
 
@@ -64,6 +65,11 @@ export default async function OrdersPage() {
                   {rest > 0 ? ` 외 ${rest}건` : ""}
                 </p>
                 <p className="mt-2 font-medium">{won(o.total_price)}</p>
+                {o.status === "paid" && (
+                  <div className="mt-3 border-t border-wabi-border pt-3">
+                    <CancelOrderButton orderId={o.id} />
+                  </div>
+                )}
               </li>
             );
           })}

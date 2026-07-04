@@ -96,3 +96,64 @@ export async function confirmPayment(
 
   return { ok: true };
 }
+
+export type CancelResult = { ok: boolean; error?: string };
+
+// 배송 전(paid) 주문 전액 취소 — 서버 액션(본인 주문 검증 후) 공용 로직.
+// 순서: RPC(잠금 하 paid 확인 → cancelled + 재고 복원) 먼저 → 토스 환불 나중.
+// 환불을 먼저 하면 배송 처리와 경합 시 "배송됐는데 환불" 가능(0011 주석 참고).
+// 멱등: cancelled 주문 재호출 시 토스 취소만 재확인 → 환불 실패 재시도 가능.
+export async function cancelPaidOrder(orderId: string): Promise<CancelResult> {
+  if (!process.env.TOSS_SECRET_KEY)
+    return { ok: false, error: "토스 시크릿 키 미설정" };
+  if (!adminConfigured()) return { ok: false, error: "서버 키 미설정" };
+
+  const admin = createAdminClient();
+  const { data: result, error } = await admin.rpc("cancel_paid_order", {
+    p_order_id: orderId,
+  });
+  if (error) return { ok: false, error: "주문 취소에 실패했습니다." };
+  if (result === "not_found")
+    return { ok: false, error: "주문을 찾을 수 없습니다." };
+  if (result === "not_cancellable")
+    return {
+      ok: false,
+      error: "배송이 시작된 주문은 취소할 수 없습니다. 문의 게시판을 이용해 주세요.",
+    };
+
+  // 주문은 cancelled 확정 — 이제 토스 환불. 결제 조회(orderId → paymentKey).
+  const lookup = await fetch(`${TOSS_API}/orders/${orderId}`, {
+    headers: { Authorization: tossAuth() },
+  });
+  if (!lookup.ok) {
+    console.error(
+      `[payments] 주문 취소 후 결제 조회 실패 — 수동 환불 확인 필요 orderId=${orderId}`,
+    );
+    return {
+      ok: false,
+      error: "취소는 접수되었으나 환불 확인에 실패했습니다. 문의해 주세요.",
+    };
+  }
+  const payment = await lookup.json();
+  if (payment.status !== "CANCELED") {
+    const cancel = await fetch(`${TOSS_API}/${payment.paymentKey}/cancel`, {
+      method: "POST",
+      headers: { Authorization: tossAuth(), "Content-Type": "application/json" },
+      body: JSON.stringify({ cancelReason: "고객 주문 취소" }),
+    });
+    if (!cancel.ok) {
+      const body = await cancel.json().catch(() => ({}));
+      if (body.code !== "ALREADY_CANCELED_PAYMENT") {
+        console.error(
+          `[payments] 주문 취소 후 환불 실패 — 수동 환불 필요 orderId=${orderId} paymentKey=${payment.paymentKey}`,
+        );
+        return {
+          ok: false,
+          error: "취소는 접수되었으나 환불 처리에 실패했습니다. 문의해 주세요.",
+        };
+      }
+    }
+  }
+
+  return { ok: true };
+}
