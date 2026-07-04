@@ -15,7 +15,9 @@ export function SiteHeader() {
   const count = useCart(cartCount);
   const mounted = useMounted();
   const user = useAuthStore((s) => s.user);
+  const isAdmin = useAuthStore((s) => s.isAdmin);
   const accountHref = mounted && user ? "/mypage" : "/auth";
+  const showAdmin = mounted && isAdmin;
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-wabi-border bg-wabi-bg/90 backdrop-blur">
@@ -44,6 +46,14 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
+          {showAdmin && (
+            <Link
+              href="/admin"
+              className="text-sm font-medium tracking-wide text-wabi-accent transition-colors hover:opacity-80"
+            >
+              Admin
+            </Link>
+          )}
         </nav>
 
         {/* 우측 액션 */}
@@ -98,6 +108,15 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
+          {showAdmin && (
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="py-3 text-sm font-medium tracking-wide text-wabi-accent"
+            >
+              Admin
+            </Link>
+          )}
         </nav>
       </div>
     </header>

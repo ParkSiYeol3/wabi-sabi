@@ -260,3 +260,12 @@ create policy "reviews insert own"
   on public.reviews for insert with check (auth.uid() = user_id);
 create policy "reviews delete own"
   on public.reviews for delete using (auth.uid() = user_id);
+
+
+-- ── PROFILE ROLE (0008) ────────────────────────────────────
+alter table public.profiles
+  add column if not exists role text not null default 'user'
+  check (role in ('user', 'admin'));
+-- 권한 상승 차단: 사용자는 name 만 수정 가능, role/email 등은 service_role 만.
+revoke update on public.profiles from anon, authenticated;
+grant update (name) on public.profiles to authenticated;
