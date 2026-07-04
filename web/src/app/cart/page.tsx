@@ -135,12 +135,12 @@ export default function CartPage() {
         >
           <Link href="/shop">쇼핑 계속하기</Link>
         </Button>
-        {/* TODO(WSB-014~019): 결제 플로우. 비회원은 로그인 유도. */}
+        {/* 결제 플로우 — /checkout 가드가 비로그인만 /auth 로 보냄 */}
         <Button
           asChild
           className="rounded-none bg-wabi-accent px-10 hover:bg-wabi-accent/90"
         >
-          <Link href="/auth?redirect=/checkout">주문하기</Link>
+          <Link href="/checkout">주문하기</Link>
         </Button>
       </div>
     </Container>
