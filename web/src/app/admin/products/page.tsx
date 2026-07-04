@@ -89,7 +89,7 @@ export default async function AdminProductsPage() {
               name="images"
               multiple
               accept="image/png,image/jpeg,image/webp"
-              className="text-sm"
+              className="cursor-pointer text-sm file:mr-3 file:cursor-pointer file:border file:border-wabi-border file:bg-transparent file:px-3 file:py-1.5 file:text-xs file:text-wabi-fg file:transition-colors hover:file:border-wabi-fg hover:file:bg-wabi-muted"
             />
           </label>
           <Button
@@ -139,7 +139,7 @@ export default async function AdminProductsPage() {
                             <button
                               type="submit"
                               aria-label="이미지 삭제"
-                              className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-red-600 text-[10px] leading-none text-white"
+                              className="absolute -right-1 -top-1 flex size-4 cursor-pointer items-center justify-center rounded-full bg-red-600 text-[10px] leading-none text-white transition-colors hover:bg-red-700"
                             >
                               ×
                             </button>
@@ -156,11 +156,11 @@ export default async function AdminProductsPage() {
                           name="images"
                           multiple
                           accept="image/png,image/jpeg,image/webp"
-                          className="w-32 text-[10px]"
+                          className="w-36 cursor-pointer text-[10px] file:mr-2 file:cursor-pointer file:border file:border-wabi-border file:bg-transparent file:px-2 file:py-1 file:text-[10px] file:text-wabi-fg file:transition-colors hover:file:border-wabi-fg hover:file:bg-wabi-muted"
                         />
                         <button
                           type="submit"
-                          className="text-xs text-wabi-accent underline"
+                          className="cursor-pointer self-start text-xs text-wabi-accent underline transition-opacity hover:opacity-70"
                         >
                           이미지 추가
                         </button>
@@ -179,7 +179,7 @@ export default async function AdminProductsPage() {
                         defaultValue={p.stock}
                         className="w-16 border border-wabi-border bg-transparent px-2 py-1"
                       />
-                      <button type="submit" className="text-xs underline">
+                      <button type="submit" className="cursor-pointer text-xs underline transition-colors hover:text-wabi-accent">
                         저장
                       </button>
                     </form>
@@ -192,7 +192,7 @@ export default async function AdminProductsPage() {
                         name="is_monthly"
                         value={String(p.is_monthly)}
                       />
-                      <button type="submit" className="text-xs underline">
+                      <button type="submit" className="cursor-pointer text-xs underline transition-colors hover:text-wabi-accent">
                         {p.is_monthly ? "지정됨" : "지정"}
                       </button>
                     </form>
@@ -205,7 +205,7 @@ export default async function AdminProductsPage() {
                         name="is_active"
                         value={String(p.is_active)}
                       />
-                      <button type="submit" className="text-xs underline">
+                      <button type="submit" className="cursor-pointer text-xs underline transition-colors hover:text-wabi-accent">
                         {p.is_active ? "노출중" : "숨김"}
                       </button>
                     </form>
@@ -215,7 +215,7 @@ export default async function AdminProductsPage() {
                       <input type="hidden" name="id" value={p.id} />
                       <button
                         type="submit"
-                        className="text-xs text-red-600 underline"
+                        className="cursor-pointer text-xs text-red-600 underline transition-colors hover:text-red-700"
                       >
                         삭제
                       </button>

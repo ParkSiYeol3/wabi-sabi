@@ -66,7 +66,7 @@ export default async function AdminOrdersPage() {
                     placeholder="송장번호"
                     className="w-36 border border-wabi-border bg-transparent px-2 py-1"
                   />
-                  <button type="submit" className="text-xs underline">
+                  <button type="submit" className="cursor-pointer text-xs underline transition-colors hover:text-wabi-accent">
                     저장
                   </button>
                 </form>
