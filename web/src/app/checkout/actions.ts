@@ -34,6 +34,28 @@ export async function createPendingOrder(
   if (!delivery.recipient || !delivery.phone || !delivery.address)
     return { ok: false, error: "배송지를 입력해 주세요." };
 
+  // 남용 가드(rate limit) — 외부 인프라 없이 DB 기준:
+  // ① 미결제(pending) 5건 이상 → 차단(방치 주문은 일일 cron 정리)
+  // ② 최근 1시간 주문 생성 10건 이상 → 차단
+  const { count: pendingCount } = await supabase
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("status", "pending");
+  if ((pendingCount ?? 0) >= 5)
+    return {
+      ok: false,
+      error: "미결제 주문이 많습니다. 기존 주문을 결제하거나 잠시 후 다시 시도해 주세요.",
+    };
+  const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count: recentCount } = await supabase
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .gte("ordered_at", hourAgo);
+  if ((recentCount ?? 0) >= 10)
+    return { ok: false, error: "주문 시도가 너무 잦습니다. 잠시 후 다시 시도해 주세요." };
+
   const ids = lines.map((l) => l.id);
   const { data: products } = await supabase
     .from("products")
