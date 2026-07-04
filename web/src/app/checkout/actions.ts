@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 
 const GIFT_PRICE = 3000;
 
@@ -57,6 +58,10 @@ export async function createPendingOrder(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "로그인이 필요합니다." };
+  // 주문 쓰기는 서버 전용(0012 에서 사용자 insert 정책 회수) — service_role 필수
+  if (!adminConfigured())
+    return { ok: false, error: "주문 처리를 위한 서버 설정이 없습니다." };
+  const admin = createAdminClient();
 
   // 스키마 검증 — 클라이언트 페이로드 불신
   const linesParsed = linesSchema.safeParse(linesInput);
@@ -137,7 +142,9 @@ export async function createPendingOrder(
     .filter(Boolean)
     .join(" ");
 
-  const { data: order, error: orderErr } = await supabase
+  // 쓰기는 service_role — 사용자 직접 insert 는 0012 로 차단됨(#62).
+  // user_id 는 서버 세션에서 확정하므로 위조 불가.
+  const { data: order, error: orderErr } = await admin
     .from("orders")
     .insert({
       user_id: user.id,
@@ -154,13 +161,17 @@ export async function createPendingOrder(
   if (orderErr || !order)
     return { ok: false, error: "주문 생성에 실패했습니다." };
 
-  const { error: itemsErr } = await supabase
+  const { error: itemsErr } = await admin
     .from("order_items")
     .insert(items.map((it) => ({ ...it, order_id: order.id })));
-  if (itemsErr) return { ok: false, error: "주문 항목 저장에 실패했습니다." };
+  if (itemsErr) {
+    // 항목 없는 고아 주문 즉시 정리(결제 전이라 안전) — cron 대기 불필요
+    await admin.from("orders").delete().eq("id", order.id);
+    return { ok: false, error: "주문 항목 저장에 실패했습니다." };
+  }
 
   if (gift.enabled) {
-    await supabase.from("gift_options").insert({
+    await admin.from("gift_options").insert({
       order_id: order.id,
       package_type: "gift",
       extra_price: GIFT_PRICE,
