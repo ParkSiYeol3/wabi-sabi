@@ -3,33 +3,10 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
 import { ClearCart } from "@/components/clear-cart";
-import { createClient } from "@/lib/supabase/server";
+import { confirmPayment } from "@/lib/payments";
 import { won } from "@/lib/orders";
 
 type SP = { paymentKey?: string; orderId?: string; amount?: string };
-
-async function confirmTossPayment(
-  paymentKey: string,
-  orderId: string,
-  amount: number,
-): Promise<{ ok: boolean; error?: string }> {
-  const secret = process.env.TOSS_SECRET_KEY;
-  if (!secret) return { ok: false, error: "토스 시크릿 키 미설정" };
-
-  const res = await fetch("https://api.tosspayments.com/v1/payments/confirm", {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${Buffer.from(`${secret}:`).toString("base64")}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ paymentKey, orderId, amount }),
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    return { ok: false, error: body.message || "결제 승인 실패" };
-  }
-  return { ok: true };
-}
 
 export default async function CheckoutSuccessPage({
   searchParams,
@@ -41,32 +18,12 @@ export default async function CheckoutSuccessPage({
   let success = false;
   let message = "결제 정보가 올바르지 않습니다.";
 
-  if (paymentKey && orderId && amount) {
-    const supabase = await createClient();
-    const confirm = await confirmTossPayment(paymentKey, orderId, Number(amount));
-    if (confirm.ok) {
-      // 토스 승인 성공 → 주문 확정(paid) + 재고 차감
-      const { error } = await supabase.rpc("confirm_order", {
-        p_order_id: orderId,
-      });
-      if (!error) {
-        success = true;
-      } else {
-        message = "주문 확정 처리 중 오류가 발생했습니다.";
-      }
-    } else {
-      // 새로고침 등으로 토스 재승인 실패해도, 이미 결제된 주문이면 성공 처리(멱등)
-      const { data: order } = await supabase
-        .from("orders")
-        .select("status")
-        .eq("id", orderId)
-        .maybeSingle();
-      if (order?.status === "paid") {
-        success = true;
-      } else {
-        message = confirm.error ?? "결제 승인 실패";
-      }
-    }
+  if (paymentKey && orderId) {
+    // 승인·확정은 서버 공용 로직(lib/payments) — 금액은 DB 주문 기준(쿼리 amount 불신),
+    // 확정 RPC 는 service_role 전용(0009), 새로고침/웹훅 중복에 멱등.
+    const confirm = await confirmPayment(paymentKey, orderId);
+    if (confirm.ok) success = true;
+    else message = confirm.error ?? "결제 승인 실패";
   }
 
   return (
