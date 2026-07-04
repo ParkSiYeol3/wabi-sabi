@@ -1,11 +1,14 @@
 "use server";
 
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { cancelPaidOrder, type CancelResult } from "@/lib/payments";
 
 // 본인 주문 취소 — 배송 전(paid)만. 실 취소·환불은 lib/payments(RPC + 토스).
 export async function cancelMyOrder(orderId: string): Promise<CancelResult> {
+  if (!z.string().uuid().safeParse(orderId).success)
+    return { ok: false, error: "주문 정보가 올바르지 않습니다." };
   const supabase = await createClient();
   const {
     data: { user },

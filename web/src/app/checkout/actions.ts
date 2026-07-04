@@ -1,19 +1,46 @@
 "use server";
 
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
 const GIFT_PRICE = 3000;
 
-export type CartLine = { id: string; quantity: number };
-export type DeliveryInput = {
-  recipient: string;
-  phone: string;
-  postcode?: string;
-  address: string;
-  detail?: string;
-  memo?: string;
-};
-export type GiftInput = { enabled: boolean; sender?: string; message?: string };
+// 입력 스키마 (보안_체크리스트 P1 입력 검증) — 서버 액션은 공개 엔드포인트,
+// 폼을 거치지 않은 임의 페이로드(음수 수량·초대형 문자열 등)를 여기서 차단.
+const cartLineSchema = z.object({
+  id: z.string().uuid(),
+  quantity: z.number().int().min(1).max(99),
+});
+// 중복 상품 id 거부 — 같은 상품을 여러 줄로 쪼개면 라인별 재고 체크를
+// 우회해 재고 이상 주문 가능(줄마다 stock ≥ qty 만 검사되므로).
+const linesSchema = z
+  .array(cartLineSchema)
+  .min(1)
+  .max(30)
+  .refine(
+    (ls) => new Set(ls.map((l) => l.id)).size === ls.length,
+    "중복 상품이 있습니다.",
+  );
+const deliverySchema = z.object({
+  recipient: z.string().trim().min(1).max(50),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^[0-9-]{9,13}$/, "전화번호 형식이 올바르지 않습니다."),
+  postcode: z.string().trim().max(10).optional(),
+  address: z.string().trim().min(1).max(200),
+  detail: z.string().trim().max(100).optional(),
+  memo: z.string().trim().max(200).optional(),
+});
+const giftSchema = z.object({
+  enabled: z.boolean(),
+  sender: z.string().trim().max(50).optional(),
+  message: z.string().trim().max(300).optional(),
+});
+
+export type CartLine = z.infer<typeof cartLineSchema>;
+export type DeliveryInput = z.infer<typeof deliverySchema>;
+export type GiftInput = z.infer<typeof giftSchema>;
 
 export type CreateOrderResult =
   | { ok: true; orderId: string; amount: number; orderName: string }
@@ -21,18 +48,35 @@ export type CreateOrderResult =
 
 // 주문 생성(status=pending). 금액은 DB 가격으로 재계산(클라이언트 값 불신).
 export async function createPendingOrder(
-  lines: CartLine[],
-  delivery: DeliveryInput,
-  gift: GiftInput,
+  linesInput: CartLine[],
+  deliveryInput: DeliveryInput,
+  giftInput: GiftInput,
 ): Promise<CreateOrderResult> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "로그인이 필요합니다." };
-  if (lines.length === 0) return { ok: false, error: "장바구니가 비었습니다." };
-  if (!delivery.recipient || !delivery.phone || !delivery.address)
-    return { ok: false, error: "배송지를 입력해 주세요." };
+
+  // 스키마 검증 — 클라이언트 페이로드 불신
+  const linesParsed = linesSchema.safeParse(linesInput);
+  if (!linesParsed.success)
+    return { ok: false, error: "장바구니 정보가 올바르지 않습니다." };
+  const deliveryParsed = deliverySchema.safeParse(deliveryInput);
+  if (!deliveryParsed.success)
+    return {
+      ok: false,
+      error:
+        deliveryParsed.error.issues[0]?.message === "전화번호 형식이 올바르지 않습니다."
+          ? "전화번호 형식이 올바르지 않습니다."
+          : "배송지를 올바르게 입력해 주세요.",
+    };
+  const giftParsed = giftSchema.safeParse(giftInput);
+  if (!giftParsed.success)
+    return { ok: false, error: "선물 옵션이 올바르지 않습니다." };
+  const lines = linesParsed.data;
+  const delivery = deliveryParsed.data;
+  const gift = giftParsed.data;
 
   // 남용 가드(rate limit) — 외부 인프라 없이 DB 기준:
   // ① 미결제(pending) 5건 이상 → 차단(방치 주문은 일일 cron 정리)
