@@ -54,7 +54,9 @@ supabase/         migrations/{0001_init,0002_rls}.sql · seed.sql
 - **2026-06-21 결제위젯 전환(#10)**: 결제창(redirect) → **결제위젯**(인페이지 결제수단+약관 UI). widgets.renderPaymentMethods/renderAgreement, setAmount(금액 변경 시 갱신), requestPayment. 실 사업용 — test키로 개발, 가맹점 계약 후 라이브키 교체.
 - **2026-07-05 재고 동시성(#56)**: migration 0010 — confirm_order_paid 재작성. 주문·상품 행 FOR UPDATE 잠금(상품은 id 순, 교착 방지) 후 재고 검증, 부족 시 cancelled+out_of_stock(토스 자동 취소·환불), 충분하면 정확 차감(greatest 클램프 제거 → 초과판매 차단). ConfirmResult.final 로 웹훅 무한 재시도 차단. 0010 적용·검증 완료(service_role 동작, anon 차단).
 - **2026-07-05 주문 취소·환불(#57)**: migration 0011 cancel_paid_order RPC — paid→cancelled+재고 복원(FOR UPDATE, 멱등). lib/payments.cancelPaidOrder: RPC 먼저→토스 환불 나중(배송 경합 봉쇄). cancelMyOrder 액션+주문내역 취소 버튼(paid 만). 0011 적용·검증 완료.
-- **2026-07-05 CSP Report-Only(#58)**: next.config CSP 헤더 — 토스 `*.tosspayments.com`·Supabase 허용, 그 외 'self'. 1단계 Report-Only(콘솔 보고만) → 프로드 플로우 위반 0 확인 후 강제 전환.
+- **2026-07-05 CSP Report-Only(#58)**: next.config CSP 헤더 — 토스 `*.tosspayments.com`·Supabase 허용, 그 외 'self'. 1단계 Report-Only + 위반 수집(`/api/csp-report`) → 프로드 위반 0 확인 후 강제 전환.
+- **2026-07-05 Zod 1차(#60)·Dependabot(#63)**: 결제·주문 액션 스키마 검증(중복 상품 id 거부 포함), Dependabot 주간+CI audit(high+) 게이트.
+- **2026-07-05 주문 쓰기 서버 전용화(#62, P0)**: 0012 — orders/order_items/gift_options 사용자 insert 회수, createPendingOrder 가 service_role 쓰기. order_items 직접 insert 로 주문 항목 조작하던 구멍 봉쇄. **0012는 코드 배포와 동시 적용.**
 
 ## 라우트
 | 경로 | 내용 | 상태 |
