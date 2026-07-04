@@ -50,7 +50,7 @@ export const useCart = create<CartState>()(
 );
 
 // 셀렉터
-export const cartCount = (s: CartState) =>
-  s.items.reduce((n, i) => n + i.quantity, 0);
+// 헤더 배지 = 장바구니에 담긴 "상품 종류 수" (주문 수량 합계 아님 — 대표님/운영 피드백).
+export const cartCount = (s: CartState) => s.items.length;
 export const cartTotal = (s: CartState) =>
   s.items.reduce((n, i) => n + i.price * i.quantity, 0);
