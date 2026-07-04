@@ -24,6 +24,10 @@ jobs:
       - name: Install
         run: npm ci
 
+      # 프로드 의존성 high 이상 취약점이면 실패 (dev 의존성은 게이트 제외)
+      - name: Audit (prod, high+)
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Lint (ESLint)
         run: npm run lint
 
