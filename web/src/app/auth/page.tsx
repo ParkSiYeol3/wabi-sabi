@@ -1,11 +1,12 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
+import { useAuthStore } from "@/store/auth";
 import { cn } from "@/lib/utils";
 
 type Tab = "login" | "signup";
@@ -14,7 +15,19 @@ type Tab = "login" | "signup";
 function AuthForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const redirect = params.get("redirect") || "/";
+  // open redirect 방지 — 내부 경로("/...")만 허용, "//host" 형태도 차단.
+  const rawRedirect = params.get("redirect") || "/";
+  const redirect =
+    rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+      ? rawRedirect
+      : "/";
+
+  // 이미 로그인 상태면 로그인 폼 대신 목적지로 이동 (예: 장바구니→주문하기).
+  const user = useAuthStore((s) => s.user);
+  const authLoading = useAuthStore((s) => s.loading);
+  useEffect(() => {
+    if (!authLoading && user) router.replace(redirect);
+  }, [authLoading, user, redirect, router]);
 
   const [tab, setTab] = useState<Tab>("login");
   const [loading, setLoading] = useState(false);
