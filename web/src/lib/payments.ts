@@ -10,7 +10,9 @@ function tossAuth(): string {
   return `Basic ${Buffer.from(`${process.env.TOSS_SECRET_KEY}:`).toString("base64")}`;
 }
 
-export type ConfirmResult = { ok: boolean; error?: string };
+// final: 재시도해도 결과가 달라지지 않는 확정 실패(재고 소진·상태 불일치 등).
+// 웹훅이 이를 200 으로 수신 확인해 무의미한 토스 재시도를 끊는다.
+export type ConfirmResult = { ok: boolean; error?: string; final?: boolean };
 
 export async function confirmPayment(
   paymentKey: string,
@@ -57,13 +59,40 @@ export async function confirmPayment(
     }
   }
 
-  // 주문 확정(paid) + 재고 차감 — service_role 전용 RPC, 금액 재검증(멱등)
+  // 주문 확정(paid) + 재고 차감 — service_role 전용 RPC, 금액 재검증·재고 검증(멱등)
   const { data: result, error } = await admin.rpc("confirm_order_paid", {
     p_order_id: orderId,
     p_amount: order.total_price,
   });
+
+  // 승인 후 재고 소진 판명(동시 주문 경합) — 결제를 자동 취소(전액 환불)
+  if (result === "out_of_stock") {
+    const cancel = await fetch(`${TOSS_API}/${paymentKey}/cancel`, {
+      method: "POST",
+      headers: { Authorization: tossAuth(), "Content-Type": "application/json" },
+      body: JSON.stringify({ cancelReason: "재고 부족 자동 취소" }),
+    });
+    if (!cancel.ok)
+      // 주문은 cancelled 인데 환불 실패 — 토스 대시보드에서 수동 취소 필요
+      console.error(
+        `[payments] 재고부족 자동취소 실패 — 수동 환불 필요 orderId=${orderId} paymentKey=${paymentKey}`,
+      );
+    return {
+      ok: false,
+      final: true,
+      error:
+        "죄송합니다. 결제 중 재고가 소진되어 주문이 취소되었습니다. 결제 금액은 전액 환불됩니다.",
+    };
+  }
+
   if (error || (result !== "confirmed" && result !== "already_paid"))
-    return { ok: false, error: `주문 확정 실패(${result ?? error?.message})` };
+    return {
+      ok: false,
+      // RPC 가 상태 코드를 반환한 경우(상태·금액 불일치)는 재시도 무의미.
+      // error(연결 실패 등)만 재시도 대상.
+      final: !error,
+      error: `주문 확정 실패(${result ?? error?.message})`,
+    };
 
   return { ok: true };
 }

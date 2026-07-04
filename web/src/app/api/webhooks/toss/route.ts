@@ -21,6 +21,6 @@ export async function POST(req: Request) {
     return Response.json({ ok: true, skipped: status });
 
   const result = await confirmPayment(paymentKey, orderId);
-  // 실패 시 4xx → 토스가 재시도
-  return Response.json(result, { status: result.ok ? 200 : 422 });
+  // 일시 실패만 4xx → 토스 재시도. 확정 실패(final: 재고 소진 등)는 200 으로 수신 확인.
+  return Response.json(result, { status: result.ok || result.final ? 200 : 422 });
 }
