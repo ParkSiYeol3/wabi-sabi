@@ -64,7 +64,7 @@ export default async function AdminNoticesPage() {
                       <input type="hidden" name="id" value={n.id} />
                       <button
                         type="submit"
-                        className="text-xs text-red-600 underline"
+                        className="cursor-pointer text-xs text-red-600 underline transition-colors hover:text-red-700"
                       >
                         삭제
                       </button>

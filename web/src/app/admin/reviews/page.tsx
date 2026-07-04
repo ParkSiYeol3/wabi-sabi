@@ -54,7 +54,7 @@ export default async function AdminReviewsPage() {
             </div>
             <form action={adminDeleteReview}>
               <input type="hidden" name="id" value={r.id} />
-              <button type="submit" className="text-xs text-red-600 underline">
+              <button type="submit" className="cursor-pointer text-xs text-red-600 underline transition-colors hover:text-red-700">
                 삭제
               </button>
             </form>
