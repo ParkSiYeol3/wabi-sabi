@@ -1,12 +1,20 @@
 "use server";
 
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { parseUuid } from "@/lib/validation";
+
+// 입력 스키마 (Zod 3차) — rating 정수 강제(소수·범위 밖 차단), 본문 길이 제한.
+const reviewSchema = z.object({
+  rating: z.number().int().min(1).max(5),
+  body: z.string().trim().min(1).max(2_000),
+});
 
 // 리뷰 작성 — 로그인 사용자만 (RLS with check auth.uid()=user_id). 상품당 1인 1리뷰.
 export async function createReview(formData: FormData) {
-  const productId = String(formData.get("product_id") || "");
+  const productId = parseUuid(formData.get("product_id"));
   if (!productId) return;
 
   const supabase = await createClient();
@@ -15,9 +23,12 @@ export async function createReview(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect(`/auth?redirect=/shop/${productId}`);
 
-  const rating = Number(formData.get("rating") || 0);
-  const body = String(formData.get("body") || "").trim();
-  if (rating < 1 || rating > 5 || !body) return;
+  const parsed = reviewSchema.safeParse({
+    rating: Number(formData.get("rating") || 0),
+    body: String(formData.get("body") || ""),
+  });
+  if (!parsed.success) return;
+  const { rating, body } = parsed.data;
 
   // 작성자명 스냅샷: profile.name > 이메일 로컬파트 > "익명"
   const { data: profile } = await supabase
@@ -42,8 +53,8 @@ export async function createReview(formData: FormData) {
 
 // 리뷰 삭제 — 본인만 (RLS delete using auth.uid()=user_id).
 export async function deleteReview(formData: FormData) {
-  const id = String(formData.get("id") || "");
-  const productId = String(formData.get("product_id") || "");
+  const id = parseUuid(formData.get("id"));
+  const productId = parseUuid(formData.get("product_id"));
   if (!id) return;
 
   const supabase = await createClient();
