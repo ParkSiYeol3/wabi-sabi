@@ -52,12 +52,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       if (boundUserRef.current === userId) return; // 이미 바인딩됨
       boundUserRef.current = userId;
-      if (event === "SIGNED_IN") {
-        const merged = await mergeGuestCart(userId, cart.items);
-        cart.bindUser(userId, merged);
-      } else {
-        const items = await loadServerCart();
+      try {
+        const items =
+          event === "SIGNED_IN"
+            ? await mergeGuestCart(userId, cart.items)
+            : await loadServerCart();
         cart.bindUser(userId, items);
+      } catch (e) {
+        // 실패 시 ref 를 되돌려 다음 인증 이벤트에서 재시도(영구 멈춤 방지).
+        boundUserRef.current = null;
+        console.error("[cart-sync] 장바구니 동기화 실패", e);
       }
     };
 
