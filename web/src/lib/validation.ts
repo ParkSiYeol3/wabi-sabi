@@ -12,3 +12,12 @@ export function parseUuid(value: FormDataEntryValue | null): string | null {
   const parsed = uuidSchema.safeParse(typeof value === "string" ? value : "");
   return parsed.success ? parsed.data : null;
 }
+
+// FormData 숫자 필드 — 누락·빈값은 undefined 로 반환(0 폴백 금지).
+// `Number(x || 0)` 은 필드가 비면 조용히 0 이 되어 재고 초기화 사고를 낼 수 있음.
+// undefined 를 스키마(z.number())에 넘겨 검증 실패로 처리한다.
+export function numField(value: FormDataEntryValue | null): number | undefined {
+  if (typeof value !== "string" || value.trim() === "") return undefined;
+  const n = Number(value);
+  return Number.isNaN(n) ? undefined : n;
+}
