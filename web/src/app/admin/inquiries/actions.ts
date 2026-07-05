@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { parseUuid } from "@/lib/validation";
+import { logAdminAction } from "@/lib/audit";
 
 export async function answerInquiry(formData: FormData) {
-  await requireAdmin();
+  const user = await requireAdmin();
   if (!adminConfigured()) return;
 
   const id = parseUuid(formData.get("id"));
@@ -18,13 +19,18 @@ export async function answerInquiry(formData: FormData) {
     .from("inquiries")
     .update({ answer, answered_at: new Date().toISOString() })
     .eq("id", id);
+  await logAdminAction(user, {
+    action: "inquiry.answer",
+    targetTable: "inquiries",
+    targetId: id,
+  });
   revalidatePath("/admin/inquiries");
   revalidatePath(`/inquiry/${id}`);
   revalidatePath("/inquiry");
 }
 
 export async function deleteInquiry(formData: FormData) {
-  await requireAdmin();
+  const user = await requireAdmin();
   if (!adminConfigured()) return;
 
   const id = parseUuid(formData.get("id"));
@@ -32,6 +38,11 @@ export async function deleteInquiry(formData: FormData) {
 
   const supabase = createAdminClient();
   await supabase.from("inquiries").delete().eq("id", id);
+  await logAdminAction(user, {
+    action: "inquiry.delete",
+    targetTable: "inquiries",
+    targetId: id,
+  });
   revalidatePath("/admin/inquiries");
   revalidatePath("/inquiry");
 }
