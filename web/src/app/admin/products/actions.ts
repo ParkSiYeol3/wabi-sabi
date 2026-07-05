@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
-import { parseUuid } from "@/lib/validation";
+import { parseUuid, numField, uuidSchema } from "@/lib/validation";
 import {
   uploadProductImages,
   deleteProductImage,
@@ -12,14 +12,14 @@ import {
 import type { ActionResult } from "./types";
 
 // 상품 입력 검증 — 음수 stock 은 재고 검증(0010)을 무력화하므로 특히 차단.
+const stockSchema = z.number().int().min(0).max(1_000_000);
 const productSchema = z.object({
   name: z.string().trim().min(1).max(120),
   price: z.number().int().min(0).max(100_000_000),
-  stock: z.number().int().min(0).max(1_000_000),
-  categoryId: z.string().uuid().nullable(),
+  stock: stockSchema,
+  categoryId: uuidSchema.nullable(),
   isMonthly: z.boolean(),
 });
-const stockSchema = z.number().int().min(0).max(1_000_000);
 
 function imageFiles(formData: FormData): File[] {
   return formData
@@ -42,8 +42,8 @@ export async function createProduct(
 
   const parsed = productSchema.safeParse({
     name: String(formData.get("name") || "").trim(),
-    price: Number(formData.get("price") || 0),
-    stock: Number(formData.get("stock") || 0),
+    price: numField(formData.get("price")),
+    stock: numField(formData.get("stock")),
     categoryId: String(formData.get("category_id") || "") || null,
     isMonthly: formData.get("is_monthly") === "on",
   });
@@ -177,7 +177,7 @@ export async function updateStock(formData: FormData) {
   if (!adminConfigured()) return;
 
   const id = parseUuid(formData.get("id"));
-  const parsedStock = stockSchema.safeParse(Number(formData.get("stock") || 0));
+  const parsedStock = stockSchema.safeParse(numField(formData.get("stock")));
   if (!id || !parsedStock.success) return;
 
   const supabase = createAdminClient();
