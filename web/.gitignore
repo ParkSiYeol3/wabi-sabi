@@ -43,3 +43,7 @@ next-env.d.ts
 # Supabase CLI local cache
 supabase/.temp/
 supabase/.branches/
+
+# 로컬 비밀(커밋 금지)
+ADMIN_PASSWORD.local.txt
+*.local.txt
