@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { parseUuid, numField, uuidSchema } from "@/lib/validation";
+import { logAdminAction } from "@/lib/audit";
 import {
   uploadProductImages,
   deleteProductImage,
@@ -36,7 +37,7 @@ export async function createProduct(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const user = await requireAdmin();
   if (!adminConfigured())
     return { ok: false, message: "SUPABASE_SERVICE_ROLE_KEY 미설정" };
 
@@ -85,6 +86,12 @@ export async function createProduct(
       message += ` — ⚠ 이미지 업로드 실패: ${failureText(failures)}. 목록에서 '이미지 추가'로 다시 시도하세요.`;
     }
   }
+  await logAdminAction(user, {
+    action: "product.create",
+    targetTable: "products",
+    targetId: inserted.id,
+    meta: { name, price, stock },
+  });
   revalidatePath("/admin/products");
   return { ok: true, message };
 }
@@ -94,7 +101,7 @@ export async function addProductImages(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const user = await requireAdmin();
   if (!adminConfigured())
     return { ok: false, message: "SUPABASE_SERVICE_ROLE_KEY 미설정" };
 
@@ -120,6 +127,13 @@ export async function addProductImages(
       .update({ images: [...current, ...urls] })
       .eq("id", id);
   }
+  if (urls.length)
+    await logAdminAction(user, {
+      action: "product.add_images",
+      targetTable: "products",
+      targetId: id,
+      meta: { count: urls.length },
+    });
   revalidatePath("/admin/products");
   revalidatePath(`/shop/${id}`);
 
@@ -136,6 +150,7 @@ export async function removeProductImage(formData: FormData) {
   await requireAdmin();
   if (!adminConfigured()) return;
 
+  const user = await requireAdmin();
   const id = parseUuid(formData.get("id"));
   const url = String(formData.get("url") || "");
   if (!id || !url) return;
@@ -155,12 +170,18 @@ export async function removeProductImage(formData: FormData) {
     .update({ images: current.filter((u) => u !== url) })
     .eq("id", id);
   await deleteProductImage(url);
+  await logAdminAction(user, {
+    action: "product.remove_image",
+    targetTable: "products",
+    targetId: id,
+    meta: { url },
+  });
   revalidatePath("/admin/products");
   revalidatePath(`/shop/${id}`);
 }
 
 export async function toggleMonthly(formData: FormData) {
-  await requireAdmin();
+  const user = await requireAdmin();
   if (!adminConfigured()) return;
 
   const id = parseUuid(formData.get("id"));
@@ -169,11 +190,17 @@ export async function toggleMonthly(formData: FormData) {
 
   const supabase = createAdminClient();
   await supabase.from("products").update({ is_monthly: !monthly }).eq("id", id);
+  await logAdminAction(user, {
+    action: "product.toggle_monthly",
+    targetTable: "products",
+    targetId: id,
+    meta: { is_monthly: !monthly },
+  });
   revalidatePath("/admin/products");
 }
 
 export async function updateStock(formData: FormData) {
-  await requireAdmin();
+  const user = await requireAdmin();
   if (!adminConfigured()) return;
 
   const id = parseUuid(formData.get("id"));
@@ -182,11 +209,17 @@ export async function updateStock(formData: FormData) {
 
   const supabase = createAdminClient();
   await supabase.from("products").update({ stock: parsedStock.data }).eq("id", id);
+  await logAdminAction(user, {
+    action: "product.update_stock",
+    targetTable: "products",
+    targetId: id,
+    meta: { stock: parsedStock.data },
+  });
   revalidatePath("/admin/products");
 }
 
 export async function toggleActive(formData: FormData) {
-  await requireAdmin();
+  const user = await requireAdmin();
   if (!adminConfigured()) return;
 
   const id = parseUuid(formData.get("id"));
@@ -195,11 +228,17 @@ export async function toggleActive(formData: FormData) {
 
   const supabase = createAdminClient();
   await supabase.from("products").update({ is_active: !active }).eq("id", id);
+  await logAdminAction(user, {
+    action: "product.toggle_active",
+    targetTable: "products",
+    targetId: id,
+    meta: { is_active: !active },
+  });
   revalidatePath("/admin/products");
 }
 
 export async function deleteProduct(formData: FormData) {
-  await requireAdmin();
+  const user = await requireAdmin();
   if (!adminConfigured()) return;
 
   const id = parseUuid(formData.get("id"));
@@ -207,5 +246,10 @@ export async function deleteProduct(formData: FormData) {
 
   const supabase = createAdminClient();
   await supabase.from("products").delete().eq("id", id);
+  await logAdminAction(user, {
+    action: "product.delete",
+    targetTable: "products",
+    targetId: id,
+  });
   revalidatePath("/admin/products");
 }
