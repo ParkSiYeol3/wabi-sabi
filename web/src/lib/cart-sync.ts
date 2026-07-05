@@ -4,6 +4,24 @@ import type { CartItem } from "@/store/cart";
 // 계정 장바구니 서버 동기화 (0015). 사용자 클라이언트로 본인 행만 CRUD(RLS).
 // 저장은 product_id+quantity, 표시 정보는 products 조인으로 최신값 사용.
 
+// 사용자별 순차 큐 — write-through 를 한 체인으로 직렬화해 순서를 보장한다.
+// fire-and-forget 로 빠르게 연속 조작하면 요청이 뒤바뀌어 로컬↔서버가 어긋날
+// 수 있음(예: add 직후 remove 가 뒤집히면 서버에 유령 항목이 남음).
+const writeChains = new Map<string, Promise<unknown>>();
+
+export function enqueueCartWrite(
+  userId: string,
+  op: () => Promise<void>,
+): Promise<void> {
+  const prev = writeChains.get(userId) ?? Promise.resolve();
+  const next = prev.then(op).catch((e) => {
+    // 실패는 삼키지 않고 로그 — 다음 loadServerCart(로그인/새로고침)에서 교정된다.
+    console.error("[cart-sync] 서버 반영 실패", e);
+  });
+  writeChains.set(userId, next);
+  return next;
+}
+
 type CartRow = {
   product_id: string;
   quantity: number;
@@ -23,7 +41,8 @@ export async function loadServerCart(): Promise<CartItem[]> {
     .select("product_id, quantity, products(name, price, images, is_active)")
     .order("updated_at", { ascending: true })
     .returns<CartRow[]>();
-  if (error || !data) return [];
+  if (error) throw error;
+  if (!data) return [];
   return data
     .filter((r) => r.products && r.products.is_active)
     .map((r) => ({
@@ -35,7 +54,7 @@ export async function loadServerCart(): Promise<CartItem[]> {
     }));
 }
 
-// 수량 설정(upsert). qty<=0 이면 삭제.
+// 수량 설정(upsert). qty<=0 이면 삭제. 에러는 throw(호출 큐가 로깅).
 export async function upsertServerItem(
   userId: string,
   productId: string,
@@ -43,14 +62,15 @@ export async function upsertServerItem(
 ): Promise<void> {
   const supabase = createClient();
   if (quantity <= 0) {
-    await supabase
+    const { error } = await supabase
       .from("cart_items")
       .delete()
       .eq("user_id", userId)
       .eq("product_id", productId);
+    if (error) throw error;
     return;
   }
-  await supabase.from("cart_items").upsert(
+  const { error } = await supabase.from("cart_items").upsert(
     {
       user_id: userId,
       product_id: productId,
@@ -59,6 +79,7 @@ export async function upsertServerItem(
     },
     { onConflict: "user_id,product_id" },
   );
+  if (error) throw error;
 }
 
 export async function removeServerItem(
@@ -66,16 +87,21 @@ export async function removeServerItem(
   productId: string,
 ): Promise<void> {
   const supabase = createClient();
-  await supabase
+  const { error } = await supabase
     .from("cart_items")
     .delete()
     .eq("user_id", userId)
     .eq("product_id", productId);
+  if (error) throw error;
 }
 
 export async function clearServerCart(userId: string): Promise<void> {
   const supabase = createClient();
-  await supabase.from("cart_items").delete().eq("user_id", userId);
+  const { error } = await supabase
+    .from("cart_items")
+    .delete()
+    .eq("user_id", userId);
+  if (error) throw error;
 }
 
 // 로그인 시 게스트(로컬) 장바구니를 서버에 병합 후, 병합된 서버 장바구니를 반환.
@@ -87,11 +113,12 @@ export async function mergeGuestCart(
   if (guest.length > 0) {
     const supabase = createClient();
     // 현재 서버 수량 조회(합산용)
-    const { data: existing } = await supabase
+    const { data: existing, error: readErr } = await supabase
       .from("cart_items")
       .select("product_id, quantity")
       .eq("user_id", userId)
       .returns<{ product_id: string; quantity: number }[]>();
+    if (readErr) throw readErr;
     const serverQty = new Map(
       (existing ?? []).map((r) => [r.product_id, r.quantity]),
     );
@@ -102,9 +129,10 @@ export async function mergeGuestCart(
       quantity: Math.min((serverQty.get(g.id) ?? 0) + g.quantity, 99),
       updated_at: new Date().toISOString(),
     }));
-    await supabase
+    const { error: writeErr } = await supabase
       .from("cart_items")
       .upsert(rows, { onConflict: "user_id,product_id" });
+    if (writeErr) throw writeErr;
   }
   return loadServerCart();
 }

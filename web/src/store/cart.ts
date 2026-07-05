@@ -4,6 +4,7 @@ import {
   upsertServerItem,
   removeServerItem,
   clearServerCart,
+  enqueueCartWrite,
 } from "@/lib/cart-sync";
 
 export interface CartItem {
@@ -46,18 +47,24 @@ export const useCart = create<CartState>()(
               ),
             };
           }
-          return { items: [...s.items, { ...item, quantity: qty }] };
+          // 신규 항목도 상한 99 (서버는 upsert 시 clamp 되므로 로컬과 맞춤).
+          return {
+            items: [...s.items, { ...item, quantity: Math.min(qty, 99) }],
+          };
         });
         const { userId, items } = get();
         if (userId) {
           const next = items.find((i) => i.id === item.id)?.quantity ?? qty;
-          void upsertServerItem(userId, item.id, next);
+          void enqueueCartWrite(userId, () =>
+            upsertServerItem(userId, item.id, next),
+          );
         }
       },
       remove: (id) => {
         set((s) => ({ items: s.items.filter((i) => i.id !== id) }));
         const { userId } = get();
-        if (userId) void removeServerItem(userId, id);
+        if (userId)
+          void enqueueCartWrite(userId, () => removeServerItem(userId, id));
       },
       setQty: (id, qty) => {
         set((s) => ({
@@ -69,12 +76,14 @@ export const useCart = create<CartState>()(
                 ),
         }));
         const { userId } = get();
-        if (userId) void upsertServerItem(userId, id, qty);
+        if (userId)
+          void enqueueCartWrite(userId, () => upsertServerItem(userId, id, qty));
       },
       clear: () => {
         const { userId } = get();
         set({ items: [] });
-        if (userId) void clearServerCart(userId);
+        if (userId)
+          void enqueueCartWrite(userId, () => clearServerCart(userId));
       },
       bindUser: (userId, items) => set({ userId, items }),
       unbindUser: () => set({ userId: null, items: [] }),
