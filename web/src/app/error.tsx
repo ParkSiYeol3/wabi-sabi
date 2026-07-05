@@ -12,8 +12,19 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // TODO: 운영 단계에서 에러 로깅 서비스 연동
     console.error(error);
+    // 서버로 전송해 기록(0014) — client 에러는 브라우저 콘솔에만 남아 운영자가 못 봄.
+    // 실패는 무시(로깅이 UX 를 막지 않음).
+    void fetch("/api/log-error", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        digest: error.digest,
+        message: error.message,
+        url: window.location.pathname,
+      }),
+      keepalive: true,
+    }).catch(() => {});
   }, [error]);
 
   return (
