@@ -1,13 +1,25 @@
 "use server";
 
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
+import { parseUuid } from "@/lib/validation";
 import {
   uploadProductImages,
   deleteProductImage,
 } from "@/lib/storage";
 import type { ActionResult } from "./types";
+
+// 상품 입력 검증 — 음수 stock 은 재고 검증(0010)을 무력화하므로 특히 차단.
+const productSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  price: z.number().int().min(0).max(100_000_000),
+  stock: z.number().int().min(0).max(1_000_000),
+  categoryId: z.string().uuid().nullable(),
+  isMonthly: z.boolean(),
+});
+const stockSchema = z.number().int().min(0).max(1_000_000);
 
 function imageFiles(formData: FormData): File[] {
   return formData
@@ -28,13 +40,19 @@ export async function createProduct(
   if (!adminConfigured())
     return { ok: false, message: "SUPABASE_SERVICE_ROLE_KEY 미설정" };
 
-  const name = String(formData.get("name") || "").trim();
-  const price = Number(formData.get("price") || 0);
-  const stock = Number(formData.get("stock") || 0);
-  const categoryId = String(formData.get("category_id") || "") || null;
-  const isMonthly = formData.get("is_monthly") === "on";
-  if (!name || Number.isNaN(price) || price < 0)
-    return { ok: false, message: "상품명과 가격을 확인해주세요." };
+  const parsed = productSchema.safeParse({
+    name: String(formData.get("name") || "").trim(),
+    price: Number(formData.get("price") || 0),
+    stock: Number(formData.get("stock") || 0),
+    categoryId: String(formData.get("category_id") || "") || null,
+    isMonthly: formData.get("is_monthly") === "on",
+  });
+  if (!parsed.success)
+    return {
+      ok: false,
+      message: "상품명·가격·재고를 확인해주세요. (가격·재고는 0 이상 정수)",
+    };
+  const { name, price, stock, categoryId, isMonthly } = parsed.data;
 
   const supabase = createAdminClient();
   const { data: inserted, error: insertError } = await supabase
@@ -80,7 +98,7 @@ export async function addProductImages(
   if (!adminConfigured())
     return { ok: false, message: "SUPABASE_SERVICE_ROLE_KEY 미설정" };
 
-  const id = String(formData.get("id") || "");
+  const id = parseUuid(formData.get("id"));
   const files = imageFiles(formData);
   if (!id) return { ok: false, message: "잘못된 요청" };
   if (!files.length) return { ok: false, message: "파일을 먼저 선택하세요." };
@@ -118,7 +136,7 @@ export async function removeProductImage(formData: FormData) {
   await requireAdmin();
   if (!adminConfigured()) return;
 
-  const id = String(formData.get("id") || "");
+  const id = parseUuid(formData.get("id"));
   const url = String(formData.get("url") || "");
   if (!id || !url) return;
 
@@ -145,7 +163,7 @@ export async function toggleMonthly(formData: FormData) {
   await requireAdmin();
   if (!adminConfigured()) return;
 
-  const id = String(formData.get("id") || "");
+  const id = parseUuid(formData.get("id"));
   const monthly = String(formData.get("is_monthly")) === "true";
   if (!id) return;
 
@@ -158,12 +176,12 @@ export async function updateStock(formData: FormData) {
   await requireAdmin();
   if (!adminConfigured()) return;
 
-  const id = String(formData.get("id") || "");
-  const stock = Number(formData.get("stock") || 0);
-  if (!id) return;
+  const id = parseUuid(formData.get("id"));
+  const parsedStock = stockSchema.safeParse(Number(formData.get("stock") || 0));
+  if (!id || !parsedStock.success) return;
 
   const supabase = createAdminClient();
-  await supabase.from("products").update({ stock }).eq("id", id);
+  await supabase.from("products").update({ stock: parsedStock.data }).eq("id", id);
   revalidatePath("/admin/products");
 }
 
@@ -171,7 +189,7 @@ export async function toggleActive(formData: FormData) {
   await requireAdmin();
   if (!adminConfigured()) return;
 
-  const id = String(formData.get("id") || "");
+  const id = parseUuid(formData.get("id"));
   const active = String(formData.get("is_active")) === "true";
   if (!id) return;
 
@@ -184,7 +202,7 @@ export async function deleteProduct(formData: FormData) {
   await requireAdmin();
   if (!adminConfigured()) return;
 
-  const id = String(formData.get("id") || "");
+  const id = parseUuid(formData.get("id"));
   if (!id) return;
 
   const supabase = createAdminClient();
