@@ -26,6 +26,13 @@ export default function AdminHome() {
         <h2 className="font-medium">감사로그</h2>
         <p className="mt-1 text-sm text-wabi-fg-muted">어드민 액션 기록 조회</p>
       </Link>
+      <Link
+        href="/admin/errors"
+        className="border border-wabi-border p-6 transition-colors hover:bg-wabi-subtle"
+      >
+        <h2 className="font-medium">에러 로그</h2>
+        <p className="mt-1 text-sm text-wabi-fg-muted">클라이언트 에러 조회</p>
+      </Link>
     </div>
   );
 }

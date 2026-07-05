@@ -33,6 +33,9 @@ export default async function AdminLayout({
           <Link href="/admin/audit" className="hover:underline">
             감사로그
           </Link>
+          <Link href="/admin/errors" className="hover:underline">
+            에러로그
+          </Link>
         </nav>
       </div>
 
