@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# 템플릿은 커밋 (루트 .gitignore 와 동일 의도)
+!.env.example
 
 # vercel
 .vercel
