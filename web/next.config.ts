@@ -65,6 +65,10 @@ const nextConfig: NextConfig = {
         hostname: SUPABASE_HOST,
         pathname: "/storage/v1/object/public/**",
       },
+      // 인스타그램 피드 이미지 (WSB-020) — IG CDN 은 지역별 서브도메인 가변.
+      // next/image 가 서버에서 프록시하므로 CSP img-src 'self' 로 커버됨(추가 불필요).
+      { protocol: "https", hostname: "*.cdninstagram.com" },
+      { protocol: "https", hostname: "**.fbcdn.net" },
     ],
   },
 };
