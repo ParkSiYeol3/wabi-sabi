@@ -73,8 +73,14 @@ function AuthForm() {
           setError("비밀번호가 일치하지 않습니다.");
           return;
         }
-        if (password.length < 6) {
-          setError("비밀번호는 6자 이상이어야 합니다.");
+        // 비밀번호 정책(보안_체크리스트 P1) — 8자 이상 + 영문·숫자 포함.
+        // 서버 강제는 Supabase 대시보드 Password Requirements 로 동일 기준 설정(👤).
+        if (password.length < 8) {
+          setError("비밀번호는 8자 이상이어야 합니다.");
+          return;
+        }
+        if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+          setError("비밀번호는 영문과 숫자를 모두 포함해야 합니다.");
           return;
         }
         const { data, error } = await supabase.auth.signUp({
@@ -151,7 +157,13 @@ function AuthForm() {
             required
             autoComplete={tab === "login" ? "current-password" : "new-password"}
             className="rounded-none"
+            aria-describedby={tab === "signup" ? "password-hint" : undefined}
           />
+          {tab === "signup" && (
+            <p id="password-hint" className="mt-1 text-xs text-wabi-fg-muted">
+              8자 이상, 영문과 숫자를 포함해 주세요.
+            </p>
+          )}
         </Field>
         {tab === "signup" && (
           <Field label="비밀번호 확인" htmlFor="password2">
