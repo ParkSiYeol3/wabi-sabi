@@ -57,6 +57,7 @@ supabase/         migrations/{0001_init,0002_rls}.sql · seed.sql
 - **2026-07-05 CSP Report-Only(#58)**: next.config CSP 헤더 — 토스 `*.tosspayments.com`·Supabase 허용, 그 외 'self'. 1단계 Report-Only + 위반 수집(`/api/csp-report`) → 프로드 위반 0 확인 후 강제 전환.
 - **2026-07-05 Zod 1차(#60)·Dependabot(#63)**: 결제·주문 액션 스키마 검증(중복 상품 id 거부 포함), Dependabot 주간+CI audit(high+) 게이트.
 - **2026-07-05 주문 쓰기 서버 전용화(#62, P0)**: 0012 — orders/order_items/gift_options 사용자 insert 회수, createPendingOrder 가 service_role 쓰기. order_items 직접 insert 로 주문 항목 조작하던 구멍 봉쇄. 0012 적용·실테스트 완료(insert 3종 42501 차단, SELECT·service_role 정상).
+- **2026-07-05 계정별 서버 장바구니(#85)**: 0015 `cart_items`(본인 RLS). 비로그인=게스트 로컬 유지, 로그인 시 게스트 병합→서버 로드, 로그아웃 시 로컬 비움(계정 것 서버 보존). lib/cart-sync(product 조인·병합), store/cart write-through(낙관적), auth-provider가 SIGNED_IN만 병합(중복 방지). 저장은 product_id+quantity, 표시정보는 products 조인(가격 최신·비활성 자동 제외).
 
 ## 라우트
 | 경로 | 내용 | 상태 |
