@@ -37,6 +37,23 @@ export const metadata: Metadata = {
   },
 };
 
+// #16 SEO: 조직·사이트 구조화 데이터 — 검색 결과 브랜드 정보(정적 값만, 이스케이프 불필요).
+const siteJsonLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "OnlineStore",
+  name: "WABI-SABI 와비사비",
+  url: "https://wasa.kr",
+  sameAs: ["https://www.instagram.com/wasa.kr"],
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "대흥로 338 1층 2호",
+    addressLocality: "천안시 동남구",
+    addressRegion: "충남",
+    postalCode: "31122",
+    addressCountry: "KR",
+  },
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -48,6 +65,10 @@ export default function RootLayout({
       className={`${notoSansKr.variable} ${notoSerifJp.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: siteJsonLd }}
+        />
         <AuthProvider>
           {/* 키보드 사용자용 본문 바로가기 (a11y) */}
           <a

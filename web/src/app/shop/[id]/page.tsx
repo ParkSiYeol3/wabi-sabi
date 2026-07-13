@@ -21,10 +21,46 @@ export async function generateMetadata({
   const { id } = await params;
   const product = await getProduct(id);
   if (!product) return { title: "상품을 찾을 수 없음" };
+  const description = product.description ?? `${product.name} — WABI-SABI`;
   return {
     title: product.name,
-    description: product.description ?? `${product.name} — WABI-SABI`,
+    description,
+    openGraph: {
+      title: product.name,
+      description,
+      // 상품 실사진이 사이트 기본 OG(opengraph-image.tsx)를 덮어씀
+      images: product.images.slice(0, 1),
+    },
   };
+}
+
+// #16 SEO: Product 구조화 데이터 — 검색 결과 리치 스니펫(가격·재고).
+// JSON.stringify 결과의 `<` 를 이스케이프해 상품 필드 경유 script 탈출 차단.
+function productJsonLd(product: {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+  description: string | null;
+  images: string[];
+}) {
+  return JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description ?? undefined,
+    image: product.images,
+    offers: {
+      "@type": "Offer",
+      url: `https://wasa.kr/shop/${product.id}`,
+      priceCurrency: "KRW",
+      price: product.price,
+      availability:
+        product.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+    },
+  }).replace(/</g, "\\u003c");
 }
 
 export default async function ProductDetailPage({
@@ -65,6 +101,10 @@ export default async function ProductDetailPage({
 
   return (
     <Container className="py-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: productJsonLd(product) }}
+      />
       <div className="grid gap-12 md:grid-cols-2">
         {/* 이미지 */}
         <div>
