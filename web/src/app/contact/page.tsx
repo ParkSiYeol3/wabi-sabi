@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Clock, MapPin, AtSign, Mail } from "lucide-react";
 import { Container } from "@/components/container";
+import { MapCard } from "@/components/map-card";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -16,7 +17,8 @@ export default function ContactPage() {
       </h1>
 
       <div className="mt-12 grid gap-12 md:grid-cols-2 md:items-start">
-        <dl className="space-y-8">
+        {/* a11y: dt/dd 없는 dl 은 마크업 위반(Lighthouse definition-list) → ul (홈과 동일) */}
+        <ul className="space-y-8">
           <Item icon={<Clock className="size-5" strokeWidth={1.5} />} title="영업 시간">
             <p>{site.hours}</p>
             <p className="text-wabi-fg-muted">{site.closed}</p>
@@ -36,10 +38,8 @@ export default function ContactPage() {
               {site.email}
             </a>
           </Item>
-        </dl>
-        <div className="flex aspect-4/3 items-center justify-center bg-wabi-muted text-sm text-wabi-fg-muted">
-          Map will be here
-        </div>
+        </ul>
+        <MapCard />
       </div>
     </Container>
   );
@@ -55,7 +55,7 @@ function Item({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex gap-4">
+    <li className="flex gap-4">
       <span className="mt-0.5 text-wabi-fg" aria-hidden>
         {icon}
       </span>
@@ -63,6 +63,6 @@ function Item({
         <h2 className="font-medium">{title}</h2>
         <div className="mt-1 space-y-0.5">{children}</div>
       </div>
-    </div>
+    </li>
   );
 }
