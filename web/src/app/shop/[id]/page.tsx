@@ -49,7 +49,8 @@ function productJsonLd(product: {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description || undefined,
+    // meta description 과 동일 폴백 — 빈 설명이어도 리치 스니펫 description 유지
+    description: product.description || `${product.name} — WABI-SABI`,
     image: product.images,
     offers: {
       "@type": "Offer",
@@ -117,7 +118,7 @@ export default async function ProductDetailPage({
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover"
-                priority
+                preload
               />
             ) : (
               <ImageIcon

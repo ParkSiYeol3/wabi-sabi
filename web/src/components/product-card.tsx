@@ -15,11 +15,12 @@ const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
 
 export function ProductCard({
   product,
-  priority = false,
+  eager = false,
 }: {
   product: ProductCardData;
-  // 첫 화면(above-the-fold) 카드에만 true — LCP 이미지 지연 발견 방지 (#16 Lighthouse)
-  priority?: boolean;
+  // 첫 화면(above-the-fold) 카드에만 true — LCP 이미지 지연 발견 방지 (#16 Lighthouse).
+  // LCP 후보가 여러 장인 그리드라 preload 대신 loading="eager" (Next 16 이미지 문서 권고).
+  eager?: boolean;
 }) {
   const href = product.href ?? `/shop/${product.id}`;
   return (
@@ -31,7 +32,7 @@ export function ProductCard({
             alt={product.name}
             fill
             sizes="(max-width: 768px) 50vw, 25vw"
-            priority={priority}
+            loading={eager ? "eager" : "lazy"}
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
