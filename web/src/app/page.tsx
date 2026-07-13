@@ -29,7 +29,7 @@ export default function Home() {
             alt=""
             width={560}
             height={278}
-            priority
+            preload
             className="h-20 w-auto md:h-28"
           />
           <h1 className="mt-8">
@@ -38,7 +38,7 @@ export default function Home() {
               alt={`${site.name} — わび-さび`}
               width={720}
               height={239}
-              priority
+              preload
               className="h-10 w-auto md:h-12"
             />
           </h1>

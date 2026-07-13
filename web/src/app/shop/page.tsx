@@ -119,7 +119,7 @@ export default async function ShopPage({
           {products.map((p, i) => (
             <li key={p.id}>
               {/* 첫 줄(모바일 2·데스크톱 4칸)은 eager 로드 — LCP 후보 */}
-              <ProductCard product={p} priority={i < 4} />
+              <ProductCard product={p} eager={i < 4} />
               <AddToCartButton
                 product={{
                   id: p.id,

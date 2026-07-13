@@ -29,7 +29,7 @@ export function SiteHeader() {
             alt=""
             width={560}
             height={278}
-            priority
+            preload
             className="h-6 w-auto"
           />
           <span className="text-sm font-bold tracking-[0.2em]">{site.name}</span>
