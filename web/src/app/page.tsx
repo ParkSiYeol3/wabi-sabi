@@ -136,7 +136,8 @@ export default function Home() {
             방문 안내 <span className="text-wabi-fg-muted">Visit Us</span>
           </h2>
           <div className="mt-12 grid gap-12 md:grid-cols-2 md:items-start">
-            <dl className="space-y-8">
+            {/* a11y: dt/dd 없는 dl 은 마크업 위반(Lighthouse definition-list) → ul 로 */}
+            <ul className="space-y-8">
               <VisitItem icon={<Clock className="size-5" strokeWidth={1.5} />} title="영업 시간">
                 <p>{site.hours}</p>
                 <p className="text-wabi-fg-muted">{site.closed}</p>
@@ -156,7 +157,7 @@ export default function Home() {
                   {site.email}
                 </a>
               </VisitItem>
-            </dl>
+            </ul>
             <div className="flex aspect-[4/3] items-center justify-center bg-wabi-muted text-sm text-wabi-fg-muted">
               Map will be here
             </div>
@@ -200,7 +201,7 @@ function VisitItem({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex gap-4">
+    <li className="flex gap-4">
       <span className="mt-0.5 text-wabi-fg" aria-hidden>
         {icon}
       </span>
@@ -208,6 +209,6 @@ function VisitItem({
         <h3 className="font-medium">{title}</h3>
         <div className="mt-1 space-y-0.5">{children}</div>
       </div>
-    </div>
+    </li>
   );
 }
