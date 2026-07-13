@@ -8,7 +8,11 @@ import { createInquiry } from "../actions";
 
 export const metadata: Metadata = { title: "문의하기" };
 
-export default async function NewInquiryPage() {
+export default async function NewInquiryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   // 로그인 필수
   const supabase = await createClient();
   const {
@@ -16,9 +20,20 @@ export default async function NewInquiryPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth?redirect=/inquiry/new");
 
+  const { error } = await searchParams;
+
   return (
     <Container className="py-16">
       <h1 className="text-2xl font-semibold tracking-wide">문의하기</h1>
+
+      {error === "rate" && (
+        <p
+          role="alert"
+          className="mt-6 max-w-2xl border border-wabi-border bg-wabi-subtle px-4 py-3 text-sm"
+        >
+          문의를 너무 자주 등록했습니다. 잠시 후 다시 시도해 주세요.
+        </p>
+      )}
 
       <form action={createInquiry} className="mt-10 max-w-2xl space-y-4">
         <Input name="title" required placeholder="제목" className="rounded-none" />
