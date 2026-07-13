@@ -93,8 +93,13 @@ export async function rateLimit(
  * 신뢰 경계 밖 값이라 위조 가능(= IP 별 상한 우회 가능)하지만, 무인증 엔드포인트에서
  * 쓸 수 있는 유일한 키다. 인증 경로는 IP 대신 user.id 를 키로 쓸 것.
  */
-export function clientIp(req: Request): string {
-  const xff = req.headers.get("x-forwarded-for");
+export function clientIpFromHeaders(h: Headers): string {
+  const xff = h.get("x-forwarded-for");
   if (xff) return xff.split(",")[0].trim();
-  return req.headers.get("x-real-ip")?.trim() || "unknown";
+  return h.get("x-real-ip")?.trim() || "unknown";
+}
+
+/** 라우트 핸들러용 — 서버 액션에선 `clientIpFromHeaders(await headers())` 를 쓴다. */
+export function clientIp(req: Request): string {
+  return clientIpFromHeaders(req.headers);
 }
