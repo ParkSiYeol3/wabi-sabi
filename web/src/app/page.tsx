@@ -2,8 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { ImageIcon, Clock, MapPin, AtSign, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ProductCard } from "@/components/product-card";
+import { NewsletterForm } from "@/components/newsletter-form";
 import { getFeaturedProducts } from "@/lib/queries/products";
 import { site } from "@/lib/site";
 
@@ -165,21 +165,7 @@ export default async function Home() {
         <p className="mt-3 text-sm text-wabi-fg-muted">
           신상품과 특별한 소식을 가장 먼저 받아보세요
         </p>
-        <form className="mx-auto mt-8 flex max-w-md gap-2">
-          <Input
-            type="email"
-            required
-            placeholder="이메일을 입력하세요"
-            aria-label="이메일 주소"
-            className="rounded-none"
-          />
-          <Button
-            type="submit"
-            className="rounded-none bg-wabi-accent px-6 hover:bg-wabi-accent/90"
-          >
-            구독하기
-          </Button>
-        </form>
+        <NewsletterForm />
       </section>
     </>
   );
