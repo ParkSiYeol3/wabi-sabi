@@ -21,7 +21,8 @@ export async function generateMetadata({
   const { id } = await params;
   const product = await getProduct(id);
   if (!product) return { title: "상품을 찾을 수 없음" };
-  const description = product.description ?? `${product.name} — WABI-SABI`;
+  // `??` 는 빈 문자열("") 설명을 통과시켜 meta description 이 비어짐(Lighthouse SEO 감점) → `||`
+  const description = product.description || `${product.name} — WABI-SABI`;
   return {
     title: product.name,
     description,
@@ -48,7 +49,7 @@ function productJsonLd(product: {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description ?? undefined,
+    description: product.description || undefined,
     image: product.images,
     offers: {
       "@type": "Offer",
