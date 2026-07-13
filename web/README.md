@@ -66,6 +66,10 @@ supabase/         migrations/{0001_init,0002_rls}.sql · seed.sql
 - **2026-07-13 의존성 배치(#91~#95)**: minor 그룹 머지, 메이저 3종 ignore(ts7·eslint10·types/node26 — 각각 빌드/lint 실패·런타임 드리프트). @types/node 는 런타임(Node 24) 정렬로 직접 24.x 고정(PR #95).
 - **2026-07-13 CSP 강제 전환(#58, PR #96)**: Report-Only → enforce(정책 동일, report-uri 유지). 위반 이제 실차단 — 결제·업로드·소셜로그인 프로드 수동 확인 권장.
 - **2026-07-13 SEO(#16, PR #97)**: 기본 OG 이미지(ImageResponse)+상품 실사진 og:image+JSON-LD(OnlineStore·Product). sitemap·robots·metadata·next/image·next/font 감사 통과.
+- **2026-07-13 홈 Featured 실상품(#104)**: 하드코딩 더미 배열 → `getFeaturedProducts`(is_monthly 우선, 부족분 최신 폴백). 어드민 상품 변경이 홈에 반영되지 않던 원인.
+- **2026-07-13 법적고지 3종(#106)**: `/legal/terms·privacy·refund` + 푸터 사업자정보(`site.business`). 사업자등록번호 등 미입력 값은 렌더 생략 — 허위 표시 방지. 👤 대표님 입력 필요.
+- **2026-07-13 뉴스레터(#108)**: 0017 `newsletter_subscribers`(service_role 전용). action 없던 껍데기 폼 → 서버 액션(동의 서버 재검증·동의시각·rate limit·upsert 멱등)+useActionState. 실브라우저 E2E·RLS 실측 완료.
+- **2026-07-13 매장 위치 카드(#110)**: "Map will be here" → 주소+지도앱 바로가기(키·CSP 불필요). Contact dl 마크업 위반도 수정(a11y 100).
 - **2026-07-13 Rate limit(#101, PR #102)**: `lib/rate-limit.ts` — Upstash Redis(env 있을 때)/인메모리(폴백) 2단. log-error 10/분·csp-report 20/분(IP), 문의 5/시간(user.id). 무인증 DB insert 남용·게시판 도배 차단. Redis 장애 시 fail-open.
 - **2026-07-13 Lighthouse 1차(#16, PR #99)**: 프로드 실측(홈 89·shop 71·상품 77) → shop 첫줄 카드 priority(LCP)·홈 dl→ul(a11y 100)·상품 meta description 빈값 버그(`??`→`||`). nonce 전환은 전 페이지 동적 렌더 강제라 정식 배포 후로 보류(#16 코멘트).
 
