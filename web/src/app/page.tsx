@@ -3,14 +3,9 @@ import Image from "next/image";
 import { ImageIcon, Clock, MapPin, AtSign, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ProductCard } from "@/components/product-card";
+import { getFeaturedProducts } from "@/lib/queries/products";
 import { site } from "@/lib/site";
-
-const featured = [
-  { name: "세라믹 볼", en: "Handcrafted ceramic bowl", price: "86,000원" },
-  { name: "백자 화병", en: "Minimalist vase", price: "45,000원" },
-  { name: "백자 볼 세트", en: "Tea cup collection", price: "62,000원" },
-  { name: "백자 티 세트", en: "Japanese teapot", price: "95,000원" },
-];
 
 const values = [
   { en: "Imperfection", ko: "불완전함 속에서 발견하는 독특한 아름다움" },
@@ -18,7 +13,10 @@ const values = [
   { en: "Authenticity", ko: "장인의 손길이 담긴 진정성있는 작품" },
 ];
 
-export default function Home() {
+export default async function Home() {
+  // 실 DB 상품 — 이전엔 하드코딩 더미(존재하지 않는 상품명·가격)를 노출했다.
+  const featured = await getFeaturedProducts(4);
+
   return (
     <>
       {/* ── Hero ───────────────────────────────────────────── */}
@@ -59,23 +57,19 @@ export default function Home() {
         <h2 className="text-center text-xl font-semibold tracking-wide">
           Featured Collection
         </h2>
-        <ul className="mt-12 grid grid-cols-2 gap-6 md:grid-cols-4">
-          {featured.map((p) => (
-            <li key={p.name}>
-              <Link href="/shop" className="group block">
-                <div className="flex aspect-square items-center justify-center bg-wabi-muted">
-                  <ImageIcon
-                    className="size-8 text-wabi-fg-muted/40"
-                    strokeWidth={1}
-                    aria-hidden
-                  />
-                </div>
-                <p className="mt-3 text-sm">{p.name}</p>
-                <p className="text-xs text-wabi-fg-muted">{p.price}</p>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {featured.length === 0 ? (
+          <p className="mt-12 text-center text-sm text-wabi-fg-muted">
+            준비 중인 상품입니다.
+          </p>
+        ) : (
+          <ul className="mt-12 grid grid-cols-2 gap-6 md:grid-cols-4">
+            {featured.map((p) => (
+              <li key={p.id}>
+                <ProductCard product={p} />
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="mt-12 text-center">
           <Button
             asChild
