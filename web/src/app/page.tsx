@@ -4,6 +4,7 @@ import { ImageIcon, Clock, MapPin, AtSign, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { NewsletterForm } from "@/components/newsletter-form";
+import { MapCard } from "@/components/map-card";
 import { getFeaturedProducts } from "@/lib/queries/products";
 import { site } from "@/lib/site";
 
@@ -152,9 +153,7 @@ export default async function Home() {
                 </a>
               </VisitItem>
             </ul>
-            <div className="flex aspect-[4/3] items-center justify-center bg-wabi-muted text-sm text-wabi-fg-muted">
-              Map will be here
-            </div>
+            <MapCard />
           </div>
         </div>
       </section>
