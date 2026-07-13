@@ -112,6 +112,7 @@ export interface ProductQuery {
   category?: string;
   q?: string;
   sort?: ProductSort;
+  limit?: number;
 }
 
 // WSB-007/008/009: 카테고리·검색·정렬 (공개 — RLS는 is_active=true 만 노출).
@@ -119,6 +120,7 @@ export async function getProducts({
   category,
   q,
   sort = "newest",
+  limit,
 }: ProductQuery = {}): Promise<ProductCardData[]> {
   const supabase = await createClient();
 
@@ -151,6 +153,8 @@ export async function getProducts({
     query = query.order("price", { ascending: false });
   else query = query.order("created_at", { ascending: false });
 
+  if (limit) query = query.limit(limit);
+
   const { data, error } = await query.returns<ProductRow[]>();
   if (error || !data) return [];
 
@@ -161,4 +165,18 @@ export async function getProducts({
     image: firstImage(p.images),
     category: p.categories?.name_en,
   }));
+}
+
+// 홈 Featured Collection — '이 달의 상품'(is_monthly) 우선, 모자라면 최신으로 채운다.
+// 대표님이 monthly 를 지정하지 않은 기간에도 홈이 비지 않도록 하는 폴백.
+export async function getFeaturedProducts(
+  count = 4,
+): Promise<ProductCardData[]> {
+  const monthly = await getProducts({ category: "monthly", limit: count });
+  if (monthly.length >= count) return monthly;
+
+  const seen = new Set(monthly.map((p) => p.id));
+  // 채울 만큼만 더 가져오되, monthly 와 겹칠 수 있어 여유분(count)을 요청 후 잘라낸다.
+  const recent = await getProducts({ limit: count * 2 });
+  return [...monthly, ...recent.filter((p) => !seen.has(p.id))].slice(0, count);
 }
