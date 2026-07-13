@@ -6,8 +6,9 @@ const SUPABASE_HOST = process.env.NEXT_PUBLIC_SUPABASE_URL
   ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
   : "zeqtfrwjnlckyinjxjcu.supabase.co";
 
-// CSP (#58) — 1단계 Report-Only: 위반을 브라우저 콘솔로만 보고(차단 없음).
-// 프로드에서 결제·이미지 업로드·OAuth 플로우 위반 0 확인 후 강제 전환(후속 PR).
+// CSP (#58) — 2단계 강제(enforce). 1단계 Report-Only 관찰기간(07-05~) 위반 보고 없음
+// + 실도메인 미연결(정식 배포 전)이라 전환 리스크 최소 시점에 전환.
+// report-uri 는 유지 — 강제 후에도 위반이 /api/csp-report 로 계속 수집됨(안전망).
 // 허용 근거: 토스 결제위젯(*.tosspayments.com — script/iframe/API/이미지),
 // Supabase(REST·Storage·Realtime). 우편번호는 수동 입력이라 외부 스크립트 없음.
 // script-src 'unsafe-inline' 은 Next.js 인라인 스크립트 필요 — nonce 전환 후속 검토.
@@ -41,8 +42,8 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   // 미사용 브라우저 권한 차단 (결제 위젯은 payment 필요)
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(self)" },
-  // CSP 1단계 — 검증 완료 후 Content-Security-Policy 로 전환
-  { key: "Content-Security-Policy-Report-Only", value: csp },
+  // CSP 2단계 — 강제 적용 (위반 시 차단 + /api/csp-report 보고)
+  { key: "Content-Security-Policy", value: csp },
   // CSP report-to 대상 엔드포인트 등록 (Reporting API)
   { key: "Reporting-Endpoints", value: 'csp="/api/csp-report"' },
 ];
