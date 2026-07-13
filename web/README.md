@@ -63,6 +63,9 @@ supabase/         migrations/{0001_init,0002_rls}.sql · seed.sql
 - **2026-07-05 클라이언트 에러 로깅(#83)**: 0014 `client_error_logs`. global-error+onerror/unhandledrejection → `/api/log-error`(zod·rate limit), `/admin/errors` 조회. Sentry 전 공백 메우기.
 - **2026-07-05 비밀번호 정책(#87)**: 가입 검증 6자 → 8자+영문·숫자 필수. 기존 계정 로그인 영향 없음.
 - **2026-07-05 인스타그램 피드(#89, PR #90)**: About 피드 IG Graph API 실피드 전환(서버 컴포넌트, 1h ISR, 실패 시 플레이스홀더 폴백). next/image 프록시 → CSP 변경 불필요. 활성화엔 `INSTAGRAM_ACCESS_TOKEN`(Meta 장기 토큰 60일, user 발급) 필요.
+- **2026-07-13 의존성 배치(#91~#95)**: minor 그룹 머지, 메이저 3종 ignore(ts7·eslint10·types/node26 — 각각 빌드/lint 실패·런타임 드리프트). @types/node 는 런타임(Node 24) 정렬로 직접 24.x 고정(PR #95).
+- **2026-07-13 CSP 강제 전환(#58, PR #96)**: Report-Only → enforce(정책 동일, report-uri 유지). 위반 이제 실차단 — 결제·업로드·소셜로그인 프로드 수동 확인 권장.
+- **2026-07-13 SEO(#16, PR #97)**: 기본 OG 이미지(ImageResponse)+상품 실사진 og:image+JSON-LD(OnlineStore·Product). sitemap·robots·metadata·next/image·next/font 감사 통과.
 
 ## 라우트
 | 경로 | 내용 | 상태 |
