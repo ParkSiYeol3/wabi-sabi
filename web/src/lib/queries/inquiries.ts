@@ -10,7 +10,8 @@ export interface InquirySummary {
 
 export interface InquiryDetail {
   id: string;
-  user_id: string;
+  // 탈퇴 시 null (0018: on delete set null — 분쟁 기록은 보존, 작성자만 익명화)
+  user_id: string | null;
   title: string;
   body: string;
   is_secret: boolean;
