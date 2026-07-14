@@ -12,6 +12,13 @@ export const site = {
   place: "와비사비",
   address: "충남 천안시 동남구 대흥로 338 1층 2호 와비사비 (31122)",
   addressNote: "wasa.kr 대면거래 및 택배거래처",
+  // 지도 검색용 (#119) — 상호·층/호·우편번호가 섞인 문자열은 네이버·카카오에서
+  // 검색이 실패한다. 도로명 주소만 따로 둔다.
+  roadAddress: "충남 천안시 동남구 대흥로 338",
+  addressDetail: "1층 2호",
+  postcode: "31122",
+  // 네이버는 검색을 거치지 않고 등록된 플레이스로 직접 진입 — 항상 정확히 뜬다.
+  naverPlaceId: "2012676632",
   instagram: "@wasa.kr",
   instagramUrl: "https://www.instagram.com/wasa.kr",
   email: "info@wasa.kr",

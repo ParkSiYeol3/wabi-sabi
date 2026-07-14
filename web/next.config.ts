@@ -12,14 +12,22 @@ const SUPABASE_HOST = process.env.NEXT_PUBLIC_SUPABASE_URL
 // 허용 근거: 토스 결제위젯(*.tosspayments.com — script/iframe/API/이미지),
 // Supabase(REST·Storage·Realtime). 우편번호는 수동 입력이라 외부 스크립트 없음.
 // script-src 'unsafe-inline' 은 Next.js 인라인 스크립트 필요 — nonce 전환 후속 검토.
+//
+// 지도 (#119): 네이버 Maps JS SDK 는 oapi.map.naver.com 에서 스크립트를 받고
+// 타일·마커를 *.pstatic.net / *.map.naver.com 에서 받으며 지오코딩 XHR 을 보낸다.
+// 구글 지도는 키 없는 iframe 임베드라 frame-src 만 필요하다(폴백 경로).
+const MAP_SCRIPT = "https://oapi.map.naver.com";
+const MAP_ASSETS = "https://*.map.naver.com https://*.pstatic.net";
+const MAP_FRAMES = "https://maps.google.com https://www.google.com";
+
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://*.tosspayments.com",
+  `script-src 'self' 'unsafe-inline' https://*.tosspayments.com ${MAP_SCRIPT}`,
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob: https://${SUPABASE_HOST} https://*.tosspayments.com`,
+  `img-src 'self' data: blob: https://${SUPABASE_HOST} https://*.tosspayments.com ${MAP_ASSETS}`,
   "font-src 'self' data:",
-  `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST} https://*.tosspayments.com`,
-  "frame-src https://*.tosspayments.com",
+  `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST} https://*.tosspayments.com ${MAP_SCRIPT} ${MAP_ASSETS}`,
+  `frame-src https://*.tosspayments.com ${MAP_FRAMES}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
