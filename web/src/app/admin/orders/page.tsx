@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { statusLabel, won } from "@/lib/orders";
-import { setTracking } from "./actions";
+import { setTracking, markDelivered } from "./actions";
 
 type Order = {
   id: string;
@@ -11,7 +11,11 @@ type Order = {
   recipient: string;
   ordered_at: string;
   tracking_number: string | null;
+  delivered_at: string | null;
 };
+
+// 배송완료로 넘길 수 있는 상태 (#124) — 취소·미결제 주문은 대상이 아니다.
+const CAN_DELIVER = ["paid", "shipping"];
 
 export default async function AdminOrdersPage() {
   if (!adminConfigured()) {
@@ -29,7 +33,7 @@ export default async function AdminOrdersPage() {
   const { data: orders } = await db
     .from("orders")
     .select(
-      "id, order_number, status, total_price, recipient, ordered_at, tracking_number",
+      "id, order_number, status, total_price, recipient, ordered_at, tracking_number, delivered_at",
     )
     .order("ordered_at", { ascending: false })
     .returns<Order[]>();
@@ -48,6 +52,7 @@ export default async function AdminOrdersPage() {
             <th className="py-2">금액</th>
             <th className="py-2">상태</th>
             <th className="py-2">송장번호</th>
+            <th className="py-2">배송완료</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-wabi-border">
@@ -70,6 +75,25 @@ export default async function AdminOrdersPage() {
                     저장
                   </button>
                 </form>
+              </td>
+              <td className="py-3">
+                {o.delivered_at ? (
+                  <span className="text-xs text-wabi-fg-muted">
+                    {new Date(o.delivered_at).toLocaleDateString("ko-KR")} 수령
+                  </span>
+                ) : CAN_DELIVER.includes(o.status) ? (
+                  <form action={markDelivered}>
+                    <input type="hidden" name="id" value={o.id} />
+                    <button
+                      type="submit"
+                      className="cursor-pointer border border-wabi-border px-2 py-1 text-xs transition-colors hover:border-wabi-fg"
+                    >
+                      배송완료 처리
+                    </button>
+                  </form>
+                ) : (
+                  <span className="text-xs text-wabi-fg-muted">—</span>
+                )}
               </td>
             </tr>
           ))}
