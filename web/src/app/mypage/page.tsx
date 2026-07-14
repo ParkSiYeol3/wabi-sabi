@@ -5,6 +5,7 @@ import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LogoutButton } from "@/components/logout-button";
+import { DeleteAccountSection } from "@/components/delete-account-section";
 import { createClient } from "@/lib/supabase/server";
 import { updateName, addAddress, deleteAddress } from "./actions";
 
@@ -143,6 +144,8 @@ export default async function MyPage() {
           위시리스트 →
         </a>
       </section>
+
+      <DeleteAccountSection />
     </Container>
   );
 }

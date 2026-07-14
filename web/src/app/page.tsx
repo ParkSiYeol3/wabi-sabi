@@ -14,12 +14,26 @@ const values = [
   { en: "Authenticity", ko: "장인의 손길이 담긴 진정성있는 작품" },
 ];
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ left?: string }>;
+}) {
   // 실 DB 상품 — 이전엔 하드코딩 더미(존재하지 않는 상품명·가격)를 노출했다.
   const featured = await getFeaturedProducts(4);
+  // 회원탈퇴 완료 안내 (#113) — 탈퇴 직후 아무 피드백 없이 홈에 떨구지 않는다.
+  const { left } = await searchParams;
 
   return (
     <>
+      {left === "1" && (
+        <p
+          role="status"
+          className="bg-wabi-muted px-5 py-3 text-center text-sm"
+        >
+          회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.
+        </p>
+      )}
       {/* ── Hero ───────────────────────────────────────────── */}
       <section className="bg-wabi-subtle">
         <div className="mx-auto flex max-w-[1200px] flex-col items-center px-5 py-28 text-center md:py-36">
