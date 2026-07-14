@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { SITE_URL } from "@/lib/site";
 
 // 본문/제목 — Pretendard 대체 (추후 Pretendard 로컬폰트로 교체 가능)
 const notoSansKr = Noto_Sans_KR({
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
   },
   description:
     "불완전함의 아름다움. 시간의 흔적이 담긴 수공예 도자기와 생활 오브제를 큐레이션합니다. Tableware · Objects · Craft · Gifts",
-  metadataBase: new URL("https://wasa.kr"),
+  metadataBase: new URL(SITE_URL),
   openGraph: {
     title: "WABI-SABI [わび-さび]",
     description: "불완전함의 아름다움 — 수공예 도자기·생활 오브제 셀렉트샵",
@@ -42,7 +43,7 @@ const siteJsonLd = JSON.stringify({
   "@context": "https://schema.org",
   "@type": "OnlineStore",
   name: "WABI-SABI 와비사비",
-  url: "https://wasa.kr",
+  url: SITE_URL,
   sameAs: ["https://www.instagram.com/wasa.kr"],
   address: {
     "@type": "PostalAddress",

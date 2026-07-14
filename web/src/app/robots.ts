@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -8,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
       // 인증·장바구니·결제·마이페이지·어드민은 색인 제외
       disallow: ["/auth", "/cart", "/checkout", "/mypage", "/admin"],
     },
-    sitemap: "https://wasa.kr/sitemap.xml",
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }
