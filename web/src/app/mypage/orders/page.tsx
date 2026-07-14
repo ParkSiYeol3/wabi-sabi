@@ -14,8 +14,18 @@ type Order = {
   status: string;
   total_price: number;
   ordered_at: string;
+  delivered_at: string | null;
   order_items: OrderItem[];
 };
+
+// 청약철회 기간 (#124/#106 교환·환불 안내) — 수령일부터 7일.
+const WITHDRAWAL_DAYS = 7;
+
+function withdrawalDeadline(deliveredAt: string): Date {
+  const d = new Date(deliveredAt);
+  d.setDate(d.getDate() + WITHDRAWAL_DAYS);
+  return d;
+}
 
 export default async function OrdersPage() {
   const supabase = await createClient();
@@ -27,7 +37,7 @@ export default async function OrdersPage() {
   const { data: orders } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, total_price, ordered_at, order_items(product_name, quantity)",
+      "id, order_number, status, total_price, ordered_at, delivered_at, order_items(product_name, quantity)",
     )
     .order("ordered_at", { ascending: false })
     .returns<Order[]>();
@@ -58,7 +68,28 @@ export default async function OrdersPage() {
                 </div>
                 <p className="mt-2 text-wabi-fg-muted">
                   {new Date(o.ordered_at).toLocaleDateString("ko-KR")}
+                  {o.delivered_at && (
+                    <>
+                      {" · "}
+                      {new Date(o.delivered_at).toLocaleDateString("ko-KR")} 수령
+                    </>
+                  )}
                 </p>
+                {o.delivered_at && (
+                  <p className="mt-1 text-xs text-wabi-fg-muted">
+                    교환·환불 요청은{" "}
+                    {withdrawalDeadline(o.delivered_at).toLocaleDateString(
+                      "ko-KR",
+                    )}
+                    까지 가능합니다.{" "}
+                    <a
+                      href="/legal/refund"
+                      className="underline hover:text-wabi-fg"
+                    >
+                      안내
+                    </a>
+                  </p>
+                )}
                 <p className="mt-2">
                   {first?.product_name}
                   {first && first.quantity > 1 ? ` ${first.quantity}개` : ""}
