@@ -127,6 +127,7 @@ export default async function ShopPage({
                   price: p.price,
                   image: p.image,
                 }}
+                soldOut={p.stock !== undefined && p.stock <= 0}
                 className="mt-3 w-full"
               />
             </li>
