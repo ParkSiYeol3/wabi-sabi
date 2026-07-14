@@ -66,6 +66,10 @@ supabase/         migrations/{0001_init,0002_rls}.sql · seed.sql
 - **2026-07-13 의존성 배치(#91~#95)**: minor 그룹 머지, 메이저 3종 ignore(ts7·eslint10·types/node26 — 각각 빌드/lint 실패·런타임 드리프트). @types/node 는 런타임(Node 24) 정렬로 직접 24.x 고정(PR #95).
 - **2026-07-13 CSP 강제 전환(#58, PR #96)**: Report-Only → enforce(정책 동일, report-uri 유지). 위반 이제 실차단 — 결제·업로드·소셜로그인 프로드 수동 확인 권장.
 - **2026-07-13 SEO(#16, PR #97)**: 기본 OG 이미지(ImageResponse)+상품 실사진 og:image+JSON-LD(OnlineStore·Product). sitemap·robots·metadata·next/image·next/font 감사 통과.
+- **2026-07-15 주문·배송·문의 메일(#129·#133)**: Resend REST. 확정 RPC 가 `confirmed` 일 때만 발송(웹훅·성공페이지 이중 확정에도 1회). 문의 답변 메일은 **본문 미포함**(비밀글 유출 방지, 링크만). 키 미설정·실패해도 결제/저장은 정상.
+- **2026-07-15 품절 표시(#131)**: 목록·홈 카드 품절 오버레이 + 담기 비활성(`stock` undefined 와 0 구분).
+- **2026-07-15 주문 상세(#137)**: `/mypage/orders/[id]` — 송장번호·배송지·항목 전체·청약철회 마감일. 어드민이 저장한 송장을 고객이 볼 수 없던 문제. 타인 접근 → 404(RLS).
+- **2026-07-15 죽은 도메인 링크 제거(#135)**: `wasa.kr` 은 **미등록 도메인**인데 7곳에 하드코딩 → sitemap·robots·메일 링크가 전부 접속 불가 URL. `lib/site-url.ts` `SITE_URL`(server-only, 프로토콜 정규화) 단일 출처.
 - **2026-07-15 배송완료 처리(#124)**: 0020 `orders.delivered_at`. delivered 로 가는 경로가 없어 모든 주문이 영구 "배송 중"이었고, 청약철회 7일 기산점(수령일)도 없었다. 어드민 배송완료 버튼+감사로그, 송장 수정으로 상태 되돌아감 방지. **날짜는 `formatDateKST`(Asia/Seoul 고정) — 서버가 UTC라 법적 기산점이 하루 어긋날 수 있었다.**
 - **2026-07-15 리뷰 구매 검증(#126)**: 0021 — RLS insert 정책이 `auth.uid()=user_id` 만 봐서 **미구매자가 PostgREST 직접 insert 로 리뷰 작성 가능(실측 201)**. 구매 조건(paid·shipping·delivered 주문에 해당 상품) 추가 → 재공격 시 403 차단. 미결제 주문 우회도 봉쇄.
 - **2026-07-14 지도 렌더 수정(#119, PR #122)**: 실키 투입 후 3겹 실패 해결 — geocoder 서브모듈 지연 로드(Service undefined) · **CSP 가 지도 스타일 JSON(JSONP script)을 차단해 타일 0장** · Geocoding API 미등록(403, NCP 에서 추가). 프로드 검증(1회 세션): 지오코딩 200·타일 렌더·폴백 0·해당 세션 CSP 위반 리포트 0건. **외부 SDK + CSP 는 로컬(http) 결과를 프로드에 대입하면 안 됨 — SDK 가 출처별로 다른 호스트/스킴을 쓴다. 최종 확인은 https 배포 환경에서.**
