@@ -36,6 +36,9 @@ export default async function AdminLayout({
           <Link href="/admin/errors" className="hover:underline">
             에러로그
           </Link>
+          <Link href="/admin/newsletter" className="hover:underline">
+            뉴스레터
+          </Link>
         </nav>
       </div>
 
