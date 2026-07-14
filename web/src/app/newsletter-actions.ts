@@ -58,6 +58,8 @@ export async function subscribeNewsletter(
     const admin = createAdminClient();
     // 재구독·중복 제출 모두 멱등 — unique(email) 충돌 시 동의 시각만 갱신하고
     // 구독 취소 상태를 해제한다.
+    // unsubscribe_token(0019)은 여기서 갱신하지 않는다 — 갈아엎으면 이미 발송된
+    // 메일의 수신거부 링크가 죽는다. 충돌 시 아래 열거한 컬럼만 갱신된다.
     const { error } = await admin.from("newsletter_subscribers").upsert(
       {
         email,
