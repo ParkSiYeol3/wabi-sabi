@@ -13,11 +13,20 @@ const SUPABASE_HOST = process.env.NEXT_PUBLIC_SUPABASE_URL
 // Supabase(REST·Storage·Realtime). 우편번호는 수동 입력이라 외부 스크립트 없음.
 // script-src 'unsafe-inline' 은 Next.js 인라인 스크립트 필요 — nonce 전환 후속 검토.
 //
-// 지도 (#119): 네이버 Maps JS SDK 는 oapi.map.naver.com 에서 스크립트를 받고
-// 타일·마커를 *.pstatic.net / *.map.naver.com 에서 받으며 지오코딩 XHR 을 보낸다.
+// 지도 (#119) — 네이버 Maps JS SDK 가 CSP 관점에서 요구하는 것(전부 실측 확인):
+//  ① SDK 본체·서브모듈: oapi.map.naver.com (script)
+//  ② 지도 스타일 정의: nrbe.pstatic.net/styles/*.json 을 **JSONP 스크립트**로 로드한다 →
+//     img-src 만 열면 타일이 한 장도 뜨지 않는다. script-src 에 *.pstatic.net 필요.
+//  ③ 지오코딩(주소→좌표): maps.apigw.ntruss.com 에 JSONP 호출.
+//  ④ 타일·마커 이미지: *.pstatic.net / *.map.naver.com / *.map.naver.net
 // 구글 지도는 키 없는 iframe 임베드라 frame-src 만 필요하다(폴백 경로).
-const MAP_SCRIPT = "https://oapi.map.naver.com";
-const MAP_ASSETS = "https://*.map.naver.com https://*.pstatic.net";
+const MAP_SCRIPT =
+  "https://oapi.map.naver.com https://maps.apigw.ntruss.com https://*.pstatic.net https://*.map.naver.net";
+const MAP_ASSETS =
+  "https://*.map.naver.com https://*.map.naver.net https://*.pstatic.net";
+// SDK 자체 오류 수집 엔드포인트. 막아도 지도는 동작하지만 페이지를 볼 때마다 CSP 위반이
+// 발생해 /api/csp-report 로그가 오염된다 → 허용해 잡음을 없앤다.
+const MAP_TELEMETRY = "https://kr-col-ext.nelo.navercorp.com";
 const MAP_FRAMES = "https://maps.google.com https://www.google.com";
 
 const csp = [
@@ -26,7 +35,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: https://${SUPABASE_HOST} https://*.tosspayments.com ${MAP_ASSETS}`,
   "font-src 'self' data:",
-  `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST} https://*.tosspayments.com ${MAP_SCRIPT} ${MAP_ASSETS}`,
+  `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST} https://*.tosspayments.com ${MAP_SCRIPT} ${MAP_ASSETS} ${MAP_TELEMETRY}`,
   `frame-src https://*.tosspayments.com ${MAP_FRAMES}`,
   "object-src 'none'",
   "base-uri 'self'",
