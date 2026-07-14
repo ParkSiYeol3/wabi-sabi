@@ -1,28 +1,6 @@
 // WABI-SABI 사이트 전역 상수 — 브랜드 정보·내비게이션 단일 출처
 // 출처: DESIGN_SYSTEM.md (Figma 시안). 휴무일은 고해상 Visit Us 시안 기준 = 수요일.
 
-// 사이트 절대 URL (#135) — sitemap·robots·OG·JSON-LD·메일 링크가 모두 이 값을 쓴다.
-//
-// wasa.kr 은 아직 **등록되지 않은 도메인**이다(2026-07-15 whois 확인). 그런데 코드가
-// https://wasa.kr 을 하드코딩하고 있어서, 검색엔진에는 죽은 URL 을 제출하고 주문 확인
-// 메일의 "주문 내역 보기" 링크는 접속 불가 사이트로 향했다.
-//
-// 우선순위:
-//   1) NEXT_PUBLIC_SITE_URL — 도메인을 확보하면 여기에 넣는다(https://wasa.kr)
-//   2) VERCEL_PROJECT_PRODUCTION_URL — Vercel 이 주입하는 프로덕션 도메인(현 배포 주소)
-//   3) localhost — 로컬 개발
-// 도메인을 사면 env 한 줄만 바꾸면 전 링크가 따라온다.
-function resolveSiteUrl(): string {
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (explicit) return explicit.replace(/\/$/, "");
-
-  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
-  if (vercel) return `https://${vercel.replace(/\/$/, "")}`;
-
-  return "http://localhost:3000";
-}
-
-export const SITE_URL = resolveSiteUrl();
 
 export const site = {
   name: "WABI-SABI",

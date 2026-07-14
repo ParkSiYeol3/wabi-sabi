@@ -1,6 +1,7 @@
 import { escapeHtml, sendMail } from "@/lib/email";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
-import { site, business, SITE_URL } from "@/lib/site";
+import { site, business } from "@/lib/site";
+import { SITE_URL } from "@/lib/site-url";
 
 // 배송 시작 메일 (#129) — 송장이 등록돼도 고객에게 알림이 가지 않았다.
 // 어드민이 송장을 실제로 저장했을 때(변경된 행이 있을 때)만 호출된다.
