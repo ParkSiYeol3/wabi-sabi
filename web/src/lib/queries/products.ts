@@ -5,6 +5,7 @@ type ProductRow = {
   id: string;
   name: string;
   price: number;
+  stock: number;
   images: unknown;
   categories: { slug: string; name_en: string } | null;
 };
@@ -37,7 +38,7 @@ export async function getRelatedProducts(
 
   const { data } = await supabase
     .from("products")
-    .select("id, name, price, images, categories(slug, name_en)")
+    .select("id, name, price, stock, images, categories(slug, name_en)")
     .eq("is_active", true)
     .eq("category_id", cat.id)
     .neq("id", excludeId)
@@ -49,6 +50,7 @@ export async function getRelatedProducts(
     id: p.id,
     name: p.name,
     price: p.price,
+    stock: p.stock,
     image: firstImage(p.images),
     category: p.categories?.name_en,
   }));
@@ -140,7 +142,7 @@ export async function getProducts({
 
   let query = supabase
     .from("products")
-    .select("id, name, price, images, categories(slug, name_en)")
+    .select("id, name, price, stock, images, categories(slug, name_en)")
     .eq("is_active", true);
 
   if (monthly) query = query.eq("is_monthly", true);
@@ -162,6 +164,7 @@ export async function getProducts({
     id: p.id,
     name: p.name,
     price: p.price,
+    stock: p.stock,
     image: firstImage(p.images),
     category: p.categories?.name_en,
   }));
