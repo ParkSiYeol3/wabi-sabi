@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
-import { statusLabel, won } from "@/lib/orders";
+import { statusLabel, won, formatDateKST } from "@/lib/orders";
 import { setTracking, markDelivered } from "./actions";
 
 type Order = {
@@ -79,7 +79,7 @@ export default async function AdminOrdersPage() {
               <td className="py-3">
                 {o.delivered_at ? (
                   <span className="text-xs text-wabi-fg-muted">
-                    {new Date(o.delivered_at).toLocaleDateString("ko-KR")} 수령
+                    {formatDateKST(o.delivered_at)} 수령
                   </span>
                 ) : CAN_DELIVER.includes(o.status) ? (
                   <form action={markDelivered}>

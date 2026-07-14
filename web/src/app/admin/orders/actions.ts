@@ -18,7 +18,7 @@ export async function setTracking(formData: FormData) {
   if (!id) return;
 
   const supabase = createAdminClient();
-  await supabase
+  const { data: updated } = await supabase
     .from("orders")
     .update({
       tracking_number: tracking || null,
@@ -27,7 +27,13 @@ export async function setTracking(formData: FormData) {
     .eq("id", id)
     // 배송완료된 주문의 송장을 고치다 상태가 shipping 으로 되돌아가면 수령일과
     // 모순된다(청약철회 기산점이 흔들린다) → paid/shipping 일 때만 허용.
-    .in("status", ["paid", "shipping"]);
+    .in("status", ["paid", "shipping"])
+    .select("id");
+
+  // 조건에 걸려 아무 행도 안 바뀌었으면 감사로그를 남기지 않는다 — 남기면
+  // "바꾼 적 없는 변경"이 기록돼 감사 기록 자체를 못 믿게 된다.
+  if (!updated || updated.length === 0) return;
+
   await logAdminAction(user, {
     action: "order.set_tracking",
     targetTable: "orders",

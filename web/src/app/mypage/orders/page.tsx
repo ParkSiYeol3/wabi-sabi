@@ -3,7 +3,12 @@ import { redirect } from "next/navigation";
 import { Container } from "@/components/container";
 import { CancelOrderButton } from "@/components/cancel-order-button";
 import { createClient } from "@/lib/supabase/server";
-import { statusLabel, won } from "@/lib/orders";
+import {
+  statusLabel,
+  won,
+  formatDateKST,
+  withdrawalDeadlineKST,
+} from "@/lib/orders";
 
 export const metadata: Metadata = { title: "주문 내역" };
 
@@ -18,14 +23,6 @@ type Order = {
   order_items: OrderItem[];
 };
 
-// 청약철회 기간 (#124/#106 교환·환불 안내) — 수령일부터 7일.
-const WITHDRAWAL_DAYS = 7;
-
-function withdrawalDeadline(deliveredAt: string): Date {
-  const d = new Date(deliveredAt);
-  d.setDate(d.getDate() + WITHDRAWAL_DAYS);
-  return d;
-}
 
 export default async function OrdersPage() {
   const supabase = await createClient();
@@ -67,26 +64,18 @@ export default async function OrdersPage() {
                   </span>
                 </div>
                 <p className="mt-2 text-wabi-fg-muted">
-                  {new Date(o.ordered_at).toLocaleDateString("ko-KR")}
-                  {o.delivered_at && (
-                    <>
-                      {" · "}
-                      {new Date(o.delivered_at).toLocaleDateString("ko-KR")} 수령
-                    </>
-                  )}
+                  {formatDateKST(o.ordered_at)}
+                  {o.delivered_at && <> · {formatDateKST(o.delivered_at)} 수령</>}
                 </p>
                 {o.delivered_at && (
                   <p className="mt-1 text-xs text-wabi-fg-muted">
-                    교환·환불 요청은{" "}
-                    {withdrawalDeadline(o.delivered_at).toLocaleDateString(
-                      "ko-KR",
-                    )}
-                    까지 가능합니다.{" "}
+                    교환·환불 요청은 {withdrawalDeadlineKST(o.delivered_at)}까지
+                    가능합니다.{" "}
                     <a
                       href="/legal/refund"
                       className="underline hover:text-wabi-fg"
                     >
-                      안내
+                      교환·환불 안내 보기
                     </a>
                   </p>
                 )}
