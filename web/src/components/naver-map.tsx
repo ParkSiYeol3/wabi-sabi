@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { GoogleMapEmbed } from "@/components/google-map-embed";
 import { site } from "@/lib/site";
 
-// 네이버 지도 상시 표시 (#119) — 대표님 요청: 지도 칸에 네이버 지도가 항상 떠 있을 것.
+// 네이버 지도 상시 표시 (#119) — 지도 칸에 네이버 지도가 항상 떠 있어야 한다.
 //
 // 네이버 클라우드 플랫폼 Maps JS SDK 는 클라이언트 ID 가 필요하다(무료 티어).
 // 좌표를 하드코딩하지 않고 SDK 의 Geocoder 로 도로명 주소를 변환한다 — 주소가
@@ -21,7 +21,7 @@ declare global {
         Map: new (el: HTMLElement, opts: object) => object;
         Marker: new (opts: object) => object;
         LatLng: new (lat: number, lng: number) => object;
-        Service: {
+        Service?: {
           geocode: (
             opts: { query: string },
             cb: (
@@ -50,18 +50,37 @@ export function NaverMap({ clientId }: { clientId: string }) {
       if (!cancelled) setFailed(true);
     };
 
-    const draw = () => {
-      const naver = window.naver;
+    // geocoder 서브모듈은 maps.js 의 load 이벤트 이후에 별도 스크립트로 더 받아온다.
+    // 그래서 load 직후엔 naver.maps 는 있어도 naver.maps.Service 가 아직 undefined 다
+    // (실제로 "Cannot read properties of undefined (reading 'geocode')" 로 터졌다).
+    // Service 가 준비될 때까지 폴링한 뒤 지오코딩한다.
+    const waitForService = (): Promise<boolean> =>
+      new Promise((resolve) => {
+        const started = Date.now();
+        const tick = () => {
+          if (cancelled) return resolve(false);
+          if (window.naver?.maps?.Service) return resolve(true);
+          if (Date.now() - started > 6000) return resolve(false);
+          setTimeout(tick, 100);
+        };
+        tick();
+      });
+
+    const draw = async () => {
       // 잘못된 키면 SDK 스크립트는 200 으로 내려오지만 maps 네임스페이스가 없다.
       if (cancelled || !ref.current) return;
-      if (!naver?.maps) return fail();
+      if (!window.naver?.maps) return fail();
 
-      naver.maps.Service.geocode({ query: site.roadAddress }, (status, res) => {
+      const ready = await waitForService();
+      const naver = window.naver;
+      const service = naver?.maps?.Service;
+      if (cancelled || !ref.current) return;
+      if (!ready || !naver || !service) return fail();
+
+      service.geocode({ query: site.roadAddress }, (status, res) => {
         if (cancelled || !ref.current) return;
         const hit =
-          status === naver.maps.Service.Status.OK
-            ? res.v2.addresses[0]
-            : undefined;
+          status === service.Status.OK ? res.v2.addresses[0] : undefined;
         if (!hit) {
           // 지오코딩 실패 시 빈 회색 박스를 남기지 않고 구글 지도로 되돌린다.
           return fail();
@@ -98,9 +117,10 @@ export function NaverMap({ clientId }: { clientId: string }) {
 
     // 위 경로 어디서도 실패를 알려주지 못하는 경우(무응답·인증 콜백 누락)의 최후 방어.
     // 지도 칸이 영구히 빈 채로 남지 않도록 폴백으로 넘긴다.
+    // 서브모듈 대기(최대 6초)를 앞지르지 않도록 그보다 길게 잡는다.
     const timer = setTimeout(() => {
       if (!drawn) fail();
-    }, 5000);
+    }, 10_000);
 
     return () => {
       cancelled = true;
