@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Stars } from "@/components/stars";
-import { getProductReviews, getReviewStats } from "@/lib/queries/reviews";
+import {
+  getProductReviews,
+  getReviewStats,
+  hasPurchased,
+} from "@/lib/queries/reviews";
 import { createReview, deleteReview } from "@/app/shop/[id]/review-actions";
 
 // 상품 상세 리뷰 섹션. currentUserId 있으면 작성 폼 노출(없으면 로그인 유도).
@@ -12,9 +16,11 @@ export async function ReviewSection({
   productId: string;
   currentUserId: string | null;
 }) {
-  const [reviews, stats] = await Promise.all([
+  const [reviews, stats, purchased] = await Promise.all([
     getProductReviews(productId),
     getReviewStats(productId),
+    // 구매자만 작성 가능 (#126) — 서버 액션에서도 같은 검증을 다시 한다.
+    currentUserId ? hasPurchased(productId) : Promise.resolve(false),
   ]);
   const alreadyReviewed = currentUserId
     ? reviews.some((r) => r.user_id === currentUserId)
@@ -37,6 +43,10 @@ export async function ReviewSection({
         alreadyReviewed ? (
           <p className="mt-6 text-sm text-wabi-fg-muted">
             이미 이 상품에 리뷰를 작성하셨습니다.
+          </p>
+        ) : !purchased ? (
+          <p className="mt-6 text-sm text-wabi-fg-muted">
+            구매하신 분만 리뷰를 작성할 수 있습니다.
           </p>
         ) : (
           <form
