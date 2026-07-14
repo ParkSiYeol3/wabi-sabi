@@ -66,6 +66,8 @@ supabase/         migrations/{0001_init,0002_rls}.sql · seed.sql
 - **2026-07-13 의존성 배치(#91~#95)**: minor 그룹 머지, 메이저 3종 ignore(ts7·eslint10·types/node26 — 각각 빌드/lint 실패·런타임 드리프트). @types/node 는 런타임(Node 24) 정렬로 직접 24.x 고정(PR #95).
 - **2026-07-13 CSP 강제 전환(#58, PR #96)**: Report-Only → enforce(정책 동일, report-uri 유지). 위반 이제 실차단 — 결제·업로드·소셜로그인 프로드 수동 확인 권장.
 - **2026-07-13 SEO(#16, PR #97)**: 기본 OG 이미지(ImageResponse)+상품 실사진 og:image+JSON-LD(OnlineStore·Product). sitemap·robots·metadata·next/image·next/font 감사 통과.
+- **2026-07-15 배송완료 처리(#124)**: 0020 `orders.delivered_at`. delivered 로 가는 경로가 없어 모든 주문이 영구 "배송 중"이었고, 청약철회 7일 기산점(수령일)도 없었다. 어드민 배송완료 버튼+감사로그, 송장 수정으로 상태 되돌아감 방지. **날짜는 `formatDateKST`(Asia/Seoul 고정) — 서버가 UTC라 법적 기산점이 하루 어긋날 수 있었다.**
+- **2026-07-15 리뷰 구매 검증(#126)**: 0021 — RLS insert 정책이 `auth.uid()=user_id` 만 봐서 **미구매자가 PostgREST 직접 insert 로 리뷰 작성 가능(실측 201)**. 구매 조건(paid·shipping·delivered 주문에 해당 상품) 추가 → 재공격 시 403 차단. 미결제 주문 우회도 봉쇄.
 - **2026-07-14 지도 렌더 수정(#119, PR #122)**: 실키 투입 후 3겹 실패 해결 — geocoder 서브모듈 지연 로드(Service undefined) · **CSP 가 지도 스타일 JSON(JSONP script)을 차단해 타일 0장** · Geocoding API 미등록(403, NCP 에서 추가). 프로드 검증(1회 세션): 지오코딩 200·타일 렌더·폴백 0·해당 세션 CSP 위반 리포트 0건. **외부 SDK + CSP 는 로컬(http) 결과를 프로드에 대입하면 안 됨 — SDK 가 출처별로 다른 호스트/스킴을 쓴다. 최종 확인은 https 배포 환경에서.**
 - **2026-07-14 지도(#119)**: 네이버 지도 상시 임베드(Maps SDK + Geocoder). 검색 실패 원인 = 상호+층/호+우편번호 섞인 쿼리 → `site.roadAddress` 분리, 네이버는 플레이스 ID 직접 진입. 키 없거나 실패 시 구글 임베드 폴백. CSP 에 지도 출처 추가. 👤 `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID`(NCP 무료) 필요.
 - **2026-07-14 회원탈퇴(#113)**: 0018 — `inquiries.user_id` cascade→set null(분쟁기록 3년 보존, 방침과 충돌 해소). 탈퇴 시 계정·배송지·위시리스트·장바구니·리뷰 삭제, 주문(5년)·문의(3년)는 익명화 보존, 뉴스레터 동반 파기. "회원탈퇴" 타이핑 + 진행중 주문 차단.
