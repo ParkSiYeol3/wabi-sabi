@@ -66,6 +66,7 @@ supabase/         migrations/{0001_init,0002_rls}.sql · seed.sql
 - **2026-07-13 의존성 배치(#91~#95)**: minor 그룹 머지, 메이저 3종 ignore(ts7·eslint10·types/node26 — 각각 빌드/lint 실패·런타임 드리프트). @types/node 는 런타임(Node 24) 정렬로 직접 24.x 고정(PR #95).
 - **2026-07-13 CSP 강제 전환(#58, PR #96)**: Report-Only → enforce(정책 동일, report-uri 유지). 위반 이제 실차단 — 결제·업로드·소셜로그인 프로드 수동 확인 권장.
 - **2026-07-13 SEO(#16, PR #97)**: 기본 OG 이미지(ImageResponse)+상품 실사진 og:image+JSON-LD(OnlineStore·Product). sitemap·robots·metadata·next/image·next/font 감사 통과.
+- **2026-07-14 지도(#119)**: 네이버 지도 상시 임베드(Maps SDK + Geocoder). 검색 실패 원인 = 상호+층/호+우편번호 섞인 쿼리 → `site.roadAddress` 분리, 네이버는 플레이스 ID 직접 진입. 키 없거나 실패 시 구글 임베드 폴백. CSP 에 지도 출처 추가. 👤 `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID`(NCP 무료) 필요.
 - **2026-07-14 회원탈퇴(#113)**: 0018 — `inquiries.user_id` cascade→set null(분쟁기록 3년 보존, 방침과 충돌 해소). 탈퇴 시 계정·배송지·위시리스트·장바구니·리뷰 삭제, 주문(5년)·문의(3년)는 익명화 보존, 뉴스레터 동반 파기. "회원탈퇴" 타이핑 + 진행중 주문 차단.
 - **2026-07-14 뉴스레터 수신거부·어드민(#116)**: 0019 `unsubscribe_token`(uuid — 이메일 링크는 임의 해지 위험). `/newsletter/unsubscribe?token=`(비로그인·noindex), `/admin/newsletter` 목록. 재구독 시 토큰 유지(기발송 메일 링크 생존).
 - **2026-07-13 홈 Featured 실상품(#104)**: 하드코딩 더미 배열 → `getFeaturedProducts`(is_monthly 우선, 부족분 최신 폴백). 어드민 상품 변경이 홈에 반영되지 않던 원인.
