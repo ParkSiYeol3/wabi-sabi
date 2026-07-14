@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/admin";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { parseUuid } from "@/lib/validation";
 import { logAdminAction } from "@/lib/audit";
+import { sendOrderShippedMail } from "@/lib/emails/order-shipped";
 
 // 송장번호 입력 + 상태 배송중 전환
 export async function setTracking(formData: FormData) {
@@ -33,6 +34,14 @@ export async function setTracking(formData: FormData) {
   // 조건에 걸려 아무 행도 안 바뀌었으면 감사로그를 남기지 않는다 — 남기면
   // "바꾼 적 없는 변경"이 기록돼 감사 기록 자체를 못 믿게 된다.
   if (!updated || updated.length === 0) return;
+
+  // 배송 시작 알림 (#129) — 송장이 실제로 등록된 경우에만.
+  // 송장을 지우는(=배송중 해제) 경우엔 보내지 않는다.
+  if (tracking) {
+    await sendOrderShippedMail(id, tracking).catch((e) =>
+      console.error("[admin] 배송 알림 메일 실패 orderId=", id, e),
+    );
+  }
 
   await logAdminAction(user, {
     action: "order.set_tracking",

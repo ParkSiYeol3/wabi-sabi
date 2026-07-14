@@ -1,4 +1,5 @@
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
+import { sendOrderConfirmedMail } from "@/lib/emails/order-confirmed";
 
 // 결제 확정 공용 로직 — success 페이지·토스 웹훅이 함께 사용.
 // 원칙: 클라이언트가 준 금액 불신. 승인 금액은 서버 DB(orders.total_price) 기준.
@@ -93,6 +94,16 @@ export async function confirmPayment(
       final: !error,
       error: `주문 확정 실패(${result ?? error?.message})`,
     };
+
+  // 주문 확인 메일 (#129) — 'confirmed'(최초 확정)일 때만 보낸다.
+  // 성공 페이지와 웹훅이 같은 주문을 동시에 확정하려 하면 한쪽은 'already_paid' 를
+  // 받으므로, 이 조건이 곧 중복 발송 방지다.
+  // 발송 실패가 결제 확정을 되돌리지 않는다 — 메일은 부가 통지이고, 실패는 로그에 남는다.
+  if (result === "confirmed") {
+    await sendOrderConfirmedMail(orderId).catch((e) =>
+      console.error("[payments] 주문 확인 메일 실패 orderId=", orderId, e),
+    );
+  }
 
   return { ok: true };
 }
