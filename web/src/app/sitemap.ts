@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getProducts } from "@/lib/queries/products";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site-url";
 
 const BASE = SITE_URL;
 

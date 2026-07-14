@@ -4,7 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site-url";
 
 // 본문/제목 — Pretendard 대체 (추후 Pretendard 로컬폰트로 교체 가능)
 const notoSansKr = Noto_Sans_KR({

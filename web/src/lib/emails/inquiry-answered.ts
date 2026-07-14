@@ -1,6 +1,7 @@
 import { escapeHtml, sendMail } from "@/lib/email";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
-import { site, business, SITE_URL } from "@/lib/site";
+import { site, business } from "@/lib/site";
+import { SITE_URL } from "@/lib/site-url";
 
 // 문의 답변 알림 (#133) — 답변이 달려도 고객에게 알림이 가지 않아, 사이트를 다시
 // 열어보기 전까지 답변을 받은 줄 모른다.

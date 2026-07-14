@@ -10,7 +10,7 @@ import { WishlistButton } from "@/components/wishlist-button";
 import { ReviewSection } from "@/components/review-section";
 import { getProduct, getRelatedProducts } from "@/lib/queries/products";
 import { createClient } from "@/lib/supabase/server";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site-url";
 
 const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
 
