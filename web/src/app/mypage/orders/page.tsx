@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Container } from "@/components/container";
 import { CancelOrderButton } from "@/components/cancel-order-button";
@@ -58,7 +59,13 @@ export default async function OrdersPage() {
                 className="border border-wabi-border p-5 text-sm"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-medium">{o.order_number}</span>
+                  {/* 상세로 이동 (#137) — 송장번호·배송지·전체 항목은 상세에서 본다 */}
+                  <Link
+                    href={`/mypage/orders/${o.id}`}
+                    className="font-medium underline-offset-4 hover:underline"
+                  >
+                    {o.order_number}
+                  </Link>
                   <span className="text-xs text-wabi-fg-muted">
                     {statusLabel(o.status)}
                   </span>
@@ -85,6 +92,14 @@ export default async function OrdersPage() {
                   {rest > 0 ? ` 외 ${rest}건` : ""}
                 </p>
                 <p className="mt-2 font-medium">{won(o.total_price)}</p>
+                <p className="mt-2">
+                  <Link
+                    href={`/mypage/orders/${o.id}`}
+                    className="text-xs text-wabi-fg-muted underline underline-offset-4 hover:text-wabi-fg"
+                  >
+                    주문 상세 보기
+                  </Link>
+                </p>
                 {o.status === "paid" && (
                   <div className="mt-3 border-t border-wabi-border pt-3">
                     <CancelOrderButton orderId={o.id} />

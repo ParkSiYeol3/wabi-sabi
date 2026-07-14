@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { Container } from "@/components/container";
@@ -131,18 +132,18 @@ export default async function MyPage() {
 
       {/* 바로가기 */}
       <section className="mt-14 flex gap-4 text-sm">
-        <a
+        <Link
           href="/mypage/orders"
           className="text-wabi-fg-muted hover:text-wabi-fg"
         >
           주문 내역 →
-        </a>
-        <a
+        </Link>
+        <Link
           href="/mypage/wishlist"
           className="text-wabi-fg-muted hover:text-wabi-fg"
         >
           위시리스트 →
-        </a>
+        </Link>
       </section>
 
       <DeleteAccountSection />
