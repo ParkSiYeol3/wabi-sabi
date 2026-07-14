@@ -1,6 +1,6 @@
 import { escapeHtml, sendMail } from "@/lib/email";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
-import { site, business } from "@/lib/site";
+import { site, business, SITE_URL } from "@/lib/site";
 
 // 문의 답변 알림 (#133) — 답변이 달려도 고객에게 알림이 가지 않아, 사이트를 다시
 // 열어보기 전까지 답변을 받은 줄 모른다.
@@ -8,7 +8,7 @@ import { site, business } from "@/lib/site";
 // 답변 본문은 메일에 싣지 않는다. 비밀글이 메일 경유로 노출되는 위험을 만들지 않기 위해
 // "답변이 등록되었습니다 + 링크"만 보낸다(작성자 본인만 로그인 후 열람 — RLS).
 
-const BASE = "https://wasa.kr";
+const BASE = SITE_URL;
 
 export async function sendInquiryAnsweredMail(inquiryId: string): Promise<void> {
   if (!adminConfigured()) return;

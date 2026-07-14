@@ -10,6 +10,7 @@ import { WishlistButton } from "@/components/wishlist-button";
 import { ReviewSection } from "@/components/review-section";
 import { getProduct, getRelatedProducts } from "@/lib/queries/products";
 import { createClient } from "@/lib/supabase/server";
+import { SITE_URL } from "@/lib/site";
 
 const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
 
@@ -54,7 +55,7 @@ function productJsonLd(product: {
     image: product.images,
     offers: {
       "@type": "Offer",
-      url: `https://wasa.kr/shop/${product.id}`,
+      url: `${SITE_URL}/shop/${product.id}`,
       priceCurrency: "KRW",
       price: product.price,
       availability:
@@ -195,7 +196,7 @@ export default async function ProductDetailPage({
         </div>
       </div>
 
-      {/* 리뷰 (형님 피드백) */}
+      {/* 리뷰 (대표님 피드백 — 게시판 3종) */}
       <ReviewSection productId={product.id} currentUserId={user?.id ?? null} />
 
       {/* 관련 상품 (WSB-012) */}

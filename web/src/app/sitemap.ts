@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getProducts } from "@/lib/queries/products";
+import { SITE_URL } from "@/lib/site";
 
-const BASE = "https://wasa.kr";
+const BASE = SITE_URL;
 
 // 정적 라우트 + 활성 상품 상세 URL (WSB-007/010 SEO).
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

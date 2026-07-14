@@ -1,7 +1,7 @@
 import { escapeHtml, sendMail } from "@/lib/email";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { formatDateKST, won } from "@/lib/orders";
-import { site, business } from "@/lib/site";
+import { site, business, SITE_URL } from "@/lib/site";
 
 // 주문 확인 메일 (#129) — 결제 완료 후 고객에게 아무 통지도 가지 않던 문제.
 // 전자상거래법 §13 은 계약 내용에 관한 서면(전자문서 포함) 교부를 요구한다.
@@ -19,7 +19,7 @@ type Row = {
   order_items: { product_name: string; quantity: number; price: number }[];
 };
 
-const BASE = "https://wasa.kr";
+const BASE = SITE_URL;
 
 function html(o: Row): string {
   const items = o.order_items
