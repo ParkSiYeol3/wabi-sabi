@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasPurchased } from "@/lib/queries/reviews";
+import { REPORT_REASONS } from "@/lib/reviews/report-reasons";
 import { parseUuid } from "@/lib/validation";
 
 // 입력 스키마 (Zod 3차) — rating 정수 강제(소수·범위 밖 차단), 본문 길이 제한.
@@ -59,19 +60,24 @@ export async function createReview(formData: FormData) {
 // 리뷰 신고 — 로그인 사용자 (#141). 부적절 리뷰를 어드민에게 알린다.
 // RLS(0022)가 본인만·자기 리뷰 신고 불가·중복(unique)을 강제하므로, 자기 리뷰나
 // 중복 신고는 insert 가 조용히 실패한다(에러 삼킴). 신고 사실은 노출하지 않는다.
+// 사유는 프리셋 enum 으로 강제 — Server Action 은 UI 를 거치지 않고 직접 호출될 수
+// 있으므로 <select> 제약만으론 임의 텍스트 삽입을 막지 못한다(서버에서 재검증).
 const reportSchema = z.object({
-  reason: z.string().trim().min(1).max(500),
+  reason: z.enum(REPORT_REASONS),
 });
 
 export async function reportReview(formData: FormData) {
   const reviewId = parseUuid(formData.get("review_id"));
   if (!reviewId) return;
 
+  // 복귀 경로용 상품 id 는 인증 체크 전에 파싱한다(로그인 리다이렉트에 컨텍스트 유지).
+  const productId = parseUuid(formData.get("product_id"));
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/auth");
+  if (!user) redirect(productId ? `/auth?redirect=/shop/${productId}` : "/auth");
 
   const parsed = reportSchema.safeParse({
     reason: String(formData.get("reason") || ""),
@@ -84,7 +90,6 @@ export async function reportReview(formData: FormData) {
     reason: parsed.data.reason,
   });
 
-  const productId = parseUuid(formData.get("product_id"));
   if (productId) revalidatePath(`/shop/${productId}`);
   revalidatePath("/review");
 }

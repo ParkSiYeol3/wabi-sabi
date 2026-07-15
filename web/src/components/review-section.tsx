@@ -109,6 +109,11 @@ export async function ReviewSection({
                 <div className="flex items-center gap-2">
                   <Stars value={r.rating} size={14} />
                   <span className="text-sm font-medium">{r.author_name}</span>
+                  {r.hidden && currentUserId === r.user_id && (
+                    <span className="border border-wabi-border px-1.5 py-0.5 text-xs text-wabi-fg-muted">
+                      숨김 처리됨
+                    </span>
+                  )}
                 </div>
                 <span className="flex items-center gap-3 text-xs text-wabi-fg-muted">
                   <time>{new Date(r.created_at).toLocaleDateString("ko-KR")}</time>

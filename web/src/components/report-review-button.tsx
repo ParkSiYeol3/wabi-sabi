@@ -2,9 +2,7 @@
 
 import { useActionState } from "react";
 import { reportReview } from "@/app/shop/[id]/review-actions";
-
-// 신고 사유 프리셋. 어드민이 판단할 최소 분류.
-const REASONS = ["스팸·광고", "욕설·비방", "허위·부적절", "기타"] as const;
+import { REPORT_REASONS } from "@/lib/reviews/report-reasons";
 
 type State = { done: boolean };
 
@@ -42,11 +40,11 @@ export function ReportReviewButton({
         )}
         <select
           name="reason"
-          defaultValue={REASONS[0]}
+          defaultValue={REPORT_REASONS[0]}
           aria-label="신고 사유"
           className="border border-wabi-border bg-transparent px-1 py-0.5"
         >
-          {REASONS.map((r) => (
+          {REPORT_REASONS.map((r) => (
             <option key={r} value={r}>
               {r}
             </option>
