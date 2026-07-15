@@ -56,7 +56,7 @@ export default async function Home({
             width={560}
             height={278}
             preload
-            className="h-20 w-auto md:h-28"
+            className="h-20 w-auto md:h-28 drop-shadow-[0_2px_16px_rgba(247,246,244,0.95)]"
           />
           <h1 className="mt-8">
             <Image
@@ -65,13 +65,13 @@ export default async function Home({
               width={720}
               height={239}
               preload
-              className="h-10 w-auto md:h-12"
+              className="h-10 w-auto md:h-12 drop-shadow-[0_2px_14px_rgba(247,246,244,0.95)]"
             />
           </h1>
-          <p className="mt-5 text-sm tracking-wide text-wabi-fg-muted">
+          <p className="mt-5 text-sm tracking-wide text-wabi-fg [text-shadow:0_1px_10px_rgb(247_246_244)]">
             {site.tagline}
           </p>
-          <p className="mt-1 text-xs tracking-wide text-wabi-fg-muted">
+          <p className="mt-1 text-xs tracking-wide text-wabi-fg-muted [text-shadow:0_1px_10px_rgb(247_246_244)]">
             {site.categoriesLine}
           </p>
           <Button asChild className="mt-10 rounded-none bg-wabi-accent px-8 hover:bg-wabi-accent/90">
