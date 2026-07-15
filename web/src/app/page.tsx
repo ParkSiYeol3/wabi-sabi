@@ -68,10 +68,10 @@ export default async function Home({
               className="h-10 w-auto md:h-12 drop-shadow-[0_2px_14px_rgba(247,246,244,0.95)]"
             />
           </h1>
-          <p className="mt-5 text-sm tracking-wide text-wabi-fg [text-shadow:0_1px_10px_rgb(247_246_244)]">
+          <p className="mt-5 text-sm font-medium tracking-wide text-black [text-shadow:0_0_4px_rgb(255_255_255),0_1px_12px_rgb(255_255_255)]">
             {site.tagline}
           </p>
-          <p className="mt-1 text-xs tracking-wide text-wabi-fg-muted [text-shadow:0_1px_10px_rgb(247_246_244)]">
+          <p className="mt-1 text-xs font-semibold tracking-wide text-black [text-shadow:0_0_4px_rgb(255_255_255),0_1px_12px_rgb(255_255_255)]">
             {site.categoriesLine}
           </p>
           <Button asChild className="mt-10 rounded-none bg-wabi-accent px-8 hover:bg-wabi-accent/90">
