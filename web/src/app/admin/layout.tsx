@@ -13,7 +13,9 @@ export default async function AdminLayout({
   return (
     <Container className="py-12">
       <div className="flex items-center justify-between border-b border-wabi-border pb-4">
-        <h1 className="text-xl font-semibold">Admin</h1>
+        <Link href="/admin" className="text-xl font-semibold hover:underline">
+          Admin
+        </Link>
         <nav className="flex gap-5 text-sm" aria-label="어드민 메뉴">
           <Link href="/admin/products" className="hover:underline">
             상품

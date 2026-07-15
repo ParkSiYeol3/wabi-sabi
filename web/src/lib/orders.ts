@@ -22,6 +22,17 @@ export function formatDateKST(iso: string): string {
   return new Date(iso).toLocaleDateString("ko-KR", { timeZone: KST });
 }
 
+// 오늘(KST) 자정을 UTC ISO 로. 매출·주문 집계의 하루 경계를 KST 로 고정한다 —
+// 서버(UTC)에서 "오늘"을 계산하면 00:00~09:00(KST) 주문이 전날로 새거나 반대로 샌다.
+// KST 는 서머타임이 없어 항상 UTC+9. Date.UTC(그날) 는 UTC 자정이므로 9시간 당긴다.
+export function startOfTodayKstIso(now: Date = new Date()): string {
+  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const midnightUtcMs =
+    Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate()) -
+    9 * 60 * 60 * 1000;
+  return new Date(midnightUtcMs).toISOString();
+}
+
 // 청약철회 기간 — 수령일부터 7일 (교환·환불 안내 #106).
 export const WITHDRAWAL_DAYS = 7;
 
