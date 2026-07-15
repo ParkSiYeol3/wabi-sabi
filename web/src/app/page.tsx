@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { MapCard } from "@/components/map-card";
-import { getFeaturedProducts } from "@/lib/queries/products";
+import { HeroSlideshow } from "@/components/hero-slideshow";
+import { getFeaturedProducts, getProducts } from "@/lib/queries/products";
 import { site } from "@/lib/site";
 
 const values = [
@@ -20,9 +21,23 @@ export default async function Home({
   searchParams: Promise<{ left?: string }>;
 }) {
   // 실 DB 상품 — 이전엔 하드코딩 더미(존재하지 않는 상품명·가격)를 노출했다.
-  const featured = await getFeaturedProducts(4);
-  // 회원탈퇴 완료 안내 (#113) — 탈퇴 직후 아무 피드백 없이 홈에 떨구지 않는다.
-  const { left } = await searchParams;
+  // 서로 의존성이 없는 요청은 병렬로 — 순차 await 워터폴 제거(TTFB 단축).
+  // featured=카드용, slidePool=히어로 슬라이드쇼용, searchParams=탈퇴 안내 플래그.
+  const [featured, slidePool, { left }] = await Promise.all([
+    getFeaturedProducts(4),
+    getProducts({ limit: 12 }),
+    searchParams,
+  ]);
+  // 히어로 배경 슬라이드쇼용 — 이미지가 등록된 활성 상품에서 모아 중복 URL 제거.
+  // (featured 만 쓰면 이 달의 상품이 사진 없을 때 배경이 비므로 상품 전체에서 수집.)
+  // 사진이 여러 장이면 크로스페이드로 순환, 1장이면 정적, 0장이면 기본 배경.
+  const heroImages = [
+    ...new Set(
+      slidePool
+        .map((p) => p.image)
+        .filter((src): src is string => Boolean(src)),
+    ),
+  ].slice(0, 6);
 
   return (
     <>
@@ -35,15 +50,16 @@ export default async function Home({
         </p>
       )}
       {/* ── Hero ───────────────────────────────────────────── */}
-      <section className="bg-wabi-subtle">
-        <div className="mx-auto flex max-w-[1200px] flex-col items-center px-5 py-28 text-center md:py-36">
+      <section className="relative overflow-hidden bg-wabi-subtle">
+        {heroImages.length > 0 && <HeroSlideshow images={heroImages} />}
+        <div className="relative z-10 mx-auto flex max-w-[1200px] flex-col items-center px-5 py-28 text-center md:py-36">
           <Image
             src="/brand/logo-mark.png"
             alt=""
             width={560}
             height={278}
             preload
-            className="h-20 w-auto md:h-28"
+            className="h-20 w-auto md:h-28 drop-shadow-[0_2px_16px_rgba(247,246,244,0.95)]"
           />
           <h1 className="mt-8">
             <Image
@@ -52,13 +68,13 @@ export default async function Home({
               width={720}
               height={239}
               preload
-              className="h-10 w-auto md:h-12"
+              className="h-10 w-auto md:h-12 drop-shadow-[0_2px_14px_rgba(247,246,244,0.95)]"
             />
           </h1>
-          <p className="mt-5 text-sm tracking-wide text-wabi-fg-muted">
+          <p className="mt-5 text-sm font-medium tracking-wide text-black [text-shadow:0_0_4px_rgb(255_255_255),0_1px_12px_rgb(255_255_255)]">
             {site.tagline}
           </p>
-          <p className="mt-1 text-xs tracking-wide text-wabi-fg-muted">
+          <p className="mt-1 text-xs font-semibold tracking-wide text-black [text-shadow:0_0_4px_rgb(255_255_255),0_1px_12px_rgb(255_255_255)]">
             {site.categoriesLine}
           </p>
           <Button asChild className="mt-10 rounded-none bg-wabi-accent px-8 hover:bg-wabi-accent/90">
