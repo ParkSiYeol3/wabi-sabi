@@ -2,6 +2,7 @@ import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { won } from "@/lib/orders";
+import { isLowStock } from "@/lib/inventory";
 import { ProductCreateForm } from "@/components/admin/product-create-form";
 import { ProductImageAdder } from "@/components/admin/product-image-adder";
 import {
@@ -110,6 +111,15 @@ export default async function AdminProductsPage() {
                       <button type="submit" className="cursor-pointer text-xs underline transition-colors hover:text-wabi-accent">
                         저장
                       </button>
+                      {p.stock === 0 ? (
+                        <span className="ml-1 whitespace-nowrap border border-red-300 px-1.5 py-0.5 text-xs text-red-600">
+                          품절
+                        </span>
+                      ) : isLowStock(p.stock) ? (
+                        <span className="ml-1 whitespace-nowrap border border-amber-300 px-1.5 py-0.5 text-xs text-amber-600">
+                          부족
+                        </span>
+                      ) : null}
                     </form>
                   </td>
                   <td className="py-3">
