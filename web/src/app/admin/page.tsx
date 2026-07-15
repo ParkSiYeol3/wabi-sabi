@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { won } from "@/lib/orders";
+import { LOW_STOCK_THRESHOLD } from "@/lib/inventory";
 
 type Summary = {
   awaiting_ship: number;
   shipping: number;
   unanswered: number;
   out_of_stock: number;
+  low_stock: number;
   reported_reviews: number;
   today_orders: number;
   today_revenue: number;
@@ -19,36 +21,43 @@ type Summary = {
 async function loadSummary(): Promise<Summary> {
   const db = createAdminClient();
   const { data } = await db
-    .rpc("admin_dashboard_summary")
+    .rpc("admin_dashboard_summary", {
+      low_stock_threshold: LOW_STOCK_THRESHOLD,
+    })
     .throwOnError()
     .returns<Summary>();
   return data as Summary;
 }
 
-// 처리 대기 카드 — 0 이면 회색, 있으면 강조(빨강). 클릭 시 해당 관리 화면.
+// 처리 대기 카드 — 0 이면 회색, 있으면 강조. tone: alert(빨강, 즉시 처리)·warn(주황, 주의).
 function ActionCard({
   href,
   label,
   count,
   unit = "건",
+  tone = "alert",
 }: {
   href: string;
   label: string;
   count: number;
   unit?: string;
+  tone?: "alert" | "warn";
 }) {
   const active = count > 0;
+  const border = tone === "warn" ? "border-amber-300" : "border-red-300";
+  // amber-600 은 흰 배경 대비 ~3.2:1 로 작은 텍스트 WCAG AA(4.5:1) 미달 → 700.
+  const text = tone === "warn" ? "text-amber-700" : "text-red-600";
   return (
     <Link
       href={href}
       className={`border p-5 transition-colors hover:bg-wabi-subtle ${
-        active ? "border-red-300" : "border-wabi-border"
+        active ? border : "border-wabi-border"
       }`}
     >
       <p className="text-sm text-wabi-fg-muted">{label}</p>
       <p
         className={`mt-1 text-2xl font-semibold ${
-          active ? "text-red-600" : "text-wabi-fg-muted"
+          active ? text : "text-wabi-fg-muted"
         }`}
       >
         {count.toLocaleString("ko-KR")}
@@ -71,7 +80,7 @@ export default async function AdminHome() {
       {/* 처리 대기 */}
       <section>
         <h2 className="text-lg font-medium">처리 대기</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <ActionCard
             href="/admin/orders"
             label="발송 대기"
@@ -93,6 +102,13 @@ export default async function AdminHome() {
             label="품절 상품"
             count={s.out_of_stock}
             unit="개"
+          />
+          <ActionCard
+            href="/admin/products"
+            label={`재고 부족 (${LOW_STOCK_THRESHOLD}개 이하)`}
+            count={s.low_stock}
+            unit="개"
+            tone="warn"
           />
         </div>
       </section>
