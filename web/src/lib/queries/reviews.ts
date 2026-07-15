@@ -7,6 +7,7 @@ export interface Review {
   rating: number;
   body: string;
   created_at: string;
+  hidden: boolean;
 }
 
 export interface ReviewStats {
@@ -15,11 +16,14 @@ export interface ReviewStats {
 }
 
 // 상품별 리뷰 목록 (최신순).
+// 공개 read 정책(0023)이 숨김 리뷰를 걸러내지만, 작성자 본인에겐 자기 리뷰가 숨김
+// 상태여도 반환된다(재작성 시 중복 삽입 조용히 실패하는 문제 방지). hidden 을 함께
+// 조회해 본인 화면에서 "숨김 처리됨" 을 표시한다.
 export async function getProductReviews(productId: string): Promise<Review[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("reviews")
-    .select("id, user_id, author_name, rating, body, created_at")
+    .select("id, user_id, author_name, rating, body, created_at, hidden")
     .eq("product_id", productId)
     .order("created_at", { ascending: false })
     .returns<Review[]>();
@@ -27,13 +31,15 @@ export async function getProductReviews(productId: string): Promise<Review[]> {
   return data;
 }
 
-// 상품별 평점 통계.
+// 상품별 평점 통계. 숨김 리뷰는 평균/개수에서 제외한다 — 작성자 본인에겐 RLS 로
+// 자기 숨김 리뷰가 보이므로 명시적으로 hidden=false 로 걸러 통계 왜곡을 막는다.
 export async function getReviewStats(productId: string): Promise<ReviewStats> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("reviews")
     .select("rating")
     .eq("product_id", productId)
+    .eq("hidden", false)
     .returns<{ rating: number }[]>();
   if (error || !data || data.length === 0) return { count: 0, average: 0 };
   const sum = data.reduce((a, r) => a + r.rating, 0);
@@ -53,12 +59,14 @@ type RecentRow = Review & {
   products: { name: string } | null;
 };
 
-// 전체 최신 리뷰 (/review 페이지).
+// 전체 최신 리뷰 (/review 페이지). 숨김 리뷰는 명시적으로 제외 — 작성자 본인에게도
+// 이 공개 목록에선 자기 숨김 리뷰를 보이지 않게 한다(라벨 없는 노출 방지).
 export async function getRecentReviews(limit = 20): Promise<RecentReview[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("reviews")
-    .select("id, user_id, author_name, rating, body, created_at, product_id, products(name)")
+    .select("id, user_id, author_name, rating, body, created_at, hidden, product_id, products(name)")
+    .eq("hidden", false)
     .order("created_at", { ascending: false })
     .limit(limit)
     .returns<RecentRow[]>();
@@ -70,6 +78,7 @@ export async function getRecentReviews(limit = 20): Promise<RecentReview[]> {
     rating: r.rating,
     body: r.body,
     created_at: r.created_at,
+    hidden: r.hidden,
     product_id: r.product_id,
     product_name: r.products?.name ?? null,
   }));

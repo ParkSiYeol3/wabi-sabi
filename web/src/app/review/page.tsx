@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/container";
 import { Stars } from "@/components/stars";
+import { ReportReviewButton } from "@/components/report-review-button";
 import { getRecentReviews } from "@/lib/queries/reviews";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "리뷰",
@@ -11,6 +13,10 @@ export const metadata: Metadata = {
 
 export default async function ReviewListPage() {
   const reviews = await getRecentReviews();
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return (
     <Container className="py-16">
@@ -29,9 +35,15 @@ export default async function ReviewListPage() {
                   <Stars value={r.rating} size={14} />
                   <span className="text-sm font-medium">{r.author_name}</span>
                 </div>
-                <time className="text-xs text-wabi-fg-muted">
-                  {new Date(r.created_at).toLocaleDateString("ko-KR")}
-                </time>
+                <span className="flex items-center gap-3 text-xs text-wabi-fg-muted">
+                  <time>{new Date(r.created_at).toLocaleDateString("ko-KR")}</time>
+                  {user && user.id !== r.user_id && (
+                    <ReportReviewButton
+                      reviewId={r.id}
+                      productId={r.product_id}
+                    />
+                  )}
+                </span>
               </div>
               <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-wabi-fg">
                 {r.body}

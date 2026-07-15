@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Stars } from "@/components/stars";
+import { ReportReviewButton } from "@/components/report-review-button";
 import {
   getProductReviews,
   getReviewStats,
@@ -108,10 +109,15 @@ export async function ReviewSection({
                 <div className="flex items-center gap-2">
                   <Stars value={r.rating} size={14} />
                   <span className="text-sm font-medium">{r.author_name}</span>
+                  {r.hidden && currentUserId === r.user_id && (
+                    <span className="border border-wabi-border px-1.5 py-0.5 text-xs text-wabi-fg-muted">
+                      숨김 처리됨
+                    </span>
+                  )}
                 </div>
                 <span className="flex items-center gap-3 text-xs text-wabi-fg-muted">
                   <time>{new Date(r.created_at).toLocaleDateString("ko-KR")}</time>
-                  {currentUserId === r.user_id && (
+                  {currentUserId === r.user_id ? (
                     <form action={deleteReview}>
                       <input type="hidden" name="id" value={r.id} />
                       <input type="hidden" name="product_id" value={productId} />
@@ -119,7 +125,9 @@ export async function ReviewSection({
                         삭제
                       </button>
                     </form>
-                  )}
+                  ) : currentUserId ? (
+                    <ReportReviewButton reviewId={r.id} productId={productId} />
+                  ) : null}
                 </span>
               </div>
               <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-wabi-fg">
