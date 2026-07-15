@@ -69,6 +69,7 @@ supabase/         migrations/{0001_init,0002_rls}.sql · seed.sql
 - **2026-07-15 주문·배송·문의 메일(#129·#133)**: Resend REST. 확정 RPC 가 `confirmed` 일 때만 발송(웹훅·성공페이지 이중 확정에도 1회). 문의 답변 메일은 **본문 미포함**(비밀글 유출 방지, 링크만). 키 미설정·실패해도 결제/저장은 정상.
 - **2026-07-15 품절 표시(#131)**: 목록·홈 카드 품절 오버레이 + 담기 비활성(`stock` undefined 와 0 구분).
 - **2026-07-15 주문 상세(#137)**: `/mypage/orders/[id]` — 송장번호·배송지·항목 전체·청약철회 마감일. 어드민이 저장한 송장을 고객이 볼 수 없던 문제. 타인 접근 → 404(RLS).
+- **2026-07-15 리뷰 모더레이션(#141)**: 0022 reviews.hidden(soft-hide)+review_reports(신고자·사유·unique). 어드민 hard delete 만 가능했고 고객 신고 수단 없었음. **공개 read 를 hidden=false 로 교체 → 쿼리 변경 없이 DB 레벨 자동 제외(RLS-first)**. 신고 = 로그인 본인·자기 리뷰 신고 불가·중복 차단, review_reports select 정책 없음 → 신고자 신원 비공개. CodeRabbit 반영: 사유 enum 강제(Server Action 우회 차단)·0023 작성자 본인 숨김 리뷰 가시성 예외(재작성 silent-fail 해결). 검증: 숨김 anon 0·신고내역 anon []·자기외 insert 401.
 - **2026-07-15 죽은 도메인 링크 제거(#135)**: `wasa.kr` 은 **미등록 도메인**인데 7곳에 하드코딩 → sitemap·robots·메일 링크가 전부 접속 불가 URL. `lib/site-url.ts` `SITE_URL`(server-only, 프로토콜 정규화) 단일 출처.
 - **2026-07-15 배송완료 처리(#124)**: 0020 `orders.delivered_at`. delivered 로 가는 경로가 없어 모든 주문이 영구 "배송 중"이었고, 청약철회 7일 기산점(수령일)도 없었다. 어드민 배송완료 버튼+감사로그, 송장 수정으로 상태 되돌아감 방지. **날짜는 `formatDateKST`(Asia/Seoul 고정) — 서버가 UTC라 법적 기산점이 하루 어긋날 수 있었다.**
 - **2026-07-15 리뷰 구매 검증(#126)**: 0021 — RLS insert 정책이 `auth.uid()=user_id` 만 봐서 **미구매자가 PostgREST 직접 insert 로 리뷰 작성 가능(실측 201)**. 구매 조건(paid·shipping·delivered 주문에 해당 상품) 추가 → 재공격 시 403 차단. 미결제 주문 우회도 봉쇄.
