@@ -45,7 +45,8 @@ function ActionCard({
 }) {
   const active = count > 0;
   const border = tone === "warn" ? "border-amber-300" : "border-red-300";
-  const text = tone === "warn" ? "text-amber-600" : "text-red-600";
+  // amber-600 은 흰 배경 대비 ~3.2:1 로 작은 텍스트 WCAG AA(4.5:1) 미달 → 700.
+  const text = tone === "warn" ? "text-amber-700" : "text-red-600";
   return (
     <Link
       href={href}

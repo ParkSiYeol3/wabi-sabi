@@ -116,7 +116,7 @@ export default async function AdminProductsPage() {
                           품절
                         </span>
                       ) : isLowStock(p.stock) ? (
-                        <span className="ml-1 whitespace-nowrap border border-amber-300 px-1.5 py-0.5 text-xs text-amber-600">
+                        <span className="ml-1 whitespace-nowrap border border-amber-300 px-1.5 py-0.5 text-xs text-amber-700">
                           부족
                         </span>
                       ) : null}
