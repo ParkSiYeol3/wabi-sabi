@@ -21,11 +21,16 @@ export default async function Home({
   searchParams: Promise<{ left?: string }>;
 }) {
   // 실 DB 상품 — 이전엔 하드코딩 더미(존재하지 않는 상품명·가격)를 노출했다.
-  const featured = await getFeaturedProducts(4);
+  // 서로 의존성이 없는 요청은 병렬로 — 순차 await 워터폴 제거(TTFB 단축).
+  // featured=카드용, slidePool=히어로 슬라이드쇼용, searchParams=탈퇴 안내 플래그.
+  const [featured, slidePool, { left }] = await Promise.all([
+    getFeaturedProducts(4),
+    getProducts({ limit: 12 }),
+    searchParams,
+  ]);
   // 히어로 배경 슬라이드쇼용 — 이미지가 등록된 활성 상품에서 모아 중복 URL 제거.
   // (featured 만 쓰면 이 달의 상품이 사진 없을 때 배경이 비므로 상품 전체에서 수집.)
   // 사진이 여러 장이면 크로스페이드로 순환, 1장이면 정적, 0장이면 기본 배경.
-  const slidePool = await getProducts({ limit: 12 });
   const heroImages = [
     ...new Set(
       slidePool
@@ -33,8 +38,6 @@ export default async function Home({
         .filter((src): src is string => Boolean(src)),
     ),
   ].slice(0, 6);
-  // 회원탈퇴 완료 안내 (#113) — 탈퇴 직후 아무 피드백 없이 홈에 떨구지 않는다.
-  const { left } = await searchParams;
 
   return (
     <>
