@@ -56,6 +56,39 @@ export async function createReview(formData: FormData) {
   revalidatePath("/review");
 }
 
+// 리뷰 신고 — 로그인 사용자 (#141). 부적절 리뷰를 어드민에게 알린다.
+// RLS(0022)가 본인만·자기 리뷰 신고 불가·중복(unique)을 강제하므로, 자기 리뷰나
+// 중복 신고는 insert 가 조용히 실패한다(에러 삼킴). 신고 사실은 노출하지 않는다.
+const reportSchema = z.object({
+  reason: z.string().trim().min(1).max(500),
+});
+
+export async function reportReview(formData: FormData) {
+  const reviewId = parseUuid(formData.get("review_id"));
+  if (!reviewId) return;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/auth");
+
+  const parsed = reportSchema.safeParse({
+    reason: String(formData.get("reason") || ""),
+  });
+  if (!parsed.success) return;
+
+  await supabase.from("review_reports").insert({
+    review_id: reviewId,
+    reporter_id: user.id,
+    reason: parsed.data.reason,
+  });
+
+  const productId = parseUuid(formData.get("product_id"));
+  if (productId) revalidatePath(`/shop/${productId}`);
+  revalidatePath("/review");
+}
+
 // 리뷰 삭제 — 본인만 (RLS delete using auth.uid()=user_id).
 export async function deleteReview(formData: FormData) {
   const id = parseUuid(formData.get("id"));
