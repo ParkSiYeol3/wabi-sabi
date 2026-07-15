@@ -1,69 +1,28 @@
 import Link from "next/link";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
-import { startOfTodayKstIso, won } from "@/lib/orders";
+import { won } from "@/lib/orders";
 
-// 처리 대기·현황 요약. service_role 로 조회한다 — 미답변 문의(비밀글)·신고 내역은
-// RLS 상 유저 클라이언트로는 보이지 않아 어드민 요약이 부정확해진다.
-async function loadSummary() {
+type Summary = {
+  awaiting_ship: number;
+  shipping: number;
+  unanswered: number;
+  out_of_stock: number;
+  reported_reviews: number;
+  today_orders: number;
+  today_revenue: number;
+};
+
+// 처리 대기·현황 요약. 집계는 DB(0024 admin_dashboard_summary RPC)에서 계산한다 —
+// 원시 행을 가져와 JS 로 세면 Data API 1,000행 제한에서 매출·건수가 조용히 낮게 나온다.
+// service_role 로만 실행 가능(security definer 라 RLS 우회 → 일반 사용자 호출은 401).
+// .throwOnError() 로 조회 실패를 0 으로 숨기지 않고 에러 경계로 보낸다.
+async function loadSummary(): Promise<Summary> {
   const db = createAdminClient();
-
-  // 신고된 리뷰 중 아직 숨기지 않은 것 = 처리 대기. review_id 를 모아 visible 만 카운트.
-  const { data: reps } = await db.from("review_reports").select("review_id");
-  const reportedIds = [...new Set((reps ?? []).map((r) => r.review_id))];
-  const reportedVisible = reportedIds.length
-    ? ((
-        await db
-          .from("reviews")
-          .select("*", { count: "exact", head: true })
-          .eq("hidden", false)
-          .in("id", reportedIds)
-      ).count ?? 0)
-    : 0;
-
-  const todayIso = startOfTodayKstIso();
-
-  const [
-    awaitingShip,
-    shipping,
-    unanswered,
-    outOfStock,
-    todayOrders,
-  ] = await Promise.all([
-    db
-      .from("orders")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "paid"),
-    db
-      .from("orders")
-      .select("*", { count: "exact", head: true })
-      .eq("status", "shipping"),
-    db
-      .from("inquiries")
-      .select("*", { count: "exact", head: true })
-      .is("answer", null),
-    db
-      .from("products")
-      .select("*", { count: "exact", head: true })
-      .eq("is_active", true)
-      .eq("stock", 0),
-    db
-      .from("orders")
-      .select("total_price")
-      .gte("ordered_at", todayIso)
-      .in("status", ["paid", "shipping", "delivered"])
-      .returns<{ total_price: number }[]>(),
-  ]);
-
-  const todayList = todayOrders.data ?? [];
-  return {
-    awaitingShip: awaitingShip.count ?? 0,
-    shipping: shipping.count ?? 0,
-    unanswered: unanswered.count ?? 0,
-    outOfStock: outOfStock.count ?? 0,
-    reportedVisible,
-    todayCount: todayList.length,
-    todayRevenue: todayList.reduce((a, o) => a + o.total_price, 0),
-  };
+  const { data } = await db
+    .rpc("admin_dashboard_summary")
+    .throwOnError()
+    .returns<Summary>();
+  return data as Summary;
 }
 
 // 처리 대기 카드 — 0 이면 회색, 있으면 강조(빨강). 클릭 시 해당 관리 화면.
@@ -116,7 +75,7 @@ export default async function AdminHome() {
           <ActionCard
             href="/admin/orders"
             label="발송 대기"
-            count={s.awaitingShip}
+            count={s.awaiting_ship}
           />
           <ActionCard
             href="/admin/inquiries"
@@ -126,13 +85,13 @@ export default async function AdminHome() {
           <ActionCard
             href="/admin/reviews"
             label="신고된 리뷰"
-            count={s.reportedVisible}
+            count={s.reported_reviews}
             unit="개"
           />
           <ActionCard
             href="/admin/products"
             label="품절 상품"
-            count={s.outOfStock}
+            count={s.out_of_stock}
             unit="개"
           />
         </div>
@@ -145,13 +104,13 @@ export default async function AdminHome() {
           <div className="border border-wabi-border p-5">
             <p className="text-sm text-wabi-fg-muted">오늘 주문</p>
             <p className="mt-1 text-2xl font-semibold">
-              {s.todayCount.toLocaleString("ko-KR")}
+              {s.today_orders.toLocaleString("ko-KR")}
               <span className="ml-1 text-sm font-normal">건</span>
             </p>
           </div>
           <div className="border border-wabi-border p-5">
             <p className="text-sm text-wabi-fg-muted">오늘 매출</p>
-            <p className="mt-1 text-2xl font-semibold">{won(s.todayRevenue)}</p>
+            <p className="mt-1 text-2xl font-semibold">{won(s.today_revenue)}</p>
           </div>
           <div className="border border-wabi-border p-5">
             <p className="text-sm text-wabi-fg-muted">배송 중</p>
