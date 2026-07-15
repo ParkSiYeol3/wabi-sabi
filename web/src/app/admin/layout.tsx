@@ -13,7 +13,11 @@ export default async function AdminLayout({
   return (
     <Container className="py-12">
       <div className="flex items-center justify-between border-b border-wabi-border pb-4">
-        <h1 className="text-xl font-semibold">Admin</h1>
+        <h1 className="text-xl font-semibold">
+          <Link href="/admin" className="hover:underline">
+            Admin
+          </Link>
+        </h1>
         <nav className="flex gap-5 text-sm" aria-label="어드민 메뉴">
           <Link href="/admin/products" className="hover:underline">
             상품
@@ -44,8 +48,8 @@ export default async function AdminLayout({
 
       {!adminConfigured() && (
         <p className="mt-4 border border-wabi-border bg-wabi-subtle p-3 text-xs text-wabi-fg-muted">
-          ⚠️ <code>SUPABASE_SERVICE_ROLE_KEY</code> 미설정 — 쓰기 작업(생성/수정/삭제)은
-          .env.local에 service_role 키를 넣어야 동작합니다.
+          ⚠️ <code>SUPABASE_SERVICE_ROLE_KEY</code> 미설정 — 쓰기 작업(생성/수정/삭제)과
+          대시보드 요약 조회는 .env.local에 service_role 키를 넣어야 동작합니다.
         </p>
       )}
 
