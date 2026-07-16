@@ -54,7 +54,7 @@ export default async function AboutPage() {
         <div className="grid gap-16 md:grid-cols-2 md:items-center">
           <Reveal>
             <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-              철학 <span className="text-wabi-fg-muted">Philosophy</span>
+わび-さび <span className="text-wabi-fg-muted">(Wabi-sabi)</span>
             </h2>
             <div className="mt-8 space-y-5 text-sm leading-8 text-wabi-fg-muted md:text-[15px]">
               {philosophy.map((p, i) => (

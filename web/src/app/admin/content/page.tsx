@@ -17,7 +17,7 @@ export default async function AdminContentPage() {
         <input type="hidden" name="key" value={PHILOSOPHY_KEY} />
         <div>
           <label htmlFor="philosophy" className="block text-sm font-medium">
-            철학 소개 문구
+わび-さび (Wabi-sabi) 소개 문구
           </label>
           <p className="mt-1 text-xs text-wabi-fg-muted">
             홈·About 페이지에 노출됩니다. 빈 줄(엔터 두 번)로 문단을 구분하세요.
