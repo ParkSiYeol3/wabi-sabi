@@ -49,7 +49,7 @@ export function ProductGallery({
                 aria-label={`${name} 이미지 ${i + 1} 보기`}
                 aria-current={i === active}
                 className={cn(
-                  "relative block aspect-square w-full overflow-hidden bg-wabi-muted transition-opacity",
+                  "relative block aspect-square w-full overflow-hidden bg-wabi-muted transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wabi-fg focus-visible:ring-offset-2 focus-visible:ring-offset-wabi-bg",
                   i === active
                     ? "ring-2 ring-wabi-fg ring-offset-2 ring-offset-wabi-bg"
                     : "opacity-70 hover:opacity-100",

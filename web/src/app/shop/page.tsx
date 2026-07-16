@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Form from "next/form";
 import { Search } from "lucide-react";
 import { Container } from "@/components/container";
 import { ProductCard } from "@/components/product-card";
@@ -75,8 +76,12 @@ export default async function ShopPage({
 
       {/* 툴바 — 검색(좌) + 정렬(우) 한 줄, 하단 구분선 */}
       <div className="mt-5 flex flex-col gap-4 border-b border-wabi-border pb-5 sm:flex-row sm:items-center sm:justify-between">
-        {/* 검색 (WSB-008) */}
-        <form action="/shop" className="flex w-full gap-2 sm:max-w-xs">
+        {/* 검색 (WSB-008) — next/form 으로 클라이언트 내비게이션(전체 새로고침 방지) */}
+        <Form
+          action="/shop"
+          role="search"
+          className="flex w-full gap-2 sm:max-w-xs"
+        >
           {sp.category && (
             <input type="hidden" name="category" value={sp.category} />
           )}
@@ -98,7 +103,7 @@ export default async function ShopPage({
           >
             <Search className="size-4" />
           </button>
-        </form>
+        </Form>
 
         {/* 정렬 (WSB-009) */}
         <div className="flex shrink-0 gap-4 text-xs">
@@ -106,6 +111,7 @@ export default async function ShopPage({
             <Link
               key={s.key}
               href={buildQuery(sp, { sort: s.key })}
+              aria-current={sort === s.key ? "true" : undefined}
               className={cn(
                 "transition-colors",
                 sort === s.key

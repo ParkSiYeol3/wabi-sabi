@@ -108,8 +108,13 @@ export default async function ProductDetailPage({
         dangerouslySetInnerHTML={{ __html: productJsonLd(product) }}
       />
       <div className="grid gap-12 md:grid-cols-2">
-        {/* 이미지 갤러리 — 썸네일 클릭 시 메인 전환 */}
-        <ProductGallery images={product.images} name={product.name} />
+        {/* 이미지 갤러리 — 썸네일 클릭 시 메인 전환.
+            key 로 상품별 재마운트해 이전 상품의 썸네일 선택이 남지 않게 한다. */}
+        <ProductGallery
+          key={product.id}
+          images={product.images}
+          name={product.name}
+        />
 
         {/* 정보 */}
         <div>
