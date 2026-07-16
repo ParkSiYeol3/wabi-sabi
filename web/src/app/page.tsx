@@ -135,7 +135,7 @@ export default async function Home({
         <div className="mx-auto grid max-w-[1200px] gap-12 px-5 py-28 md:grid-cols-2 md:items-center">
           <Reveal variant="left">
             <h2 className="text-2xl font-semibold">
-              철학 <span className="text-wabi-fg-muted">Philosophy</span>
+わび-さび <span className="text-wabi-fg-muted">(Wabi-sabi)</span>
             </h2>
             <div className="mt-6 space-y-4 text-sm leading-7 text-wabi-fg-muted">
               {philosophy.map((p, i) => (
