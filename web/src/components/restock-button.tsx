@@ -17,14 +17,15 @@ export function RestockButton({
   productId: string;
   initial: boolean;
 }) {
+  // 액션이 실패하면 이전 상태를 유지한다 — 실패를 무시하고 토글하면 알림을
+  // 받는 것처럼 보이지만 실제로는 구독되지 않는다.
   const [subscribed, action, pending] = useActionState<boolean, FormData>(
     async (prev, formData) => {
-      if (prev) {
-        await unsubscribeRestock(formData);
-        return false;
-      }
-      await subscribeRestock(formData);
-      return true;
+      const ok = prev
+        ? await unsubscribeRestock(formData)
+        : await subscribeRestock(formData);
+      if (!ok) return prev;
+      return !prev;
     },
     initial,
   );

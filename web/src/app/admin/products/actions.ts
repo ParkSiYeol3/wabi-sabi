@@ -216,7 +216,16 @@ export async function updateStock(formData: FormData) {
     .eq("id", id)
     .maybeSingle<{ stock: number }>();
 
-  await supabase.from("products").update({ stock: parsedStock.data }).eq("id", id);
+  // 저장이 실패하면 감사로그·알림을 남기지 않는다(하지 않은 변경을 기록·통지하지 않도록).
+  const { error: updateErr } = await supabase
+    .from("products")
+    .update({ stock: parsedStock.data })
+    .eq("id", id);
+  if (updateErr) {
+    console.error("[admin] 재고 저장 실패", id, updateErr);
+    return;
+  }
+
   await logAdminAction(user, {
     action: "product.update_stock",
     targetTable: "products",

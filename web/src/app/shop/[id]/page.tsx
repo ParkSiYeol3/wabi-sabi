@@ -81,25 +81,26 @@ export default async function ProductDetailPage({
     data: { user },
   } = await supabase.auth.getUser();
   let wished = false;
-  // 재입고 알림 구독 여부 (#166) — 품절이고 로그인 상태일 때만 버튼을 노출한다.
+  // 재입고 알림 구독 여부 (#166) — 버튼이 품절일 때만 뜨므로 그때만 조회한다.
   let restockSubscribed = false;
   if (user) {
-    const [{ data: wish }, { data: restock }] = await Promise.all([
-      supabase
-        .from("wishlist")
-        .select("id")
-        .eq("product_id", id)
-        .eq("user_id", user.id)
-        .maybeSingle(),
-      supabase
+    const { data: wish } = await supabase
+      .from("wishlist")
+      .select("id")
+      .eq("product_id", id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    wished = !!wish;
+
+    if (product.stock <= 0) {
+      const { data: restock } = await supabase
         .from("restock_subscriptions")
         .select("id")
         .eq("product_id", id)
         .eq("user_id", user.id)
-        .maybeSingle(),
-    ]);
-    wished = !!wish;
-    restockSubscribed = !!restock;
+        .maybeSingle();
+      restockSubscribed = !!restock;
+    }
   }
 
   const related = product.category

@@ -35,7 +35,8 @@ export async function sendRestockMails(productId: string): Promise<void> {
       const to = authUser?.user?.email;
       if (!to) continue;
 
-      await sendMail({
+      // sendMail 은 실패 시 false — 반환값을 봐야 실패한 구독을 지우지 않는다.
+      const sent = await sendMail({
         to,
         subject: `[${site.name}] ${product.name} 재입고 알림`,
         html: `
@@ -54,7 +55,7 @@ export async function sendRestockMails(productId: string): Promise<void> {
           </p>
         </div>`,
       });
-      sentIds.push(sub.id);
+      if (sent) sentIds.push(sub.id);
     } catch (e) {
       // 한 명 실패가 나머지 발송을 막지 않는다.
       console.error("[restock] 발송 실패", sub.user_id, e);
