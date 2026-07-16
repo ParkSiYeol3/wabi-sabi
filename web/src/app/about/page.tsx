@@ -4,6 +4,12 @@ import { Container } from "@/components/container";
 import { Reveal } from "@/components/reveal";
 import { InstagramFeed } from "@/components/instagram-feed";
 import { site } from "@/lib/site";
+import {
+  getSiteContent,
+  PHILOSOPHY_KEY,
+  DEFAULT_PHILOSOPHY,
+  toParagraphs,
+} from "@/lib/queries/content";
 
 export const metadata: Metadata = {
   title: "About",
@@ -18,7 +24,10 @@ const values = [
 
 const stagger = [0, 100, 200] as const;
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const philosophy = toParagraphs(
+    (await getSiteContent(PHILOSOPHY_KEY)) ?? DEFAULT_PHILOSOPHY,
+  );
   return (
     <>
       {/* 히어로 — 큰 헤드라인 */}
@@ -48,20 +57,9 @@ export default function AboutPage() {
               철학 <span className="text-wabi-fg-muted">Philosophy</span>
             </h2>
             <div className="mt-8 space-y-5 text-sm leading-8 text-wabi-fg-muted md:text-[15px]">
-              <p>
-                わび-さび (Wabi-sabi)는 불완전함과 무상함의 아름다움을 받아들이는
-                일본의 미학입니다.
-              </p>
-              <p>
-                우리는 시간의 흔적이 담긴 수공예 도자기와 생활 오브제를
-                큐레이션합니다. 각 제품은 장인의 손길이 닿은 유일무이한
-                작품입니다.
-              </p>
-              <p>
-                10년 넘게 오가바의 도자기로 만든 라면을 먹어온 우리가, 생각한
-                도자기를 만들어주었으면 하고 오가바 작가님께 주문을 했습니다.
-                주문하신 분들만이 가지실 수 있는 특별한 작품들입니다.
-              </p>
+              {philosophy.map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
             </div>
 
             {/* 영업시간 */}

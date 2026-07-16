@@ -34,6 +34,9 @@ export default async function AdminLayout({
           <Link href="/admin/reviews" className="hover:underline">
             리뷰
           </Link>
+          <Link href="/admin/content" className="hover:underline">
+            콘텐츠
+          </Link>
           <Link href="/admin/audit" className="hover:underline">
             감사로그
           </Link>

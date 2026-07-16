@@ -8,6 +8,12 @@ import { MapCard } from "@/components/map-card";
 import { HeroSlideshow } from "@/components/hero-slideshow";
 import { Reveal } from "@/components/reveal";
 import { getFeaturedProducts, getProducts } from "@/lib/queries/products";
+import {
+  getSiteContent,
+  PHILOSOPHY_KEY,
+  DEFAULT_PHILOSOPHY,
+  toParagraphs,
+} from "@/lib/queries/content";
 import { site } from "@/lib/site";
 
 const values = [
@@ -24,11 +30,13 @@ export default async function Home({
   // 실 DB 상품 — 이전엔 하드코딩 더미(존재하지 않는 상품명·가격)를 노출했다.
   // 서로 의존성이 없는 요청은 병렬로 — 순차 await 워터폴 제거(TTFB 단축).
   // featured=카드용, slidePool=히어로 슬라이드쇼용, searchParams=탈퇴 안내 플래그.
-  const [featured, slidePool, { left }] = await Promise.all([
+  const [featured, slidePool, philosophyRaw, { left }] = await Promise.all([
     getFeaturedProducts(4),
     getProducts({ limit: 12 }),
+    getSiteContent(PHILOSOPHY_KEY),
     searchParams,
   ]);
+  const philosophy = toParagraphs(philosophyRaw ?? DEFAULT_PHILOSOPHY);
   // 히어로 배경 슬라이드쇼용 — 이미지가 등록된 활성 상품에서 모아 중복 URL 제거.
   // (featured 만 쓰면 이 달의 상품이 사진 없을 때 배경이 비므로 상품 전체에서 수집.)
   // 사진이 여러 장이면 크로스페이드로 순환, 1장이면 정적, 0장이면 기본 배경.
@@ -130,15 +138,9 @@ export default async function Home({
               철학 <span className="text-wabi-fg-muted">Philosophy</span>
             </h2>
             <div className="mt-6 space-y-4 text-sm leading-7 text-wabi-fg-muted">
-              <p>
-                わび-さび (Wabi-sabi)는 불완전함과 무상함의 아름다움을 받아들이는
-                일본의 미학입니다.
-              </p>
-              <p>
-                우리는 시간의 흔적이 담긴 수공예 도자기와 생활 오브제를
-                큐레이션합니다. 각 제품은 장인의 손길이 닿은 유일무이한
-                작품입니다.
-              </p>
+              {philosophy.map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
             </div>
           </Reveal>
           <Reveal variant="right">
