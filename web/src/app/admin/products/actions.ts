@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/admin";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { parseUuid, numField, uuidSchema } from "@/lib/validation";
 import { logAdminAction } from "@/lib/audit";
+import { sendRestockMails } from "@/lib/emails/restock";
 import {
   uploadProductImages,
   deleteProductImage,
@@ -208,14 +209,42 @@ export async function updateStock(formData: FormData) {
   if (!id || !parsedStock.success) return;
 
   const supabase = createAdminClient();
-  await supabase.from("products").update({ stock: parsedStock.data }).eq("id", id);
+  // 재입고 판정을 위해 이전 재고를 먼저 읽는다 (#166).
+  const { data: before } = await supabase
+    .from("products")
+    .select("stock")
+    .eq("id", id)
+    .maybeSingle<{ stock: number }>();
+
+  // 저장이 실패하면 감사로그·알림을 남기지 않는다(하지 않은 변경을 기록·통지하지 않도록).
+  const { error: updateErr } = await supabase
+    .from("products")
+    .update({ stock: parsedStock.data })
+    .eq("id", id);
+  if (updateErr) {
+    console.error("[admin] 재고 저장 실패", id, updateErr);
+    return;
+  }
+
   await logAdminAction(user, {
     action: "product.update_stock",
     targetTable: "products",
     targetId: id,
     meta: { stock: parsedStock.data },
   });
+
+  // 품절 → 재입고로 바뀐 순간에만 구독자에게 알림(1회성). 발송 실패는 삼켜
+  // 재고 저장을 되돌리지 않는다 — 메일은 부가 기능(fail-open).
+  if (before?.stock === 0 && parsedStock.data > 0) {
+    try {
+      await sendRestockMails(id);
+    } catch (e) {
+      console.error("[restock] 알림 발송 실패", id, e);
+    }
+  }
+
   revalidatePath("/admin/products");
+  revalidatePath(`/shop/${id}`);
 }
 
 export async function toggleActive(formData: FormData) {

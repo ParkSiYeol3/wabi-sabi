@@ -5,6 +5,7 @@ import { Container } from "@/components/container";
 import { ProductCard } from "@/components/product-card";
 import { ProductGallery } from "@/components/product-gallery";
 import { ProductDetailActions } from "@/components/product-detail-actions";
+import { RestockButton } from "@/components/restock-button";
 import { WishlistButton } from "@/components/wishlist-button";
 import { ReviewSection } from "@/components/review-section";
 import { getProduct, getRelatedProducts } from "@/lib/queries/products";
@@ -80,14 +81,26 @@ export default async function ProductDetailPage({
     data: { user },
   } = await supabase.auth.getUser();
   let wished = false;
+  // 재입고 알림 구독 여부 (#166) — 버튼이 품절일 때만 뜨므로 그때만 조회한다.
+  let restockSubscribed = false;
   if (user) {
-    const { data } = await supabase
+    const { data: wish } = await supabase
       .from("wishlist")
       .select("id")
       .eq("product_id", id)
       .eq("user_id", user.id)
       .maybeSingle();
-    wished = !!data;
+    wished = !!wish;
+
+    if (product.stock <= 0) {
+      const { data: restock } = await supabase
+        .from("restock_subscriptions")
+        .select("id")
+        .eq("product_id", id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      restockSubscribed = !!restock;
+    }
   }
 
   const related = product.category
@@ -147,6 +160,25 @@ export default async function ProductDetailPage({
             }}
             stock={product.stock}
           />
+
+          {/* 품절이면 재입고 알림 (#166) — 로그인 사용자만(발송 주소 = 계정 이메일) */}
+          {product.stock <= 0 &&
+            (user ? (
+              <RestockButton
+                productId={product.id}
+                initial={restockSubscribed}
+              />
+            ) : (
+              <p className="mt-4 text-sm text-wabi-fg-muted">
+                <Link
+                  href={`/auth?redirect=/shop/${product.id}`}
+                  className="underline hover:text-wabi-fg"
+                >
+                  로그인
+                </Link>{" "}
+                후 재입고 알림을 받을 수 있습니다.
+              </p>
+            ))}
 
           {specs.length > 0 && (
             <dl className="mt-10 divide-y divide-wabi-border border-t border-wabi-border text-sm">
