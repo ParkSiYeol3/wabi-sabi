@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { Container } from "@/components/container";
 import { ProductCard } from "@/components/product-card";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { Reveal } from "@/components/reveal";
 import { Input } from "@/components/ui/input";
 import { categories, MONTHLY_SLUG } from "@/lib/site";
 import { getProducts, type ProductSort } from "@/lib/queries/products";
@@ -131,22 +132,39 @@ export default async function ShopPage({
         </p>
       ) : (
         <ul className="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
-          {products.map((p, i) => (
-            <li key={p.id}>
-              {/* 첫 줄(모바일 2·데스크톱 4칸)은 eager 로드 — LCP 후보 */}
-              <ProductCard product={p} eager={i < 4} />
-              <AddToCartButton
-                product={{
-                  id: p.id,
-                  name: p.name,
-                  price: p.price,
-                  image: p.image,
-                }}
-                soldOut={typeof p.stock === "number" && p.stock <= 0}
-                className="mt-3 w-full"
-              />
-            </li>
-          ))}
+          {products.map((p, i) => {
+            const card = (
+              <>
+                {/* 첫 줄(모바일 2·데스크톱 4칸)은 eager 로드 — LCP 후보 */}
+                <ProductCard product={p} eager={i < 4} />
+                <AddToCartButton
+                  product={{
+                    id: p.id,
+                    name: p.name,
+                    price: p.price,
+                    image: p.image,
+                  }}
+                  soldOut={typeof p.stock === "number" && p.stock <= 0}
+                  className="mt-3 w-full"
+                />
+              </>
+            );
+            return (
+              <li key={p.id}>
+                {/* 첫 행은 LCP 보호를 위해 즉시 표시, 이후 행만 스크롤 진입 애니메이션 */}
+                {i < 4 ? (
+                  card
+                ) : (
+                  <Reveal
+                    variant="scale"
+                    delay={([0, 100, 200, 300] as const)[i % 4] ?? 0}
+                  >
+                    {card}
+                  </Reveal>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </Container>
