@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Form from "next/form";
 import { Search } from "lucide-react";
 import { Container } from "@/components/container";
 import { ProductCard } from "@/components/product-card";
@@ -43,35 +44,16 @@ export default async function ShopPage({
 
   return (
     <Container className="py-16">
-      <h1 className="text-2xl font-semibold tracking-wide">Shop</h1>
-
-      {/* 검색 (WSB-008) */}
-      <form action="/shop" className="mt-8 flex max-w-sm gap-2">
-        {sp.category && (
-          <input type="hidden" name="category" value={sp.category} />
-        )}
-        {sp.sort && sp.sort !== "newest" && (
-          <input type="hidden" name="sort" value={sp.sort} />
-        )}
-        <Input
-          name="q"
-          type="search"
-          defaultValue={sp.q ?? ""}
-          placeholder="상품 검색"
-          aria-label="상품 검색"
-          className="rounded-none"
-        />
-        <button
-          type="submit"
-          aria-label="검색"
-          className="flex items-center justify-center bg-wabi-accent px-4 text-white hover:bg-wabi-accent/90"
-        >
-          <Search className="size-4" />
-        </button>
-      </form>
+      {/* 헤더 — 타이틀 + 결과 수 */}
+      <div className="flex items-baseline justify-between">
+        <h1 className="text-2xl font-semibold tracking-wide">Shop</h1>
+        <span className="text-xs text-wabi-fg-muted">
+          {products.length}개 상품
+        </span>
+      </div>
 
       {/* 카테고리 (WSB-007) */}
-      <nav className="mt-6 flex flex-wrap gap-2" aria-label="카테고리">
+      <nav className="mt-8 flex flex-wrap gap-2" aria-label="카테고리">
         <FilterLink href={buildQuery(sp, { category: undefined })} active={!sp.category}>
           전체
         </FilterLink>
@@ -92,22 +74,55 @@ export default async function ShopPage({
         ))}
       </nav>
 
-      {/* 정렬 (WSB-009) */}
-      <div className="mt-4 flex gap-4 text-xs">
-        {sorts.map((s) => (
-          <Link
-            key={s.key}
-            href={buildQuery(sp, { sort: s.key })}
-            className={cn(
-              "transition-colors",
-              sort === s.key
-                ? "font-medium text-wabi-fg"
-                : "text-wabi-fg-muted hover:text-wabi-fg",
-            )}
+      {/* 툴바 — 검색(좌) + 정렬(우) 한 줄, 하단 구분선 */}
+      <div className="mt-5 flex flex-col gap-4 border-b border-wabi-border pb-5 sm:flex-row sm:items-center sm:justify-between">
+        {/* 검색 (WSB-008) — next/form 으로 클라이언트 내비게이션(전체 새로고침 방지) */}
+        <Form
+          action="/shop"
+          role="search"
+          className="flex w-full gap-2 sm:max-w-xs"
+        >
+          {sp.category && (
+            <input type="hidden" name="category" value={sp.category} />
+          )}
+          {sp.sort && sp.sort !== "newest" && (
+            <input type="hidden" name="sort" value={sp.sort} />
+          )}
+          <Input
+            name="q"
+            type="search"
+            defaultValue={sp.q ?? ""}
+            placeholder="상품 검색"
+            aria-label="상품 검색"
+            className="rounded-none"
+          />
+          <button
+            type="submit"
+            aria-label="검색"
+            className="flex items-center justify-center bg-wabi-accent px-4 text-white hover:bg-wabi-accent/90"
           >
-            {s.label}
-          </Link>
-        ))}
+            <Search className="size-4" />
+          </button>
+        </Form>
+
+        {/* 정렬 (WSB-009) */}
+        <div className="flex shrink-0 gap-4 text-xs">
+          {sorts.map((s) => (
+            <Link
+              key={s.key}
+              href={buildQuery(sp, { sort: s.key })}
+              aria-current={sort === s.key ? "true" : undefined}
+              className={cn(
+                "transition-colors",
+                sort === s.key
+                  ? "font-medium text-wabi-fg"
+                  : "text-wabi-fg-muted hover:text-wabi-fg",
+              )}
+            >
+              {s.label}
+            </Link>
+          ))}
+        </div>
       </div>
 
       {products.length === 0 ? (
@@ -115,7 +130,7 @@ export default async function ShopPage({
           {sp.q ? `'${sp.q}' 검색 결과가 없습니다.` : "준비 중인 상품입니다."}
         </p>
       ) : (
-        <ul className="mt-10 grid grid-cols-2 gap-6 md:grid-cols-4">
+        <ul className="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
           {products.map((p, i) => (
             <li key={p.id}>
               {/* 첫 줄(모바일 2·데스크톱 4칸)은 eager 로드 — LCP 후보 */}
@@ -127,7 +142,7 @@ export default async function ShopPage({
                   price: p.price,
                   image: p.image,
                 }}
-                soldOut={p.stock !== undefined && p.stock <= 0}
+                soldOut={typeof p.stock === "number" && p.stock <= 0}
                 className="mt-3 w-full"
               />
             </li>

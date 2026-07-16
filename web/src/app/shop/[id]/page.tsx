@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ImageIcon } from "lucide-react";
 import { Container } from "@/components/container";
 import { ProductCard } from "@/components/product-card";
+import { ProductGallery } from "@/components/product-gallery";
 import { ProductDetailActions } from "@/components/product-detail-actions";
 import { WishlistButton } from "@/components/wishlist-button";
 import { ReviewSection } from "@/components/review-section";
@@ -109,45 +108,13 @@ export default async function ProductDetailPage({
         dangerouslySetInnerHTML={{ __html: productJsonLd(product) }}
       />
       <div className="grid gap-12 md:grid-cols-2">
-        {/* 이미지 */}
-        <div>
-          <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-wabi-muted">
-            {main ? (
-              <Image
-                src={main}
-                alt={product.name}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
-                preload
-              />
-            ) : (
-              <ImageIcon
-                className="size-12 text-wabi-fg-muted/40"
-                strokeWidth={1}
-                aria-hidden
-              />
-            )}
-          </div>
-          {product.images.length > 1 && (
-            <ul className="mt-3 grid grid-cols-4 gap-3">
-              {product.images.slice(0, 4).map((src, i) => (
-                <li
-                  key={i}
-                  className="relative aspect-square overflow-hidden bg-wabi-muted"
-                >
-                  <Image
-                    src={src}
-                    alt={`${product.name} ${i + 1}`}
-                    fill
-                    sizes="120px"
-                    className="object-cover"
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {/* 이미지 갤러리 — 썸네일 클릭 시 메인 전환.
+            key 로 상품별 재마운트해 이전 상품의 썸네일 선택이 남지 않게 한다. */}
+        <ProductGallery
+          key={product.id}
+          images={product.images}
+          name={product.name}
+        />
 
         {/* 정보 */}
         <div>
