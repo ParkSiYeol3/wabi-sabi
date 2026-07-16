@@ -29,7 +29,7 @@ export function HeroSlideshow({ images }: { images: string[] }) {
           fill
           sizes="100vw"
           preload={i === 0}
-          className={`object-cover transition-opacity duration-1000 ease-in-out ${
+          className={`object-cover transition-opacity duration-2500 ease-in-out ${
             i === idx ? "opacity-100" : "opacity-0"
           }`}
         />
