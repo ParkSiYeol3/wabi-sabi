@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Container } from "@/components/container";
 import { ProductCard, type ProductCardData } from "@/components/product-card";
 import { WishlistButton } from "@/components/wishlist-button";
+import { AddToCartButton } from "@/components/add-to-cart-button";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "위시리스트" };
@@ -13,6 +14,7 @@ type Row = {
     id: string;
     name: string;
     price: number;
+    stock: number;
     images: unknown;
   } | null;
 };
@@ -26,7 +28,7 @@ export default async function WishlistPage() {
 
   const { data } = await supabase
     .from("wishlist")
-    .select("product_id, products(id, name, price, images)")
+    .select("product_id, products(id, name, price, stock, images)")
     .order("created_at", { ascending: false })
     .returns<Row[]>();
 
@@ -36,6 +38,7 @@ export default async function WishlistPage() {
       id: r.products!.id,
       name: r.products!.name,
       price: r.products!.price,
+      stock: r.products!.stock,
       image:
         Array.isArray(r.products!.images) &&
         typeof r.products!.images[0] === "string"
@@ -59,6 +62,11 @@ export default async function WishlistPage() {
                 <WishlistButton productId={p.id} initial refreshOnToggle />
               </div>
               <ProductCard product={p} />
+              <AddToCartButton
+                product={{ id: p.id, name: p.name, price: p.price, image: p.image }}
+                soldOut={p.stock !== undefined && p.stock <= 0}
+                className="mt-3 w-full"
+              />
             </li>
           ))}
         </ul>
