@@ -32,7 +32,7 @@ const VARIANTS = {
   scale: { hidden: "scale-90 opacity-0", shown: "scale-100 opacity-100" },
   blur: {
     hidden: "translate-y-8 opacity-0 blur-md",
-    shown: "translate-y-0 opacity-100 blur-0",
+    shown: "translate-y-0 opacity-100 blur-none",
   },
 } as const;
 
