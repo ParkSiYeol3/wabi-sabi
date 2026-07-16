@@ -43,6 +43,31 @@ export type CartLine = z.infer<typeof cartLineSchema>;
 export type DeliveryInput = z.infer<typeof deliverySchema>;
 export type GiftInput = z.infer<typeof giftSchema>;
 
+export type SavedAddress = {
+  id: string;
+  recipient: string;
+  phone: string;
+  postcode: string | null;
+  address: string;
+  detail: string | null;
+};
+
+// 본인 저장 배송지 (#162) — 결제 시 자동 채움용. RLS(addresses 소유자 전용)로
+// 타인 주소는 조회되지 않는다. 최신순.
+export async function getMyAddresses(): Promise<SavedAddress[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data } = await supabase
+    .from("addresses")
+    .select("id, recipient, phone, postcode, address, detail")
+    .order("created_at", { ascending: false })
+    .returns<SavedAddress[]>();
+  return data ?? [];
+}
+
 export type CreateOrderResult =
   | { ok: true; orderId: string; amount: number; orderName: string }
   | { ok: false; error: string };
