@@ -1,11 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ImageIcon, Clock, MapPin, AtSign, Mail } from "lucide-react";
+import { Clock, MapPin, AtSign, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { MapCard } from "@/components/map-card";
 import { HeroSlideshow } from "@/components/hero-slideshow";
+import { Reveal } from "@/components/reveal";
 import { getFeaturedProducts, getProducts } from "@/lib/queries/products";
 import { site } from "@/lib/site";
 
@@ -84,39 +85,48 @@ export default async function Home({
       </section>
 
       {/* ── Featured Collection ────────────────────────────── */}
-      <section className="mx-auto max-w-[1200px] px-5 py-24">
-        <h2 className="text-center text-xl font-semibold tracking-wide">
-          Featured Collection
-        </h2>
+      <section className="mx-auto max-w-[1200px] px-5 py-28">
+        <Reveal>
+          <h2 className="text-center text-2xl font-semibold tracking-wide">
+            Featured Collection
+          </h2>
+        </Reveal>
         {featured.length === 0 ? (
           <p className="mt-12 text-center text-sm text-wabi-fg-muted">
             준비 중인 상품입니다.
           </p>
         ) : (
-          <ul className="mt-12 grid grid-cols-2 gap-6 md:grid-cols-4">
-            {featured.map((p) => (
+          <ul className="mt-14 grid grid-cols-2 gap-6 md:grid-cols-4">
+            {featured.map((p, i) => (
               <li key={p.id}>
-                <ProductCard product={p} />
+                <Reveal
+                  variant="scale"
+                  delay={([0, 100, 200, 300] as const)[i] ?? 0}
+                >
+                  <ProductCard product={p} />
+                </Reveal>
               </li>
             ))}
           </ul>
         )}
-        <div className="mt-12 text-center">
-          <Button
-            asChild
-            variant="outline"
-            className="rounded-none border-wabi-fg px-8"
-          >
-            <Link href="/shop">VIEW ALL</Link>
-          </Button>
-        </div>
+        <Reveal>
+          <div className="mt-14 text-center">
+            <Button
+              asChild
+              variant="outline"
+              className="rounded-none border-wabi-fg px-8"
+            >
+              <Link href="/shop">VIEW ALL</Link>
+            </Button>
+          </div>
+        </Reveal>
       </section>
 
       {/* ── Philosophy ─────────────────────────────────────── */}
       <section className="bg-wabi-subtle">
-        <div className="mx-auto grid max-w-[1200px] gap-12 px-5 py-24 md:grid-cols-2 md:items-center">
-          <div>
-            <h2 className="text-xl font-semibold">
+        <div className="mx-auto grid max-w-[1200px] gap-12 px-5 py-28 md:grid-cols-2 md:items-center">
+          <Reveal variant="left">
+            <h2 className="text-2xl font-semibold">
               철학 <span className="text-wabi-fg-muted">Philosophy</span>
             </h2>
             <div className="mt-6 space-y-4 text-sm leading-7 text-wabi-fg-muted">
@@ -130,39 +140,50 @@ export default async function Home({
                 작품입니다.
               </p>
             </div>
-          </div>
-          <div className="flex aspect-[4/3] items-center justify-center bg-wabi-muted">
-            <ImageIcon
-              className="size-10 text-wabi-fg-muted/40"
-              strokeWidth={1}
-              aria-hidden
-            />
-          </div>
+          </Reveal>
+          <Reveal variant="right">
+            <div className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-wabi-muted">
+              <Image
+                src="/brand/logo-mark.png"
+                alt=""
+                width={280}
+                height={139}
+                className="h-auto w-2/5 opacity-15"
+              />
+            </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ── Our Values ─────────────────────────────────────── */}
-      <section className="mx-auto max-w-[1200px] px-5 py-24">
-        <h2 className="text-center text-xl font-semibold">Our Values</h2>
-        <div className="mt-12 grid gap-10 text-center md:grid-cols-3">
-          {values.map((v) => (
-            <div key={v.en}>
-              <h3 className="text-base font-medium">{v.en}</h3>
-              <p className="mt-3 text-sm text-wabi-fg-muted">{v.ko}</p>
-            </div>
+      <section className="mx-auto max-w-[1200px] px-5 py-28">
+        <Reveal>
+          <h2 className="text-center text-2xl font-semibold">Our Values</h2>
+        </Reveal>
+        <div className="mt-14 grid gap-10 text-center md:grid-cols-3">
+          {values.map((v, i) => (
+            <Reveal key={v.en} delay={([0, 100, 200] as const)[i] ?? 0}>
+              <div>
+                <h3 className="text-base font-medium">{v.en}</h3>
+                <p className="mt-3 text-sm text-wabi-fg-muted">{v.ko}</p>
+              </div>
+            </Reveal>
           ))}
         </div>
       </section>
 
       {/* ── Visit Us ───────────────────────────────────────── */}
       <section className="bg-wabi-subtle">
-        <div className="mx-auto max-w-[1200px] px-5 py-24">
-          <h2 className="text-center text-xl font-semibold">
-            방문 안내 <span className="text-wabi-fg-muted">Visit Us</span>
-          </h2>
-          <div className="mt-12 grid gap-12 md:grid-cols-2 md:items-start">
+        <div className="mx-auto max-w-[1200px] px-5 py-28">
+          <Reveal>
+            <h2 className="text-center text-2xl font-semibold">
+              방문 안내 <span className="text-wabi-fg-muted">Visit Us</span>
+            </h2>
+          </Reveal>
+          <div className="mt-14 grid gap-12 md:grid-cols-2 md:items-start">
             {/* a11y: dt/dd 없는 dl 은 마크업 위반(Lighthouse definition-list) → ul 로 */}
-            <ul className="space-y-8">
+            <Reveal variant="left">
+              <ul className="space-y-8">
               <VisitItem icon={<Clock className="size-5" strokeWidth={1.5} />} title="영업 시간">
                 <p>{site.hours}</p>
                 <p className="text-wabi-fg-muted">{site.closed}</p>
@@ -182,19 +203,24 @@ export default async function Home({
                   {site.email}
                 </a>
               </VisitItem>
-            </ul>
-            <MapCard />
+              </ul>
+            </Reveal>
+            <Reveal variant="right">
+              <MapCard />
+            </Reveal>
           </div>
         </div>
       </section>
 
       {/* ── Newsletter ─────────────────────────────────────── */}
-      <section className="mx-auto max-w-[1200px] px-5 py-24 text-center">
-        <h2 className="text-xl font-semibold">Newsletter</h2>
-        <p className="mt-3 text-sm text-wabi-fg-muted">
-          신상품과 특별한 소식을 가장 먼저 받아보세요
-        </p>
-        <NewsletterForm />
+      <section className="mx-auto max-w-[1200px] px-5 py-28 text-center">
+        <Reveal variant="scale">
+          <h2 className="text-xl font-semibold">Newsletter</h2>
+          <p className="mt-3 text-sm text-wabi-fg-muted">
+            신상품과 특별한 소식을 가장 먼저 받아보세요
+          </p>
+          <NewsletterForm />
+        </Reveal>
       </section>
     </>
   );
