@@ -6,6 +6,7 @@ import { ProductCard } from "@/components/product-card";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { MapCard } from "@/components/map-card";
 import { HeroParallax } from "@/components/hero-parallax";
+import { ScrollShowcase, type ShowcaseItem } from "@/components/scroll-showcase";
 import { Reveal } from "@/components/reveal";
 import { getFeaturedProducts, getProducts } from "@/lib/queries/products";
 import {
@@ -47,6 +48,11 @@ export default async function Home({
         .filter((src): src is string => Boolean(src)),
     ),
   ].slice(0, 6);
+  // 스크롤 쇼케이스 (#168) — 사진이 있는 상품만, 2개 미만이면 섹션을 걸지 않는다.
+  const showcaseItems: ShowcaseItem[] = slidePool
+    .filter((p) => Boolean(p.image))
+    .slice(0, 5)
+    .map((p) => ({ id: p.id, name: p.name, image: p.image as string }));
 
   return (
     <>
@@ -88,6 +94,9 @@ export default async function Home({
             <Link href="/shop">SEE MORE</Link>
           </Button>
       </HeroParallax>
+
+      {/* ── 스크롤 쇼케이스 (#168) — 스크롤로 상품을 하나씩 훑는다 ── */}
+      {showcaseItems.length >= 2 && <ScrollShowcase items={showcaseItems} />}
 
       {/* ── Featured Collection ────────────────────────────── */}
       <section className="mx-auto max-w-[1200px] px-5 py-28">

@@ -11,7 +11,7 @@ import { HeroSlideshow } from "@/components/hero-slideshow";
 // 처음부터 opacity 를 낮추면 LCP 가 나빠진다. 스크롤이 시작될 때만 손댄다.
 // scroll 은 passive + rAF 로 묶어 프레임당 한 번만 계산한다.
 
-const BG_SPEED = 0.3; // 배경 이동 비율(1=스크롤과 동일, 낮을수록 느리게 = 깊어 보임)
+const BG_SPEED = 0.18; // 배경 이동 비율(1=스크롤과 동일, 낮을수록 느리게 = 깊어 보임)
 const CONTENT_SPEED = 0.15;
 const FADE_RATE = 1.3; // 1 이면 뷰포트 1개 스크롤에 완전히 사라짐
 
