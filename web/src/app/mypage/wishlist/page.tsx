@@ -14,7 +14,7 @@ type Row = {
     id: string;
     name: string;
     price: number;
-    stock: number;
+    stock: number | null;
     images: unknown;
   } | null;
 };
@@ -38,7 +38,9 @@ export default async function WishlistPage() {
       id: r.products!.id,
       name: r.products!.name,
       price: r.products!.price,
-      stock: r.products!.stock,
+      // PostgREST 는 미관리 컬럼을 null 로 준다. null <= 0 은 true 라 품절로 오판되므로
+      // undefined 로 정규화한다(ProductCard·담기 버튼 모두 undefined 는 "미표시"로 처리).
+      stock: r.products!.stock ?? undefined,
       image:
         Array.isArray(r.products!.images) &&
         typeof r.products!.images[0] === "string"
@@ -64,7 +66,7 @@ export default async function WishlistPage() {
               <ProductCard product={p} />
               <AddToCartButton
                 product={{ id: p.id, name: p.name, price: p.price, image: p.image }}
-                soldOut={p.stock !== undefined && p.stock <= 0}
+                soldOut={typeof p.stock === "number" && p.stock <= 0}
                 className="mt-3 w-full"
               />
             </li>
