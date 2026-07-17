@@ -3,13 +3,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Container } from "@/components/container";
 import { CancelOrderButton } from "@/components/cancel-order-button";
+import { OrderStatusBadge } from "@/components/order-status-badge";
 import { createClient } from "@/lib/supabase/server";
-import {
-  statusLabel,
-  won,
-  formatDateKST,
-  withdrawalDeadlineKST,
-} from "@/lib/orders";
+import { won, formatDateKST, withdrawalDeadlineKST } from "@/lib/orders";
 import { parseUuid } from "@/lib/validation";
 
 export const metadata: Metadata = { title: "주문 상세" };
@@ -74,9 +70,7 @@ export default async function OrderDetailPage({
         <h1 className="text-2xl font-semibold tracking-wide">
           {order.order_number}
         </h1>
-        <span className="text-sm text-wabi-fg-muted">
-          {statusLabel(order.status)}
-        </span>
+        <OrderStatusBadge status={order.status} className="text-sm" />
       </div>
       <p className="mt-2 text-sm text-wabi-fg-muted">
         {formatDateKST(order.ordered_at)} 주문
