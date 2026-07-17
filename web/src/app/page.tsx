@@ -6,15 +6,9 @@ import { ProductCard } from "@/components/product-card";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { MapCard } from "@/components/map-card";
 import { HeroParallax } from "@/components/hero-parallax";
-import { ScrollShowcase, type ShowcaseItem } from "@/components/scroll-showcase";
+import { ScrollShowcase } from "@/components/scroll-showcase";
 import { Reveal } from "@/components/reveal";
-import { getFeaturedProducts, getProducts } from "@/lib/queries/products";
-import {
-  getSiteContent,
-  PHILOSOPHY_KEY,
-  DEFAULT_PHILOSOPHY,
-  toParagraphs,
-} from "@/lib/queries/content";
+import { getHomeData } from "@/lib/queries/home";
 import { site } from "@/lib/site";
 
 const values = [
@@ -28,30 +22,11 @@ export default async function Home({
 }: {
   searchParams: Promise<{ left?: string }>;
 }) {
-  // 실 DB 상품 — 이전엔 하드코딩 더미(존재하지 않는 상품명·가격)를 노출했다.
-  // 서로 의존성이 없는 요청은 병렬로 — 순차 await 워터폴 제거(TTFB 단축).
-  // featured=카드용, slidePool=히어로 슬라이드쇼용, searchParams=탈퇴 안내 플래그.
-  const [featured, slidePool, philosophyRaw, { left }] = await Promise.all([
-    getFeaturedProducts(4),
-    getProducts({ limit: 12 }),
-    getSiteContent(PHILOSOPHY_KEY),
-    searchParams,
-  ]);
-  const philosophy = toParagraphs(philosophyRaw ?? DEFAULT_PHILOSOPHY);
-  // 히어로 배경 슬라이드쇼용 — 이미지가 등록된 활성 상품에서 모아 중복 URL 제거.
-  // (featured 만 쓰면 이 달의 상품이 사진 없을 때 배경이 비므로 상품 전체에서 수집.)
-  // 사진이 여러 장이면 크로스페이드로 순환, 1장이면 정적, 0장이면 기본 배경.
-  const heroImages = [
-    ...new Set(
-      slidePool
-        .map((p) => p.image)
-        .filter((src): src is string => Boolean(src)),
-    ),
-  ].slice(0, 6);
-  // 스크롤 쇼케이스 (#168) — 사진이 있는 상품만, 2개 미만이면 섹션을 걸지 않는다.
-  const showcaseItems: ShowcaseItem[] = slidePool
-    .flatMap((p) => (p.image ? [{ id: p.id, name: p.name, image: p.image }] : []))
-    .slice(0, 5);
+  // 홈 공개 데이터는 캐시된 단일 로더로 (#177) — featured·히어로 이미지·쇼케이스·
+  // 소개문구를 활성 상품 12개 + 소개문구 2쿼리로 통합하고 120초 캐시. searchParams
+  // (탈퇴 안내)는 요청마다 달라 캐시 밖에서 읽는다.
+  const [{ featured, heroImages, showcaseItems, philosophy }, { left }] =
+    await Promise.all([getHomeData(), searchParams]);
 
   return (
     <>
