@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { hasPurchased } from "@/lib/queries/reviews";
 import { REPORT_REASONS } from "@/lib/reviews/report-reasons";
 import { parseUuid } from "@/lib/validation";
+import { rateLimit } from "@/lib/rate-limit";
 
 // 입력 스키마 (Zod 3차) — rating 정수 강제(소수·범위 밖 차단), 본문 길이 제한.
 const reviewSchema = z.object({
@@ -83,6 +84,11 @@ export async function reportReview(formData: FormData) {
     reason: String(formData.get("reason") || ""),
   });
   if (!parsed.success) return;
+
+  // 신고는 (reporter, review) unique 라 한 리뷰엔 1회뿐이지만, 서로 다른 리뷰를 대량
+  // 신고하는 brigading 은 막지 못한다. 사용자당 시간 20건으로 제한한다.
+  const { ok } = await rateLimit(`report:${user.id}`, 20, 3_600);
+  if (!ok) return;
 
   await supabase.from("review_reports").insert({
     review_id: reviewId,
