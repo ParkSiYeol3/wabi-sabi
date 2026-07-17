@@ -1,4 +1,6 @@
+import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import type { ProductCardData } from "@/components/product-card";
 
 type ProductRow = {
@@ -168,6 +170,68 @@ export async function getProducts({
     image: firstImage(p.images),
     category: p.categories?.name_en,
   }));
+}
+
+// /shop 탐색(검색어 없음) 전용 캐시 경로. 카테고리(약 10종)×정렬(3종)로 조합이 유한해
+// unstable_cache 로 묶는다. 검색(q)은 입력이 무한해 캐시하지 않고 기존 getProducts 를 쓴다.
+//
+// getProducts 와 달리 슬러그→id 를 얻는 categories 룩업(별도 왕복)을 없앤다: category!inner
+// 조인 + categories.slug 필터로 한 쿼리에 끝낸다(PostgREST 는 embed 필터가 부모행을 좁히려면
+// inner 조인이어야 한다). 잘못된 슬러그는 매칭 카테고리가 없어 빈 배열(기존 동작과 동일).
+//
+// anon 클라라 빌드 프리렌더에서 실행되면 공개 env 없이 throw 하지만, /shop 은 searchParams
+// prop 으로 선-dynamic 이라 빌드에서 호출되지 않는다. sitemap 이 쓰는 getProducts 는 서버
+// 클라 그대로 둬 이 함정에서 분리한다.
+async function loadShopBrowse(
+  category: string | null,
+  sort: ProductSort,
+): Promise<ProductCardData[]> {
+  const db = createPublicClient();
+  const monthly = category === "monthly";
+  const filterByCategory = !!category && !monthly;
+
+  const join = filterByCategory
+    ? "categories!inner(slug, name_en)"
+    : "categories(slug, name_en)";
+
+  let query = db
+    .from("products")
+    .select(`id, name, price, stock, images, ${join}`)
+    .eq("is_active", true);
+
+  if (monthly) query = query.eq("is_monthly", true);
+  else if (filterByCategory) query = query.eq("categories.slug", category);
+
+  if (sort === "price_asc") query = query.order("price", { ascending: true });
+  else if (sort === "price_desc")
+    query = query.order("price", { ascending: false });
+  else query = query.order("created_at", { ascending: false });
+
+  const { data, error } = await query.returns<ProductRow[]>();
+  if (error || !data) return [];
+
+  return data.map((p) => ({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    stock: p.stock,
+    image: firstImage(p.images),
+    category: p.categories?.name_en,
+  }));
+}
+
+const getCachedShopBrowse = unstable_cache(
+  (category: string | null, sort: ProductSort) => loadShopBrowse(category, sort),
+  ["shop-browse"],
+  { revalidate: 120 },
+);
+
+// 어드민 상품 변경 시 revalidatePath("/shop") 로 무효화된다.
+export function getShopBrowse({
+  category,
+  sort = "newest",
+}: { category?: string; sort?: ProductSort } = {}): Promise<ProductCardData[]> {
+  return getCachedShopBrowse(category ?? null, sort);
 }
 
 // 홈 Featured Collection — '이 달의 상품'(is_monthly) 우선, 모자라면 최신으로 채운다.
