@@ -5,6 +5,7 @@ import { AuthProvider } from "@/components/auth-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { SITE_URL } from "@/lib/site-url";
+import { business } from "@/lib/site";
 
 // 본문/제목 — Pretendard 대체 (추후 Pretendard 로컬폰트로 교체 가능)
 const notoSansKr = Noto_Sans_KR({
@@ -45,6 +46,9 @@ const siteJsonLd = JSON.stringify({
   name: "WABI-SABI 와비사비",
   url: SITE_URL,
   sameAs: ["https://www.instagram.com/wasa.kr"],
+  // 값이 있을 때만 — 미입력 필드는 넣지 않는다(허위 표시 방지, undefined 는 제거됨).
+  telephone: business.phone || undefined,
+  email: business.email || undefined,
   address: {
     "@type": "PostalAddress",
     streetAddress: "대흥로 338 1층 2호",
