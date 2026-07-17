@@ -8,7 +8,11 @@ import { AddToCartButton } from "@/components/add-to-cart-button";
 import { Reveal } from "@/components/reveal";
 import { Input } from "@/components/ui/input";
 import { categories, MONTHLY_SLUG } from "@/lib/site";
-import { getProducts, type ProductSort } from "@/lib/queries/products";
+import {
+  getProducts,
+  getShopBrowse,
+  type ProductSort,
+} from "@/lib/queries/products";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -41,7 +45,10 @@ export default async function ShopPage({
 }) {
   const sp = await searchParams;
   const sort = (sp.sort as ProductSort) || "newest";
-  const products = await getProducts({ category: sp.category, q: sp.q, sort });
+  // 검색어가 있으면 캐시 밖(입력 무한), 없으면 캐시된 탐색 경로(카테고리×정렬 유한).
+  const products = sp.q?.trim()
+    ? await getProducts({ category: sp.category, q: sp.q, sort })
+    : await getShopBrowse({ category: sp.category, sort });
 
   return (
     <Container className="py-16">

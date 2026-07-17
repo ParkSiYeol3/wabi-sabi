@@ -95,6 +95,7 @@ export async function createProduct(
   });
   revalidatePath("/admin/products");
   revalidatePath("/");
+  revalidatePath("/shop"); // 상품 목록 탐색 캐시(#185) 무효화
   return { ok: true, message };
 }
 
@@ -138,6 +139,7 @@ export async function addProductImages(
     });
   revalidatePath("/admin/products");
   revalidatePath("/");
+  revalidatePath("/shop"); // 상품 목록 탐색 캐시(#185) 무효화
   revalidatePath(`/shop/${id}`);
 
   if (failures.length)
@@ -181,6 +183,7 @@ export async function removeProductImage(formData: FormData) {
   });
   revalidatePath("/admin/products");
   revalidatePath("/");
+  revalidatePath("/shop"); // 상품 목록 탐색 캐시(#185) 무효화
   revalidatePath(`/shop/${id}`);
 }
 
@@ -202,6 +205,7 @@ export async function toggleMonthly(formData: FormData) {
   });
   revalidatePath("/admin/products");
   revalidatePath("/");
+  revalidatePath("/shop"); // 상품 목록 탐색 캐시(#185) 무효화
 }
 
 export async function updateStock(formData: FormData) {
@@ -249,6 +253,7 @@ export async function updateStock(formData: FormData) {
 
   revalidatePath("/admin/products");
   revalidatePath("/");
+  revalidatePath("/shop"); // 상품 목록 탐색 캐시(#185) 무효화
   revalidatePath(`/shop/${id}`);
 }
 
@@ -270,6 +275,7 @@ export async function toggleActive(formData: FormData) {
   });
   revalidatePath("/admin/products");
   revalidatePath("/");
+  revalidatePath("/shop"); // 상품 목록 탐색 캐시(#185) 무효화
   revalidatePath(`/shop/${id}`); // 상세 캐시(#181) 무효화 — 비활성 즉시 반영
 }
 
@@ -289,5 +295,6 @@ export async function deleteProduct(formData: FormData) {
   });
   revalidatePath("/admin/products");
   revalidatePath("/");
+  revalidatePath("/shop"); // 상품 목록 탐색 캐시(#185) 무효화
   revalidatePath(`/shop/${id}`); // 상세 캐시(#181) 무효화 — 삭제 즉시 404
 }
