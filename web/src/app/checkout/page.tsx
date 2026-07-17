@@ -198,10 +198,11 @@ export default function CheckoutPage() {
             </label>
             {gift && (
               <div className="mt-4 grid gap-3">
-                <Input name="sender" placeholder="보내는 분" className="rounded-none" />
+                <Input name="sender" aria-label="보내는 분" placeholder="보내는 분" className="rounded-none" />
                 <textarea
                   name="message"
                   rows={3}
+                  aria-label="메시지 카드 내용"
                   placeholder="메시지 카드 내용"
                   className="resize-none border border-wabi-border bg-transparent px-3 py-2 text-sm outline-none focus:border-wabi-fg"
                 />

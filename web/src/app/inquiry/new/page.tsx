@@ -36,11 +36,18 @@ export default async function NewInquiryPage({
       )}
 
       <form action={createInquiry} className="mt-10 max-w-2xl space-y-4">
-        <Input name="title" required placeholder="제목" className="rounded-none" />
+        <Input
+          name="title"
+          required
+          aria-label="문의 제목"
+          placeholder="제목"
+          className="rounded-none"
+        />
         <textarea
           name="body"
           required
           rows={8}
+          aria-label="문의 내용"
           placeholder="문의 내용을 입력하세요"
           className="w-full border border-wabi-border bg-transparent px-3 py-2 text-sm"
         />
