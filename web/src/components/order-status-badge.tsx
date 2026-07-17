@@ -9,7 +9,7 @@ const STYLE: Record<string, string> = {
   paid: "border-wabi-fg text-wabi-fg", // 결제 완료 — 진행 중 강조
   shipping: "border-blue-300 text-blue-700", // 배송 중
   delivered: "border-wabi-border text-wabi-fg-muted", // 완료 — 차분하게
-  cancelled: "border-red-300 text-red-600", // 취소
+  cancelled: "border-red-300 text-red-700", // 취소
 };
 
 export function OrderStatusBadge({
