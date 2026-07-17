@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { MapCard } from "@/components/map-card";
-import { HeroSlideshow } from "@/components/hero-slideshow";
+import { HeroParallax } from "@/components/hero-parallax";
+import { ScrollShowcase, type ShowcaseItem } from "@/components/scroll-showcase";
 import { Reveal } from "@/components/reveal";
 import { getFeaturedProducts, getProducts } from "@/lib/queries/products";
 import {
@@ -47,6 +48,10 @@ export default async function Home({
         .filter((src): src is string => Boolean(src)),
     ),
   ].slice(0, 6);
+  // 스크롤 쇼케이스 (#168) — 사진이 있는 상품만, 2개 미만이면 섹션을 걸지 않는다.
+  const showcaseItems: ShowcaseItem[] = slidePool
+    .flatMap((p) => (p.image ? [{ id: p.id, name: p.name, image: p.image }] : []))
+    .slice(0, 5);
 
   return (
     <>
@@ -58,10 +63,8 @@ export default async function Home({
           회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.
         </p>
       )}
-      {/* ── Hero ───────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-wabi-subtle">
-        {heroImages.length > 0 && <HeroSlideshow images={heroImages} />}
-        <div className="relative z-10 mx-auto flex max-w-[1200px] flex-col items-center px-5 py-28 text-center md:py-36">
+      {/* ── Hero (패럴랙스 #168) ───────────────────────────── */}
+      <HeroParallax images={heroImages}>
           <Image
             src="/brand/logo-mark.png"
             alt=""
@@ -89,8 +92,10 @@ export default async function Home({
           <Button asChild className="mt-10 rounded-none bg-wabi-accent px-8 hover:bg-wabi-accent/90">
             <Link href="/shop">SEE MORE</Link>
           </Button>
-        </div>
-      </section>
+      </HeroParallax>
+
+      {/* ── 스크롤 쇼케이스 (#168) — 스크롤로 상품을 하나씩 훑는다 ── */}
+      {showcaseItems.length >= 2 && <ScrollShowcase items={showcaseItems} />}
 
       {/* ── Featured Collection ────────────────────────────── */}
       <section className="mx-auto max-w-[1200px] px-5 py-28">
