@@ -73,6 +73,7 @@ export async function ReviewSection({
               name="body"
               required
               rows={3}
+              aria-label="리뷰 내용"
               placeholder="상품 사용 후기를 남겨주세요"
               className="w-full border border-wabi-border bg-transparent px-3 py-2 text-sm"
             />

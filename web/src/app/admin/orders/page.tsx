@@ -68,6 +68,7 @@ export default async function AdminOrdersPage() {
                   <input
                     name="tracking_number"
                     defaultValue={o.tracking_number ?? ""}
+                    aria-label={`주문 ${o.order_number} 송장번호`}
                     placeholder="송장번호"
                     className="w-36 border border-wabi-border bg-transparent px-2 py-1"
                   />

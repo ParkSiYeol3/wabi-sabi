@@ -40,6 +40,7 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
       <Input
         name="name"
         required
+        aria-label="상품명"
         placeholder="상품명"
         value={name}
         onChange={(e) => setName(e.target.value)}
@@ -50,6 +51,7 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
         type="number"
         min={0}
         required
+        aria-label="가격"
         placeholder="가격"
         value={price}
         onChange={(e) => setPrice(e.target.value)}
@@ -59,6 +61,7 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
         name="stock"
         type="number"
         min={0}
+        aria-label="재고"
         placeholder="재고"
         value={stock}
         onChange={(e) => setStock(e.target.value)}

@@ -68,6 +68,7 @@ export default async function AdminInquiriesPage() {
                 rows={3}
                 required
                 defaultValue={q.answer ?? ""}
+                aria-label={`${q.title} 답변 작성`}
                 placeholder="답변 작성"
                 className="w-full border border-wabi-border bg-transparent px-3 py-2 text-sm"
               />

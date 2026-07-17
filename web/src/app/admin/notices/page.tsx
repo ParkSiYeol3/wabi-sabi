@@ -21,11 +21,18 @@ export default async function AdminNoticesPage() {
       <section>
         <h2 className="text-lg font-medium">새 공지 등록</h2>
         <form action={createNotice} className="mt-4 space-y-3">
-          <Input name="title" required placeholder="제목" className="rounded-none" />
+          <Input
+            name="title"
+            required
+            aria-label="공지 제목"
+            placeholder="제목"
+            className="rounded-none"
+          />
           <textarea
             name="body"
             required
             rows={6}
+            aria-label="공지 내용"
             placeholder="내용"
             className="w-full border border-wabi-border bg-transparent px-3 py-2 text-sm"
           />
