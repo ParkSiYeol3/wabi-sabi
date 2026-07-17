@@ -50,9 +50,8 @@ export default async function Home({
   ].slice(0, 6);
   // 스크롤 쇼케이스 (#168) — 사진이 있는 상품만, 2개 미만이면 섹션을 걸지 않는다.
   const showcaseItems: ShowcaseItem[] = slidePool
-    .filter((p) => Boolean(p.image))
-    .slice(0, 5)
-    .map((p) => ({ id: p.id, name: p.name, image: p.image as string }));
+    .flatMap((p) => (p.image ? [{ id: p.id, name: p.name, image: p.image }] : []))
+    .slice(0, 5);
 
   return (
     <>

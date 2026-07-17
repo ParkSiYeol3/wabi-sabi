@@ -91,6 +91,7 @@ export function ScrollShowcase({ items }: { items: ShowcaseItem[] }) {
         </p>
         <Link
           href={`/shop/${active.id}`}
+          aria-label={`${active.name} 상품 보러 가기`}
           className="mt-3 text-sm text-wabi-fg-muted underline underline-offset-4 hover:text-wabi-fg"
         >
           보러 가기

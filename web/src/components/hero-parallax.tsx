@@ -50,6 +50,10 @@ export function HeroParallax({
       raf = requestAnimationFrame(update);
     };
 
+    // 페이지 중간에서 새로고침·뒤로가기로 들어오면 스크롤이 이미 내려가 있다.
+    // 그때만 초기 1회 반영 — 최상단(scrollY=0)이면 손대지 않아 LCP 를 지킨다.
+    if (window.scrollY > 0) update();
+
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", onScroll);
