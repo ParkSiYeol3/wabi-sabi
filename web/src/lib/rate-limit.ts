@@ -1,18 +1,23 @@
 // 남용 방지 rate limit (#16 / 보안_체크리스트).
-// 백엔드 2단:
+// 백엔드 3단(우선순위):
 //  ① UPSTASH_REDIS_REST_URL·TOKEN 설정 시 → Redis INCR+EXPIRE (인스턴스 간 공유, 정확)
-//  ② 미설정 시 → 인메모리 폴백 (서버리스 인스턴스별로 독립 = 상한이 인스턴스 수만큼
-//     느슨해짐. 그래도 단일 클라이언트의 반복 폭주는 대부분 같은 인스턴스로 라우팅돼
-//     실효가 있고, 무설정 배포에서도 무방비보다 낫다.)
+//  ② Supabase 설정 시 → check_rate_limit RPC(0029) 로 rate_limits 테이블 카운터
+//     (인스턴스 간 공유. Redis 없이도 서버리스 다중 인스턴스에서 상한이 정확.)
+//  ③ 둘 다 없으면 → 인메모리 폴백 (서버리스 인스턴스별로 독립 = 상한이 인스턴스 수만큼
+//     느슨해지고 콜드스타트마다 리셋. 최후 수단.)
 // 결제·주문 생성은 별도 DB 가드(#53, checkout/actions)로 이미 보호됨.
+
+import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 
 type Result = { ok: boolean; remaining: number };
 
 const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
 const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
 
-export function rateLimitBackend(): "redis" | "memory" {
-  return REDIS_URL && REDIS_TOKEN ? "redis" : "memory";
+export function rateLimitBackend(): "redis" | "supabase" | "memory" {
+  if (REDIS_URL && REDIS_TOKEN) return "redis";
+  if (adminConfigured()) return "supabase";
+  return "memory";
 }
 
 // ── 인메모리 폴백 ──────────────────────────────────────────
@@ -66,24 +71,45 @@ async function redisLimit(
   return { ok: count <= limit, remaining: Math.max(0, limit - count) };
 }
 
+// ── Supabase 테이블 (RPC) ─────────────────────────────────
+// check_rate_limit(0029) 이 원자적으로 증가하고 증가 후 카운트를 돌려준다.
+async function supabaseLimit(
+  key: string,
+  limit: number,
+  windowSec: number,
+): Promise<Result> {
+  const db = createAdminClient();
+  const { data, error } = await db.rpc("check_rate_limit", {
+    p_bucket: key,
+    p_limit: limit,
+    p_window_seconds: windowSec,
+  });
+  if (error) throw error;
+  const count = Number(data ?? 0);
+  return { ok: count <= limit, remaining: Math.max(0, limit - count) };
+}
+
 /**
  * 고정 창(fixed window) 카운터.
  * @param key 식별자 (예: `log-error:1.2.3.4`) — 호출부가 접두사로 용도를 구분한다.
  * @returns ok=false 면 호출부가 429 등으로 거절.
  *
- * Redis 실패 시 요청을 막지 않는다(fail-open) — 로깅·리포트 수집 같은 부가 기능이
- * 레이트리밋 인프라 장애로 함께 죽는 편이 더 나쁘다.
+ * 원격 백엔드(Redis·Supabase) 실패 시 요청을 막지 않고 인메모리로 폴백한다(fail-open)
+ * — 로깅·리포트 수집·구독 같은 기능이 레이트리밋 인프라 장애로 함께 죽는 편이 더 나쁘다.
  */
 export async function rateLimit(
   key: string,
   limit: number,
   windowSec: number,
 ): Promise<Result> {
-  if (rateLimitBackend() === "memory") return memoryLimit(key, limit, windowSec);
+  const backend = rateLimitBackend();
+  if (backend === "memory") return memoryLimit(key, limit, windowSec);
   try {
-    return await redisLimit(key, limit, windowSec);
+    return backend === "redis"
+      ? await redisLimit(key, limit, windowSec)
+      : await supabaseLimit(key, limit, windowSec);
   } catch (err) {
-    console.error("[rate-limit] Redis 실패 — 인메모리로 폴백", err);
+    console.error(`[rate-limit] ${backend} 실패 — 인메모리로 폴백`, err);
     return memoryLimit(key, limit, windowSec);
   }
 }
