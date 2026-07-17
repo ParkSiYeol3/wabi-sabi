@@ -9,6 +9,7 @@ import { RestockButton } from "@/components/restock-button";
 import { WishlistButton } from "@/components/wishlist-button";
 import { ReviewSection } from "@/components/review-section";
 import { getProduct, getRelatedProducts } from "@/lib/queries/products";
+import { getReviewStats } from "@/lib/queries/reviews";
 import { createClient } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/site-url";
 
@@ -36,16 +37,19 @@ export async function generateMetadata({
   };
 }
 
-// #16 SEO: Product 구조화 데이터 — 검색 결과 리치 스니펫(가격·재고).
+// #16 SEO: Product 구조화 데이터 — 검색 결과 리치 스니펫(가격·재고·별점).
 // JSON.stringify 결과의 `<` 를 이스케이프해 상품 필드 경유 script 탈출 차단.
-function productJsonLd(product: {
-  id: string;
-  name: string;
-  price: number;
-  stock: number;
-  description: string | null;
-  images: string[];
-}) {
+function productJsonLd(
+  product: {
+    id: string;
+    name: string;
+    price: number;
+    stock: number;
+    description: string | null;
+    images: string[];
+  },
+  stats: { count: number; average: number },
+) {
   return JSON.stringify({
     "@context": "https://schema.org",
     "@type": "Product",
@@ -53,6 +57,7 @@ function productJsonLd(product: {
     // meta description 과 동일 폴백 — 빈 설명이어도 리치 스니펫 description 유지
     description: product.description || `${product.name} — WABI-SABI`,
     image: product.images,
+    brand: { "@type": "Brand", name: "WABI-SABI" },
     offers: {
       "@type": "Offer",
       url: `${SITE_URL}/shop/${product.id}`,
@@ -63,6 +68,18 @@ function productJsonLd(product: {
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
     },
+    // 별점은 리뷰가 있을 때만 — reviewCount 0 이면 구글이 리치결과를 거부한다.
+    // (undefined 키는 JSON.stringify 가 제거한다.)
+    aggregateRating:
+      stats.count > 0
+        ? {
+            "@type": "AggregateRating",
+            ratingValue: stats.average,
+            reviewCount: stats.count,
+            bestRating: 5,
+            worstRating: 1,
+          }
+        : undefined,
   }).replace(/</g, "\\u003c");
 }
 
@@ -103,9 +120,12 @@ export default async function ProductDetailPage({
     }
   }
 
-  const related = product.category
-    ? await getRelatedProducts(product.category.slug, product.id)
-    : [];
+  const [related, reviewStats] = await Promise.all([
+    product.category
+      ? getRelatedProducts(product.category.slug, product.id)
+      : Promise.resolve([]),
+    getReviewStats(id), // Product JSON-LD 별점(리치결과)용
+  ]);
 
   const main = product.images[0] ?? null;
   const specs = [
@@ -118,7 +138,7 @@ export default async function ProductDetailPage({
     <Container className="py-16">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: productJsonLd(product) }}
+        dangerouslySetInnerHTML={{ __html: productJsonLd(product, reviewStats) }}
       />
       <div className="grid gap-12 md:grid-cols-2">
         {/* 이미지 갤러리 — 썸네일 클릭 시 메인 전환.
