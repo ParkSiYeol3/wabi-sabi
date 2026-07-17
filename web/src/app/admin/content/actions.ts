@@ -36,7 +36,7 @@ export async function saveContent(formData: FormData) {
     targetId: parsed.data.key,
   });
 
-  revalidatePath("/");
+  revalidatePath("/"); // 홈 캐시된 소개문구 즉시 무효화
   revalidatePath("/about");
   revalidatePath("/admin/content");
 }

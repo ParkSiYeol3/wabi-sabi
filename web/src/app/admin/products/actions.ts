@@ -94,6 +94,7 @@ export async function createProduct(
     meta: { name, price, stock },
   });
   revalidatePath("/admin/products");
+  revalidatePath("/");
   return { ok: true, message };
 }
 
@@ -136,6 +137,7 @@ export async function addProductImages(
       meta: { count: urls.length },
     });
   revalidatePath("/admin/products");
+  revalidatePath("/");
   revalidatePath(`/shop/${id}`);
 
   if (failures.length)
@@ -178,6 +180,7 @@ export async function removeProductImage(formData: FormData) {
     meta: { url },
   });
   revalidatePath("/admin/products");
+  revalidatePath("/");
   revalidatePath(`/shop/${id}`);
 }
 
@@ -198,6 +201,7 @@ export async function toggleMonthly(formData: FormData) {
     meta: { is_monthly: !monthly },
   });
   revalidatePath("/admin/products");
+  revalidatePath("/");
 }
 
 export async function updateStock(formData: FormData) {
@@ -244,6 +248,7 @@ export async function updateStock(formData: FormData) {
   }
 
   revalidatePath("/admin/products");
+  revalidatePath("/");
   revalidatePath(`/shop/${id}`);
 }
 
@@ -264,6 +269,7 @@ export async function toggleActive(formData: FormData) {
     meta: { is_active: !active },
   });
   revalidatePath("/admin/products");
+  revalidatePath("/");
 }
 
 export async function deleteProduct(formData: FormData) {
@@ -281,4 +287,5 @@ export async function deleteProduct(formData: FormData) {
     targetId: id,
   });
   revalidatePath("/admin/products");
+  revalidatePath("/");
 }
