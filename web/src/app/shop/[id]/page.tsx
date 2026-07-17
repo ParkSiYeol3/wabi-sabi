@@ -8,8 +8,7 @@ import { ProductDetailActions } from "@/components/product-detail-actions";
 import { RestockButton } from "@/components/restock-button";
 import { WishlistButton } from "@/components/wishlist-button";
 import { ReviewSection } from "@/components/review-section";
-import { getProduct, getRelatedProducts } from "@/lib/queries/products";
-import { getReviewStats } from "@/lib/queries/reviews";
+import { getCachedProductDetail } from "@/lib/queries/product-detail";
 import { createClient } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/site-url";
 
@@ -21,8 +20,9 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const product = await getProduct(id);
-  if (!product) return { title: "상품을 찾을 수 없음" };
+  const bundle = await getCachedProductDetail(id);
+  if (!bundle) return { title: "상품을 찾을 수 없음" };
+  const { product } = bundle;
   // `??` 는 빈 문자열("") 설명을 통과시켜 meta description 이 비어짐(Lighthouse SEO 감점) → `||`
   const description = product.description || `${product.name} — WABI-SABI`;
   return {
@@ -89,10 +89,12 @@ export default async function ProductDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const product = await getProduct(id);
-  if (!product) notFound();
+  // 공개 데이터(상품·관련상품·평점)는 캐시된 번들로 (#181).
+  const bundle = await getCachedProductDetail(id);
+  if (!bundle) notFound();
+  const { product, related, stats: reviewStats } = bundle;
 
-  // 위시리스트 초기 상태 (로그인 시)
+  // 위시리스트 초기 상태 (로그인 시) — 사용자별이라 캐시 밖.
   const supabase = await createClient();
   const {
     data: { user },
@@ -119,13 +121,6 @@ export default async function ProductDetailPage({
       restockSubscribed = !!restock;
     }
   }
-
-  const [related, reviewStats] = await Promise.all([
-    product.category
-      ? getRelatedProducts(product.category.slug, product.id)
-      : Promise.resolve([]),
-    getReviewStats(id), // Product JSON-LD 별점(리치결과)용
-  ]);
 
   const main = product.images[0] ?? null;
   const specs = [
