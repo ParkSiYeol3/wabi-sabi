@@ -11,6 +11,12 @@ export const metadata: Metadata = {
   description: "WABI-SABI 고객 리뷰",
 };
 
+// 이 페이지는 getUser()(쿠키)로 결국 dynamic 이지만, 캐시된 getRecentReviews 가
+// 그보다 먼저 실행돼 빌드 프리렌더 중 createPublicClient 를 호출한다(CI엔 공개 env
+// 미주입 → 빌드 실패). 명시적으로 요청 시 렌더로 고정한다. 리뷰 목록은 unstable_cache
+// 로 캐시되므로 DB 왕복은 그대로 제거된다.
+export const dynamic = "force-dynamic";
+
 export default async function ReviewListPage() {
   const reviews = await getRecentReviews();
   const supabase = await createClient();

@@ -8,6 +8,12 @@ export const metadata: Metadata = {
   description: "WABI-SABI 공지사항",
 };
 
+// 쿠키·searchParams 를 안 읽어 기본값이면 빌드 타임 정적 프리렌더 대상이 되는데,
+// 그러면 빌드 중 Supabase 에 접근한다(CI엔 공개 env 미주입 → 빌드 실패, 프로덕션에도
+// 빌드가 DB 가용성에 의존). 홈·상세처럼 요청 시 렌더하되 getNotices 는 unstable_cache
+// 로 캐시되므로 DB 왕복은 그대로 제거된다.
+export const dynamic = "force-dynamic";
+
 export default async function NoticeListPage() {
   const notices = await getNotices();
 

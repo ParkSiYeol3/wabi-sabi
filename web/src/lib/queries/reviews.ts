@@ -1,4 +1,6 @@
+import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 export interface Review {
   id: string;
@@ -61,9 +63,13 @@ type RecentRow = Review & {
 
 // 전체 최신 리뷰 (/review 페이지). 숨김 리뷰는 명시적으로 제외 — 작성자 본인에게도
 // 이 공개 목록에선 자기 숨김 리뷰를 보이지 않게 한다(라벨 없는 노출 방지).
-export async function getRecentReviews(limit = 20): Promise<RecentReview[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+//
+// 공개 목록이므로 쿠키 없는 anon 클라 + unstable_cache 로 묶는다. anon 은 RLS 상
+// hidden=false 리뷰만 보므로(0023) 본인 숨김 리뷰가 새지 않는다(.eq 은 이중 방어).
+// 리뷰 작성/삭제/신고·어드민 숨김 액션이 revalidatePath("/review") 로 무효화한다.
+async function loadRecentReviews(limit: number): Promise<RecentReview[]> {
+  const db = createPublicClient();
+  const { data, error } = await db
     .from("reviews")
     .select("id, user_id, author_name, rating, body, created_at, hidden, product_id, products(name)")
     .eq("hidden", false)
@@ -82,6 +88,16 @@ export async function getRecentReviews(limit = 20): Promise<RecentReview[]> {
     product_id: r.product_id,
     product_name: r.products?.name ?? null,
   }));
+}
+
+const getCachedRecentReviews = unstable_cache(
+  loadRecentReviews,
+  ["recent-reviews"],
+  { revalidate: 120 },
+);
+
+export function getRecentReviews(limit = 20): Promise<RecentReview[]> {
+  return getCachedRecentReviews(limit);
 }
 
 // 구매 검증 (#126) — 리뷰는 구매자만 쓸 수 있어야 한다.

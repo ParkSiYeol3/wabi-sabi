@@ -46,4 +46,6 @@ export async function deleteNotice(formData: FormData) {
   });
   revalidatePath("/admin/notices");
   revalidatePath("/notice");
+  revalidatePath(`/notice/${id}`); // 캐시된 상세가 삭제 후에도 남지 않게
+
 }
