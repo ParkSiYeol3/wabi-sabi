@@ -270,6 +270,7 @@ export async function toggleActive(formData: FormData) {
   });
   revalidatePath("/admin/products");
   revalidatePath("/");
+  revalidatePath(`/shop/${id}`); // 상세 캐시(#181) 무효화 — 비활성 즉시 반영
 }
 
 export async function deleteProduct(formData: FormData) {
@@ -288,4 +289,5 @@ export async function deleteProduct(formData: FormData) {
   });
   revalidatePath("/admin/products");
   revalidatePath("/");
+  revalidatePath(`/shop/${id}`); // 상세 캐시(#181) 무효화 — 삭제 즉시 404
 }
