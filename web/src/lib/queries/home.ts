@@ -75,14 +75,14 @@ async function loadHomeData(): Promise<HomeData> {
     .slice(0, FEATURED_COUNT)
     .map(toCard);
 
-  // 히어로 배경·쇼케이스 — 이미지가 있는 상품에서.
-  const withImage = pool.filter((p) => firstImage(p.images));
-  const heroImages = [
-    ...new Set(withImage.map((p) => firstImage(p.images) as string)),
-  ].slice(0, 6);
-  const showcaseItems: ShowcaseItem[] = withImage
-    .slice(0, 5)
-    .map((p) => ({ id: p.id, name: p.name, image: firstImage(p.images)! }));
+  // 히어로 배경·쇼케이스 — 이미지가 있는 상품에서. flatMap 으로 한 번에 좁혀
+  // firstImage 중복 호출·타입 단언(as/!)을 없앤다.
+  const withImage = pool.flatMap((p) => {
+    const image = firstImage(p.images);
+    return image ? [{ id: p.id, name: p.name, image }] : [];
+  });
+  const heroImages = [...new Set(withImage.map((p) => p.image))].slice(0, 6);
+  const showcaseItems: ShowcaseItem[] = withImage.slice(0, 5);
 
   const philosophy = toParagraphs(content?.value?.trim() || DEFAULT_PHILOSOPHY);
 
