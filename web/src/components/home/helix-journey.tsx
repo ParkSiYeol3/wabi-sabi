@@ -118,13 +118,26 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
 
     // 휠 스무스 스크롤(SmoothScroll)이 페이지 이동 자체를 이징하므로 연출은
     // 현재 스크롤을 그대로 따른다(이중 스무딩 금지 — 겹치면 둥둥 뜨는 랙).
+    //
+    // 진입 드로잉(#211 피드백): 스크럽만 있으면 첫 화면에서 선이 "이미 그려진
+    // 상태"로 시작한다 — 목업의 로드 애니메이션처럼 0에서부터 ease-out 으로
+    // 그려진 뒤 스크럽에 자연 인계한다(선만 — 카드는 즉시 정확 추종).
+    const INTRO_MS = 2600;
+    const introT0 = performance.now();
+    let introDone = false;
+    const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+
     let raf = 0;
     let height = 1;
     let vh = window.innerHeight;
 
     const render = (top: number) => {
+      const k = introDone
+        ? 1
+        : easeOut(Math.min(1, (performance.now() - introT0) / INTRO_MS));
+      if (k >= 1) introDone = true;
       paths.forEach((el, i) => {
-        const p = clamp01((vh * 0.85 - top) / height);
+        const p = clamp01((vh * 0.85 - top) / height) * k;
         el.style.strokeDasharray = `${lens[i]}`;
         el.style.strokeDashoffset = `${lens[i] * (1 - p)}`;
       });
@@ -162,6 +175,12 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
     };
 
     update(); // 중간 로드(새로고침)에서도 현재 스크롤 기준으로 즉시 동기화
+    // 진입 드로잉 동안만 도는 rAF — 완료되면 자동 정지(이후는 스크롤 이벤트만).
+    const introTick = () => {
+      update();
+      if (!introDone) requestAnimationFrame(introTick);
+    };
+    requestAnimationFrame(introTick);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
     return () => {
