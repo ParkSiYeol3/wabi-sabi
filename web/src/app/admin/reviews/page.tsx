@@ -61,7 +61,7 @@ export default async function AdminReviewsPage() {
       <h2 className="text-lg font-medium">
         리뷰 목록 ({sorted.length})
         {reportedCount > 0 && (
-          <span className="ml-2 text-sm text-red-600">
+          <span className="ml-2 text-sm text-red-700">
             · 신고 {reportedCount}건
           </span>
         )}
@@ -109,7 +109,7 @@ export default async function AdminReviewsPage() {
                   {r.body}
                 </p>
                 {report && (
-                  <p className="mt-1 text-xs text-red-600">
+                  <p className="mt-1 text-xs text-red-700">
                     사유: {report.reasons.join(", ")}
                     {report.count > report.reasons.length && " …"}
                   </p>
@@ -137,7 +137,7 @@ export default async function AdminReviewsPage() {
                   <input type="hidden" name="id" value={r.id} />
                   <button
                     type="submit"
-                    className="cursor-pointer text-xs text-red-600 underline transition-colors hover:text-red-700"
+                    className="cursor-pointer text-xs text-red-700 underline transition-colors hover:text-red-800"
                   >
                     삭제
                   </button>

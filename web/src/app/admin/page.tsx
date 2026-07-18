@@ -99,8 +99,8 @@ function ActionCard({
 }) {
   const active = count > 0;
   const border = tone === "warn" ? "border-amber-300" : "border-red-300";
-  // amber-600 은 흰 배경 대비 ~3.2:1 로 작은 텍스트 WCAG AA(4.5:1) 미달 → 700.
-  const text = tone === "warn" ? "text-amber-700" : "text-red-600";
+  // 크림 배경(#205) 기준 WCAG AA — amber-700·red-600 은 크림에서 4.5:1 미달이라 한 단계 진하게.
+  const text = tone === "warn" ? "text-amber-800" : "text-red-700";
   return (
     <Link
       href={href}
@@ -255,8 +255,8 @@ export default async function AdminHome() {
                       <span
                         className={
                           p.stock === 0
-                            ? "shrink-0 font-medium text-red-600"
-                            : "shrink-0 font-medium text-amber-700"
+                            ? "shrink-0 font-medium text-red-700"
+                            : "shrink-0 font-medium text-amber-800"
                         }
                       >
                         {p.stock === 0 ? "품절" : `${p.stock}개`}

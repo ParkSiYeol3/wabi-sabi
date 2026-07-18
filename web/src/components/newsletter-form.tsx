@@ -58,7 +58,7 @@ export function NewsletterForm() {
         <p
           role="status"
           className={`mt-3 text-left text-xs ${
-            state.ok ? "text-wabi-fg" : "text-red-600"
+            state.ok ? "text-wabi-fg" : "text-red-700"
           }`}
         >
           {state.message}

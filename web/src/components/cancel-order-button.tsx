@@ -33,7 +33,7 @@ export function CancelOrderButton({ orderId }: { orderId: string }) {
       >
         {pending ? "취소 처리 중…" : "주문 취소"}
       </Button>
-      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-xs text-red-700">{error}</p>}
     </div>
   );
 }

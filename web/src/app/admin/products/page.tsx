@@ -129,11 +129,11 @@ export default async function AdminProductsPage() {
                         저장
                       </button>
                       {p.stock === 0 ? (
-                        <span className="ml-1 whitespace-nowrap border border-red-300 px-1.5 py-0.5 text-xs text-red-600">
+                        <span className="ml-1 whitespace-nowrap border border-red-300 px-1.5 py-0.5 text-xs text-red-700">
                           품절
                         </span>
                       ) : isLowStock(p.stock) ? (
-                        <span className="ml-1 whitespace-nowrap border border-amber-300 px-1.5 py-0.5 text-xs text-amber-700">
+                        <span className="ml-1 whitespace-nowrap border border-amber-300 px-1.5 py-0.5 text-xs text-amber-800">
                           부족
                         </span>
                       ) : null}
@@ -170,7 +170,7 @@ export default async function AdminProductsPage() {
                       <input type="hidden" name="id" value={p.id} />
                       <button
                         type="submit"
-                        className="cursor-pointer text-xs text-red-600 underline transition-colors hover:text-red-700"
+                        className="cursor-pointer text-xs text-red-700 underline transition-colors hover:text-red-800"
                       >
                         삭제
                       </button>

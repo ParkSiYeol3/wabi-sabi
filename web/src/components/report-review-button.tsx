@@ -53,7 +53,7 @@ export function ReportReviewButton({
         <button
           type="submit"
           disabled={pending}
-          className="underline hover:text-red-600 disabled:opacity-50"
+          className="underline hover:text-red-700 disabled:opacity-50"
         >
           접수
         </button>

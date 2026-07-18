@@ -122,7 +122,7 @@ export async function ReviewSection({
                     <form action={deleteReview}>
                       <input type="hidden" name="id" value={r.id} />
                       <input type="hidden" name="product_id" value={productId} />
-                      <button type="submit" className="underline hover:text-red-600">
+                      <button type="submit" className="underline hover:text-red-700">
                         삭제
                       </button>
                     </form>

@@ -37,7 +37,7 @@ export function ProductImageAdder({ productId }: { productId: string }) {
       {state && (
         <p
           role="status"
-          className={`max-w-40 text-[10px] ${state.ok ? "text-wabi-accent" : "text-red-600"}`}
+          className={`max-w-40 text-[10px] ${state.ok ? "text-wabi-accent" : "text-red-700"}`}
         >
           {state.message}
         </p>

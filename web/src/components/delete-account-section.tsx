@@ -31,7 +31,7 @@ export function DeleteAccountSection() {
             type="button"
             variant="outline"
             onClick={() => setOpen(true)}
-            className="mt-4 rounded-none border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700"
+            className="mt-4 rounded-none border-red-600 text-red-700 hover:bg-red-50 hover:text-red-800"
           >
             회원 탈퇴
           </Button>
@@ -71,7 +71,7 @@ export function DeleteAccountSection() {
           />
 
           {state?.error && (
-            <p role="alert" className="mt-3 text-xs text-red-600">
+            <p role="alert" className="mt-3 text-xs text-red-700">
               {state.error}
             </p>
           )}
