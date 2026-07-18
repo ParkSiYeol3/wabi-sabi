@@ -19,8 +19,18 @@ export type JourneyMoment = {
   name: string;
   price: number;
   image: string | null;
+  comment: string | null; // 상품 한 줄 코멘트(설명 첫 문장)
   label: string; // 아침 · morning
 };
+
+// 상품 설명이 없을 때의 모멘트 기본 코멘트 — 시적 한 문장.
+export const MOMENT_COMMENTS = [
+  "하루의 시작을 조용히 담아내는 그릇.",
+  "김이 오르는 잠깐, 손안의 온기.",
+  "평범한 점심을 조금 특별하게.",
+  "느린 오후의 결을 닮은 물건.",
+  "하루의 끝, 식탁 위의 고요.",
+] as const;
 
 // 목업 좌표 — 곡선(helix)과 만나는 지점(%). 좌우 교차.
 const MOMENT_POS = [
@@ -89,7 +99,8 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
       momentRefs.current.forEach((m) => {
         if (m) {
           m.style.opacity = "1";
-          m.style.transform = "none";
+          m.style.transform = "translateY(-50%)";
+          m.style.pointerEvents = "auto";
         }
       });
       return;
@@ -110,12 +121,15 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
 
       momentRefs.current.forEach((m, i) => {
         if (!m) return;
-        const y = MOMENT_POS[i].y / 100;
-        // 곡선이 도달하기 직전 등장, 한참 지나면 여운만 남기고 옅어진다.
-        const fadeIn = clamp01((p - (y - 0.1)) / 0.08);
-        const fadeOut = 1 - clamp01((p - (y + 0.16)) / 0.12) * 0.7;
-        m.style.opacity = `${(fadeIn * fadeOut).toFixed(3)}`;
-        m.style.transform = `translateY(${((1 - fadeIn) * 14).toFixed(1)}px)`;
+        const d = p - MOMENT_POS[i].y / 100; // 모멘트 지점까지의 거리
+        // 종형 곡선(#197 피드백) — 다가오면 서서히 커지며 나타나고,
+        // 지나가면 서서히 작아지며 완전히 사라진다.
+        const vis =
+          clamp01((d + 0.14) / 0.1) * (1 - clamp01((d - 0.02) / 0.12));
+        m.style.opacity = vis.toFixed(3);
+        m.style.transform = `translateY(-50%) scale(${(0.78 + 0.22 * vis).toFixed(3)})`;
+        // 사라진 카드가 보이지 않는 클릭 함정이 되지 않게.
+        m.style.pointerEvents = vis < 0.1 ? "none" : "auto";
       });
     };
     const onScroll = () => {
@@ -133,7 +147,7 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
   }, []);
 
   return (
-    <div ref={wrapRef} className="relative mx-auto w-full max-w-[1060px] px-3">
+    <div ref={wrapRef} className="relative mx-auto w-full max-w-265 px-3">
       {/* 데스크톱/모바일 캔버스 — CSS 로만 전환(레이아웃 시프트 없음) */}
       {[
         { cfg: DESKTOP, cls: "hidden md:block", key: "d" },
@@ -190,10 +204,12 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
         a day
       </div>
 
-      {/* 모멘트 — 점 + 상품 카드 (좌우 교차) */}
+      {/* 모멘트 — 곡선 위 점 + 반대편 여백에 상품 카드 (#197 피드백).
+          점이 오른쪽 극점(71%)이면 왼쪽 빈 공간에, 왼쪽 극점이면 오른쪽에 —
+          곡선과 겹치지 않는 넓은 여백에서 사진+한 줄 코멘트가 커졌다 작아진다. */}
       {moments.slice(0, MOMENT_POS.length).map((m, i) => {
         const pos = MOMENT_POS[i];
-        const right = pos.x > 50; // 카드가 점의 오른쪽에 붙는지
+        const cardLeft = pos.x > 50; // 점이 오른쪽 → 카드는 왼쪽 여백
         return (
           <div key={m.id}>
             <div
@@ -204,15 +220,15 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
               ref={(el) => {
                 momentRefs.current[i] = el;
               }}
-              className={`absolute w-[38vw] max-w-46.5 -translate-y-1/2 transition-none ${
-                right ? "text-left" : "text-right"
+              className={`absolute w-[44%] max-w-75 md:w-[36%] ${
+                cardLeft
+                  ? "left-[3%] text-right md:left-[7%]"
+                  : "right-[3%] text-left md:right-[7%]"
               }`}
               style={{
                 top: `${pos.y}%`,
-                ...(right
-                  ? { left: `calc(${pos.x}% + 16px)` }
-                  : { right: `calc(${100 - pos.x}% + 16px)` }),
                 opacity: 0,
+                transform: "translateY(-50%) scale(0.78)",
               }}
             >
               <div className="mb-2 [font-family:var(--ws-serif)] italic text-[13px] text-[#8f8676] md:mb-3 md:text-[16px]">
@@ -225,7 +241,7 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
                       src={m.image}
                       alt={m.name}
                       fill
-                      sizes="(max-width: 768px) 38vw, 186px"
+                      sizes="(max-width: 768px) 44vw, 300px"
                       className="object-cover"
                     />
                   ) : (
@@ -237,9 +253,13 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
                     </>
                   )}
                 </div>
+                {/* 한 줄 코멘트 — 상품 설명 첫 문장, 없으면 모멘트 기본 문장 */}
+                <p className="mt-3 [font-family:var(--ws-serif)] italic text-[13px] leading-normal text-[#6b6353] md:text-[16px]">
+                  {m.comment ?? MOMENT_COMMENTS[i] ?? ""}
+                </p>
                 <div
                   className={`mt-2 flex items-baseline justify-between gap-2 ${
-                    right ? "" : "flex-row-reverse"
+                    cardLeft ? "flex-row-reverse" : ""
                   }`}
                 >
                   <span className="truncate [font-family:var(--ws-serif)] text-[16px] text-[#423c30] md:text-[21px]">
