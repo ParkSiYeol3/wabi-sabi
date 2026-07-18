@@ -33,12 +33,13 @@ export const MOMENT_COMMENTS = [
 ] as const;
 
 // 곡선 극점(좌우 교차)과 만나는 지점(%) — 나선 파라미터(3.5바퀴)에서 유도.
+// 데스크톱·모바일 캔버스가 시작/끝 여백 비율을 공유해 좌표가 둘 다 극점에 맞는다.
 const MOMENT_POS = [
-  { x: 71, y: 31 },
-  { x: 29, y: 44 },
-  { x: 71, y: 56.5 },
-  { x: 29, y: 69.5 },
-  { x: 71, y: 82.5 },
+  { x: 71, y: 30.3 },
+  { x: 29, y: 43.4 },
+  { x: 71, y: 56.6 },
+  { x: 29, y: 69.8 },
+  { x: 71, y: 83.0 },
 ] as const;
 
 export const MOMENT_LABELS = [
@@ -71,9 +72,11 @@ function helixPath(
   return d.trim();
 }
 
-// 곡선을 길게(#197 피드백 4차) — 카드 사이 여백을 벌려 한 번에 한 장면만 흐르게.
-const DESKTOP = { vb: "0 0 1000 3400", d: helixPath(500, 210, 55, 180, 3240, 3.5, 720) };
-const MOBILE = { vb: "0 0 1000 6400", d: helixPath(500, 170, 80, 260, 6140, 3.5, 720) };
+// 곡선을 길게(#197 피드백 5차) — 앞 카드가 완전히 사라진 뒤 다음 카드가 시작되게
+// 카드 간 스크롤 간격 > 등장 구간이 되도록 잡는다. 시작/끝 여백은 두 캔버스가
+// 같은 비율(3.9%/3.5%)을 쓰므로 MOMENT_POS 가 양쪽 모두 극점에 맞는다.
+const DESKTOP = { vb: "0 0 1000 4600", d: helixPath(500, 210, 55, 180, 4440, 3.5, 720) };
+const MOBILE = { vb: "0 0 1000 9600", d: helixPath(500, 170, 80, 376, 9266, 3.5, 720) };
 
 const won = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -111,26 +114,29 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
       return;
     }
 
+    // 마우스 휠은 터치패드보다 스크롤 델타가 커서 연출이 뚝뚝 끊긴다(#197 피드백
+    // 5차). 스크롤 자체를 가로채는 대신(UX·접근성 해악) 연출이 따라오는 위치를
+    // lerp 로 완만하게 쫓게 한다 — 휠로 확 내려도 선·카드는 스르륵 따라잡는다.
     let raf = 0;
-    const update = () => {
-      raf = 0;
-      const rect = wrap.getBoundingClientRect();
-      const vh = window.innerHeight;
-      // 캔버스가 뷰포트를 통과하는 진행도 — 하단 15% 지점 기준.
-      const p = clamp01((vh * 0.85 - rect.top) / rect.height);
+    let targetTop = 0; // 실제 rect.top
+    let curTop = 0; // 연출용 스무딩된 rect.top
+    let height = 1;
+    let vh = window.innerHeight;
 
+    const render = (top: number) => {
       paths.forEach((el, i) => {
+        const p = clamp01((vh * 0.85 - top) / height);
         el.style.strokeDasharray = `${lens[i]}`;
         el.style.strokeDashoffset = `${lens[i] * (1 - p)}`;
       });
 
       momentRefs.current.forEach((m, i) => {
         if (!m) return;
-        // 뷰포트 중앙 기준 종형(#197 피드백 4차) — 캔버스 진행도가 아니라 점의
-        // 화면 위치로 판정해, 첫 화면(점이 아직 아래)엔 아무것도 보이지 않고
-        // 스크롤로 점이 화면 중앙에 올 때 최대, 위로 지나가면 다시 사라진다.
-        const dotY = rect.top + (MOMENT_POS[i].y / 100) * rect.height;
-        const dist = Math.abs(dotY - vh * 0.5) / (vh * 0.38);
+        // 뷰포트 중앙 기준 종형 — 점이 화면 아래면 0, 중앙에서 최대, 지나가면
+        // 다시 소멸. 구간(±0.32vh)이 카드 간 스크롤 간격보다 좁아 앞 카드가
+        // 완전히 사라진 뒤에야 다음 카드가 나타난다.
+        const dotY = top + (MOMENT_POS[i].y / 100) * height;
+        const dist = Math.abs(dotY - vh * 0.5) / (vh * 0.32);
         const vis = clamp01(1 - dist);
         m.style.opacity = vis.toFixed(3);
         m.style.transform = `translateY(-50%) scale(${(0.78 + 0.22 * vis).toFixed(3)})`;
@@ -140,11 +146,30 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
         if (dot) dot.style.opacity = vis.toFixed(3); // 점도 함께 — 시작은 곡선만
       });
     };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
+
+    const measure = () => {
+      const rect = wrap.getBoundingClientRect();
+      targetTop = rect.top;
+      height = rect.height;
+      vh = window.innerHeight;
     };
 
-    update(); // 중간 로드(새로고침)에서도 현재 스크롤 기준으로 즉시 동기화
+    const tick = () => {
+      curTop += (targetTop - curTop) * 0.11; // 60fps 기준 ~0.4s 에 수렴
+      if (Math.abs(targetTop - curTop) < 0.5) curTop = targetTop;
+      render(curTop);
+      raf = curTop === targetTop ? 0 : requestAnimationFrame(tick);
+    };
+
+    const onScroll = () => {
+      measure();
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+
+    // 첫 렌더(중간 로드 포함)는 스무딩 없이 현재 위치로 즉시 동기화.
+    measure();
+    curTop = targetTop;
+    render(curTop);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
     return () => {
