@@ -53,17 +53,70 @@ export const nav = [
   { label: "Contact", href: "/contact" },
 ] as const;
 
-// Shop 물건 종류 7종 (category_id). All=전체보기, monthly=이 달의 상품(is_monthly 플래그)은
-// 카테고리가 아니라 Shop 탭에서 별도 처리한다. (src/app/shop/page.tsx)
-export const categories = [
-  { slug: "plate", ko: "접시", en: "Plate" },
-  { slug: "bowl", ko: "볼", en: "Bowl" },
-  { slug: "cup", ko: "컵", en: "Cup" },
-  { slug: "cutlery", ko: "커트러리", en: "Cutlery" },
-  { slug: "life", ko: "리빙", en: "Life" },
+// Shop 카테고리 2계층 트리 (#193, 대표님 피드백 — 상품군 확장: 다도·액세서리 등).
+// DB(categories, 마이그 0032)와 여기가 함께 진실이다 — 트리를 바꾸면 마이그도 함께.
+// 상품은 소분류(잎)에 연결하고, '선물'처럼 하위 없는 대분류엔 직접 연결한다.
+// All=전체보기, monthly=이 달의 상품(is_monthly)은 카테고리가 아니라 별도 필터.
+export type CategoryLeaf = { slug: string; ko: string; en: string };
+export type CategoryNode = CategoryLeaf & {
+  children?: readonly CategoryLeaf[];
+};
+
+export const categoryTree: readonly CategoryNode[] = [
+  {
+    slug: "tableware",
+    ko: "식기",
+    en: "Tableware",
+    children: [
+      { slug: "plate", ko: "접시", en: "Plate" },
+      { slug: "bowl", ko: "볼", en: "Bowl" },
+      { slug: "cup", ko: "컵", en: "Cup" },
+      { slug: "cutlery", ko: "커트러리", en: "Cutlery" },
+    ],
+  },
+  {
+    slug: "tea",
+    ko: "다도",
+    en: "Tea",
+    children: [
+      { slug: "teaware", ko: "다기", en: "Teaware" },
+      { slug: "fan", ko: "부채", en: "Fan" },
+    ],
+  },
+  {
+    slug: "accessory",
+    ko: "액세서리",
+    en: "Accessory",
+    children: [
+      { slug: "keyring", ko: "키링", en: "Keyring" },
+      { slug: "necklace", ko: "목걸이", en: "Necklace" },
+      { slug: "bracelet", ko: "팔찌", en: "Bracelet" },
+      { slug: "hairtie", ko: "머리끈", en: "Hair Tie" },
+    ],
+  },
+  {
+    slug: "living",
+    ko: "리빙",
+    en: "Living",
+    children: [
+      { slug: "life", ko: "생활 소품", en: "Life" },
+      { slug: "craft", ko: "공예", en: "Craft" },
+    ],
+  },
   { slug: "gift", ko: "선물", en: "Gift" },
-  { slug: "craft", ko: "공예", en: "Craft" },
 ] as const;
+
+// 필터용 slug 확장 — 대분류 slug 면 자신+하위 전부, 소분류면 자신만.
+// 모르는 slug 는 [slug] 그대로 돌려 DB 매칭 실패(빈 결과)로 흐르게 한다.
+export function categorySlugs(slug: string): string[] {
+  for (const node of categoryTree) {
+    if (node.slug === slug)
+      return [slug, ...(node.children?.map((c) => c.slug) ?? [])];
+    const child = node.children?.find((c) => c.slug === slug);
+    if (child) return [slug];
+  }
+  return [slug];
+}
 
 // 이 달의 상품 — Shop 탭에서 카테고리와 같은 줄에 노출하되 필터는 is_monthly 로 동작.
 export const MONTHLY_SLUG = "monthly";

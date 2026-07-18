@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
+import { categorySlugs } from "@/lib/site";
 import type { ProductCardData } from "@/components/product-card";
 
 type ProductRow = {
@@ -130,25 +131,22 @@ export async function getProducts({
 
   // category="monthly" 는 종류가 아니라 이 달의 상품 필터(is_monthly).
   const monthly = category === "monthly";
+  const filterByCategory = !!category && !monthly;
 
-  let categoryId: string | undefined;
-  if (category && !monthly) {
-    const { data: cat } = await supabase
-      .from("categories")
-      .select("id")
-      .eq("slug", category)
-      .single();
-    if (!cat) return [];
-    categoryId = cat.id;
-  }
-
+  // 카테고리 필터는 slug→id 별도 조회 대신 !inner 조인 필터로 한 번에.
+  // 대분류 slug 는 하위 소분류까지 확장해 매칭한다(#193 2계층 트리).
   let query = supabase
     .from("products")
-    .select("id, name, price, stock, images, categories(slug, name_en)")
+    .select(
+      filterByCategory
+        ? "id, name, price, stock, images, categories!inner(slug, name_en)"
+        : "id, name, price, stock, images, categories(slug, name_en)",
+    )
     .eq("is_active", true);
 
   if (monthly) query = query.eq("is_monthly", true);
-  if (categoryId) query = query.eq("category_id", categoryId);
+  if (filterByCategory)
+    query = query.in("categories.slug", categorySlugs(category!));
   if (q && q.trim()) query = query.ilike("name", `%${q.trim()}%`);
 
   // 정렬
@@ -200,7 +198,9 @@ async function loadShopBrowse(
     .eq("is_active", true);
 
   if (monthly) query = query.eq("is_monthly", true);
-  else if (filterByCategory) query = query.eq("categories.slug", category);
+  // 대분류 slug 는 하위 소분류까지 확장해 매칭한다(#193 2계층 트리).
+  else if (filterByCategory)
+    query = query.in("categories.slug", categorySlugs(category));
 
   if (sort === "price_asc") query = query.order("price", { ascending: true });
   else if (sort === "price_desc")

@@ -7,7 +7,7 @@ import { ProductCard } from "@/components/product-card";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { Reveal } from "@/components/reveal";
 import { Input } from "@/components/ui/input";
-import { categories, MONTHLY_SLUG } from "@/lib/site";
+import { categoryTree, MONTHLY_SLUG } from "@/lib/site";
 import {
   getProducts,
   getShopBrowse,
@@ -71,7 +71,8 @@ export default async function ShopPage({
         >
           이 달의 상품
         </FilterLink>
-        {categories.map((c) => (
+        {/* 대분류 칩 — 하위 소분류까지 포함해 필터된다(#193). 소분류 토글 사이드바는 후속. */}
+        {categoryTree.map((c) => (
           <FilterLink
             key={c.slug}
             href={buildQuery(sp, { category: c.slug })}
