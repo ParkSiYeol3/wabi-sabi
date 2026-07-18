@@ -14,15 +14,18 @@ export function SmoothScroll() {
     const doc = document.scrollingElement ?? document.documentElement;
     let target = window.scrollY;
     let raf = 0;
+    let lastSet = -1; // 우리가 마지막으로 scrollTo 한 위치 — 외부 개입 감지용
 
     const tick = () => {
       const cur = window.scrollY;
       const next = cur + (target - cur) * 0.1; // 60fps 기준 ~0.5s 글라이드
       if (Math.abs(target - next) < 0.5) {
+        lastSet = target;
         window.scrollTo(0, target);
         raf = 0;
         return;
       }
+      lastSet = next;
       window.scrollTo(0, next);
       raf = requestAnimationFrame(tick);
     };
@@ -38,9 +41,20 @@ export function SmoothScroll() {
     };
 
     // 키보드·스크롤바 등 다른 입력으로 움직이면 목표를 현재 위치로 동기화.
-    // (루프 구동 중의 스크롤 이벤트는 우리 자신이 낸 것이라 건너뛴다.)
+    // 루프 구동 중이라도 스크롤 위치가 우리가 마지막에 쓴 값과 다르면 외부
+    // 개입(스크롤바 드래그 등)이다 — 즉시 양보하지 않으면 드래그 위치와 옛
+    // 목표점이 프레임마다 싸우며 화면이 진동한다(버그 리포트: 스크롤바 드래그
+    // 시 떨림). 애니메이션을 끊고 목표를 현재 위치로 맞춘다.
     const onScroll = () => {
-      if (!raf) target = window.scrollY;
+      if (raf) {
+        if (Math.abs(window.scrollY - lastSet) > 1.5) {
+          cancelAnimationFrame(raf);
+          raf = 0;
+          target = window.scrollY;
+        }
+        return;
+      }
+      target = window.scrollY;
     };
 
     window.addEventListener("wheel", onWheel, { passive: false });
