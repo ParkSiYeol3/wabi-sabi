@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Clock, MapPin, AtSign, Mail } from "lucide-react";
+import { Clock, MapPin, AtSign, Mail, Store } from "lucide-react";
 import { Container } from "@/components/container";
 import { MapCard } from "@/components/map-card";
 import { site } from "@/lib/site";
@@ -36,6 +36,18 @@ export default function ContactPage() {
           <Item icon={<Mail className="size-5" strokeWidth={1.5} />} title="문의">
             <a href={`mailto:${site.email}`} className="hover:underline">
               {site.email}
+            </a>
+          </Item>
+          {/* 자사몰 외 판매 채널(#201) — 네이버에서도 같은 상품을 구매할 수 있다 */}
+          <Item icon={<Store className="size-5" strokeWidth={1.5} />} title="네이버 스마트스토어">
+            <a
+              href={site.naverStoreUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline"
+            >
+              smartstore.naver.com/wasa_kr
+              <span className="sr-only"> (새 창 열림)</span>
             </a>
           </Item>
         </ul>

@@ -51,6 +51,14 @@ export function SiteFooter() {
           <Link href="/review" className="hover:text-white">
             리뷰
           </Link>
+          <a
+            href={site.naverStoreUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white"
+          >
+            네이버 스토어<span className="sr-only"> (새 창 열림)</span>
+          </a>
           {legalNav.map((l) => (
             <Link
               key={l.href}

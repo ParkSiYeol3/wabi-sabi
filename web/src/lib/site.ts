@@ -22,6 +22,8 @@ export const site = {
   naverPlaceId: "2012676632",
   instagram: "@wasa.kr",
   instagramUrl: "https://www.instagram.com/wasa.kr",
+  // 네이버 스마트스토어 — 자사몰 외 판매 채널(#201). 푸터·Contact·JSON-LD sameAs 에 노출.
+  naverStoreUrl: "https://smartstore.naver.com/wasa_kr",
   email: "info@wasa.kr",
 } as const;
 

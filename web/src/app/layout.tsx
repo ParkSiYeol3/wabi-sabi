@@ -45,7 +45,11 @@ const siteJsonLd = JSON.stringify({
   "@type": "OnlineStore",
   name: "WABI-SABI 와비사비",
   url: SITE_URL,
-  sameAs: ["https://www.instagram.com/wasa.kr"],
+  // 브랜드 엔티티 연결 — 인스타그램·네이버 스마트스토어(#201)
+  sameAs: [
+    "https://www.instagram.com/wasa.kr",
+    "https://smartstore.naver.com/wasa_kr",
+  ],
   // 값이 있을 때만 — 미입력 필드는 넣지 않는다(허위 표시 방지, undefined 는 제거됨).
   telephone: business.phone || undefined,
   email: business.email || undefined,
