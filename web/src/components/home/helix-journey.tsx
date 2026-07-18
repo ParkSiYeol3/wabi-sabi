@@ -32,13 +32,13 @@ export const MOMENT_COMMENTS = [
   "하루의 끝, 식탁 위의 고요.",
 ] as const;
 
-// 목업 좌표 — 곡선(helix)과 만나는 지점(%). 좌우 교차.
+// 곡선 극점(좌우 교차)과 만나는 지점(%) — 나선 파라미터(3.5바퀴)에서 유도.
 const MOMENT_POS = [
-  { x: 71, y: 30 },
+  { x: 71, y: 31 },
   { x: 29, y: 44 },
-  { x: 71, y: 57 },
-  { x: 29, y: 70 },
-  { x: 71, y: 83 },
+  { x: 71, y: 56.5 },
+  { x: 29, y: 69.5 },
+  { x: 71, y: 82.5 },
 ] as const;
 
 export const MOMENT_LABELS = [
@@ -71,8 +71,9 @@ function helixPath(
   return d.trim();
 }
 
-const DESKTOP = { vb: "0 0 1000 2600", d: helixPath(500, 210, 55, 180, 2440, 3.5, 720) };
-const MOBILE = { vb: "0 0 1000 5200", d: helixPath(500, 170, 80, 260, 4980, 3.5, 720) };
+// 곡선을 길게(#197 피드백 4차) — 카드 사이 여백을 벌려 한 번에 한 장면만 흐르게.
+const DESKTOP = { vb: "0 0 1000 3400", d: helixPath(500, 210, 55, 180, 3240, 3.5, 720) };
+const MOBILE = { vb: "0 0 1000 6400", d: helixPath(500, 170, 80, 260, 6140, 3.5, 720) };
 
 const won = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -81,6 +82,7 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const pathRefs = useRef<(SVGPathElement | null)[]>([]);
   const momentRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const dotRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -103,6 +105,9 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
           m.style.pointerEvents = "auto";
         }
       });
+      dotRefs.current.forEach((d) => {
+        if (d) d.style.opacity = "1";
+      });
       return;
     }
 
@@ -121,15 +126,18 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
 
       momentRefs.current.forEach((m, i) => {
         if (!m) return;
-        const d = p - MOMENT_POS[i].y / 100; // 모멘트 지점까지의 거리
-        // 종형 곡선(#197 피드백) — 다가오면 서서히 커지며 나타나고,
-        // 지나가면 서서히 작아지며 완전히 사라진다.
-        const vis =
-          clamp01((d + 0.14) / 0.1) * (1 - clamp01((d - 0.02) / 0.12));
+        // 뷰포트 중앙 기준 종형(#197 피드백 4차) — 캔버스 진행도가 아니라 점의
+        // 화면 위치로 판정해, 첫 화면(점이 아직 아래)엔 아무것도 보이지 않고
+        // 스크롤로 점이 화면 중앙에 올 때 최대, 위로 지나가면 다시 사라진다.
+        const dotY = rect.top + (MOMENT_POS[i].y / 100) * rect.height;
+        const dist = Math.abs(dotY - vh * 0.5) / (vh * 0.38);
+        const vis = clamp01(1 - dist);
         m.style.opacity = vis.toFixed(3);
         m.style.transform = `translateY(-50%) scale(${(0.78 + 0.22 * vis).toFixed(3)})`;
         // 사라진 카드가 보이지 않는 클릭 함정이 되지 않게.
         m.style.pointerEvents = vis < 0.1 ? "none" : "auto";
+        const dot = dotRefs.current[i];
+        if (dot) dot.style.opacity = vis.toFixed(3); // 점도 함께 — 시작은 곡선만
       });
     };
     const onScroll = () => {
@@ -182,8 +190,11 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
         return (
           <div key={m.id}>
             <div
+              ref={(el) => {
+                dotRefs.current[i] = el;
+              }}
               className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#423c30]"
-              style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+              style={{ left: `${pos.x}%`, top: `${pos.y}%`, opacity: 0 }}
             />
             <div
               ref={(el) => {
