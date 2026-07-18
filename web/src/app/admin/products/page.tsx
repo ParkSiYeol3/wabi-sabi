@@ -23,6 +23,7 @@ type Product = {
   images: string[] | null;
 };
 type Category = { id: string; name_ko: string; name_en: string };
+type CategoryRow = Category & { parent_id: string | null };
 
 export default async function AdminProductsPage() {
   // service_role 있으면 전체(비활성 포함), 없으면 공개 읽기
@@ -34,11 +35,27 @@ export default async function AdminProductsPage() {
     .order("created_at", { ascending: false })
     .returns<Product[]>();
 
-  const { data: categories } = await db
+  const { data: categoryRows } = await db
     .from("categories")
-    .select("id, name_ko, name_en")
+    .select("id, name_ko, name_en, parent_id")
     .order("sort_order")
-    .returns<Category[]>();
+    .returns<CategoryRow[]>();
+
+  // 상품은 소분류(잎)에만 연결한다(#193 2계층). 하위가 있는 대분류는 선택지에서
+  // 빼고, 소분류는 "대분류 > 소분류" 라벨로 어디 속하는지 보이게 한다.
+  // 하위 없는 대분류('선물')는 그대로 잎이다.
+  const rows = categoryRows ?? [];
+  const parentIds = new Set(rows.map((c) => c.parent_id).filter(Boolean));
+  const nameById = new Map(rows.map((c) => [c.id, c.name_ko]));
+  const categories: Category[] = rows
+    .filter((c) => !parentIds.has(c.id))
+    .map((c) => ({
+      id: c.id,
+      name_ko: c.parent_id
+        ? `${nameById.get(c.parent_id)} > ${c.name_ko}`
+        : c.name_ko,
+      name_en: c.name_en,
+    }));
 
   return (
     <div className="space-y-10">
