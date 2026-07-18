@@ -107,11 +107,14 @@ function AuthForm() {
 
   return (
     <div className="w-full max-w-sm border border-wabi-border p-8">
+      {/* 시각적으론 탭이 제목 역할 — 스크린리더용 페이지 제목만 별도 제공 */}
+      <h1 className="sr-only">로그인 · 회원가입</h1>
       <div className="grid grid-cols-2 border-b border-wabi-border">
         {(["login", "signup"] as const).map((t) => (
           <button
             key={t}
             type="button"
+            aria-pressed={tab === t}
             onClick={() => {
               setTab(t);
               setError(null);
