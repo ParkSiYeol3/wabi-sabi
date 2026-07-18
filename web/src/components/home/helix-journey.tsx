@@ -106,6 +106,7 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
           m.style.opacity = "1";
           m.style.transform = "translateY(-50%)";
           m.style.pointerEvents = "auto";
+          m.removeAttribute("inert");
         }
       });
       dotRefs.current.forEach((d) => {
@@ -137,8 +138,11 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
         const vis = clamp01(1 - dist);
         m.style.opacity = vis.toFixed(3);
         m.style.transform = `translateY(-50%) scale(${(0.78 + 0.22 * vis).toFixed(3)})`;
-        // 사라진 카드가 보이지 않는 클릭 함정이 되지 않게.
+        // 사라진 카드가 보이지 않는 클릭·포커스 함정이 되지 않게 —
+        // pointer-events 는 포인터만 막으므로 inert 로 키보드 탭·접근성
+        // 트리에서도 함께 제외한다(CodeRabbit #198).
         m.style.pointerEvents = vis < 0.1 ? "none" : "auto";
+        m.toggleAttribute("inert", vis < 0.1);
         const dot = dotRefs.current[i];
         if (dot) dot.style.opacity = vis.toFixed(3); // 점도 함께 — 시작은 곡선만
       });
@@ -222,6 +226,8 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
                 opacity: 0,
                 transform: "translateY(-50%) scale(0.78)",
               }}
+              // 초기(숨김) 상태 — JS 로드 전에도 키보드·스크린리더에서 제외
+              inert
             >
               <div className="mb-2 [font-family:var(--ws-serif)] italic text-[13px] text-[#8f8676] md:mb-3 md:text-[16px]">
                 {m.label}
