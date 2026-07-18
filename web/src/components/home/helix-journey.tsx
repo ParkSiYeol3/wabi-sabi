@@ -75,8 +75,9 @@ function helixPath(
 // 곡선을 길게(#197 피드백 5차) — 앞 카드가 완전히 사라진 뒤 다음 카드가 시작되게
 // 카드 간 스크롤 간격 > 등장 구간이 되도록 잡는다. 시작/끝 여백은 두 캔버스가
 // 같은 비율(3.9%/3.5%)을 쓰므로 MOMENT_POS 가 양쪽 모두 극점에 맞는다.
-const DESKTOP = { vb: "0 0 1000 4600", d: helixPath(500, 210, 55, 180, 4440, 3.5, 720) };
-const MOBILE = { vb: "0 0 1000 9600", d: helixPath(500, 170, 80, 376, 9266, 3.5, 720) };
+// 스텝 240(바퀴당 ~68점) — 1.3px 획에선 720과 시각 동일, 인라인 path 가 1/3(#211).
+const DESKTOP = { vb: "0 0 1000 4600", d: helixPath(500, 210, 55, 180, 4440, 3.5, 240) };
+const MOBILE = { vb: "0 0 1000 9600", d: helixPath(500, 170, 80, 376, 9266, 3.5, 240) };
 
 const won = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
