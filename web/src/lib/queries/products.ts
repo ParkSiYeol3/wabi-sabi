@@ -19,45 +19,9 @@ function firstImage(images: unknown): string | null {
     : null;
 }
 
-function imageList(images: unknown): string[] {
-  return Array.isArray(images)
-    ? images.filter((i): i is string => typeof i === "string")
-    : [];
-}
 
-// WSB-012: 같은 카테고리 관련 상품 추천 (자기 제외).
-export async function getRelatedProducts(
-  categorySlug: string,
-  excludeId: string,
-  limit = 4,
-): Promise<ProductCardData[]> {
-  const supabase = await createClient();
-  const { data: cat } = await supabase
-    .from("categories")
-    .select("id")
-    .eq("slug", categorySlug)
-    .single();
-  if (!cat) return [];
-
-  const { data } = await supabase
-    .from("products")
-    .select("id, name, price, stock, images, categories(slug, name_en)")
-    .eq("is_active", true)
-    .eq("category_id", cat.id)
-    .neq("id", excludeId)
-    .order("created_at", { ascending: false })
-    .limit(limit)
-    .returns<ProductRow[]>();
-
-  return (data ?? []).map((p) => ({
-    id: p.id,
-    name: p.name,
-    price: p.price,
-    stock: p.stock,
-    image: firstImage(p.images),
-    category: p.categories?.name_en,
-  }));
-}
+// (getRelatedProducts·getProduct 는 상세 캐시 번들(#181 product-detail.ts)로
+//  대체돼 소비처가 없어져 제거 — #207. ProductDetail 타입은 번들이 계속 쓴다.)
 
 export interface ProductDetail {
   id: string;
@@ -72,44 +36,6 @@ export interface ProductDetail {
   category: { slug: string; name_en: string; name_ko: string } | null;
 }
 
-// WSB-010: 상품 상세 단건 조회 (없거나 비활성 → null).
-export async function getProduct(id: string): Promise<ProductDetail | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("products")
-    .select(
-      "id, name, price, stock, description, material, size, care, images, categories(slug, name_en, name_ko)",
-    )
-    .eq("id", id)
-    .eq("is_active", true)
-    .maybeSingle();
-
-  if (error || !data) return null;
-  const row = data as unknown as {
-    id: string;
-    name: string;
-    price: number;
-    stock: number;
-    description: string | null;
-    material: string | null;
-    size: string | null;
-    care: string | null;
-    images: unknown;
-    categories: { slug: string; name_en: string; name_ko: string } | null;
-  };
-  return {
-    id: row.id,
-    name: row.name,
-    price: row.price,
-    stock: row.stock,
-    description: row.description,
-    material: row.material,
-    size: row.size,
-    care: row.care,
-    images: imageList(row.images),
-    category: row.categories,
-  };
-}
 
 export type ProductSort = "newest" | "price_asc" | "price_desc";
 
@@ -234,16 +160,5 @@ export function getShopBrowse({
   return getCachedShopBrowse(category ?? null, sort);
 }
 
-// 홈 Featured Collection — '이 달의 상품'(is_monthly) 우선, 모자라면 최신으로 채운다.
-// 대표님이 monthly 를 지정하지 않은 기간에도 홈이 비지 않도록 하는 폴백.
-export async function getFeaturedProducts(
-  count = 4,
-): Promise<ProductCardData[]> {
-  const monthly = await getProducts({ category: "monthly", limit: count });
-  if (monthly.length >= count) return monthly;
-
-  const seen = new Set(monthly.map((p) => p.id));
-  // 채울 만큼만 더 가져오되, monthly 와 겹칠 수 있어 여유분(count)을 요청 후 잘라낸다.
-  const recent = await getProducts({ limit: count * 2 });
-  return [...monthly, ...recent.filter((p) => !seen.has(p.id))].slice(0, count);
-}
+// (getFeaturedProducts 는 구 홈 Featured Collection 용 — 헬릭스 리디자인(#197)으로
+//  소비처가 사라져 제거 — #207.)
