@@ -14,10 +14,19 @@ export const HOME_CONTENT_TAG = "home-content";
 const FEATURED_COUNT = 4;
 const POOL_LIMIT = 12;
 
+export type JourneyProduct = {
+  id: string;
+  name: string;
+  price: number;
+  image: string | null;
+  comment: string | null; // 설명 첫 문장 — 없으면 컴포넌트가 모멘트 기본 문장 사용
+};
+
 export type HomeData = {
   featured: ProductCardData[];
   heroImages: string[];
   showcaseItems: ShowcaseItem[];
+  journey: JourneyProduct[];
   philosophy: string[];
 };
 
@@ -26,10 +35,19 @@ type Row = {
   name: string;
   price: number;
   stock: number;
+  description: string | null;
   images: unknown;
   is_monthly: boolean;
   categories: { name_en: string } | null;
 };
+
+// 상품 설명 첫 문장 — 헬릭스 카드의 한 줄 코멘트(#197). 길면 잘라 여운만 남긴다.
+function firstSentence(text: string | null): string | null {
+  if (!text) return null;
+  const s = text.split(/\n|(?<=[.!?。])\s/)[0]?.trim();
+  if (!s) return null;
+  return s.length > 46 ? `${s.slice(0, 45)}…` : s;
+}
 
 function firstImage(images: unknown): string | null {
   return Array.isArray(images) && typeof images[0] === "string"
@@ -46,7 +64,9 @@ async function loadHomeData(): Promise<HomeData> {
   const [{ data: products }, { data: content }] = await Promise.all([
     db
       .from("products")
-      .select("id, name, price, stock, images, is_monthly, categories(name_en)")
+      .select(
+        "id, name, price, stock, description, images, is_monthly, categories(name_en)",
+      )
       .eq("is_active", true)
       .order("created_at", { ascending: false })
       .limit(POOL_LIMIT)
@@ -79,14 +99,47 @@ async function loadHomeData(): Promise<HomeData> {
   // firstImage 중복 호출·타입 단언(as/!)을 없앤다.
   const withImage = pool.flatMap((p) => {
     const image = firstImage(p.images);
-    return image ? [{ id: p.id, name: p.name, image }] : [];
+    return image
+      ? [
+          {
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            image,
+            comment: firstSentence(p.description),
+          },
+        ]
+      : [];
   });
   const heroImages = [...new Set(withImage.map((p) => p.image))].slice(0, 6);
-  const showcaseItems: ShowcaseItem[] = withImage.slice(0, 5);
+  const showcaseItems: ShowcaseItem[] = withImage.map(
+    ({ id, name, image }) => ({ id, name, image }),
+  ).slice(0, 5);
+
+  // 헬릭스 여정 모멘트(#197) — 사진 있는 상품 우선, 모자라면 최신으로 채움(플레이스홀더).
+  const journeyIds = new Set(withImage.map((p) => p.id));
+  const journey: JourneyProduct[] = [
+    ...withImage.map(({ id, name, price, image, comment }) => ({
+      id,
+      name,
+      price,
+      image,
+      comment,
+    })),
+    ...pool
+      .filter((p) => !journeyIds.has(p.id))
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        price: p.price,
+        image: null,
+        comment: firstSentence(p.description),
+      })),
+  ].slice(0, 5);
 
   const philosophy = toParagraphs(content?.value?.trim() || DEFAULT_PHILOSOPHY);
 
-  return { featured, heroImages, showcaseItems, philosophy };
+  return { featured, heroImages, showcaseItems, journey, philosophy };
 }
 
 // 120초 캐시 + 태그. 상품·콘텐츠는 자주 바뀌지 않고, 바뀌면 어드민이 태그를 무효화한다.
