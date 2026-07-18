@@ -17,9 +17,10 @@ import { getHomeData } from "@/lib/queries/home";
 // 외부 요청·CSP 변경 없음. 모든 기기(PC·모바일) 동일 렌더.
 // 라틴 이탤릭은 Cormorant 가 먼저 받는다. 전역 토큰은 건드리지 않고 홈 래퍼의
 // CSS 변수로만 쓴다(리스크 격리).
+// 홈에서 쓰는 웨이트는 400(본문·이탤릭)·500(제목 font-medium)뿐 — 600 제외(#211).
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500"],
   style: ["normal", "italic"],
   variable: "--font-cormorant",
   display: "swap",
@@ -30,8 +31,11 @@ const spaceMono = Space_Mono({
   variable: "--font-ws-mono",
   display: "swap",
 });
+// KS X 1001 완성형 2350자 + 라틴·약물 서브셋(fonttools) — 원본 425KB → 201KB.
+// 서브셋 밖 희귀 음절·한자는 스택 폴백(시스템 세리프)으로 렌더된다(#211).
+// 원본은 hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/ 에서 재획득 가능.
 const maruburi = localFont({
-  src: "../fonts/MaruBuri-Light.woff2",
+  src: "../fonts/MaruBuri-Light.subset.woff2",
   weight: "300",
   variable: "--font-maruburi",
   display: "swap",
