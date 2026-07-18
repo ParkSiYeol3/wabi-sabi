@@ -176,22 +176,14 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
         </svg>
       ))}
 
-      {/* 축 라벨 */}
-      <div className="absolute left-1/2 top-[4.6%] translate-x-3 [font-family:var(--ws-serif)] italic text-[17px] text-[#423c30] md:text-[19px]">
-        일상{" "}
-        <span className="not-italic [font-family:var(--ws-mono)] text-[9px] tracking-[2px] text-[#9a9080] md:text-[10px]">
-          EVERYDAY
-        </span>
-      </div>
-
-      {/* 흐르는 시어 */}
-      <div className="absolute left-[60%] top-[24%] -rotate-[4deg] [font-family:var(--ws-serif)] italic text-[16px] text-[#8f8676] md:text-[20px]">
+      {/* 흐르는 시어 — 스크롤 중에 만나는 무드 요소(진입 화면엔 곡선만) */}
+      <div className="absolute left-[60%] top-[24%] rotate-[-4deg] [font-family:var(--ws-serif)] italic text-[16px] text-[#8f8676] md:text-[20px]">
         천천히
       </div>
-      <div className="absolute left-[22%] top-[51%] rotate-[3deg] [font-family:var(--ws-serif)] italic text-[16px] text-[#8f8676] md:left-[30%] md:text-[20px]">
+      <div className="absolute left-[22%] top-[51%] rotate-3 [font-family:var(--ws-serif)] italic text-[16px] text-[#8f8676] md:left-[30%] md:text-[20px]">
         결을 따라
       </div>
-      <div className="absolute left-[56%] top-[74%] -rotate-[3deg] [font-family:var(--ws-serif)] italic text-[16px] text-[#8f8676] md:text-[20px]">
+      <div className="absolute left-[56%] top-[74%] -rotate-3 [font-family:var(--ws-serif)] italic text-[16px] text-[#8f8676] md:text-[20px]">
         곁에
       </div>
       <div className="absolute left-[47%] top-[90%] origin-left -rotate-90 [font-family:var(--ws-mono)] text-[9px] tracking-[2px] text-[#9a9080] md:text-[10px]">
@@ -212,7 +204,7 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
               ref={(el) => {
                 momentRefs.current[i] = el;
               }}
-              className={`absolute w-[38vw] max-w-[186px] -translate-y-1/2 transition-none ${
+              className={`absolute w-[38vw] max-w-46.5 -translate-y-1/2 transition-none ${
                 right ? "text-left" : "text-right"
               }`}
               style={{
@@ -227,7 +219,7 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
                 {m.label}
               </div>
               <Link href={`/shop/${m.id}`} className="block">
-                <div className="relative flex aspect-[5/4] items-center justify-center overflow-hidden rounded-[50%/42%] border border-[rgba(66,60,48,.16)] bg-[repeating-linear-gradient(48deg,#e7dcc8_0_1px,#efe6d5_1px_12px)]">
+                <div className="relative flex aspect-5/4 items-center justify-center overflow-hidden rounded-[50%/42%] border border-[rgba(66,60,48,.16)] bg-[repeating-linear-gradient(48deg,#e7dcc8_0_1px,#efe6d5_1px_12px)]">
                   {m.image ? (
                     <Image
                       src={m.image}
@@ -264,7 +256,7 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
       })}
 
       {/* 종착 노드 */}
-      <div className="absolute left-1/2 top-[95.5%] flex h-[88px] w-[88px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-dotted border-[rgba(66,60,48,.5)] bg-[#f3ebdd] text-center md:h-[104px] md:w-[104px]">
+      <div className="absolute left-1/2 top-[95.5%] flex h-22 w-22 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-dotted border-[rgba(66,60,48,.5)] bg-[#f3ebdd] text-center md:h-26 md:w-26">
         <span className="[font-family:var(--ws-serif)] italic text-[13px] leading-[1.2] text-[#423c30] md:text-[15px]">
           당신의
           <br />

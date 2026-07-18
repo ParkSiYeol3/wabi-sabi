@@ -83,24 +83,10 @@ export default async function Home({
         </p>
       )}
 
-      {/* ── 진입 — 로고 없이, 선의 시작만 (#197 대표님 무드) ── */}
-      <section className="px-6 pb-6 pt-16 text-center md:pt-24">
-        <p className="[font-family:var(--ws-mono)] text-[10px] tracking-[3px] text-[#9a9080] md:text-[11px]">
-          라이프스타일 셀렉트숍 — SINCE 2026
-        </p>
-        <h1 className="mt-7 [font-family:var(--ws-serif)] text-[clamp(38px,7vw,92px)] font-medium leading-[1.06] tracking-[-0.5px]">
-          말하지 않아도,
-          <br />
-          <em className="font-normal">자연스레 스며드는</em>
-        </h1>
-        <p className="mx-auto mt-5 max-w-[540px] [font-family:var(--ws-serif)] italic text-[clamp(16px,2.3vw,25px)] text-[#6b6353]">
-          a quiet flow of everyday tableware — follow the line of an ordinary
-          day.
-        </p>
-      </section>
-
-      {/* ── 하루의 결 — 스크롤이 그리는 헬릭스 여정 ── */}
-      <section className="pb-8 pt-2">
+      {/* ── 진입 즉시 곡선만 (#197 대표님 무드 — 코멘트·로고 일절 없음).
+           스크린리더용 페이지 제목만 숨김 제공. ── */}
+      <h1 className="sr-only">WABI-SABI — 하루의 결을 따라 흐르는 그릇 셀렉트숍</h1>
+      <section className="pb-8 pt-6 md:pt-10">
         <HelixJourney moments={moments} />
       </section>
 
@@ -120,14 +106,14 @@ export default async function Home({
           </h2>
         </Reveal>
         <Reveal>
-          <div className="mx-auto mt-8 max-w-[620px] space-y-4 [font-family:var(--ws-serif)] text-[17px] leading-[1.7] text-[#524a3a] md:text-[19px]">
+          <div className="mx-auto mt-8 max-w-155 space-y-4 [font-family:var(--ws-serif)] text-[17px] leading-[1.7] text-[#524a3a] md:text-[19px]">
             {philosophy.map((p, i) => (
               <p key={i}>{p}</p>
             ))}
           </div>
         </Reveal>
 
-        <div className="mx-auto mt-16 grid max-w-[1000px] gap-10 border-t border-[rgba(66,60,48,.24)] px-2 pt-11 text-left md:grid-cols-3">
+        <div className="mx-auto mt-16 grid max-w-250 gap-10 border-t border-[rgba(66,60,48,.24)] px-2 pt-11 text-left md:grid-cols-3">
           {pillars.map((v, i) => (
             <Reveal key={v.han} delay={([0, 100, 200] as const)[i] ?? 0}>
               <div>
@@ -159,7 +145,7 @@ export default async function Home({
 
       {/* ── Visit / Newsletter — 기능 유지, 무드 톤만 맞춤 ── */}
       <section className="border-t border-[rgba(66,60,48,.16)]">
-        <div className="mx-auto max-w-[1000px] px-6 py-20">
+        <div className="mx-auto max-w-250 px-6 py-20">
           <Reveal>
             <h2 className="text-center [font-family:var(--ws-serif)] text-[26px] font-medium">
               방문 안내 <span className="italic text-[#8f8676]">Visit Us</span>
