@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Cormorant_Garamond, Space_Mono, Hahmlet } from "next/font/google";
+import { Cormorant_Garamond, Space_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { Reveal } from "@/components/reveal";
 import {
   HelixJourney,
@@ -10,10 +11,12 @@ import { SmoothScroll } from "@/components/home/smooth-scroll";
 import { getHomeData } from "@/lib/queries/home";
 
 // 홈 전용 무드 폰트 (#209) — 대표님 피드백: 기존 궁서보다 얇은 궁서 느낌.
-// 시스템 궁서는 굵기가 고정이라 "더 얇게"가 불가능 → 웹폰트 Hahmlet Light(300)를
-// 1순위로 두어 모든 기기(PC·모바일)가 동일하게 얇은 전통 세리프로 렌더된다.
-// 라틴 이탤릭은 Cormorant 가 먼저 받는다.
-// 전역 토큰은 건드리지 않고 홈 래퍼의 CSS 변수로만 쓴다(리스크 격리).
+// (Hahmlet Light 는 진지함이 부족해 기각 → 마루부리 Light 로 교체.)
+// 마루부리(네이버, SIL OFL — 셀프호스팅 합법)는 붓의 부리가 살아있는 전통
+// 세리프라 궁서의 진지함을 유지하면서 Light 웨이트로 얇다. 셀프호스팅이라
+// 외부 요청·CSP 변경 없음. 모든 기기(PC·모바일) 동일 렌더.
+// 라틴 이탤릭은 Cormorant 가 먼저 받는다. 전역 토큰은 건드리지 않고 홈 래퍼의
+// CSS 변수로만 쓴다(리스크 격리).
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
@@ -27,9 +30,10 @@ const spaceMono = Space_Mono({
   variable: "--font-ws-mono",
   display: "swap",
 });
-const hahmlet = Hahmlet({
-  weight: ["300"],
-  variable: "--font-hahmlet",
+const maruburi = localFont({
+  src: "../fonts/MaruBuri-Light.woff2",
+  weight: "300",
+  variable: "--font-maruburi",
   display: "swap",
 });
 
@@ -70,7 +74,7 @@ export default async function Home({
 
   return (
     <div
-      className={`${cormorant.variable} ${spaceMono.variable} ${hahmlet.variable} bg-[#f3ebdd] text-[#423c30] [--ws-serif:var(--font-cormorant),var(--font-hahmlet),Gungsuh,GungSeo,serif] [--ws-mono:var(--font-ws-mono),monospace]`}
+      className={`${cormorant.variable} ${spaceMono.variable} ${maruburi.variable} bg-[#f3ebdd] text-[#423c30] [--ws-serif:var(--font-cormorant),var(--font-maruburi),Gungsuh,GungSeo,serif] [--ws-mono:var(--font-ws-mono),monospace]`}
     >
       {/* 휠 스크롤 이징 — 홈에서만 (#197 6차) */}
       <SmoothScroll />
