@@ -71,8 +71,8 @@ function helixPath(
   return d.trim();
 }
 
-const DESKTOP = { vb: "0 0 1000 2600", d: helixPath(500, 210, 55, 180, 2440, 3.5, 720), axis: 2470 };
-const MOBILE = { vb: "0 0 1000 5200", d: helixPath(500, 170, 80, 260, 4980, 3.5, 720), axis: 5060 };
+const DESKTOP = { vb: "0 0 1000 2600", d: helixPath(500, 210, 55, 180, 2440, 3.5, 720) };
+const MOBILE = { vb: "0 0 1000 5200", d: helixPath(500, 170, 80, 260, 4980, 3.5, 720) };
 
 const won = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -159,24 +159,7 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
           className={`${cls} h-auto w-full overflow-visible`}
           aria-hidden
         >
-          {/* 시간 축 */}
-          <line
-            x1="500"
-            y1="150"
-            x2="500"
-            y2={cfg.axis}
-            stroke="#423c30"
-            strokeWidth="1"
-            strokeDasharray="1 6"
-            opacity="0.55"
-          />
-          <path
-            d={`M500 150 L493 172 M500 150 L507 172`}
-            fill="none"
-            stroke="#423c30"
-            strokeWidth="1.1"
-          />
-          {/* 하루의 흐름 — 스크롤이 그리는 선 */}
+          {/* 곡선만 — 축·화살표·시어 없이 스크롤이 그리는 선 하나 (#197 피드백 3차) */}
           <path
             ref={(el) => {
               pathRefs.current[pi] = el;
@@ -189,20 +172,6 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
           />
         </svg>
       ))}
-
-      {/* 흐르는 시어 — 스크롤 중에 만나는 무드 요소(진입 화면엔 곡선만) */}
-      <div className="absolute left-[60%] top-[24%] rotate-[-4deg] [font-family:var(--ws-serif)] italic text-[16px] text-[#8f8676] md:text-[20px]">
-        천천히
-      </div>
-      <div className="absolute left-[22%] top-[51%] rotate-3 [font-family:var(--ws-serif)] italic text-[16px] text-[#8f8676] md:left-[30%] md:text-[20px]">
-        결을 따라
-      </div>
-      <div className="absolute left-[56%] top-[74%] -rotate-3 [font-family:var(--ws-serif)] italic text-[16px] text-[#8f8676] md:text-[20px]">
-        곁에
-      </div>
-      <div className="absolute left-[47%] top-[90%] origin-left -rotate-90 [font-family:var(--ws-mono)] text-[9px] tracking-[2px] text-[#9a9080] md:text-[10px]">
-        a day
-      </div>
 
       {/* 모멘트 — 곡선 위 점 + 반대편 여백에 상품 카드 (#197 피드백).
           점이 오른쪽 극점(71%)이면 왼쪽 빈 공간에, 왼쪽 극점이면 오른쪽에 —
@@ -275,19 +244,6 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
         );
       })}
 
-      {/* 종착 노드 */}
-      <div className="absolute left-1/2 top-[95.5%] flex h-22 w-22 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-dotted border-[rgba(66,60,48,.5)] bg-[#f3ebdd] text-center md:h-26 md:w-26">
-        <span className="[font-family:var(--ws-serif)] italic text-[13px] leading-[1.2] text-[#423c30] md:text-[15px]">
-          당신의
-          <br />
-          식탁
-        </span>
-      </div>
-
-      {/* 캡션 */}
-      <div className="absolute -bottom-2 left-0 [font-family:var(--ws-serif)] italic text-[13px] text-[#8f8676] md:text-[15px]">
-        / 하루의 결 · the grain of a day /
-      </div>
     </div>
   );
 }

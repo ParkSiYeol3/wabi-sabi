@@ -131,7 +131,7 @@ export default async function Home({
               href="/shop"
               className="border-b border-[#423c30] pb-1 [font-family:var(--ws-mono)] text-[11px] tracking-[2px] transition-colors hover:text-[#8f8676] md:text-[12px]"
             >
-              마음에 드는 그릇 만나기 · ENTER THE SHOP →
+              당신의 하루에 놓일 그릇, 천천히 둘러보세요 →
             </Link>
           </div>
         </Reveal>
