@@ -77,14 +77,16 @@ export function SiteFooter() {
           ))}
           {ftc && (
             <span className="whitespace-nowrap">
-              <span className="mx-1.5 text-white/25">|</span>
+              <span aria-hidden className="mx-1.5 text-white/25">
+                |
+              </span>
               <a
                 href={ftc}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline underline-offset-2 hover:text-white/70"
               >
-                사업자정보확인
+                사업자정보확인<span className="sr-only"> (새 창 열림)</span>
               </a>
             </span>
           )}
