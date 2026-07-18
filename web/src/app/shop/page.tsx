@@ -74,6 +74,7 @@ export default async function ShopPage({
               key={c.slug}
               href={buildQuery(sp, { category: c.slug })}
               active={groupActive}
+              current={sp.category === c.slug}
             >
               {c.ko} {c.en}
             </FilterLink>
@@ -222,16 +223,20 @@ export default async function ShopPage({
 function FilterLink({
   href,
   active,
+  current = active,
   children,
 }: {
   href: string;
+  /** 시각적 강조(그룹 활성 포함) */
   active: boolean;
+  /** 정확히 현재 필터인 링크만 aria-current — 기본은 active 와 동일 */
+  current?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <Link
       href={href}
-      aria-current={active ? "true" : undefined}
+      aria-current={current ? "true" : undefined}
       className={cn(
         "border px-4 py-1.5 text-xs transition-colors",
         active
