@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Menu, X, ShoppingBag, User } from "lucide-react";
 import { nav, site } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -12,12 +13,17 @@ import { useAuthStore } from "@/store/auth";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
   const count = useCart(cartCount);
   const mounted = useMounted();
   const user = useAuthStore((s) => s.user);
   const isAdmin = useAuthStore((s) => s.isAdmin);
   const accountHref = mounted && user ? "/mypage" : "/auth";
   const showAdmin = mounted && isAdmin;
+
+  // 홈은 곡선만으로 시작하는 무드 페이지(#197 대표님 피드백) — 상단바 자체를 없앤다.
+  // 탐색은 여정 끝 CTA(Shop)와 푸터가 담당한다.
+  if (pathname === "/") return null;
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-wabi-border bg-wabi-bg/90 backdrop-blur">
