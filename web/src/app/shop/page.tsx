@@ -190,6 +190,7 @@ function FilterLink({
   return (
     <Link
       href={href}
+      aria-current={active ? "true" : undefined}
       className={cn(
         "border px-4 py-1.5 text-xs transition-colors",
         active
