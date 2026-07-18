@@ -114,12 +114,9 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
       return;
     }
 
-    // 마우스 휠은 터치패드보다 스크롤 델타가 커서 연출이 뚝뚝 끊긴다(#197 피드백
-    // 5차). 스크롤 자체를 가로채는 대신(UX·접근성 해악) 연출이 따라오는 위치를
-    // lerp 로 완만하게 쫓게 한다 — 휠로 확 내려도 선·카드는 스르륵 따라잡는다.
+    // 휠 스무스 스크롤(SmoothScroll)이 페이지 이동 자체를 이징하므로 연출은
+    // 현재 스크롤을 그대로 따른다(이중 스무딩 금지 — 겹치면 둥둥 뜨는 랙).
     let raf = 0;
-    let targetTop = 0; // 실제 rect.top
-    let curTop = 0; // 연출용 스무딩된 rect.top
     let height = 1;
     let vh = window.innerHeight;
 
@@ -147,29 +144,19 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
       });
     };
 
-    const measure = () => {
+    const update = () => {
+      raf = 0;
       const rect = wrap.getBoundingClientRect();
-      targetTop = rect.top;
       height = rect.height;
       vh = window.innerHeight;
-    };
-
-    const tick = () => {
-      curTop += (targetTop - curTop) * 0.11; // 60fps 기준 ~0.4s 에 수렴
-      if (Math.abs(targetTop - curTop) < 0.5) curTop = targetTop;
-      render(curTop);
-      raf = curTop === targetTop ? 0 : requestAnimationFrame(tick);
+      render(rect.top);
     };
 
     const onScroll = () => {
-      measure();
-      if (!raf) raf = requestAnimationFrame(tick);
+      if (!raf) raf = requestAnimationFrame(update);
     };
 
-    // 첫 렌더(중간 로드 포함)는 스무딩 없이 현재 위치로 즉시 동기화.
-    measure();
-    curTop = targetTop;
-    render(curTop);
+    update(); // 중간 로드(새로고침)에서도 현재 스크롤 기준으로 즉시 동기화
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
     return () => {

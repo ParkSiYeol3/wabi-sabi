@@ -6,6 +6,7 @@ import {
   HelixJourney,
   MOMENT_LABELS,
 } from "@/components/home/helix-journey";
+import { SmoothScroll } from "@/components/home/smooth-scroll";
 import { getHomeData } from "@/lib/queries/home";
 
 // 홈 전용 무드 폰트 (#197) — 시열님 피드백: 빈티지하고 진지한 궁서체.
@@ -71,6 +72,8 @@ export default async function Home({
     <div
       className={`${cormorant.variable} ${spaceMono.variable} ${songMyung.variable} bg-[#f3ebdd] text-[#423c30] [--ws-serif:var(--font-cormorant),Gungsuh,GungSeo,궁서,var(--font-song-myung),serif] [--ws-mono:var(--font-ws-mono),monospace]`}
     >
+      {/* 휠 스크롤 이징 — 홈에서만 (#197 6차) */}
+      <SmoothScroll />
       {left === "1" && (
         <p role="status" className="bg-[#e7dcc8] px-5 py-3 text-center text-sm">
           회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.
