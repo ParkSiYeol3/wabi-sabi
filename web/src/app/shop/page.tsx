@@ -8,6 +8,8 @@ import { AddToCartButton } from "@/components/add-to-cart-button";
 import { Reveal } from "@/components/reveal";
 import { Input } from "@/components/ui/input";
 import { categoryTree, MONTHLY_SLUG } from "@/lib/site";
+import { ShopSidebar } from "@/components/shop-sidebar";
+import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
 import {
   getProducts,
   getShopBrowse,
@@ -26,17 +28,8 @@ const sorts: { key: ProductSort; label: string }[] = [
   { key: "price_desc", label: "높은가격순" },
 ];
 
-type SP = { category?: string; q?: string; sort?: string };
-
-function buildQuery(base: SP, override: Partial<SP>): string {
-  const merged = { ...base, ...override };
-  const params = new URLSearchParams();
-  if (merged.category) params.set("category", merged.category);
-  if (merged.q) params.set("q", merged.q);
-  if (merged.sort && merged.sort !== "newest") params.set("sort", merged.sort);
-  const s = params.toString();
-  return s ? `/shop?${s}` : "/shop";
-}
+type SP = ShopSP;
+const buildQuery = buildShopQuery;
 
 export default async function ShopPage({
   searchParams,
@@ -60,8 +53,8 @@ export default async function ShopPage({
         </span>
       </div>
 
-      {/* 카테고리 (WSB-007) */}
-      <nav className="mt-8 flex flex-wrap gap-2" aria-label="카테고리">
+      {/* 카테고리 칩 (WSB-007) — 모바일·태블릿 전용. 데스크톱은 좌측 사이드바(#195). */}
+      <nav className="mt-8 flex flex-wrap gap-2 lg:hidden" aria-label="카테고리">
         <FilterLink href={buildQuery(sp, { category: undefined })} active={!sp.category}>
           전체
         </FilterLink>
@@ -71,20 +64,65 @@ export default async function ShopPage({
         >
           이 달의 상품
         </FilterLink>
-        {/* 대분류 칩 — 하위 소분류까지 포함해 필터된다(#193). 소분류 토글 사이드바는 후속. */}
-        {categoryTree.map((c) => (
-          <FilterLink
-            key={c.slug}
-            href={buildQuery(sp, { category: c.slug })}
-            active={sp.category === c.slug}
-          >
-            {c.ko} {c.en}
-          </FilterLink>
-        ))}
+        {/* 대분류 칩 — 하위 소분류까지 포함해 필터된다(#193). */}
+        {categoryTree.map((c) => {
+          const groupActive =
+            sp.category === c.slug ||
+            !!c.children?.some((ch) => ch.slug === sp.category);
+          return (
+            <FilterLink
+              key={c.slug}
+              href={buildQuery(sp, { category: c.slug })}
+              active={groupActive}
+            >
+              {c.ko} {c.en}
+            </FilterLink>
+          );
+        })}
       </nav>
 
+      {/* 모바일 소분류 줄 — 선택된 대분류(또는 그 소분류)가 있을 때만 */}
+      {(() => {
+        const node = categoryTree.find(
+          (c) =>
+            c.children &&
+            (c.slug === sp.category ||
+              c.children.some((ch) => ch.slug === sp.category)),
+        );
+        if (!node?.children) return null;
+        return (
+          <nav
+            className="mt-3 flex flex-wrap gap-2 lg:hidden"
+            aria-label={`${node.ko} 소분류`}
+          >
+            <FilterLink
+              href={buildQuery(sp, { category: node.slug })}
+              active={sp.category === node.slug}
+            >
+              {node.ko} 전체
+            </FilterLink>
+            {node.children.map((ch) => (
+              <FilterLink
+                key={ch.slug}
+                href={buildQuery(sp, { category: ch.slug })}
+                active={sp.category === ch.slug}
+              >
+                {ch.ko}
+              </FilterLink>
+            ))}
+          </nav>
+        );
+      })()}
+
+      <div className="mt-8 flex items-start gap-10">
+        {/* 데스크톱 좌측 사이드바 — 소분류 토글 (#195, biomedium 참고) */}
+        <div className="hidden lg:block">
+          <ShopSidebar sp={sp} />
+        </div>
+
+        <div className="min-w-0 flex-1">
       {/* 툴바 — 검색(좌) + 정렬(우) 한 줄, 하단 구분선 */}
-      <div className="mt-5 flex flex-col gap-4 border-b border-wabi-border pb-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 border-b border-wabi-border pb-5 sm:flex-row sm:items-center sm:justify-between">
         {/* 검색 (WSB-008) — next/form 으로 클라이언트 내비게이션(전체 새로고침 방지) */}
         <Form
           action="/shop"
@@ -135,7 +173,7 @@ export default async function ShopPage({
       </div>
 
       {products.length === 0 ? (
-        <p className="mt-16 text-center text-sm text-wabi-fg-muted">
+        <p className="mt-16 pb-10 text-center text-sm text-wabi-fg-muted">
           {sp.q ? `'${sp.q}' 검색 결과가 없습니다.` : "준비 중인 상품입니다."}
         </p>
       ) : (
@@ -175,6 +213,8 @@ export default async function ShopPage({
           })}
         </ul>
       )}
+        </div>
+      </div>
     </Container>
   );
 }
