@@ -51,7 +51,7 @@ export default async function AdminInquiriesPage() {
               </div>
               <form action={deleteInquiry}>
                 <input type="hidden" name="id" value={q.id} />
-                <button type="submit" className="cursor-pointer text-xs text-red-600 underline transition-colors hover:text-red-700">
+                <button type="submit" className="cursor-pointer text-xs text-red-700 underline transition-colors hover:text-red-800">
                   삭제
                 </button>
               </form>

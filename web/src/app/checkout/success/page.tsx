@@ -47,7 +47,7 @@ export default async function CheckoutSuccessPage({
         </>
       ) : (
         <>
-          <XCircle className="size-12 text-red-600" strokeWidth={1.2} />
+          <XCircle className="size-12 text-red-700" strokeWidth={1.2} />
           <h1 className="mt-6 text-2xl font-semibold">결제를 완료하지 못했습니다</h1>
           <p className="mt-3 text-sm text-wabi-fg-muted">{message}</p>
           <Button asChild className="mt-10 rounded-none bg-wabi-accent px-8 hover:bg-wabi-accent/90">

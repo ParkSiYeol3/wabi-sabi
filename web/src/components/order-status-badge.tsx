@@ -2,12 +2,13 @@ import { statusLabel } from "@/lib/orders";
 import { cn } from "@/lib/utils";
 
 // 주문 상태 배지 (#170) — 상태가 작은 회색 텍스트라 구분이 안 됐다.
-// 색은 WCAG AA 대비를 만족하는 700 계열(amber-600 등은 작은 텍스트에서 미달).
+// 색은 크림 배경(#205)에서 WCAG AA 를 만족하는 진한 계열 — 흰 배경 기준이던
+// amber/blue-700 은 크림에선 4.5:1 미달이라 800 으로(red 는 700).
 // 미니멀 톤 유지: 배경 채우지 않고 테두리 + 글자색만.
 const STYLE: Record<string, string> = {
-  pending: "border-amber-300 text-amber-700", // 결제 대기 — 조치 필요
+  pending: "border-amber-300 text-amber-800", // 결제 대기 — 조치 필요
   paid: "border-wabi-fg text-wabi-fg", // 결제 완료 — 진행 중 강조
-  shipping: "border-blue-300 text-blue-700", // 배송 중
+  shipping: "border-blue-300 text-blue-800", // 배송 중
   delivered: "border-wabi-border text-wabi-fg-muted", // 완료 — 차분하게
   cancelled: "border-red-300 text-red-700", // 취소
 };

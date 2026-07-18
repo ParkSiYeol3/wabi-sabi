@@ -241,7 +241,7 @@ export default function CheckoutPage() {
           </dl>
 
           {error && (
-            <p className="mt-4 text-sm text-red-600" role="alert">
+            <p className="mt-4 text-sm text-red-700" role="alert">
               {error}
             </p>
           )}

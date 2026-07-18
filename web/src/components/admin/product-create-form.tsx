@@ -112,7 +112,7 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
       {state && (
         <p
           role="status"
-          className={`sm:col-span-2 lg:col-span-4 text-xs ${state.ok ? "text-wabi-accent" : "text-red-600"}`}
+          className={`sm:col-span-2 lg:col-span-4 text-xs ${state.ok ? "text-wabi-accent" : "text-red-700"}`}
         >
           {state.message}
         </p>

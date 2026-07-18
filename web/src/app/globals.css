@@ -26,14 +26,16 @@
   --ring: oklch(0.709 0.01 56.259);
 
   /* WABI-SABI 브랜드 토큰 (Figma 시안 도출 — DESIGN_SYSTEM.md) */
-  --wabi-bg: #ffffff;
-  --wabi-bg-subtle: #f7f6f4; /* 섹션 배경 (웜 오프화이트) */
-  --wabi-bg-muted: #efedea; /* 패널/플레이스홀더 */
-  --wabi-fg: #1a1a1a;
-  --wabi-fg-muted: #6b6b6b;
-  --wabi-border: #e5e3df;
-  --wabi-accent: #3b3733; /* 버튼 (웜 차콜) */
-  --wabi-footer: #0a0a0a; /* 푸터 검정 */
+  /* 크림 통일 (#205, 브랜드 가이드 팔레트 + 홈 헬릭스 톤) — 대표님 확인:
+     "홈 크림톤 매우 좋다". 홈(#f3ebdd/#423c30)과 동일 계열로 전 페이지 정합. */
+  --wabi-bg: #f3ebdd; /* 크림 (홈과 동일) */
+  --wabi-bg-subtle: #ece2cf; /* 섹션 배경 (한 톤 깊은 크림) */
+  --wabi-bg-muted: #e7dcc8; /* 패널/플레이스홀더 (홈 질감 톤) */
+  --wabi-fg: #423c30; /* 먹빛 브라운 (홈 잉크) */
+  --wabi-fg-muted: #6b6353; /* 뮤트 브라운 */
+  --wabi-border: #d7cfc1; /* 크림 위 잉크 16% */
+  --wabi-accent: #423c30; /* 버튼 (잉크와 동일) */
+  --wabi-footer: #241f17; /* 푸터 (브랜드 최심색 다크브라운) */
 }
 
 .dark {

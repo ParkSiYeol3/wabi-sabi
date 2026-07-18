@@ -14,7 +14,7 @@ export default async function CheckoutFailPage({
 
   return (
     <Container className="flex flex-col items-center py-28 text-center">
-      <XCircle className="size-12 text-red-600" strokeWidth={1.2} />
+      <XCircle className="size-12 text-red-700" strokeWidth={1.2} />
       <h1 className="mt-6 text-2xl font-semibold">결제가 취소되었습니다</h1>
       <p className="mt-3 text-sm text-wabi-fg-muted">
         {message || "결제가 진행되지 않았습니다. 다시 시도해 주세요."}
