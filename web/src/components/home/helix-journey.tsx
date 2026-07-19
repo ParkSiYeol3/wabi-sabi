@@ -104,10 +104,10 @@ function helixSegments(
 // "원통을 감싸는" 코일로 보이려면 한 화면에 고리가 1.5~2개는 보여야 한다(#213 2차)
 // — 3.5바퀴/캔버스에선 바퀴당 세로 1200px 라 화면(~900px)엔 늘 반 바퀴 미만만
 // 보여 지그재그로 읽혔다. 7.5바퀴로 촘촘하게(바퀴당 ~550u), 반지름 320·타원
-// 진폭 135 로 넓게 감싼다(#213 3차 — 시열님: 더 넓은 반경). 두 캔버스는 반지름과 시작/끝 여백 비율을
+// 진폭 95(카드 상하 클리어런스) 로 넓게 감싼다(#213 3차 — 시열님: 더 넓은 반경). 두 캔버스는 반지름과 시작/끝 여백 비율을
 // 공유해 MOMENT_POS 가 동일하게 맞는다. 카드 간격(17.75%)은 등장 구간보다 넓다.
-const DESKTOP = { vb: "0 0 1000 4800", geom: helixSegments(500, 320, 135, 180, 4440, 7.5, 480) };
-const MOBILE = { vb: "0 0 1000 10000", geom: helixSegments(500, 320, 135, 375, 9250, 7.5, 480) };
+const DESKTOP = { vb: "0 0 1000 4800", geom: helixSegments(500, 320, 95, 180, 4440, 7.5, 480) };
+const MOBILE = { vb: "0 0 1000 10000", geom: helixSegments(500, 320, 95, 375, 9250, 7.5, 480) };
 
 const won = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -256,8 +256,8 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
                   d={seg.d}
                   fill="none"
                   stroke="#423c30"
-                  strokeWidth={1.3}
-                  opacity={seg.front ? 1 : 0.3}
+                  strokeWidth={seg.front ? 1.3 : 1.6}
+                  opacity={seg.front ? 1 : 0.45}
                   style={{
                     strokeDasharray: seg.len,
                     strokeDashoffset: seg.len,
@@ -288,7 +288,9 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
               ref={(el) => {
                 momentRefs.current[i] = el;
               }}
-              className={`absolute w-[44%] max-w-75 md:w-[36%] ${
+              // 크림 배경 패딩 — 넓은 코일과 불가피하게 교차하는 구간에서 선이
+              // 카드(종이) 밑으로 깔끔히 들어간다(#213 4차: 사진과 선 겹침 제거).
+              className={`absolute w-[44%] max-w-75 bg-[#f3ebdd] p-3 md:w-[36%] md:p-4 ${
                 cardLeft
                   ? "left-[3%] text-right md:left-[7%]"
                   : "right-[3%] text-left md:right-[7%]"
