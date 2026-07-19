@@ -11,14 +11,12 @@ import { useEffect } from "react";
 export function SmoothScroll() {
   // 새로고침 시 브라우저가 이전 스크롤 위치를 복원하면 여정이 중간부터 시작된다
   // (#217 시열님) — 홈은 항상 맨 위(곡선의 시작)에서 열리도록 복원을 끄고 리셋.
-  // 홈에 있는 동안만 manual, 떠나면 원복(다른 페이지의 뒤로가기 복원 유지).
+  // scrollRestoration 은 히스토리 엔트리 단위(CodeRabbit #218)라 원복 클린업이
+  // 필요 없다 — manual 은 홈 엔트리에만 남고 새 엔트리는 기본(auto)로 생긴다.
+  // 뒤로가기로 홈에 돌아와도 맨 위에서 시작(무드 의도와 일치).
   useEffect(() => {
-    const prev = window.history.scrollRestoration;
     window.history.scrollRestoration = "manual";
     window.scrollTo(0, 0);
-    return () => {
-      window.history.scrollRestoration = prev;
-    };
   }, []);
 
   useEffect(() => {
