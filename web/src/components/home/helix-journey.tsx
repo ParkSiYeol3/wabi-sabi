@@ -34,13 +34,13 @@ export const MOMENT_COMMENTS = [
 
 // 곡선 극점(좌우 교차)과 만나는 지점(%) — 나선 7.5바퀴의 k=3·6·9·12·15번째
 // 반바퀴 극점(sin=0, cos=∓1). 데스크톱·모바일 캔버스가 시작(3.75%)/끝 여백
-// 비율과 반지름(260)을 공유해 좌표가 둘 다 극점에 정확히 맞는다.
+// 비율과 반지름(280)을 공유해 좌표가 둘 다 극점에 정확히 맞는다.
 const MOMENT_POS = [
-  { x: 18, y: 21.5 },
-  { x: 82, y: 39.25 },
-  { x: 18, y: 57.0 },
-  { x: 82, y: 74.75 },
-  { x: 18, y: 92.5 },
+  { x: 22, y: 21.5 },
+  { x: 78, y: 39.25 },
+  { x: 22, y: 57.0 },
+  { x: 78, y: 74.75 },
+  { x: 22, y: 92.5 },
 ] as const;
 
 export const MOMENT_LABELS = [
@@ -52,8 +52,9 @@ export const MOMENT_LABELS = [
 ] as const;
 
 // 입체 스프링 나선 (#213, 대표님 피드백 — 평면 S커브가 아닌 3D 코일).
-// 나선을 앞면/뒷면 반바퀴 세그먼트로 쪼갠다: 뒷면(sin<0)은 옅고 가늘게, 앞면이
-// 교차점에서 덮으며(SVG 뒤→앞 순서) 입체감이 생긴다. 세그먼트 길이는 폴리라인
+// 나선을 앞면/뒷면 반바퀴 세그먼트로 쪼개 누적 순서로 이어 그린다. 선 자체는
+// 색·굵기 완전 균일(#213 5차 — 옅기 차이가 얼룩처럼 보임) — 입체감은 교차
+// 기하만으로 낸다(레퍼런스와 동일). 세그먼트 길이는 폴리라인
 // 현(chord) 합 — 브라우저의 path 길이와 정확히 일치하므로 DOM 측정이 필요 없다.
 // 결정적 계산이라 SSR/클라 동일(하이드레이션 안전).
 type HelixSeg = { d: string; front: boolean; len: number; cum: number };
@@ -103,11 +104,11 @@ function helixSegments(
 
 // "원통을 감싸는" 코일로 보이려면 한 화면에 고리가 1.5~2개는 보여야 한다(#213 2차)
 // — 3.5바퀴/캔버스에선 바퀴당 세로 1200px 라 화면(~900px)엔 늘 반 바퀴 미만만
-// 보여 지그재그로 읽혔다. 7.5바퀴로 촘촘하게(바퀴당 ~550u), 반지름 320·타원
-// 진폭 95(카드 상하 클리어런스) 로 넓게 감싼다(#213 3차 — 시열님: 더 넓은 반경). 두 캔버스는 반지름과 시작/끝 여백 비율을
-// 공유해 MOMENT_POS 가 동일하게 맞는다. 카드 간격(17.75%)은 등장 구간보다 넓다.
-const DESKTOP = { vb: "0 0 1000 4800", geom: helixSegments(500, 320, 95, 180, 4440, 7.5, 480) };
-const MOBILE = { vb: "0 0 1000 10000", geom: helixSegments(500, 320, 95, 375, 9250, 7.5, 480) };
+// 보여 지그재그로 읽혔다. 7.5바퀴로 촘촘하게(바퀴당 ~550u).
+// 반지름 280(5차 — 320은 카드와 과교차)·타원 진폭 95(카드 상하 클리어런스).
+// 두 캔버스는 반지름과 시작/끝 여백 비율을 공유해 MOMENT_POS 가 동일하게 맞는다. 카드 간격(17.75%)은 등장 구간보다 넓다.
+const DESKTOP = { vb: "0 0 1000 4800", geom: helixSegments(500, 280, 95, 180, 4440, 7.5, 480) };
+const MOBILE = { vb: "0 0 1000 10000", geom: helixSegments(500, 280, 95, 375, 9250, 7.5, 480) };
 
 const won = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -256,8 +257,8 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
                   d={seg.d}
                   fill="none"
                   stroke="#423c30"
-                  strokeWidth={seg.front ? 1.3 : 1.6}
-                  opacity={seg.front ? 1 : 0.45}
+                  strokeWidth={1.3}
+                  opacity={1}
                   style={{
                     strokeDasharray: seg.len,
                     strokeDashoffset: seg.len,
@@ -290,7 +291,7 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
               }}
               // 크림 배경 패딩 — 넓은 코일과 불가피하게 교차하는 구간에서 선이
               // 카드(종이) 밑으로 깔끔히 들어간다(#213 4차: 사진과 선 겹침 제거).
-              className={`absolute w-[44%] max-w-75 bg-[#f3ebdd] p-3 md:w-[36%] md:p-4 ${
+              className={`absolute w-[44%] max-w-75 md:w-[36%] ${
                 cardLeft
                   ? "left-[3%] text-right md:left-[7%]"
                   : "right-[3%] text-left md:right-[7%]"
