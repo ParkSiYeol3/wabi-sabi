@@ -49,3 +49,7 @@ supabase/.branches/
 # 로컬 비밀(커밋 금지)
 ADMIN_PASSWORD.local.txt
 *.local.txt
+
+# playwright
+/test-results/
+/playwright-report/
