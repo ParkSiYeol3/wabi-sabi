@@ -32,15 +32,15 @@ export const MOMENT_COMMENTS = [
   "하루의 끝, 식탁 위의 고요.",
 ] as const;
 
-// 곡선 극점(좌우 교차)과 만나는 지점(%) — 나선 7.5바퀴의 k=3·6·9·12·15번째
-// 반바퀴 극점(sin=0, cos=∓1). 데스크톱·모바일 캔버스가 시작(3.75%)/끝 여백
-// 비율과 반지름(280)을 공유해 좌표가 둘 다 극점에 정확히 맞는다.
+// 모멘트 = 나선 10바퀴의 왼쪽 극점 k=3·7·11·15·19 (#213 9차 — 카드는 전부
+// 왼쪽 여백 포켓에). 테이퍼라 극점 x 가 층마다 다르다: x = 50 - R(k)/10,
+// R(k)=300+130·k/20. 두 캔버스는 시작(3.75%)/끝(99.2%) 여백 비율 공유.
 const MOMENT_POS = [
-  { x: 22, y: 21.5 },
-  { x: 78, y: 39.25 },
-  { x: 22, y: 57.0 },
-  { x: 78, y: 74.75 },
-  { x: 22, y: 92.5 },
+  { x: 18.1, y: 18.1 },
+  { x: 15.5, y: 37.2 },
+  { x: 12.9, y: 56.2 },
+  { x: 10.3, y: 75.3 },
+  { x: 7.7, y: 94.4 },
 ] as const;
 
 export const MOMENT_LABELS = [
@@ -112,12 +112,13 @@ function helixSegments(
 // 두 캔버스는 반지름과 시작/끝 여백 비율을 공유해 MOMENT_POS 가 동일하게 맞는다. 카드 간격(17.75%)은 등장 구간보다 넓다.
 // 레퍼런스 비율(#213 8차): 맨 위 고리부터 화면 폭 ~60%(rTop 300), 테이퍼는
 // 은은하게(→430). 한 화면에 ~2바퀴(10바퀴/캔버스), 타원 납작비 0.30.
-const DESKTOP = { vb: "0 0 1000 4800", geom: helixSegments(500, 300, 430, 0.3, 180, 4440, 10, 640) };
-const MOBILE = { vb: "0 0 1000 10000", geom: helixSegments(500, 300, 430, 0.3, 375, 9250, 10, 640) };
+// 끝을 캔버스 바닥(99.2%)까지 — 선이 브랜드 로고 직전까지 이어진다(#213 9차).
+const DESKTOP = { vb: "0 0 1000 4800", geom: helixSegments(500, 300, 430, 0.3, 180, 4760, 10, 640) };
+const MOBILE = { vb: "0 0 1000 10000", geom: helixSegments(500, 300, 430, 0.3, 375, 9920, 10, 640) };
 
 // #213 7차: 곡선(원뿔 나선)에 집중하는 동안 카드·점 임시 오프.
 // 복귀 시 요구사항: 모바일에서도 데스크톱처럼 점 바깥쪽 포켓에 카드 배치.
-const SHOW_MOMENTS = false;
+const SHOW_MOMENTS = true;
 
 const won = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -284,7 +285,6 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
           곡선과 겹치지 않는 넓은 여백에서 사진+한 줄 코멘트가 커졌다 작아진다. */}
       {SHOW_MOMENTS && moments.slice(0, MOMENT_POS.length).map((m, i) => {
         const pos = MOMENT_POS[i];
-        const cardLeft = pos.x > 50; // 점이 오른쪽 → 카드는 왼쪽 여백
         return (
           <div key={m.id}>
             <div
@@ -301,11 +301,9 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
               // 데스크톱(#213 6차): 점 바깥쪽 포켓 — 왼쪽 극점이면 점의 왼쪽
               // 여백에(오른쪽 끝을 점에 붙임), 오른쪽 극점이면 오른쪽 여백에.
               // 코일과 아예 안 겹치는 위치다. 모바일은 공간이 없어 반대편 유지.
-              className={`absolute w-[44%] max-w-75 md:w-[28%] ${
-                cardLeft
-                  ? "left-[3%] max-md:text-right md:left-[calc(var(--dx)*1%+16px)] md:text-left"
-                  : "right-[3%] max-md:text-left md:right-[calc((100-var(--dx))*1%+16px)] md:text-right"
-              }`}
+              // 전부 왼쪽 여백 포켓(#213 9차): 데스크톱은 카드 오른쪽 끝을 점에
+              // 붙여 왼쪽 여백으로, 모바일은 공간이 없어 점 오른쪽(고리 안쪽)에.
+              className="absolute w-[44%] max-w-75 max-md:left-[calc(var(--dx)*1%+12px)] max-md:text-left md:right-[calc((100-var(--dx))*1%+14px)] md:w-[28%] md:text-right"
               style={{
                 top: `${pos.y}%`,
                 opacity: 0,
@@ -341,13 +339,7 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
                 <p className="mt-3 [font-family:var(--ws-serif)] italic text-[13px] leading-normal text-[#6b6353] md:text-[16px]">
                   {m.comment ?? MOMENT_COMMENTS[i] ?? ""}
                 </p>
-                <div
-                  className={`mt-2 flex items-baseline justify-between gap-2 ${
-                    cardLeft
-                      ? "max-md:flex-row-reverse"
-                      : "md:flex-row-reverse"
-                  }`}
-                >
+                <div className="mt-2 flex items-baseline justify-between gap-2 md:flex-row-reverse">
                   <span className="truncate [font-family:var(--ws-serif)] text-[16px] text-[#423c30] md:text-[21px]">
                     {m.name}
                   </span>
