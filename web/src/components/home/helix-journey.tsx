@@ -62,8 +62,9 @@ type HelixGeom = { segs: HelixSeg[]; total: number };
 
 function helixSegments(
   cx: number,
-  R: number,
-  rY: number,
+  rTop: number,
+  rBot: number,
+  rYRatio: number, // 타원 세로/가로 비 — 원근(약 0.32~0.38)
   yStart: number,
   yEnd: number,
   loops: number,
@@ -73,9 +74,11 @@ function helixSegments(
   const pitch = (yEnd - yStart) / tMax;
   const pt = (i: number) => {
     const t = (tMax * i) / steps;
+    // 원뿔형(#213 7차, 레퍼런스) — 위 고리는 작고 아래로 갈수록 넓어진다.
+    const R = rTop + (rBot - rTop) * (t / tMax);
     return {
       x: cx + R * Math.cos(t),
-      y: yStart + pitch * t + rY * Math.sin(t),
+      y: yStart + pitch * t + R * rYRatio * Math.sin(t),
       front: Math.sin(t) >= -1e-9, // 화면 아래로 볼록한 반바퀴 = 앞면
     };
   };
@@ -107,8 +110,12 @@ function helixSegments(
 // 보여 지그재그로 읽혔다. 7.5바퀴로 촘촘하게(바퀴당 ~550u).
 // 반지름 280(5차 — 320은 카드와 과교차)·타원 진폭 95(카드 상하 클리어런스).
 // 두 캔버스는 반지름과 시작/끝 여백 비율을 공유해 MOMENT_POS 가 동일하게 맞는다. 카드 간격(17.75%)은 등장 구간보다 넓다.
-const DESKTOP = { vb: "0 0 1000 4800", geom: helixSegments(500, 280, 95, 180, 4440, 7.5, 480) };
-const MOBILE = { vb: "0 0 1000 10000", geom: helixSegments(500, 280, 95, 375, 9250, 7.5, 480) };
+const DESKTOP = { vb: "0 0 1000 4800", geom: helixSegments(500, 150, 360, 0.34, 180, 4440, 7.5, 480) };
+const MOBILE = { vb: "0 0 1000 10000", geom: helixSegments(500, 150, 360, 0.34, 375, 9250, 7.5, 480) };
+
+// #213 7차: 곡선(원뿔 나선)에 집중하는 동안 카드·점 임시 오프.
+// 복귀 시 요구사항: 모바일에서도 데스크톱처럼 점 바깥쪽 포켓에 카드 배치.
+const SHOW_MOMENTS = false;
 
 const won = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -273,7 +280,7 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
       {/* 모멘트 — 곡선 위 점 + 반대편 여백에 상품 카드 (#197 피드백).
           점이 오른쪽 극점(71%)이면 왼쪽 빈 공간에, 왼쪽 극점이면 오른쪽에 —
           곡선과 겹치지 않는 넓은 여백에서 사진+한 줄 코멘트가 커졌다 작아진다. */}
-      {moments.slice(0, MOMENT_POS.length).map((m, i) => {
+      {SHOW_MOMENTS && moments.slice(0, MOMENT_POS.length).map((m, i) => {
         const pos = MOMENT_POS[i];
         const cardLeft = pos.x > 50; // 점이 오른쪽 → 카드는 왼쪽 여백
         return (
