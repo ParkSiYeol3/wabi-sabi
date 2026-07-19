@@ -9,6 +9,18 @@ import { useEffect } from "react";
 // 라이브러리 없이). 터치·키보드·스크롤바 드래그·reduced-motion 은 건드리지
 // 않아 접근성이 유지된다. 홈에서만 마운트되고 페이지를 떠나면 해제된다.
 export function SmoothScroll() {
+  // 새로고침 시 브라우저가 이전 스크롤 위치를 복원하면 여정이 중간부터 시작된다
+  // (#217 시열님) — 홈은 항상 맨 위(곡선의 시작)에서 열리도록 복원을 끄고 리셋.
+  // 홈에 있는 동안만 manual, 떠나면 원복(다른 페이지의 뒤로가기 복원 유지).
+  useEffect(() => {
+    const prev = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    window.scrollTo(0, 0);
+    return () => {
+      window.history.scrollRestoration = prev;
+    };
+  }, []);
+
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const doc = document.scrollingElement ?? document.documentElement;
