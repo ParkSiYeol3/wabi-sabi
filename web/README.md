@@ -6,8 +6,11 @@
 > 이 README = 개발 상시 로그. 진행사항 생길 때마다 갱신.
 
 ## 스택
-Next.js 16.2.9 (App Router, Turbopack) · React 19.2.4 · TypeScript · Tailwind v4 ·
-shadcn/ui(stone) · Supabase(@supabase/ssr) · Zustand · next/font(Noto Sans KR + Noto Serif JP)
+Next.js 16.2.10 (App Router, Turbopack) · React 19.2.4 · TypeScript · Tailwind v4 ·
+shadcn/ui(stone) · Supabase(@supabase/ssr) · Zustand · Playwright(E2E) ·
+next/font(Noto Sans KR + Noto Serif JP, 홈 전용 Cormorant·Space Mono·마루부리 Light 셀프호스팅)
+
+**라이브: https://wasa.kr** (Vercel, 함수 리전 `icn1` — vercel.json)
 
 ## 시작하기
 ```bash
@@ -18,15 +21,25 @@ npm run build                # 프로덕션 빌드 검증
 ```
 `.env.local` 비어 있어도 dev 동작 (proxy/AuthProvider가 Supabase 미설정 시 스킵).
 
+E2E 스모크는 기본 **프로덕션(wasa.kr)** 대상 — 프리뷰는 Vercel SSO 보호라 접근 불가.
+```bash
+npm run test:e2e                          # wasa.kr 대상
+E2E_BASE_URL=http://localhost:3000 npm run test:e2e
+```
+
 ## 구조
 ```
 src/
-  app/            page(홈)·shop·about·contact·cart·auth + layout·globals.css
-  components/     site-header, site-footer, container, product-card, auth-provider, ui/*(shadcn)
-  lib/            site.ts(브랜드·nav 상수) · supabase/{client,server,proxy} · utils(cn)
-  store/          auth.ts (Zustand)
+  app/            page(홈=헬릭스 여정)·shop·about·contact·cart·auth·checkout·mypage·admin
+                  ·legal/{terms,privacy,refund}·notice·inquiry·review + api/* + layout·globals.css
+  components/     site-header/footer, container, product-card, auth-provider, ui/*(shadcn)
+                  home/{helix-journey,smooth-scroll}  ← 홈 전용 연출
+  lib/            site.ts(브랜드·nav·categoryTree) · supabase/{client,server,admin,public}
+                  · queries/* · payments · rate-limit · inventory · site-url
+  store/          auth.ts · cart.ts (Zustand)
   proxy.ts        Next16 proxy (세션 갱신, env 없으면 스킵)
-supabase/         migrations/{0001_init,0002_rls}.sql · seed.sql
+supabase/migrations/  0001~0032 (RLS·RPC·인덱스)
+e2e/                  Playwright 스모크 5시나리오
 ```
 
 ## 진행 로그
@@ -86,23 +99,26 @@ supabase/         migrations/{0001_init,0002_rls}.sql · seed.sql
 - **2026-07-13 매장 위치 카드(#110)**: "Map will be here" → 주소+지도앱 바로가기(키·CSP 불필요). Contact dl 마크업 위반도 수정(a11y 100).
 - **2026-07-13 Rate limit(#101, PR #102)**: `lib/rate-limit.ts` — Upstash Redis(env 있을 때)/인메모리(폴백) 2단. log-error 10/분·csp-report 20/분(IP), 문의 5/시간(user.id). 무인증 DB insert 남용·게시판 도배 차단. Redis 장애 시 fail-open.
 - **2026-07-13 Lighthouse 1차(#16, PR #99)**: 프로드 실측(홈 89·shop 71·상품 77) → shop 첫줄 카드 priority(LCP)·홈 dl→ul(a11y 100)·상품 meta description 빈값 버그(`??`→`||`). nonce 전환은 전 페이지 동적 렌더 강제라 정식 배포 후로 보류(#16 코멘트).
+- **2026-07-19 카테고리 2계층·shop 사이드바(#184~#196)**: 대표님 피드백 — 0032 `categories.parent_id`, `lib/site.ts categoryTree` 와 DB 동시 진실. shop 좌측 사이드바는 `details/summary` 무JS 토글(모바일 접힘).
+- **2026-07-19 홈 전면 리디자인 "하루의 결"(#197~#214, 12차 왕복)**: 진입 즉시 **곡선만**(로고·카피 0) → 스크롤 스크럽으로 원뿔 나선이 그려지고 극점 여백에서 콘텐츠가 커졌다 작아진다. `helix-journey.tsx`(세그먼트 dash 드로잉 — 폴리라인 현 합이라 DOM 측정 불요) + `smooth-scroll.tsx`(휠만 가로채는 이징 0.06, 스크롤바 등 외부 입력 감지 시 즉시 양보). 상단바는 홈에서 제거. 폰트=마루부리 Light 셀프호스팅(KS 완성형 2350자 서브셋 425→201KB).
+- **2026-07-19 개통·성능(#215~#220)**: wasa.kr DNS·TLS·Resend 인증(실발송 200)·네이버지도 콘솔 등록 완료. **함수 리전 iad1→icn1**(동적 TTFB 350~700→135~190ms), www→apex Primary(리다이렉트 0). 결제 후 장바구니 부활 레이스 픽스(#216 — 확정 직후 서버에서 `cart_items` 직접 삭제).
+- **2026-07-19 E2E 스모크·모바일(#221~#224)**: Playwright 5시나리오(홈 렌더·shop·담기→장바구니→auth 게이트·푸터 법정표시·contact) — CI 가 main push 후 90s 대기 뒤 프로덕션 대상 실행. 모바일 줌아웃 흰 화면 → 루트(html/body) 크림 + `viewport minimum-scale=1`(축소 차단, 확대는 허용해 WCAG 1.4.4 유지).
+- **2026-07-19 헬릭스 카드→철학 멘트·About 분리(#225~#228)**: 대표님 피드백 — 곡선 위 상품 카드를 **철학 멘트 3주(侘·寂·選)** 로 교체(슬롯 6→3, 극점 k=5·12·19). 엔딩 pillars 그리드는 제거(중복). 홈이 상품 테이블을 안 읽게 돼 `getHomeData` 는 소개문구 1쿼리만. About 은 Our Values → **"고르는 기준"**(손의 흔적·쓰임·시간)으로 역할 분리.
 
-## 라우트
-| 경로 | 내용 | 상태 |
-|------|------|------|
-| `/` | 홈(Hero·Featured·Philosophy·Values·Visit·Newsletter) | ✅ UI |
-| `/shop` | 카테고리 필터 + 상품 그리드 | ✅ UI / 데이터 TODO(WSB-007) |
-| `/about` | Philosophy + Our Values | ✅ UI |
-| `/contact` | Visit Us 정보 | ✅ UI |
-| `/cart` | 빈 장바구니 | ✅ UI / 로직 TODO(WSB-013) |
-| `/auth` | 로그인·회원가입 탭 카드 | ✅ UI / Supabase TODO(WSB-001/003) |
+## 주요 라우트
+| 경로 | 내용 |
+|------|------|
+| `/` | 헬릭스 여정(곡선 스크럽 + 侘寂選) → 브랜드 엔딩 → CTA |
+| `/shop`, `/shop/[id]` | 카테고리 트리 사이드바·검색·정렬 / 상세·갤러리·리뷰·재입고 알림 |
+| `/cart` → `/checkout` → `/checkout/success` | 서버 동기화 장바구니 → 토스 결제 → 확정(RPC) |
+| `/mypage/*` | 정보·배송지·주문내역·주문상세·위시리스트·탈퇴 |
+| `/admin/*` | 상품·주문·공지·문의·리뷰·뉴스레터·콘텐츠·감사로그·에러로그·대시보드 |
+| `/about`, `/contact` | 브랜드 기준·인스타 피드 / 지도(네이버, 구글 폴백)·채널 |
+| `/legal/{terms,privacy,refund}` | 법적고지 3종 (푸터 사업자정보와 함께) |
 
-## 미해결 (블로커)
-1. Supabase 프로젝트 미생성 → `.env.local` 빈값. DB·인증 실가동 불가.
-2. 휴무일 = **수요일**(디자인 시안 채택, 브리핑 "일요일"과 충돌).
-3. 결제 PG 미정(토스/포트원).
-4. categories/wishlist/addresses 컬럼 확정 필요.
-
-## 다음 작업
-Supabase 프로젝트 생성 → 마이그레이션 적용 → 상품 데이터 연동(WSB-007) → 인증 연동(WSB-001/003).
-보안/QA/성능은 각 기능 구현 시 동반 점검(RLS·입력검증·이미지최적화·접근성).
+## 남은 것 = 외부 의존 (2026-07-19)
+1. **토스 전자결제 심사 중**(대표님 명의 신청) → 승인 후 live 키 Production 교체 + 웹훅 등록 + 실결제 1회 검증
+2. 실상품 사진 교체·`test` 상품 정리
+3. 대표님 확정: 반품 배송비·회수 방법 · 개인정보보호책임자 · About 카피 검토
+4. 운영 설정: DMARC · `CRON_SECRET` · Supabase Password Requirements · 이메일 인증 ON
+5. 오픈 직전: `/security-review` 1회 · 모바일 실기기 전수 · 백업/사고대응 절차
