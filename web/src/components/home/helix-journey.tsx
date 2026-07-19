@@ -289,17 +289,19 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
               ref={(el) => {
                 momentRefs.current[i] = el;
               }}
-              // 크림 배경 패딩 — 넓은 코일과 불가피하게 교차하는 구간에서 선이
-              // 카드(종이) 밑으로 깔끔히 들어간다(#213 4차: 사진과 선 겹침 제거).
-              className={`absolute w-[44%] max-w-75 md:w-[36%] ${
+              // 데스크톱(#213 6차): 점 바깥쪽 포켓 — 왼쪽 극점이면 점의 왼쪽
+              // 여백에(오른쪽 끝을 점에 붙임), 오른쪽 극점이면 오른쪽 여백에.
+              // 코일과 아예 안 겹치는 위치다. 모바일은 공간이 없어 반대편 유지.
+              className={`absolute w-[44%] max-w-75 md:w-[28%] ${
                 cardLeft
-                  ? "left-[3%] text-right md:left-[7%]"
-                  : "right-[3%] text-left md:right-[7%]"
+                  ? "left-[3%] max-md:text-right md:left-[calc(var(--dx)*1%+16px)] md:text-left"
+                  : "right-[3%] max-md:text-left md:right-[calc((100-var(--dx))*1%+16px)] md:text-right"
               }`}
               style={{
                 top: `${pos.y}%`,
                 opacity: 0,
                 transform: "translateY(-50%) scale(0.78)",
+                ["--dx" as string]: pos.x,
               }}
               // 초기(숨김) 상태 — JS 로드 전에도 키보드·스크린리더에서 제외
               inert
@@ -332,7 +334,9 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
                 </p>
                 <div
                   className={`mt-2 flex items-baseline justify-between gap-2 ${
-                    cardLeft ? "flex-row-reverse" : ""
+                    cardLeft
+                      ? "max-md:flex-row-reverse"
+                      : "md:flex-row-reverse"
                   }`}
                 >
                   <span className="truncate [font-family:var(--ws-serif)] text-[16px] text-[#423c30] md:text-[21px]">

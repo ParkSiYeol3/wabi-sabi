@@ -78,7 +78,7 @@ export default async function Home({
 
   return (
     <div
-      className={`${cormorant.variable} ${spaceMono.variable} ${maruburi.variable} bg-[#f3ebdd] text-[#423c30] [--ws-serif:var(--font-cormorant),var(--font-maruburi),Gungsuh,GungSeo,serif] [--ws-mono:var(--font-ws-mono),monospace]`}
+      className={`${cormorant.variable} ${spaceMono.variable} ${maruburi.variable} overflow-x-clip bg-[#f3ebdd] text-[#423c30] [--ws-serif:var(--font-cormorant),var(--font-maruburi),Gungsuh,GungSeo,serif] [--ws-mono:var(--font-ws-mono),monospace]`}
     >
       {/* 휠 스크롤 이징 — 홈에서만 (#197 6차) */}
       <SmoothScroll />
