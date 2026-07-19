@@ -2,6 +2,9 @@ name: E2E Smoke (production)
 
 # 프리뷰는 SSO 보호라 병합 후 프로덕션(wasa.kr)을 스모크한다.
 # 배포 완료 여유를 두고 90초 대기 후 실행. 수동 실행도 가능.
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]

@@ -30,7 +30,12 @@ test("상세 → 담기 → 장바구니 → 주문하기(auth 게이트)", asyn
   // 담기 (상세 버튼 텍스트 "장바구니") — 품절이면 비활성 → 스킵
   const add = page.getByRole("button", { name: "장바구니", exact: true });
   await expect(add).toBeVisible();
-  if (!(await add.isEnabled())) test.skip(true, "첫 상품 품절 — 담기 스킵");
+  // 하이드레이션 중 일시 비활성일 수 있어 5초까지 기다린 뒤에만 품절로 판단
+  try {
+    await expect(add).toBeEnabled({ timeout: 5_000 });
+  } catch {
+    test.skip(true, "첫 상품 품절 — 담기 스킵");
+  }
   await add.click();
 
   // 헤더 배지 (1개) — 홈이 아닌 페이지라 헤더 존재
