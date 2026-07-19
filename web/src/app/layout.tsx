@@ -23,6 +23,14 @@ const notoSerifJp = Noto_Serif_JP({
   display: "swap",
 });
 
+// 핀치 줌아웃(축소) 방지(#223 시열님) — 화면이 좁은 컬럼으로 줄어드는 현상 차단.
+// 확대(zoom-in)는 그대로 허용해 저시력 접근성(WCAG 1.4.4)을 지킨다.
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  minimumScale: 1,
+};
+
 export const metadata: Metadata = {
   title: {
     default: "WABI-SABI [わび-さび] — Living Select Shop",
