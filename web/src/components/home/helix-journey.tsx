@@ -306,7 +306,7 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
               // 좌우 교차 포켓(#213 10차): 데스크톱은 카드를 점 바깥 여백에
               // (왼쪽 극점이면 왼쪽, 오른쪽 극점이면 오른쪽), 모바일은 공간이
               // 없어 점 안쪽(고리 입구)에.
-              className={`absolute w-[44%] max-w-75 md:w-[28%] ${
+              className={`absolute w-[40%] max-w-64 md:w-[24%] ${
                 dotLeft
                   ? "max-md:left-[calc(var(--dx)*1%+12px)] max-md:text-left md:right-[calc((100-var(--dx))*1%+14px)] md:text-right"
                   : "max-md:right-[calc((100-var(--dx))*1%+12px)] max-md:text-right md:left-[calc(var(--dx)*1%+14px)] md:text-left"
