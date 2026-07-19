@@ -102,8 +102,13 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* 줌아웃·오버스크롤로 문서 밖이 드러나도 크림이 이어지게 — 루트에 칠한다
+     (#223 모바일 줌아웃 시 흰 여백). */
+  html {
+    background-color: var(--wabi-bg);
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-wabi-bg text-foreground;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
