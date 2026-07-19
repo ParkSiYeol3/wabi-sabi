@@ -50,8 +50,15 @@ export const MOMENT_LABELS = [
   "저녁 · evening",
 ] as const;
 
-// 나선 경로 — 결정적 계산이라 SSR/클라 동일(하이드레이션 안전).
-function helixPath(
+// 입체 스프링 나선 (#213, 대표님 피드백 — 평면 S커브가 아닌 3D 코일).
+// 나선을 앞면/뒷면 반바퀴 세그먼트로 쪼갠다: 뒷면(sin<0)은 옅고 가늘게, 앞면이
+// 교차점에서 덮으며(SVG 뒤→앞 순서) 입체감이 생긴다. 세그먼트 길이는 폴리라인
+// 현(chord) 합 — 브라우저의 path 길이와 정확히 일치하므로 DOM 측정이 필요 없다.
+// 결정적 계산이라 SSR/클라 동일(하이드레이션 안전).
+type HelixSeg = { d: string; front: boolean; len: number; cum: number };
+type HelixGeom = { segs: HelixSeg[]; total: number };
+
+function helixSegments(
   cx: number,
   R: number,
   rY: number,
@@ -59,32 +66,58 @@ function helixPath(
   yEnd: number,
   loops: number,
   steps: number,
-): string {
+): HelixGeom {
   const tMax = Math.PI * 2 * loops;
   const pitch = (yEnd - yStart) / tMax;
-  let d = "";
-  for (let i = 0; i <= steps; i++) {
+  const pt = (i: number) => {
     const t = (tMax * i) / steps;
-    const x = cx + R * Math.cos(t);
-    const y = yStart + pitch * t + rY * Math.sin(t);
-    d += (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1) + " ";
+    return {
+      x: cx + R * Math.cos(t),
+      y: yStart + pitch * t + rY * Math.sin(t),
+      front: Math.sin(t) >= -1e-9, // 화면 아래로 볼록한 반바퀴 = 앞면
+    };
+  };
+
+  const segs: HelixSeg[] = [];
+  let cum = 0;
+  let cur = [pt(0)];
+  for (let i = 1; i <= steps; i++) {
+    const p = pt(i);
+    cur.push(p);
+    const boundary = p.front !== cur[0].front;
+    if (boundary || i === steps) {
+      let len = 0;
+      let d = `M${cur[0].x.toFixed(1)} ${cur[0].y.toFixed(1)} `;
+      for (let j = 1; j < cur.length; j++) {
+        len += Math.hypot(cur[j].x - cur[j - 1].x, cur[j].y - cur[j - 1].y);
+        d += `L${cur[j].x.toFixed(1)} ${cur[j].y.toFixed(1)} `;
+      }
+      segs.push({ d: d.trim(), front: cur[0].front, len, cum });
+      cum += len;
+      cur = [p]; // 경계점을 다음 세그먼트 시작점으로 공유(끊김 없음)
+    }
   }
-  return d.trim();
+  return { segs, total: cum };
 }
 
 // 곡선을 길게(#197 피드백 5차) — 앞 카드가 완전히 사라진 뒤 다음 카드가 시작되게
 // 카드 간 스크롤 간격 > 등장 구간이 되도록 잡는다. 시작/끝 여백은 두 캔버스가
 // 같은 비율(3.9%/3.5%)을 쓰므로 MOMENT_POS 가 양쪽 모두 극점에 맞는다.
-// 스텝 240(바퀴당 ~68점) — 1.3px 획에선 720과 시각 동일, 인라인 path 가 1/3(#211).
-const DESKTOP = { vb: "0 0 1000 4600", d: helixPath(500, 210, 55, 180, 4440, 3.5, 240) };
-const MOBILE = { vb: "0 0 1000 9600", d: helixPath(500, 170, 80, 376, 9266, 3.5, 240) };
+// rY 를 키워(55→100) 고리가 뚜렷한 타원으로 보이게 — 극점(sin=0)의 y 는 그대로라
+// 모멘트 좌표는 불변. 스텝 240(바퀴당 ~68점)은 1.3px 획에서 충분히 매끈(#211).
+const DESKTOP = { vb: "0 0 1000 4600", geom: helixSegments(500, 210, 100, 180, 4440, 3.5, 240) };
+const MOBILE = { vb: "0 0 1000 9600", geom: helixSegments(500, 170, 90, 376, 9266, 3.5, 240) };
 
 const won = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
+// 캔버스 2개(데스크톱·모바일)의 세그먼트 지오메트리 — 효과 루프가 참조.
+const CANVASES = [DESKTOP, MOBILE];
+
 export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const pathRefs = useRef<(SVGPathElement | null)[]>([]);
+  // segRefs[캔버스][세그먼트] — cfg.geom.segs 와 같은 인덱스.
+  const segRefs = useRef<(SVGPathElement | null)[][]>([[], []]);
   const momentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dotRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -92,15 +125,14 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
     const wrap = wrapRef.current;
     if (!wrap) return;
 
-    const paths = pathRefs.current.filter(Boolean) as SVGPathElement[];
-    const lens = paths.map((p) => p.getTotalLength());
-
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
       // 완성 상태 고정 — 모션 없이 전부 보이게.
-      paths.forEach((p) => {
-        p.style.strokeDasharray = "none";
-        p.style.strokeDashoffset = "0";
+      segRefs.current.flat().forEach((p) => {
+        if (p) {
+          p.style.strokeDasharray = "none";
+          p.style.strokeDashoffset = "0";
+        }
       });
       momentRefs.current.forEach((m) => {
         if (m) {
@@ -136,10 +168,17 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
         ? 1
         : easeOut(Math.min(1, (performance.now() - introT0) / INTRO_MS));
       if (k >= 1) introDone = true;
-      paths.forEach((el, i) => {
-        const p = clamp01((vh * 0.85 - top) / height) * k;
-        el.style.strokeDasharray = `${lens[i]}`;
-        el.style.strokeDashoffset = `${lens[i] * (1 - p)}`;
+      const p = clamp01((vh * 0.85 - top) / height) * k;
+      CANVASES.forEach((cfg, ci) => {
+        const drawn = p * cfg.geom.total;
+        cfg.geom.segs.forEach((seg, si) => {
+          const el = segRefs.current[ci][si];
+          if (!el) return;
+          // 전체 진행 길이를 세그먼트 구간으로 환산 — 누적 순서대로 이어 그려진다.
+          const local = clamp01((drawn - seg.cum) / seg.len);
+          el.style.strokeDasharray = `${seg.len}`;
+          el.style.strokeDashoffset = `${seg.len * (1 - local)}`;
+        });
       });
 
       momentRefs.current.forEach((m, i) => {
@@ -203,17 +242,29 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
           className={`${cls} h-auto w-full overflow-visible`}
           aria-hidden
         >
-          {/* 곡선만 — 축·화살표·시어 없이 스크롤이 그리는 선 하나 (#197 피드백 3차) */}
-          <path
-            ref={(el) => {
-              pathRefs.current[pi] = el;
-            }}
-            d={cfg.d}
-            fill="none"
-            stroke="#423c30"
-            strokeWidth="1.3"
-            style={{ strokeDasharray: 12000, strokeDashoffset: 12000 }}
-          />
+          {/* 입체 스프링(#213) — 뒷면(옅고 가늘게)을 먼저, 앞면이 교차점에서 덮는다.
+              각 세그먼트는 자기 길이만큼의 dash 로 숨겨져 있다가 누적 순서대로 그려진다. */}
+          {[false, true].map((frontPass) =>
+            cfg.geom.segs.map((seg, si) =>
+              seg.front === frontPass ? (
+                <path
+                  key={si}
+                  ref={(el) => {
+                    segRefs.current[pi][si] = el;
+                  }}
+                  d={seg.d}
+                  fill="none"
+                  stroke="#423c30"
+                  strokeWidth={seg.front ? 1.3 : 1}
+                  opacity={seg.front ? 1 : 0.3}
+                  style={{
+                    strokeDasharray: seg.len,
+                    strokeDashoffset: seg.len,
+                  }}
+                />
+              ) : null,
+            ),
+          )}
         </svg>
       ))}
 
