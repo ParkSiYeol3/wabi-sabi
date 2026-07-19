@@ -335,8 +335,12 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
                       src={m.image}
                       alt={m.name}
                       fill
-                      sizes="(max-width: 768px) 44vw, 300px"
+                      sizes="(max-width: 768px) 40vw, 256px"
                       className="object-cover"
+                      // 첫 두 카드는 곧 뷰포트에 들어온다 — lazy 면 LCP 로 잡힌
+                      // 숨은 이미지의 로드가 3.7s 지연됐다(#219 Lighthouse).
+                      priority={i === 0}
+                      loading={i < 2 ? "eager" : undefined}
                     />
                   ) : (
                     <>
