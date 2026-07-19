@@ -32,14 +32,15 @@ export const MOMENT_COMMENTS = [
   "하루의 끝, 식탁 위의 고요.",
 ] as const;
 
-// 모멘트 = 나선 10바퀴의 왼쪽 극점 k=3·7·11·15·19 (#213 9차 — 카드는 전부
-// 왼쪽 여백 포켓에). 테이퍼라 극점 x 가 층마다 다르다: x = 50 - R(k)/10,
-// R(k)=300+130·k/20. 두 캔버스는 시작(3.75%)/끝(99.2%) 여백 비율 공유.
+// 모멘트 = 나선 10바퀴의 극점 k=7(좌)·10(우)·13(좌)·16(우)·19(좌) — 좌우
+// 교차 배치(#213 10차). 테이퍼라 극점 x 가 층마다 다르다: x = 50 ∓ R(k)/10,
+// R(k)=300+130·k/20. 마지막 카드(94.4%)는 9차에서 확인된 위치 유지, 첫 1/3은
+// 곡선만 흐르는 빌드업. 두 캔버스는 시작(3.75%)/끝(99.2%) 여백 비율 공유.
 const MOMENT_POS = [
-  { x: 18.1, y: 18.1 },
   { x: 15.5, y: 37.2 },
-  { x: 12.9, y: 56.2 },
-  { x: 10.3, y: 75.3 },
+  { x: 86.5, y: 51.5 },
+  { x: 11.6, y: 65.8 },
+  { x: 90.4, y: 80.1 },
   { x: 7.7, y: 94.4 },
 ] as const;
 
@@ -285,6 +286,7 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
           곡선과 겹치지 않는 넓은 여백에서 사진+한 줄 코멘트가 커졌다 작아진다. */}
       {SHOW_MOMENTS && moments.slice(0, MOMENT_POS.length).map((m, i) => {
         const pos = MOMENT_POS[i];
+        const dotLeft = pos.x < 50; // 왼쪽 극점 → 카드는 왼쪽 포켓
         return (
           <div key={m.id}>
             <div
@@ -301,9 +303,14 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
               // 데스크톱(#213 6차): 점 바깥쪽 포켓 — 왼쪽 극점이면 점의 왼쪽
               // 여백에(오른쪽 끝을 점에 붙임), 오른쪽 극점이면 오른쪽 여백에.
               // 코일과 아예 안 겹치는 위치다. 모바일은 공간이 없어 반대편 유지.
-              // 전부 왼쪽 여백 포켓(#213 9차): 데스크톱은 카드 오른쪽 끝을 점에
-              // 붙여 왼쪽 여백으로, 모바일은 공간이 없어 점 오른쪽(고리 안쪽)에.
-              className="absolute w-[44%] max-w-75 max-md:left-[calc(var(--dx)*1%+12px)] max-md:text-left md:right-[calc((100-var(--dx))*1%+14px)] md:w-[28%] md:text-right"
+              // 좌우 교차 포켓(#213 10차): 데스크톱은 카드를 점 바깥 여백에
+              // (왼쪽 극점이면 왼쪽, 오른쪽 극점이면 오른쪽), 모바일은 공간이
+              // 없어 점 안쪽(고리 입구)에.
+              className={`absolute w-[44%] max-w-75 md:w-[28%] ${
+                dotLeft
+                  ? "max-md:left-[calc(var(--dx)*1%+12px)] max-md:text-left md:right-[calc((100-var(--dx))*1%+14px)] md:text-right"
+                  : "max-md:right-[calc((100-var(--dx))*1%+12px)] max-md:text-right md:left-[calc(var(--dx)*1%+14px)] md:text-left"
+              }`}
               style={{
                 top: `${pos.y}%`,
                 opacity: 0,
@@ -339,7 +346,11 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
                 <p className="mt-3 [font-family:var(--ws-serif)] italic text-[13px] leading-normal text-[#6b6353] md:text-[16px]">
                   {m.comment ?? MOMENT_COMMENTS[i] ?? ""}
                 </p>
-                <div className="mt-2 flex items-baseline justify-between gap-2 md:flex-row-reverse">
+                <div
+                  className={`mt-2 flex items-baseline justify-between gap-2 ${
+                    dotLeft ? "md:flex-row-reverse" : "max-md:flex-row-reverse"
+                  }`}
+                >
                   <span className="truncate [font-family:var(--ws-serif)] text-[16px] text-[#423c30] md:text-[21px]">
                     {m.name}
                   </span>
