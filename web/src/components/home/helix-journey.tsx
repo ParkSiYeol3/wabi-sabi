@@ -1,60 +1,46 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Link from "next/link";
-import Image from "next/image";
 
 // 홈 "하루의 결" 헬릭스 여정 (#197, 대표님 피드백 — 클로드 디자인 목업 v2 이식).
-// 시간 축(수직 점선)을 따라 흐르는 나선 곡선이 스크롤에 맞춰 그려지고, 곡선 위
-// 모멘트(아침~저녁)마다 실상품 카드가 자연스레 등장했다가 지나가면 옅어진다.
+// 나선 곡선이 스크롤에 맞춰 그려지고, 곡선 극점의 여백 포켓에서 브랜드 철학
+// 멘트(侘·寂·選)가 자연스레 등장했다가 지나가면 옅어진다(#225 — 상품 카드 대체).
 //
 // - 목업은 3.2s 고정 드로잉 애니메이션 → 여기선 스크롤 스크럽(대표님 "선을 따라
 //   스크롤" 요구). passive scroll + rAF, 상태 없이 ref 직접 조작(프레임당 리렌더 0).
-// - prefers-reduced-motion: 스크럽 없이 완성된 선 + 카드 전부 표시.
+// - prefers-reduced-motion: 스크럽 없이 완성된 선 + 멘트 전부 표시.
 // - 데스크톱/모바일 SVG 를 각각 프리렌더(CSS 로 전환) — JS 분기가 없어 하이드레이션
-//   레이아웃 시프트가 없다. 모바일은 세로 피치를 늘려 카드 간격을 확보한다.
+//   레이아웃 시프트가 없다. 모바일은 세로 피치를 늘려 멘트 간격을 확보한다.
 
-export type JourneyMoment = {
-  id: string;
-  name: string;
-  price: number;
-  image: string | null;
-  comment: string | null; // 상품 한 줄 코멘트(설명 첫 문장)
-  label: string; // 아침 · morning
-};
-
-// 상품 설명이 없을 때의 모멘트 기본 코멘트 — 시적 한 문장.
-export const MOMENT_COMMENTS = [
-  "하루의 시작을 조용히 담아내는 그릇.",
-  "김이 오르는 잠깐, 손안의 온기.",
-  "평범한 점심을 조금 특별하게.",
-  "느린 오후의 결을 닮은 물건.",
-  "하루의 끝, 식탁 위의 고요.",
-  "불을 끄기 전, 곁의 마지막 온기.",
+// 侘·寂·選 — 브랜드 철학 3주. 곡선 여정 안에서 등장한다(#225, 대표님 피드백 —
+// "카드 대신 저 멘트들"). 엔딩 그리드에 있던 내용을 이곳으로 옮겼다(중복 금지).
+const PILLARS = [
+  {
+    han: "侘",
+    label: "01 — 와비 / WABI",
+    body: "소박함과 절제. 덜어낼수록 선명해지는 본질을 담습니다.",
+  },
+  {
+    han: "寂",
+    label: "02 — 사비 / SABI",
+    body: "시간의 흔적. 낡음과 결이 만드는 고요한 깊이를 아낍니다.",
+  },
+  {
+    han: "選",
+    label: "03 — 큐레이션 / SELECT",
+    body: "오래 곁에 둘 것만을. 만든 이와 쓰는 이의 하루를 잇습니다.",
+  },
 ] as const;
 
-// 모멘트 = 나선 10바퀴의 극점 k=7(좌)·10(우)·13(좌)·16(우)·19(좌) — 좌우
-// 교차 배치(#213 10차). 테이퍼라 극점 x 가 층마다 다르다: x = 50 ∓ R(k)/10,
-// R(k)=300+130·k/20. 마지막 카드(94.4%)는 9차에서 확인된 위치 유지, 첫 1/3은
-// 곡선만 흐르는 빌드업. 두 캔버스는 시작(3.75%)/끝(99.2%) 여백 비율 공유.
-// 슬롯 6개(#213 11차 — 리미트 완화): k=4·7·10·13·16·19. 간격 3반바퀴(교차
-// 유지 최소 홀수 간격)라 이 이상 늘리면 카드 간격 < 등장 구간이 된다.
+// 멘트 = 나선 10바퀴의 극점 k=5(좌)·12(우)·19(좌) — 3주(#225)라 간격을
+// 7반바퀴로 넓혔다(홀수 간격 = 좌우 교차 유지). 테이퍼라 극점 x 가 층마다
+// 다르다: x = 50 ∓ R(k)/10, R(k)=300+6.5k. y 는 여백비를 두 캔버스가
+// 공유하므로 동일: y% = (yStart + (yEnd−yStart)·k/20) / vbH.
+// 첫 1/3은 곡선만 흐르는 빌드업, 마지막(94.2%)은 카드 시절 확정된 종점 유지.
 const MOMENT_POS = [
-  { x: 82.6, y: 22.8 },
-  { x: 15.5, y: 37.1 },
-  { x: 86.5, y: 51.4 },
-  { x: 11.6, y: 65.7 },
-  { x: 90.4, y: 79.9 },
+  { x: 16.8, y: 27.6 },
+  { x: 87.8, y: 60.9 },
   { x: 7.7, y: 94.2 },
-] as const;
-
-export const MOMENT_LABELS = [
-  "아침 · morning",
-  "차 한 잔 · a cup of tea",
-  "점심 · midday",
-  "오후 · afternoon",
-  "저녁 · evening",
-  "밤 · night",
 ] as const;
 
 // 입체 스프링 나선 (#213, 대표님 피드백 — 평면 S커브가 아닌 3D 코일).
@@ -123,17 +109,15 @@ function helixSegments(
 const DESKTOP = { vb: "0 0 1000 4100", geom: helixSegments(500, 300, 430, 0.3, 154, 4059, 10, 640) };
 const MOBILE = { vb: "0 0 1000 8500", geom: helixSegments(500, 300, 430, 0.3, 319, 8415, 10, 640) };
 
-// #213 7차: 곡선(원뿔 나선)에 집중하는 동안 카드·점 임시 오프.
-// 복귀 시 요구사항: 모바일에서도 데스크톱처럼 점 바깥쪽 포켓에 카드 배치.
+// #213 7차: 곡선(원뿔 나선)에 집중하는 동안 멘트·점 임시 오프용 플래그.
 const SHOW_MOMENTS = true;
 
-const won = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
 // 캔버스 2개(데스크톱·모바일)의 세그먼트 지오메트리 — 효과 루프가 참조.
 const CANVASES = [DESKTOP, MOBILE];
 
-export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
+export function HelixJourney() {
   const wrapRef = useRef<HTMLDivElement>(null);
   // segRefs[캔버스][세그먼트] — cfg.geom.segs 와 같은 인덱스.
   const segRefs = useRef<(SVGPathElement | null)[][]>([[], []]);
@@ -287,14 +271,15 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
         </svg>
       ))}
 
-      {/* 모멘트 — 곡선 위 점 + 반대편 여백에 상품 카드 (#197 피드백).
-          점이 오른쪽 극점(71%)이면 왼쪽 빈 공간에, 왼쪽 극점이면 오른쪽에 —
-          곡선과 겹치지 않는 넓은 여백에서 사진+한 줄 코멘트가 커졌다 작아진다. */}
-      {SHOW_MOMENTS && moments.slice(0, MOMENT_POS.length).map((m, i) => {
+      {/* 철학 멘트 — 곡선 위 점 + 극점 바깥 여백 포켓 (#225, 카드 시절 배치 유지).
+          점이 왼쪽 극점이면 왼쪽 여백에(오른쪽 끝을 점에 붙임), 오른쪽 극점이면
+          오른쪽 여백에 — 코일과 겹치지 않는 곳에서 커졌다 작아진다. 모바일은
+          공간이 없어 점 안쪽(고리 입구)에. */}
+      {SHOW_MOMENTS && PILLARS.map((v, i) => {
         const pos = MOMENT_POS[i];
-        const dotLeft = pos.x < 50; // 왼쪽 극점 → 카드는 왼쪽 포켓
+        const dotLeft = pos.x < 50; // 왼쪽 극점 → 멘트는 왼쪽 포켓
         return (
-          <div key={m.id}>
+          <div key={v.han}>
             <div
               ref={(el) => {
                 dotRefs.current[i] = el;
@@ -306,13 +291,7 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
               ref={(el) => {
                 momentRefs.current[i] = el;
               }}
-              // 데스크톱(#213 6차): 점 바깥쪽 포켓 — 왼쪽 극점이면 점의 왼쪽
-              // 여백에(오른쪽 끝을 점에 붙임), 오른쪽 극점이면 오른쪽 여백에.
-              // 코일과 아예 안 겹치는 위치다. 모바일은 공간이 없어 반대편 유지.
-              // 좌우 교차 포켓(#213 10차): 데스크톱은 카드를 점 바깥 여백에
-              // (왼쪽 극점이면 왼쪽, 오른쪽 극점이면 오른쪽), 모바일은 공간이
-              // 없어 점 안쪽(고리 입구)에.
-              className={`absolute w-[40%] max-w-64 md:w-[24%] ${
+              className={`absolute w-[46%] max-w-72 md:w-[26%] ${
                 dotLeft
                   ? "max-md:left-[calc(var(--dx)*1%+12px)] max-md:text-left md:right-[calc((100-var(--dx))*1%+14px)] md:text-right"
                   : "max-md:right-[calc((100-var(--dx))*1%+12px)] max-md:text-right md:left-[calc(var(--dx)*1%+14px)] md:text-left"
@@ -326,49 +305,15 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
               // 초기(숨김) 상태 — JS 로드 전에도 키보드·스크린리더에서 제외
               inert
             >
-              <div className="mb-2 [font-family:var(--ws-serif)] italic text-[13px] text-[#8f8676] md:mb-3 md:text-[16px]">
-                {m.label}
+              <div className="[font-family:var(--ws-serif)] text-[40px] leading-none text-[#423c30] md:text-[52px]">
+                {v.han}
               </div>
-              <Link href={`/shop/${m.id}`} className="block">
-                <div className="relative flex aspect-5/4 items-center justify-center overflow-hidden rounded-[50%/42%] border border-[rgba(66,60,48,.16)] bg-[repeating-linear-gradient(48deg,#e7dcc8_0_1px,#efe6d5_1px_12px)]">
-                  {m.image ? (
-                    <Image
-                      src={m.image}
-                      alt={m.name}
-                      fill
-                      sizes="(max-width: 768px) 40vw, 256px"
-                      className="object-cover"
-                      // 첫 두 카드는 곧 뷰포트에 들어온다 — lazy 면 LCP 로 잡힌
-                      // 숨은 이미지의 로드가 3.7s 지연됐다(#219 Lighthouse).
-                      priority={i === 0}
-                      loading={i < 2 ? "eager" : undefined}
-                    />
-                  ) : (
-                    <>
-                      <div className="h-2/5 w-[44%] rounded-full bg-[radial-gradient(circle_at_42%_38%,rgba(66,60,48,.24),transparent_68%)] blur-lg" />
-                      <span className="absolute bottom-2 [font-family:var(--ws-mono)] text-[8px] tracking-[1px] text-[#a39a88]">
-                        [ product shot ]
-                      </span>
-                    </>
-                  )}
-                </div>
-                {/* 한 줄 코멘트 — 상품 설명 첫 문장, 없으면 모멘트 기본 문장 */}
-                <p className="mt-3 [font-family:var(--ws-serif)] italic text-[13px] leading-normal text-[#6b6353] md:text-[16px]">
-                  {m.comment ?? MOMENT_COMMENTS[i] ?? ""}
-                </p>
-                <div
-                  className={`mt-2 flex items-baseline justify-between gap-2 ${
-                    dotLeft ? "md:flex-row-reverse" : "max-md:flex-row-reverse"
-                  }`}
-                >
-                  <span className="truncate [font-family:var(--ws-serif)] text-[16px] text-[#423c30] md:text-[21px]">
-                    {m.name}
-                  </span>
-                  <span className="shrink-0 [font-family:var(--ws-mono)] text-[10px] text-[#6b6353] md:text-[11px]">
-                    {won(m.price)}
-                  </span>
-                </div>
-              </Link>
+              <div className="mt-3 [font-family:var(--ws-mono)] text-[9px] tracking-[2px] text-[#9a9080] md:text-[10px]">
+                {v.label}
+              </div>
+              <p className="mt-2 [font-family:var(--ws-serif)] text-[14px] leading-[1.6] text-[#524a3a] md:text-[17px]">
+                {v.body}
+              </p>
             </div>
           </div>
         );
