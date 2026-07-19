@@ -4,6 +4,7 @@ import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
 import { ClearCart } from "@/components/clear-cart";
 import { confirmPayment } from "@/lib/payments";
+import { createClient } from "@/lib/supabase/server";
 import { won } from "@/lib/orders";
 
 type SP = { paymentKey?: string; orderId?: string; amount?: string };
@@ -22,8 +23,19 @@ export default async function CheckoutSuccessPage({
     // 승인·확정은 서버 공용 로직(lib/payments) — 금액은 DB 주문 기준(쿼리 amount 불신),
     // 확정 RPC 는 service_role 전용(0009), 새로고침/웹훅 중복에 멱등.
     const confirm = await confirmPayment(paymentKey, orderId);
-    if (confirm.ok) success = true;
-    else message = confirm.error ?? "결제 승인 실패";
+    if (confirm.ok) {
+      success = true;
+      // 서버 장바구니도 여기서 즉시 비운다(#215) — 클라 ClearCart 는 auth
+      // 바인딩 전에 돌 수 있어 로컬만 비우면 이후 동기화가 서버 항목을
+      // 되살린다. 본인 행만 지워지므로(RLS) 사용자 클라이언트로 충분. 멱등.
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("cart_items").delete().eq("user_id", user.id);
+      }
+    } else message = confirm.error ?? "결제 승인 실패";
   }
 
   return (
