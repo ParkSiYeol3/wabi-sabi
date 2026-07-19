@@ -36,11 +36,11 @@ export const MOMENT_COMMENTS = [
 // 반바퀴 극점(sin=0, cos=∓1). 데스크톱·모바일 캔버스가 시작(3.75%)/끝 여백
 // 비율과 반지름(260)을 공유해 좌표가 둘 다 극점에 정확히 맞는다.
 const MOMENT_POS = [
-  { x: 24, y: 21.5 },
-  { x: 76, y: 39.25 },
-  { x: 24, y: 57.0 },
-  { x: 76, y: 74.75 },
-  { x: 24, y: 92.5 },
+  { x: 18, y: 21.5 },
+  { x: 82, y: 39.25 },
+  { x: 18, y: 57.0 },
+  { x: 82, y: 74.75 },
+  { x: 18, y: 92.5 },
 ] as const;
 
 export const MOMENT_LABELS = [
@@ -103,11 +103,11 @@ function helixSegments(
 
 // "원통을 감싸는" 코일로 보이려면 한 화면에 고리가 1.5~2개는 보여야 한다(#213 2차)
 // — 3.5바퀴/캔버스에선 바퀴당 세로 1200px 라 화면(~900px)엔 늘 반 바퀴 미만만
-// 보여 지그재그로 읽혔다. 7.5바퀴로 촘촘하게(바퀴당 ~550u), 반지름 260·타원
-// 진폭 110 으로 뚜렷한 고리를 만든다. 두 캔버스는 반지름과 시작/끝 여백 비율을
+// 보여 지그재그로 읽혔다. 7.5바퀴로 촘촘하게(바퀴당 ~550u), 반지름 320·타원
+// 진폭 135 로 넓게 감싼다(#213 3차 — 시열님: 더 넓은 반경). 두 캔버스는 반지름과 시작/끝 여백 비율을
 // 공유해 MOMENT_POS 가 동일하게 맞는다. 카드 간격(17.75%)은 등장 구간보다 넓다.
-const DESKTOP = { vb: "0 0 1000 4800", geom: helixSegments(500, 260, 110, 180, 4440, 7.5, 480) };
-const MOBILE = { vb: "0 0 1000 10000", geom: helixSegments(500, 260, 110, 375, 9250, 7.5, 480) };
+const DESKTOP = { vb: "0 0 1000 4800", geom: helixSegments(500, 320, 135, 180, 4440, 7.5, 480) };
+const MOBILE = { vb: "0 0 1000 10000", geom: helixSegments(500, 320, 135, 375, 9250, 7.5, 480) };
 
 const won = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -256,7 +256,7 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
                   d={seg.d}
                   fill="none"
                   stroke="#423c30"
-                  strokeWidth={seg.front ? 1.3 : 1}
+                  strokeWidth={1.3}
                   opacity={seg.front ? 1 : 0.3}
                   style={{
                     strokeDasharray: seg.len,
