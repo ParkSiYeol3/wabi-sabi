@@ -16,10 +16,25 @@ export const metadata: Metadata = {
   description: "와비-사비, 불완전함과 무상함의 아름다움을 받아들이는 미학",
 };
 
-const values = [
-  { en: "Imperfection", ko: "불완전함 속에서 발견하는 독특한 아름다움" },
-  { en: "Simplicity", ko: "단순함이 만들어내는 깊이있는 여백" },
-  { en: "Authenticity", ko: "장인의 손길이 담긴 진정성있는 작품" },
+// 고르는 기준 (#227) — 브랜드 철학(侘·寂·選)은 홈 곡선 여정이 맡는다(#225).
+// About 은 그 철학이 실제 셀렉션에서 어떻게 작동하는지를 설명한다.
+// 카피는 대표님 검토 전제 초안.
+const criteria = [
+  {
+    en: "Trace of Hands",
+    ko: "손의 흔적",
+    body: "물레 자국, 유약의 흐름, 어긋난 좌우 — 같은 형태가 둘 없는 물건만 들입니다.",
+  },
+  {
+    en: "Everyday Use",
+    ko: "쓰임",
+    body: "장식장이 아니라 식탁 위에서 매일 손에 닿는, 쓰임이 분명한 물건을 고릅니다.",
+  },
+  {
+    en: "Time",
+    ko: "시간",
+    body: "쓸수록 길이 들고, 낡음이 결이 되는 — 오래 곁에 둘수록 좋아지는 것만 남깁니다.",
+  },
 ] as const;
 
 const stagger = [0, 100, 200] as const;
@@ -90,26 +105,32 @@ export default async function AboutPage() {
         </div>
       </Container>
 
-      {/* Our Values */}
+      {/* 고르는 기준 — 철학(홈)이 셀렉션에서 어떻게 작동하는지 (#227) */}
       <section className="bg-wabi-subtle">
         <Container className="py-24 md:py-32">
           <Reveal>
             <h2 className="text-center text-2xl font-semibold tracking-tight md:text-3xl">
-              Our Values
+              고르는 기준
             </h2>
+            <p className="mt-4 text-center text-sm text-wabi-fg-muted">
+              모든 물건은 세 가지 질문을 통과한 뒤에야 매대에 오릅니다.
+            </p>
           </Reveal>
           <div className="mt-16 grid gap-12 md:grid-cols-3">
-            {values.map((v, i) => (
+            {criteria.map((v, i) => (
               <Reveal key={v.en} delay={stagger[i]}>
                 <div className="text-center md:border-l md:border-wabi-border md:first:border-l-0 md:px-8">
                   <span className="text-2xl font-light text-wabi-fg-muted/60">
                     0{i + 1}
                   </span>
                   <h3 className="mt-5 text-lg font-medium tracking-wide">
-                    {v.en}
+                    {v.ko}
+                    <span className="ml-2 text-xs font-normal uppercase tracking-[0.15em] text-wabi-fg-muted">
+                      {v.en}
+                    </span>
                   </h3>
                   <p className="mt-3 text-sm leading-7 text-wabi-fg-muted">
-                    {v.ko}
+                    {v.body}
                   </p>
                 </div>
               </Reveal>
