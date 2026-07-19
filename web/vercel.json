@@ -4,5 +4,8 @@
       "path": "/api/cron/cleanup-pending",
       "schedule": "0 18 * * *"
     }
+  ],
+  "regions": [
+    "icn1"
   ]
 }
