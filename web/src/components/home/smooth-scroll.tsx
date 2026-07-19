@@ -18,7 +18,7 @@ export function SmoothScroll() {
 
     const tick = () => {
       const cur = window.scrollY;
-      const next = cur + (target - cur) * 0.1; // 60fps 기준 ~0.5s 글라이드
+      const next = cur + (target - cur) * 0.06; // 60fps 기준 ~0.8s 글라이드(#213 12차 — 더 느긋하게)
       if (Math.abs(target - next) < 0.5) {
         lastSet = target;
         window.scrollTo(0, target);

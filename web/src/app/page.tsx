@@ -78,7 +78,7 @@ export default async function Home({
 
   return (
     <div
-      className={`${cormorant.variable} ${spaceMono.variable} ${maruburi.variable} bg-[#f3ebdd] text-[#423c30] [--ws-serif:var(--font-cormorant),var(--font-maruburi),Gungsuh,GungSeo,serif] [--ws-mono:var(--font-ws-mono),monospace]`}
+      className={`${cormorant.variable} ${spaceMono.variable} ${maruburi.variable} overflow-x-clip bg-[#f3ebdd] text-[#423c30] [--ws-serif:var(--font-cormorant),var(--font-maruburi),Gungsuh,GungSeo,serif] [--ws-mono:var(--font-ws-mono),monospace]`}
     >
       {/* 휠 스크롤 이징 — 홈에서만 (#197 6차) */}
       <SmoothScroll />
@@ -91,12 +91,12 @@ export default async function Home({
       {/* ── 진입 즉시 곡선만 (#197 대표님 무드 — 코멘트·로고 일절 없음).
            스크린리더용 페이지 제목만 숨김 제공. ── */}
       <h1 className="sr-only">WABI-SABI — 하루의 결을 따라 흐르는 그릇 셀렉트숍</h1>
-      <section className="pb-8 pt-6 md:pt-10">
+      <section className="pb-0 pt-6 md:pt-10">
         <HelixJourney moments={moments} />
       </section>
 
-      {/* ── 여정의 끝 — 그제야 브랜드 (#197) ── */}
-      <section className="px-6 pb-10 pt-20 text-center md:pt-28">
+      {/* ── 여정의 끝 — 그제야 브랜드. 선 끝에 로고가 바로 이어진다(#213 9차) ── */}
+      <section className="px-6 pb-10 pt-4 text-center md:pt-6">
         <Reveal>
           <Image
             src="/brand/logo-mark.png"

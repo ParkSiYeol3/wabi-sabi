@@ -30,16 +30,22 @@ export const MOMENT_COMMENTS = [
   "평범한 점심을 조금 특별하게.",
   "느린 오후의 결을 닮은 물건.",
   "하루의 끝, 식탁 위의 고요.",
+  "불을 끄기 전, 곁의 마지막 온기.",
 ] as const;
 
-// 곡선 극점(좌우 교차)과 만나는 지점(%) — 나선 파라미터(3.5바퀴)에서 유도.
-// 데스크톱·모바일 캔버스가 시작/끝 여백 비율을 공유해 좌표가 둘 다 극점에 맞는다.
+// 모멘트 = 나선 10바퀴의 극점 k=7(좌)·10(우)·13(좌)·16(우)·19(좌) — 좌우
+// 교차 배치(#213 10차). 테이퍼라 극점 x 가 층마다 다르다: x = 50 ∓ R(k)/10,
+// R(k)=300+130·k/20. 마지막 카드(94.4%)는 9차에서 확인된 위치 유지, 첫 1/3은
+// 곡선만 흐르는 빌드업. 두 캔버스는 시작(3.75%)/끝(99.2%) 여백 비율 공유.
+// 슬롯 6개(#213 11차 — 리미트 완화): k=4·7·10·13·16·19. 간격 3반바퀴(교차
+// 유지 최소 홀수 간격)라 이 이상 늘리면 카드 간격 < 등장 구간이 된다.
 const MOMENT_POS = [
-  { x: 71, y: 30.3 },
-  { x: 29, y: 43.4 },
-  { x: 71, y: 56.6 },
-  { x: 29, y: 69.8 },
-  { x: 71, y: 83.0 },
+  { x: 82.6, y: 22.8 },
+  { x: 15.5, y: 37.2 },
+  { x: 86.5, y: 51.5 },
+  { x: 11.6, y: 65.8 },
+  { x: 90.4, y: 80.1 },
+  { x: 7.7, y: 94.4 },
 ] as const;
 
 export const MOMENT_LABELS = [
@@ -48,43 +54,88 @@ export const MOMENT_LABELS = [
   "점심 · midday",
   "오후 · afternoon",
   "저녁 · evening",
+  "밤 · night",
 ] as const;
 
-// 나선 경로 — 결정적 계산이라 SSR/클라 동일(하이드레이션 안전).
-function helixPath(
+// 입체 스프링 나선 (#213, 대표님 피드백 — 평면 S커브가 아닌 3D 코일).
+// 나선을 앞면/뒷면 반바퀴 세그먼트로 쪼개 누적 순서로 이어 그린다. 선 자체는
+// 색·굵기 완전 균일(#213 5차 — 옅기 차이가 얼룩처럼 보임) — 입체감은 교차
+// 기하만으로 낸다(레퍼런스와 동일). 세그먼트 길이는 폴리라인
+// 현(chord) 합 — 브라우저의 path 길이와 정확히 일치하므로 DOM 측정이 필요 없다.
+// 결정적 계산이라 SSR/클라 동일(하이드레이션 안전).
+type HelixSeg = { d: string; front: boolean; len: number; cum: number };
+type HelixGeom = { segs: HelixSeg[]; total: number };
+
+function helixSegments(
   cx: number,
-  R: number,
-  rY: number,
+  rTop: number,
+  rBot: number,
+  rYRatio: number, // 타원 세로/가로 비 — 원근(약 0.32~0.38)
   yStart: number,
   yEnd: number,
   loops: number,
   steps: number,
-): string {
+): HelixGeom {
   const tMax = Math.PI * 2 * loops;
   const pitch = (yEnd - yStart) / tMax;
-  let d = "";
-  for (let i = 0; i <= steps; i++) {
+  const pt = (i: number) => {
     const t = (tMax * i) / steps;
-    const x = cx + R * Math.cos(t);
-    const y = yStart + pitch * t + rY * Math.sin(t);
-    d += (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1) + " ";
+    // 원뿔형(#213 7차, 레퍼런스) — 위 고리는 작고 아래로 갈수록 넓어진다.
+    const R = rTop + (rBot - rTop) * (t / tMax);
+    return {
+      x: cx + R * Math.cos(t),
+      y: yStart + pitch * t + R * rYRatio * Math.sin(t),
+      front: Math.sin(t) >= -1e-9, // 화면 아래로 볼록한 반바퀴 = 앞면
+    };
+  };
+
+  const segs: HelixSeg[] = [];
+  let cum = 0;
+  let cur = [pt(0)];
+  for (let i = 1; i <= steps; i++) {
+    const p = pt(i);
+    cur.push(p);
+    const boundary = p.front !== cur[0].front;
+    if (boundary || i === steps) {
+      let len = 0;
+      let d = `M${cur[0].x.toFixed(1)} ${cur[0].y.toFixed(1)} `;
+      for (let j = 1; j < cur.length; j++) {
+        len += Math.hypot(cur[j].x - cur[j - 1].x, cur[j].y - cur[j - 1].y);
+        d += `L${cur[j].x.toFixed(1)} ${cur[j].y.toFixed(1)} `;
+      }
+      segs.push({ d: d.trim(), front: cur[0].front, len, cum });
+      cum += len;
+      cur = [p]; // 경계점을 다음 세그먼트 시작점으로 공유(끊김 없음)
+    }
   }
-  return d.trim();
+  return { segs, total: cum };
 }
 
-// 곡선을 길게(#197 피드백 5차) — 앞 카드가 완전히 사라진 뒤 다음 카드가 시작되게
-// 카드 간 스크롤 간격 > 등장 구간이 되도록 잡는다. 시작/끝 여백은 두 캔버스가
-// 같은 비율(3.9%/3.5%)을 쓰므로 MOMENT_POS 가 양쪽 모두 극점에 맞는다.
-// 스텝 240(바퀴당 ~68점) — 1.3px 획에선 720과 시각 동일, 인라인 path 가 1/3(#211).
-const DESKTOP = { vb: "0 0 1000 4600", d: helixPath(500, 210, 55, 180, 4440, 3.5, 240) };
-const MOBILE = { vb: "0 0 1000 9600", d: helixPath(500, 170, 80, 376, 9266, 3.5, 240) };
+// "원통을 감싸는" 코일로 보이려면 한 화면에 고리가 1.5~2개는 보여야 한다(#213 2차)
+// — 3.5바퀴/캔버스에선 바퀴당 세로 1200px 라 화면(~900px)엔 늘 반 바퀴 미만만
+// 보여 지그재그로 읽혔다. 7.5바퀴로 촘촘하게(바퀴당 ~550u).
+// 반지름 280(5차 — 320은 카드와 과교차)·타원 진폭 95(카드 상하 클리어런스).
+// 두 캔버스는 반지름과 시작/끝 여백 비율을 공유해 MOMENT_POS 가 동일하게 맞는다. 카드 간격(17.75%)은 등장 구간보다 넓다.
+// 레퍼런스 비율(#213 8차): 맨 위 고리부터 화면 폭 ~60%(rTop 300), 테이퍼는
+// 은은하게(→430). 한 화면에 ~2바퀴(10바퀴/캔버스), 타원 납작비 0.30.
+// 끝을 캔버스 바닥(99.2%)까지 — 선이 브랜드 로고 직전까지 이어진다(#213 9차).
+const DESKTOP = { vb: "0 0 1000 4800", geom: helixSegments(500, 300, 430, 0.3, 180, 4760, 10, 640) };
+const MOBILE = { vb: "0 0 1000 10000", geom: helixSegments(500, 300, 430, 0.3, 375, 9920, 10, 640) };
+
+// #213 7차: 곡선(원뿔 나선)에 집중하는 동안 카드·점 임시 오프.
+// 복귀 시 요구사항: 모바일에서도 데스크톱처럼 점 바깥쪽 포켓에 카드 배치.
+const SHOW_MOMENTS = true;
 
 const won = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
+// 캔버스 2개(데스크톱·모바일)의 세그먼트 지오메트리 — 효과 루프가 참조.
+const CANVASES = [DESKTOP, MOBILE];
+
 export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const pathRefs = useRef<(SVGPathElement | null)[]>([]);
+  // segRefs[캔버스][세그먼트] — cfg.geom.segs 와 같은 인덱스.
+  const segRefs = useRef<(SVGPathElement | null)[][]>([[], []]);
   const momentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dotRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -92,15 +143,14 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
     const wrap = wrapRef.current;
     if (!wrap) return;
 
-    const paths = pathRefs.current.filter(Boolean) as SVGPathElement[];
-    const lens = paths.map((p) => p.getTotalLength());
-
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
       // 완성 상태 고정 — 모션 없이 전부 보이게.
-      paths.forEach((p) => {
-        p.style.strokeDasharray = "none";
-        p.style.strokeDashoffset = "0";
+      segRefs.current.flat().forEach((p) => {
+        if (p) {
+          p.style.strokeDasharray = "none";
+          p.style.strokeDashoffset = "0";
+        }
       });
       momentRefs.current.forEach((m) => {
         if (m) {
@@ -136,10 +186,17 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
         ? 1
         : easeOut(Math.min(1, (performance.now() - introT0) / INTRO_MS));
       if (k >= 1) introDone = true;
-      paths.forEach((el, i) => {
-        const p = clamp01((vh * 0.85 - top) / height) * k;
-        el.style.strokeDasharray = `${lens[i]}`;
-        el.style.strokeDashoffset = `${lens[i] * (1 - p)}`;
+      const p = clamp01((vh * 0.85 - top) / height) * k;
+      CANVASES.forEach((cfg, ci) => {
+        const drawn = p * cfg.geom.total;
+        cfg.geom.segs.forEach((seg, si) => {
+          const el = segRefs.current[ci][si];
+          if (!el) return;
+          // 전체 진행 길이를 세그먼트 구간으로 환산 — 누적 순서대로 이어 그려진다.
+          const local = clamp01((drawn - seg.cum) / seg.len);
+          el.style.strokeDasharray = `${seg.len}`;
+          el.style.strokeDashoffset = `${seg.len * (1 - local)}`;
+        });
       });
 
       momentRefs.current.forEach((m, i) => {
@@ -203,26 +260,38 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
           className={`${cls} h-auto w-full overflow-visible`}
           aria-hidden
         >
-          {/* 곡선만 — 축·화살표·시어 없이 스크롤이 그리는 선 하나 (#197 피드백 3차) */}
-          <path
-            ref={(el) => {
-              pathRefs.current[pi] = el;
-            }}
-            d={cfg.d}
-            fill="none"
-            stroke="#423c30"
-            strokeWidth="1.3"
-            style={{ strokeDasharray: 12000, strokeDashoffset: 12000 }}
-          />
+          {/* 입체 스프링(#213) — 뒷면(옅고 가늘게)을 먼저, 앞면이 교차점에서 덮는다.
+              각 세그먼트는 자기 길이만큼의 dash 로 숨겨져 있다가 누적 순서대로 그려진다. */}
+          {[false, true].map((frontPass) =>
+            cfg.geom.segs.map((seg, si) =>
+              seg.front === frontPass ? (
+                <path
+                  key={si}
+                  ref={(el) => {
+                    segRefs.current[pi][si] = el;
+                  }}
+                  d={seg.d}
+                  fill="none"
+                  stroke="#423c30"
+                  strokeWidth={1.3}
+                  opacity={1}
+                  style={{
+                    strokeDasharray: seg.len,
+                    strokeDashoffset: seg.len,
+                  }}
+                />
+              ) : null,
+            ),
+          )}
         </svg>
       ))}
 
       {/* 모멘트 — 곡선 위 점 + 반대편 여백에 상품 카드 (#197 피드백).
           점이 오른쪽 극점(71%)이면 왼쪽 빈 공간에, 왼쪽 극점이면 오른쪽에 —
           곡선과 겹치지 않는 넓은 여백에서 사진+한 줄 코멘트가 커졌다 작아진다. */}
-      {moments.slice(0, MOMENT_POS.length).map((m, i) => {
+      {SHOW_MOMENTS && moments.slice(0, MOMENT_POS.length).map((m, i) => {
         const pos = MOMENT_POS[i];
-        const cardLeft = pos.x > 50; // 점이 오른쪽 → 카드는 왼쪽 여백
+        const dotLeft = pos.x < 50; // 왼쪽 극점 → 카드는 왼쪽 포켓
         return (
           <div key={m.id}>
             <div
@@ -236,15 +305,22 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
               ref={(el) => {
                 momentRefs.current[i] = el;
               }}
-              className={`absolute w-[44%] max-w-75 md:w-[36%] ${
-                cardLeft
-                  ? "left-[3%] text-right md:left-[7%]"
-                  : "right-[3%] text-left md:right-[7%]"
+              // 데스크톱(#213 6차): 점 바깥쪽 포켓 — 왼쪽 극점이면 점의 왼쪽
+              // 여백에(오른쪽 끝을 점에 붙임), 오른쪽 극점이면 오른쪽 여백에.
+              // 코일과 아예 안 겹치는 위치다. 모바일은 공간이 없어 반대편 유지.
+              // 좌우 교차 포켓(#213 10차): 데스크톱은 카드를 점 바깥 여백에
+              // (왼쪽 극점이면 왼쪽, 오른쪽 극점이면 오른쪽), 모바일은 공간이
+              // 없어 점 안쪽(고리 입구)에.
+              className={`absolute w-[40%] max-w-64 md:w-[24%] ${
+                dotLeft
+                  ? "max-md:left-[calc(var(--dx)*1%+12px)] max-md:text-left md:right-[calc((100-var(--dx))*1%+14px)] md:text-right"
+                  : "max-md:right-[calc((100-var(--dx))*1%+12px)] max-md:text-right md:left-[calc(var(--dx)*1%+14px)] md:text-left"
               }`}
               style={{
                 top: `${pos.y}%`,
                 opacity: 0,
                 transform: "translateY(-50%) scale(0.78)",
+                ["--dx" as string]: pos.x,
               }}
               // 초기(숨김) 상태 — JS 로드 전에도 키보드·스크린리더에서 제외
               inert
@@ -277,7 +353,7 @@ export function HelixJourney({ moments }: { moments: JourneyMoment[] }) {
                 </p>
                 <div
                   className={`mt-2 flex items-baseline justify-between gap-2 ${
-                    cardLeft ? "flex-row-reverse" : ""
+                    dotLeft ? "md:flex-row-reverse" : "max-md:flex-row-reverse"
                   }`}
                 >
                   <span className="truncate [font-family:var(--ws-serif)] text-[16px] text-[#423c30] md:text-[21px]">

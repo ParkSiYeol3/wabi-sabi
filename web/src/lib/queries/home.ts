@@ -97,7 +97,7 @@ async function loadHomeData(): Promise<HomeData> {
         image: null,
         comment: firstSentence(p.description),
       })),
-  ].slice(0, 5);
+  ].slice(0, 6);
 
   const philosophy = toParagraphs(content?.value?.trim() || DEFAULT_PHILOSOPHY);
 
