@@ -94,11 +94,35 @@ export default async function Home({
         {/* 철학 3주(侘·寂·選)는 곡선 여정 안으로 이동(#225) — 여기선 반복하지 않는다 */}
         <Reveal>
           <div className="mt-14">
+            {/* 채워지는 아웃라인 CTA (#231) — 호버/포커스 시 먹색 판이 아래에서
+                차오르며 글자까지 크림색으로 바뀐다. 색 전환을 따로 주면 판이
+                절반만 올라온 순간 글자가 배경에 묻히므로, 반전된 문구를 판 위에
+                얹어 함께 슬라이드시킨다(마스킹). 판 레이어는 aria-hidden —
+                스크린리더가 같은 문장을 두 번 읽지 않게. */}
             <Link
               href="/shop"
-              className="border-b border-[#423c30] pb-1 [font-family:var(--ws-mono)] text-[11px] tracking-[2px] transition-colors hover:text-[#8f8676] md:text-[12px]"
+              className="group relative inline-block overflow-hidden rounded-3xl border border-[#423c30]/70 px-6 py-3 text-center [font-family:var(--ws-mono)] text-[10px] leading-relaxed tracking-[1.5px] text-[#423c30] md:rounded-full md:px-9 md:py-4 md:text-[12px] md:tracking-[2px]"
             >
-              당신의 하루에 놓일 그릇, 천천히 둘러보세요 →
+              <span>
+                당신의 하루에 놓일 그릇, 천천히 둘러보세요{" "}
+                <span
+                  aria-hidden
+                  className="inline-block transition-transform duration-500 ease-out group-hover:translate-x-1 group-focus-visible:translate-x-1 motion-reduce:transition-none"
+                >
+                  →
+                </span>
+              </span>
+              <span
+                aria-hidden
+                className="absolute inset-0 flex translate-y-full items-center justify-center bg-[#423c30] px-6 text-[#f3ebdd] transition-transform duration-500 ease-out group-hover:translate-y-0 group-focus-visible:translate-y-0 motion-reduce:transition-none md:px-9"
+              >
+                <span>
+                  당신의 하루에 놓일 그릇, 천천히 둘러보세요{" "}
+                  <span className="inline-block transition-transform duration-500 ease-out group-hover:translate-x-1 group-focus-visible:translate-x-1 motion-reduce:transition-none">
+                    →
+                  </span>
+                </span>
+              </span>
             </Link>
           </div>
         </Reveal>
