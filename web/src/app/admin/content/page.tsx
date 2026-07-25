@@ -5,6 +5,8 @@ import {
   DEFAULT_PHILOSOPHY,
   HOME_PILLAR_KEYS,
   DEFAULT_PILLARS,
+  HOME_PILLAR_LABEL_KEYS,
+  DEFAULT_PILLAR_LABELS,
   HOME_CTA_KEY,
   DEFAULT_HOME_CTA,
   type ContentKey,
@@ -56,8 +58,20 @@ function ContentField({
 
 export default async function AdminContentPage() {
   // 각 편집 값(미저장이면 기본 문구). 병렬 조회.
-  const [philosophy, wabi, sabi, select, cta] = await Promise.all([
+  const [
+    philosophy,
+    wabiLabel,
+    sabiLabel,
+    selectLabel,
+    wabi,
+    sabi,
+    select,
+    cta,
+  ] = await Promise.all([
     getSiteContent(PHILOSOPHY_KEY),
+    getSiteContent(HOME_PILLAR_LABEL_KEYS[0]),
+    getSiteContent(HOME_PILLAR_LABEL_KEYS[1]),
+    getSiteContent(HOME_PILLAR_LABEL_KEYS[2]),
     getSiteContent(HOME_PILLAR_KEYS[0]),
     getSiteContent(HOME_PILLAR_KEYS[1]),
     getSiteContent(HOME_PILLAR_KEYS[2]),
@@ -91,24 +105,53 @@ export default async function AdminContentPage() {
             홈 스크롤 중 곡선을 따라 나타나는 문구입니다. 한자(侘·寂·選)와
             라벨은 고정이며, 아래 본문만 편집됩니다.
           </p>
-          <ContentField
-            contentKey={HOME_PILLAR_KEYS[0]}
-            label="侘 · 와비 / WABI"
-            value={wabi ?? DEFAULT_PILLARS.home_pillar_wabi}
-            rows={2}
-          />
-          <ContentField
-            contentKey={HOME_PILLAR_KEYS[1]}
-            label="寂 · 사비 / SABI"
-            value={sabi ?? DEFAULT_PILLARS.home_pillar_sabi}
-            rows={2}
-          />
-          <ContentField
-            contentKey={HOME_PILLAR_KEYS[2]}
-            label="選 · 큐레이션 / SELECT"
-            value={select ?? DEFAULT_PILLARS.home_pillar_select}
-            rows={2}
-          />
+          <div className="space-y-3 rounded-lg border border-wabi-border p-4">
+            <p className="text-xs font-medium text-wabi-fg">侘 (첫 번째)</p>
+            <ContentField
+              contentKey={HOME_PILLAR_LABEL_KEYS[0]}
+              label="제목"
+              value={wabiLabel ?? DEFAULT_PILLAR_LABELS.home_pillar_wabi_label}
+              rows={1}
+            />
+            <ContentField
+              contentKey={HOME_PILLAR_KEYS[0]}
+              label="본문"
+              value={wabi ?? DEFAULT_PILLARS.home_pillar_wabi}
+              rows={2}
+            />
+          </div>
+          <div className="space-y-3 rounded-lg border border-wabi-border p-4">
+            <p className="text-xs font-medium text-wabi-fg">寂 (두 번째)</p>
+            <ContentField
+              contentKey={HOME_PILLAR_LABEL_KEYS[1]}
+              label="제목"
+              value={sabiLabel ?? DEFAULT_PILLAR_LABELS.home_pillar_sabi_label}
+              rows={1}
+            />
+            <ContentField
+              contentKey={HOME_PILLAR_KEYS[1]}
+              label="본문"
+              value={sabi ?? DEFAULT_PILLARS.home_pillar_sabi}
+              rows={2}
+            />
+          </div>
+          <div className="space-y-3 rounded-lg border border-wabi-border p-4">
+            <p className="text-xs font-medium text-wabi-fg">選 (세 번째)</p>
+            <ContentField
+              contentKey={HOME_PILLAR_LABEL_KEYS[2]}
+              label="제목"
+              value={
+                selectLabel ?? DEFAULT_PILLAR_LABELS.home_pillar_select_label
+              }
+              rows={1}
+            />
+            <ContentField
+              contentKey={HOME_PILLAR_KEYS[2]}
+              label="본문"
+              value={select ?? DEFAULT_PILLARS.home_pillar_select}
+              rows={2}
+            />
+          </div>
         </section>
 
         {/* 홈 하단 CTA — Shop 으로 유도하는 문구 */}

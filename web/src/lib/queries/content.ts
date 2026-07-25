@@ -6,18 +6,25 @@ import { createPublicClient } from "@/lib/supabase/public";
 
 export const PHILOSOPHY_KEY = "philosophy";
 
-// 홈 하드코딩 문구를 편집 가능하게 이전(#245). 라벨(侘 와비 / WABI 등)은 브랜드
-// 구조라 코드 고정, 본문·CTA 만 편집한다. 키는 saveContent enum·admin 폼과 동기.
+// 홈 하드코딩 문구를 편집 가능하게 이전(#245·#247). 한자(侘·寂·選)만 브랜드
+// 상징이라 코드 고정, 제목(라벨)·본문·CTA 는 편집한다. 키는 saveContent enum·
+// admin 폼과 동기. 라벨/본문 키는 같은 순서(와비→사비→큐레이션)로 대응한다.
 export const HOME_PILLAR_KEYS = [
   "home_pillar_wabi",
   "home_pillar_sabi",
   "home_pillar_select",
+] as const;
+export const HOME_PILLAR_LABEL_KEYS = [
+  "home_pillar_wabi_label",
+  "home_pillar_sabi_label",
+  "home_pillar_select_label",
 ] as const;
 export const HOME_CTA_KEY = "home_cta";
 
 // 편집 가능한 전체 키 — 액션 enum·타입 안전의 단일 출처.
 export const CONTENT_KEYS = [
   PHILOSOPHY_KEY,
+  ...HOME_PILLAR_LABEL_KEYS,
   ...HOME_PILLAR_KEYS,
   HOME_CTA_KEY,
 ] as const;
@@ -30,11 +37,21 @@ export const DEFAULT_PHILOSOPHY = `わび-さび (Wabi-sabi)는 불완전함과 
 
 10년 넘게 오가바의 도자기로 만든 라면을 먹어온 우리가, 생각한 도자기를 만들어주었으면 하고 오가바 작가님께 주문을 했습니다. 주문하신 분들만이 가지실 수 있는 특별한 작품들입니다.`;
 
-// 홈 철학 3주 본문 기본값(라벨은 helix-journey 에 고정). 키 순서와 1:1 대응.
+// 홈 철학 3주 본문 기본값(한자는 helix-journey 에 고정). 키 순서와 1:1 대응.
 export const DEFAULT_PILLARS: Record<(typeof HOME_PILLAR_KEYS)[number], string> = {
   home_pillar_wabi: "소박함과 절제. 덜어낼수록 선명해지는 본질을 담습니다.",
   home_pillar_sabi: "시간의 흔적. 낡음과 결이 만드는 고요한 깊이를 아낍니다.",
   home_pillar_select: "오래 곁에 둘 것만을. 만든 이와 쓰는 이의 하루를 잇습니다.",
+};
+
+// 홈 철학 3주 제목(라벨) 기본값 — 편집 가능(#247). 키 순서와 1:1 대응.
+export const DEFAULT_PILLAR_LABELS: Record<
+  (typeof HOME_PILLAR_LABEL_KEYS)[number],
+  string
+> = {
+  home_pillar_wabi_label: "01 — 와비 / WABI",
+  home_pillar_sabi_label: "02 — 사비 / SABI",
+  home_pillar_select_label: "03 — 큐레이션 / SELECT",
 };
 
 export const DEFAULT_HOME_CTA = "당신의 하루에 놓일 그릇, 천천히 둘러보세요 →";

@@ -13,13 +13,9 @@ import { useEffect, useRef } from "react";
 //   레이아웃 시프트가 없다. 모바일은 세로 피치를 늘려 멘트 간격을 확보한다.
 
 // 侘·寂·選 — 브랜드 철학 3주. 곡선 여정 안에서 등장한다(#225, 대표님 피드백 —
-// "카드 대신 저 멘트들"). 한자·라벨은 브랜드 구조라 코드 고정, 본문은 대표님이
-// 어드민에서 편집한다(#245) — page 에서 pillarBodies props 로 주입한다.
-const PILLAR_META = [
-  { han: "侘", label: "01 — 와비 / WABI" },
-  { han: "寂", label: "02 — 사비 / SABI" },
-  { han: "選", label: "03 — 큐레이션 / SELECT" },
-] as const;
+// "카드 대신 저 멘트들"). 한자만 브랜드 상징이라 코드 고정, 제목(라벨)·본문은
+// 대표님이 어드민에서 편집한다(#245·#247) — page 에서 props 로 주입한다.
+const PILLAR_HANJA = ["侘", "寂", "選"] as const;
 
 // 멘트 = 나선 10바퀴의 극점 k=5(좌)·12(우)·19(좌) — 3주(#225)라 간격을
 // 7반바퀴로 넓혔다(홀수 간격 = 좌우 교차 유지). 테이퍼라 극점 x 가 층마다
@@ -106,9 +102,19 @@ const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 // 캔버스 2개(데스크톱·모바일)의 세그먼트 지오메트리 — 효과 루프가 참조.
 const CANVASES = [DESKTOP, MOBILE];
 
-export function HelixJourney({ pillarBodies }: { pillarBodies: string[] }) {
-  // 라벨(고정)과 편집 본문(props)을 합쳐 렌더용 3주를 만든다.
-  const pillars = PILLAR_META.map((m, i) => ({ ...m, body: pillarBodies[i] ?? "" }));
+export function HelixJourney({
+  pillarLabels,
+  pillarBodies,
+}: {
+  pillarLabels: string[];
+  pillarBodies: string[];
+}) {
+  // 한자(고정)와 편집 제목·본문(props)을 합쳐 렌더용 3주를 만든다.
+  const pillars = PILLAR_HANJA.map((han, i) => ({
+    han,
+    label: pillarLabels[i] ?? "",
+    body: pillarBodies[i] ?? "",
+  }));
   const wrapRef = useRef<HTMLDivElement>(null);
   // segRefs[캔버스][세그먼트] — cfg.geom.segs 와 같은 인덱스.
   const segRefs = useRef<(SVGPathElement | null)[][]>([[], []]);
