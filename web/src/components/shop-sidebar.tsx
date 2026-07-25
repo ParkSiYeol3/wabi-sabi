@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { categoryTree, MONTHLY_SLUG } from "@/lib/site";
+import { MONTHLY_SLUG, type CategoryNode } from "@/lib/site";
 import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +37,13 @@ function SideLink({
   );
 }
 
-export function ShopSidebar({ sp }: { sp: ShopSP }) {
+export function ShopSidebar({
+  sp,
+  tree,
+}: {
+  sp: ShopSP;
+  tree: CategoryNode[];
+}) {
   const current = sp.category;
 
   return (
@@ -53,7 +59,7 @@ export function ShopSidebar({ sp }: { sp: ShopSP }) {
       </SideLink>
 
       <div className="mt-3 space-y-1 border-t border-wabi-border pt-3">
-        {categoryTree.map((node) =>
+        {tree.map((node) =>
           node.children ? (
             <details
               key={node.slug}

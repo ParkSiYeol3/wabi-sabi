@@ -7,7 +7,7 @@ import { ProductCard } from "@/components/product-card";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { Reveal } from "@/components/reveal";
 import { Input } from "@/components/ui/input";
-import { categoryTree, MONTHLY_SLUG } from "@/lib/site";
+import { MONTHLY_SLUG } from "@/lib/site";
 import { ShopSidebar } from "@/components/shop-sidebar";
 import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
 import {
@@ -15,6 +15,7 @@ import {
   getShopBrowse,
   type ProductSort,
 } from "@/lib/queries/products";
+import { getCategoryTree } from "@/lib/queries/categories";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -39,10 +40,13 @@ export default async function ShopPage({
   const sp = await searchParams;
   const sort = (sp.sort as ProductSort) || "newest";
   const query = sp.q?.trim();
-  // 검색어가 있으면 캐시 밖(입력 무한), 없으면 캐시된 탐색 경로(카테고리×정렬 유한).
-  const products = query
-    ? await getProducts({ category: sp.category, q: sp.q, sort })
-    : await getShopBrowse({ category: sp.category, sort });
+  // 카테고리 트리(이름은 DB 편집값 #246) — 상품 조회와 병렬.
+  const [tree, products] = await Promise.all([
+    getCategoryTree(),
+    query
+      ? getProducts({ category: sp.category, q: sp.q, sort })
+      : getShopBrowse({ category: sp.category, sort }),
+  ]);
 
   // 검색 결과가 없으면 이탈하지 않게 최신 상품을 추천한다(갭 분석 4). 캐시된
   // 탐색 쿼리 재사용 — 검색 실패 시에만 실행하므로 정상 경로엔 부하가 없다.
@@ -73,7 +77,7 @@ export default async function ShopPage({
           이 달의 상품
         </FilterLink>
         {/* 대분류 칩 — 하위 소분류까지 포함해 필터된다(#193). */}
-        {categoryTree.map((c) => {
+        {tree.map((c) => {
           const groupActive =
             sp.category === c.slug ||
             !!c.children?.some((ch) => ch.slug === sp.category);
@@ -92,7 +96,7 @@ export default async function ShopPage({
 
       {/* 모바일 소분류 줄 — 선택된 대분류(또는 그 소분류)가 있을 때만 */}
       {(() => {
-        const node = categoryTree.find(
+        const node = tree.find(
           (c) =>
             c.children &&
             (c.slug === sp.category ||
@@ -126,7 +130,7 @@ export default async function ShopPage({
       <div className="mt-8 flex items-start gap-10">
         {/* 데스크톱 좌측 사이드바 — 소분류 토글 (#195, biomedium 참고) */}
         <div className="hidden lg:block">
-          <ShopSidebar sp={sp} />
+          <ShopSidebar sp={sp} tree={tree} />
         </div>
 
         <div className="min-w-0 flex-1">
