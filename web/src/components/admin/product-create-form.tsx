@@ -16,6 +16,7 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
   const [stock, setStock] = useState("0");
   const [categoryId, setCategoryId] = useState("");
   const [isMonthly, setIsMonthly] = useState(false);
+  const [description, setDescription] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   // 성공 시에만 폼 초기화 (실패 시 입력값 유지). 액션 래퍼에서 처리 — effect 내 setState 회피.
@@ -28,6 +29,7 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
         setStock("0");
         setCategoryId("");
         setIsMonthly(false);
+        setDescription("");
         if (fileRef.current) fileRef.current.value = "";
       }
       return result;
@@ -89,6 +91,20 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
           className="size-4"
         />
         이 달의 상품
+      </label>
+      {/* 상품 설명 — 상세 페이지에 노출된다. 넓게 전체 폭 차지 */}
+      <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted sm:col-span-2 lg:col-span-4">
+        상품 설명 (상세 페이지에 표시)
+        <textarea
+          name="description"
+          rows={4}
+          maxLength={2000}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          aria-label="상품 설명"
+          placeholder="소재·크기·사용 안내 등 상품 설명을 입력하세요"
+          className="resize-y border border-wabi-border bg-transparent px-3 py-2 text-sm text-wabi-fg outline-none transition-colors focus:border-wabi-fg"
+        />
       </label>
       <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted sm:col-span-2 lg:col-span-3">
         상품 이미지 (여러 장 가능, png/jpg/webp, 장당 최대 12MB)
