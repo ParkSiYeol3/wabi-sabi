@@ -4,7 +4,6 @@ import Form from "next/form";
 import { Search } from "lucide-react";
 import { Container } from "@/components/container";
 import { ProductCard } from "@/components/product-card";
-import { AddToCartButton } from "@/components/add-to-cart-button";
 import { Reveal } from "@/components/reveal";
 import { Input } from "@/components/ui/input";
 import { MONTHLY_SLUG } from "@/lib/site";
@@ -209,16 +208,6 @@ export default async function ShopPage({
                 {suggestions.map((p) => (
                   <li key={p.id}>
                     <ProductCard product={p} />
-                    <AddToCartButton
-                      product={{
-                        id: p.id,
-                        name: p.name,
-                        price: p.price,
-                        image: p.image,
-                      }}
-                      soldOut={typeof p.stock === "number" && p.stock <= 0}
-                      className="mt-3 w-full"
-                    />
                   </li>
                 ))}
               </ul>
@@ -228,22 +217,8 @@ export default async function ShopPage({
       ) : (
         <ul className="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
           {products.map((p, i) => {
-            const card = (
-              <>
-                {/* 첫 줄(모바일 2·데스크톱 4칸)은 eager 로드 — LCP 후보 */}
-                <ProductCard product={p} eager={i < 4} />
-                <AddToCartButton
-                  product={{
-                    id: p.id,
-                    name: p.name,
-                    price: p.price,
-                    image: p.image,
-                  }}
-                  soldOut={typeof p.stock === "number" && p.stock <= 0}
-                  className="mt-3 w-full"
-                />
-              </>
-            );
+            {/* 담기는 상세 페이지에서(#252, 대표님 시안 — 옵션 선택 후 담기). 카드는 상세로 유도만. */}
+            const card = <ProductCard product={p} eager={i < 4} />;
             return (
               <li key={p.id}>
                 {/* 첫 행은 LCP 보호를 위해 즉시 표시, 이후 행만 스크롤 진입 애니메이션 */}
