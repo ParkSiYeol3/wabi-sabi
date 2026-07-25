@@ -5,21 +5,11 @@
 
 export type Origin = { value: string; ko: string };
 
-// 셀렉트숍 취급국 위주. 자주 쓰는 한국·일본을 위로.
+// 취급국(대표님) — 한·일·중만. 그 외는 폼에서 "직접 입력"으로 처리한다.
 export const ORIGINS: readonly Origin[] = [
   { value: "Made in Korea", ko: "대한민국" },
   { value: "Made in Japan", ko: "일본" },
   { value: "Made in China", ko: "중국" },
-  { value: "Made in Taiwan", ko: "대만" },
-  { value: "Made in Vietnam", ko: "베트남" },
-  { value: "Made in Thailand", ko: "태국" },
-  { value: "Made in France", ko: "프랑스" },
-  { value: "Made in Germany", ko: "독일" },
-  { value: "Made in Italy", ko: "이탈리아" },
-  { value: "Made in Portugal", ko: "포르투갈" },
-  { value: "Made in Denmark", ko: "덴마크" },
-  { value: "Made in the UK", ko: "영국" },
-  { value: "Made in the USA", ko: "미국" },
 ] as const;
 
 const ORIGIN_VALUES = new Set(ORIGINS.map((o) => o.value));

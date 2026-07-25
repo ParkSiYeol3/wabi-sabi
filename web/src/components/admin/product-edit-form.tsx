@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateProduct } from "@/app/admin/products/actions";
 import type { ActionResult } from "@/app/admin/products/types";
-import { ORIGINS, originLabel, isKnownOrigin } from "@/lib/origins";
+import { OriginPicker } from "@/components/admin/origin-picker";
 
 type Category = { id: string; name_ko: string; name_en: string };
 
@@ -107,22 +107,7 @@ export function ProductEditForm({
       </label>
       <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted">
         원산지
-        <select
-          name="origin"
-          defaultValue={product.origin ?? ""}
-          className="h-9 border border-wabi-border bg-transparent px-3 text-sm"
-        >
-          <option value="">원산지 선택 안 함</option>
-          {/* 목록에 없는 기존 값(구 자유입력)은 보존되게 옵션으로 추가 */}
-          {product.origin && !isKnownOrigin(product.origin) && (
-            <option value={product.origin}>{product.origin} (기존 값)</option>
-          )}
-          {ORIGINS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {originLabel(o)}
-            </option>
-          ))}
-        </select>
+        <OriginPicker initial={product.origin ?? ""} />
       </label>
       <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted">
         사이즈

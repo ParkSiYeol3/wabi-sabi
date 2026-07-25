@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createProduct } from "@/app/admin/products/actions";
 import type { ActionResult } from "@/app/admin/products/types";
-import { ORIGINS, originLabel } from "@/lib/origins";
+import { OriginPicker } from "@/components/admin/origin-picker";
 
 type Category = { id: string; name_ko: string; name_en: string };
 
@@ -18,10 +18,11 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
   const [categoryId, setCategoryId] = useState("");
   const [isMonthly, setIsMonthly] = useState(false);
   const [description, setDescription] = useState("");
-  const [origin, setOrigin] = useState("");
   const [material, setMaterial] = useState("");
   const [size, setSize] = useState("");
   const [care, setCare] = useState("");
+  // OriginPicker 는 내부 상태라 성공 후 초기화하려면 remount(key 증가)한다.
+  const [originKey, setOriginKey] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // 성공 시에만 폼 초기화 (실패 시 입력값 유지). 액션 래퍼에서 처리 — effect 내 setState 회피.
@@ -35,10 +36,10 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
         setCategoryId("");
         setIsMonthly(false);
         setDescription("");
-        setOrigin("");
         setMaterial("");
         setSize("");
         setCare("");
+        setOriginKey((k) => k + 1);
         if (fileRef.current) fileRef.current.value = "";
       }
       return result;
@@ -101,21 +102,8 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
         onChange={(e) => setMaterial(e.target.value)}
         className="rounded-none"
       />
-      {/* 원산지 — "Made in" 고정, 나라만 선택(대표님). 저장값은 완성형 문자열 */}
-      <select
-        name="origin"
-        aria-label="원산지"
-        value={origin}
-        onChange={(e) => setOrigin(e.target.value)}
-        className="h-9 border border-wabi-border bg-transparent px-3 text-sm"
-      >
-        <option value="">원산지 선택 안 함</option>
-        {ORIGINS.map((o) => (
-          <option key={o.value} value={o.value}>
-            {originLabel(o)}
-          </option>
-        ))}
-      </select>
+      {/* 원산지 — 한·일·중 드롭다운 + 직접 입력(대표님). 저장값은 완성형 문자열 */}
+      <OriginPicker key={originKey} />
       <Input
         name="size"
         maxLength={500}
