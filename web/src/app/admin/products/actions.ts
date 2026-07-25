@@ -15,17 +15,38 @@ import type { ActionResult } from "./types";
 
 // 상품 입력 검증 — 음수 stock 은 재고 검증(0010)을 무력화하므로 특히 차단.
 const stockSchema = z.number().int().min(0).max(1_000_000);
-const productSchema = z.object({
+// 등록·수정이 공유하는 본문 필드. stock 은 등록에만 — 수정은 목록의 재고 저장
+// 경로(updateStock)로 일원화한다(재입고 알림 판정이 거기 있음, #166).
+const productFieldsSchema = z.object({
   name: z.string().trim().min(1).max(120),
   price: z.number().int().min(0).max(100_000_000),
-  stock: stockSchema,
   categoryId: uuidSchema.nullable(),
   isMonthly: z.boolean(),
   // 상품 설명 — 상세 페이지에 노출된다. 비우면 null(설명 없이 렌더).
   description: z.string().trim().max(2000).nullable(),
-  // 원산지(0035, 대표님 지시) — 상세 스펙에 노출. 비우면 null(표시 생략).
+  // 상세 스펙(소재·사이즈·주의·원산지 0035) — 비우면 null(표시 생략).
+  material: z.string().trim().max(500).nullable(),
+  size: z.string().trim().max(500).nullable(),
+  care: z.string().trim().max(500).nullable(),
   origin: z.string().trim().max(120).nullable(),
 });
+const productSchema = productFieldsSchema.extend({ stock: stockSchema });
+
+// FormData → 본문 필드 파싱(등록·수정 공용). 빈 문자열은 null 로.
+function productFields(formData: FormData) {
+  const text = (key: string) => String(formData.get(key) || "").trim() || null;
+  return {
+    name: String(formData.get("name") || "").trim(),
+    price: numField(formData.get("price")),
+    categoryId: String(formData.get("category_id") || "") || null,
+    isMonthly: formData.get("is_monthly") === "on",
+    description: text("description"),
+    material: text("material"),
+    size: text("size"),
+    care: text("care"),
+    origin: text("origin"),
+  };
+}
 
 function imageFiles(formData: FormData): File[] {
   return formData
@@ -47,21 +68,26 @@ export async function createProduct(
     return { ok: false, message: "SUPABASE_SERVICE_ROLE_KEY 미설정" };
 
   const parsed = productSchema.safeParse({
-    name: String(formData.get("name") || "").trim(),
-    price: numField(formData.get("price")),
+    ...productFields(formData),
     stock: numField(formData.get("stock")),
-    categoryId: String(formData.get("category_id") || "") || null,
-    isMonthly: formData.get("is_monthly") === "on",
-    description: String(formData.get("description") || "").trim() || null,
-    origin: String(formData.get("origin") || "").trim() || null,
   });
   if (!parsed.success)
     return {
       ok: false,
       message: "상품명·가격·재고를 확인해주세요. (가격·재고는 0 이상 정수)",
     };
-  const { name, price, stock, categoryId, isMonthly, description, origin } =
-    parsed.data;
+  const {
+    name,
+    price,
+    stock,
+    categoryId,
+    isMonthly,
+    description,
+    material,
+    size,
+    care,
+    origin,
+  } = parsed.data;
 
   const supabase = createAdminClient();
   const { data: inserted, error: insertError } = await supabase
@@ -73,6 +99,9 @@ export async function createProduct(
       category_id: categoryId,
       is_monthly: isMonthly,
       description,
+      material,
+      size,
+      care,
       origin,
     })
     .select("id")
@@ -106,6 +135,64 @@ export async function createProduct(
   revalidatePath("/");
   revalidatePath("/shop"); // 상품 목록 탐색 캐시(#185) 무효화
   return { ok: true, message };
+}
+
+// 기존 상품 본문 수정 (대표님 지시 — 이미 올린 상품 글 수정). 재고는 목록의
+// updateStock(재입고 알림 경로), 이미지는 목록의 추가/삭제가 담당 — 여기선 제외.
+export async function updateProduct(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const user = await requireAdmin();
+  if (!adminConfigured())
+    return { ok: false, message: "SUPABASE_SERVICE_ROLE_KEY 미설정" };
+
+  const id = parseUuid(formData.get("id"));
+  if (!id) return { ok: false, message: "잘못된 요청" };
+
+  const parsed = productFieldsSchema.safeParse(productFields(formData));
+  if (!parsed.success)
+    return { ok: false, message: "상품명·가격을 확인해주세요. (가격은 0 이상 정수)" };
+  const {
+    name,
+    price,
+    categoryId,
+    isMonthly,
+    description,
+    material,
+    size,
+    care,
+    origin,
+  } = parsed.data;
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("products")
+    .update({
+      name,
+      price,
+      category_id: categoryId,
+      is_monthly: isMonthly,
+      description,
+      material,
+      size,
+      care,
+      origin,
+    })
+    .eq("id", id);
+  if (error) return { ok: false, message: `저장 실패: ${error.message}` };
+
+  await logAdminAction(user, {
+    action: "product.update",
+    targetTable: "products",
+    targetId: id,
+    meta: { name, price, category_id: categoryId },
+  });
+  revalidatePath("/admin/products");
+  revalidatePath("/");
+  revalidatePath("/shop"); // 상품 목록 탐색 캐시(#185) 무효화
+  revalidatePath(`/shop/${id}`); // 상세 캐시(#181) 무효화
+  return { ok: true, message: "저장되었습니다." };
 }
 
 // 기존 상품에 이미지 추가 (기존 배열 뒤에 append) — useActionState 시그니처.

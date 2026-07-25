@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { won } from "@/lib/orders";
@@ -19,6 +20,8 @@ import {
   removeProductImage,
 } from "./actions";
 
+import { leafCategoryOptions, type CategoryRow } from "./leaf-options";
+
 type Product = {
   id: string;
   name: string;
@@ -28,8 +31,6 @@ type Product = {
   is_monthly: boolean;
   images: string[] | null;
 };
-type Category = { id: string; name_ko: string; name_en: string };
-type CategoryRow = Category & { parent_id: string | null };
 
 export default async function AdminProductsPage() {
   // service_role 있으면 전체(비활성 포함), 없으면 공개 읽기
@@ -47,21 +48,8 @@ export default async function AdminProductsPage() {
     .order("sort_order")
     .returns<CategoryRow[]>();
 
-  // 상품은 소분류(잎)에만 연결한다(#193 2계층). 하위가 있는 대분류는 선택지에서
-  // 빼고, 소분류는 "대분류 > 소분류" 라벨로 어디 속하는지 보이게 한다.
-  // 하위 없는 대분류('선물')는 그대로 잎이다.
-  const rows = categoryRows ?? [];
-  const parentIds = new Set(rows.map((c) => c.parent_id).filter(Boolean));
-  const nameById = new Map(rows.map((c) => [c.id, c.name_ko]));
-  const categories: Category[] = rows
-    .filter((c) => !parentIds.has(c.id))
-    .map((c) => ({
-      id: c.id,
-      name_ko: c.parent_id
-        ? `${nameById.get(c.parent_id)} > ${c.name_ko}`
-        : c.name_ko,
-      name_en: c.name_en,
-    }));
+  // 잎 카테고리 선택지 — 수정 페이지와 공용(leaf-options.ts)
+  const categories = leafCategoryOptions(categoryRows ?? []);
 
   return (
     <>
@@ -93,6 +81,7 @@ export default async function AdminProductsPage() {
                       <th className="px-4 py-3 font-medium">재고</th>
                       <th className="px-4 py-3 font-medium">이 달의 상품</th>
                       <th className="px-4 py-3 font-medium">노출</th>
+                      <th className="px-4 py-3 font-medium">수정</th>
                       <th className="px-4 py-3 font-medium">삭제</th>
                     </tr>
                   </thead>
@@ -181,6 +170,15 @@ export default async function AdminProductsPage() {
                         {p.is_active ? "노출중" : "숨김"}
                       </button>
                     </form>
+                  </td>
+                  <td className="px-4 py-3">
+                    {/* 본문(이름·가격·설명·스펙·카테고리) 수정 페이지 */}
+                    <Link
+                      href={`/admin/products/${p.id}`}
+                      className="text-xs underline underline-offset-2 transition-colors hover:text-wabi-accent"
+                    >
+                      수정
+                    </Link>
                   </td>
                   <td className="px-4 py-3">
                     <form action={deleteProduct}>
