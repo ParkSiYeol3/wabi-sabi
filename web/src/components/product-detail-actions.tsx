@@ -30,9 +30,10 @@ export function ProductDetailActions({ product, stock }: Props) {
 
   return (
     <div className="mt-8 space-y-4">
-      {/* 추가 옵션 (#253) — 상세에서 선택 후 담는다. 선물 메시지는 결제 화면에서. */}
-      <div>
-        <span className="text-sm text-wabi-fg-muted">추가 옵션</span>
+      {/* 추가 옵션 (#253) — 상세에서 선택 후 담는다. 선물 메시지는 결제 화면에서.
+          fieldset/legend 로 스크린리더에 옵션 그룹임을 알린다. */}
+      <fieldset>
+        <legend className="text-sm text-wabi-fg-muted">추가 옵션</legend>
         <div className="mt-2 space-y-1.5">
           {ADDONS.map((a) => (
             <label key={a.code} className="flex items-center gap-2 text-sm">
@@ -46,7 +47,7 @@ export function ProductDetailActions({ product, stock }: Props) {
             </label>
           ))}
         </div>
-      </div>
+      </fieldset>
 
       {/* 수량 */}
       <div className="flex items-center gap-4">
