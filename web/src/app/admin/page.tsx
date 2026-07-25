@@ -19,6 +19,7 @@ import {
   StatTile,
   EmptyState,
 } from "@/components/admin/ui";
+import { RevenueChart } from "@/components/admin/revenue-chart";
 
 type Summary = {
   awaiting_ship: number;
@@ -83,22 +84,6 @@ async function loadDashboard() {
   };
 }
 
-// 만원 단위 축약 — 막대 위 라벨용(1,250,000원은 좁은 칸에 안 들어간다).
-function compactWon(n: number): string {
-  if (n === 0) return "0";
-  if (n < 10_000) return n.toLocaleString("ko-KR");
-  const man = n / 10_000;
-  return `${man >= 100 ? Math.round(man).toLocaleString("ko-KR") : man.toFixed(man % 1 === 0 ? 0 : 1)}만`;
-}
-
-// "YYYY-MM-DD"(KST 일자) → 요일. UTC 자정 파싱이라도 KST 로는 같은 날짜라 안전.
-function weekdayKo(day: string): string {
-  return new Date(day).toLocaleDateString("ko-KR", {
-    weekday: "short",
-    timeZone: "Asia/Seoul",
-  });
-}
-
 export default async function AdminHome() {
   if (!adminConfigured()) {
     // service_role 키가 없으면 요약 수치가 부정확하다(레이아웃에 별도 경고 배너 있음).
@@ -116,7 +101,6 @@ export default async function AdminHome() {
   }
 
   const { summary: s, trend, lowStock, recent } = await loadDashboard();
-  const maxRevenue = Math.max(...trend.map((t) => t.revenue), 1);
 
   return (
     <div className="space-y-10">
@@ -190,45 +174,12 @@ export default async function AdminHome() {
         </div>
       </section>
 
-      {/* 최근 7일 매출 추이 (KST) — 외부 차트 라이브러리 없이 CSS 막대.
-          수치가 막대 위·아래 텍스트로 그대로 보이므로 별도 대체 텍스트 불요. */}
+      {/* 최근 7일 매출 추이 (KST) — recharts AreaChart(#239, 진입 애니메이션).
+          차트만 클라이언트 컴포넌트라 recharts 번들은 어드민 청크에 격리된다. */}
       <section>
         <SectionHeading>최근 7일 매출</SectionHeading>
         <Panel className="mt-3 p-5">
-          <div className="flex items-end justify-between gap-2">
-            {trend.map((t) => (
-              <div
-                key={t.day}
-                className="flex flex-1 flex-col items-center gap-1"
-                title={`${t.day} — 주문 ${t.orders}건 · ${won(t.revenue)}`}
-              >
-                <span className="text-xs text-wabi-fg-muted tabular-nums">
-                  {compactWon(t.revenue)}
-                </span>
-                <div className="flex h-28 w-full max-w-12 items-end">
-                  <div
-                    className={
-                      t.revenue > 0
-                        ? "w-full rounded-t-md bg-wabi-accent/80"
-                        : "w-full rounded-t-md bg-wabi-border"
-                    }
-                    style={{
-                      height:
-                        t.revenue > 0
-                          ? `${Math.max((t.revenue / maxRevenue) * 100, 4)}%`
-                          : "2px",
-                    }}
-                  />
-                </div>
-                <span className="text-xs text-wabi-fg-muted tabular-nums">
-                  {t.day.slice(5).replace("-", "/")}
-                </span>
-                <span className="text-[10px] text-wabi-fg-muted">
-                  {weekdayKo(t.day)} · {t.orders}건
-                </span>
-              </div>
-            ))}
-          </div>
+          <RevenueChart trend={trend} />
         </Panel>
       </section>
 
