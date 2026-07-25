@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { ORIGINS, isKnownOrigin, originLabel } from "@/lib/origins";
 
@@ -14,10 +14,22 @@ export function OriginPicker({ initial = "" }: { initial?: string }) {
   const [custom, setCustom] = useState(initial !== "" && !isKnownOrigin(initial));
   const [value, setValue] = useState(initial);
 
+  // 모드 전환 시 언마운트된 컨트롤에서 포커스가 사라지지 않게 새 컨트롤로 옮긴다
+  // (키보드 접근성, CodeRabbit). 최초 마운트에선 포커스를 훔치지 않는다.
+  const selectRef = useRef<HTMLSelectElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const userSwitched = useRef(false);
+  useEffect(() => {
+    if (!userSwitched.current) return;
+    if (custom) inputRef.current?.focus();
+    else selectRef.current?.focus();
+  }, [custom]);
+
   if (custom) {
     return (
       <div className="flex items-center gap-2">
         <Input
+          ref={inputRef}
           name="origin"
           maxLength={120}
           aria-label="원산지 직접 입력"
@@ -29,6 +41,7 @@ export function OriginPicker({ initial = "" }: { initial?: string }) {
         <button
           type="button"
           onClick={() => {
+            userSwitched.current = true;
             setCustom(false);
             setValue("");
           }}
@@ -42,11 +55,13 @@ export function OriginPicker({ initial = "" }: { initial?: string }) {
 
   return (
     <select
+      ref={selectRef}
       name="origin"
       aria-label="원산지"
       value={value}
       onChange={(e) => {
         if (e.target.value === CUSTOM) {
+          userSwitched.current = true;
           setCustom(true);
           setValue("");
         } else {
