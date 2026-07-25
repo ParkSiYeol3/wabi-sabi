@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { Container } from "@/components/container";
 import { ProductCard, type ProductCardData } from "@/components/product-card";
 import { WishlistButton } from "@/components/wishlist-button";
-import { AddToCartButton } from "@/components/add-to-cart-button";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "위시리스트" };
@@ -63,12 +62,9 @@ export default async function WishlistPage() {
               <div className="absolute right-2 top-2 z-10 bg-wabi-bg/80">
                 <WishlistButton productId={p.id} initial refreshOnToggle />
               </div>
+              {/* 담기 버튼 제거(#252 연장, 대표님) — 옵션 선택 위해 상세로 유도.
+                  카드 클릭이 상세로 간다. */}
               <ProductCard product={p} />
-              <AddToCartButton
-                product={{ id: p.id, name: p.name, price: p.price, image: p.image }}
-                soldOut={typeof p.stock === "number" && p.stock <= 0}
-                className="mt-3 w-full"
-              />
             </li>
           ))}
         </ul>
