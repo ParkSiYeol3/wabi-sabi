@@ -36,6 +36,24 @@ export default async function AdminProductEditPage({
   ]);
   if (!product) notFound();
 
+  // 현재 카테고리가 잎 목록에 없으면(하위 있는 대분류에 직접 연결된 레거시 등)
+  // select 가 "카테고리 없음"으로 폴백해 저장 시 조용히 초기화된다(CodeRabbit
+  // #261) — 그 경우 현재 값을 선택지에 추가해 유지되게 한다.
+  const rows = categoryRows ?? [];
+  const categories = leafCategoryOptions(rows);
+  if (
+    product.category_id &&
+    !categories.some((c) => c.id === product.category_id)
+  ) {
+    const cur = rows.find((c) => c.id === product.category_id);
+    if (cur)
+      categories.push({
+        id: cur.id,
+        name_ko: `${cur.name_ko} (대분류)`,
+        name_en: cur.name_en,
+      });
+  }
+
   return (
     <>
       <PageHeader title="상품 수정" description={product.name} />
@@ -48,10 +66,7 @@ export default async function AdminProductEditPage({
         </Link>
       </div>
       <Panel className="p-6">
-        <ProductEditForm
-          product={product}
-          categories={leafCategoryOptions(categoryRows ?? [])}
-        />
+        <ProductEditForm product={product} categories={categories} />
       </Panel>
     </>
   );

@@ -166,7 +166,8 @@ export async function updateProduct(
   } = parsed.data;
 
   const supabase = createAdminClient();
-  const { error } = await supabase
+  // select 로 매칭 row 를 돌려받아 부재(동시 삭제 등)를 성공으로 오인하지 않는다.
+  const { data: updated, error } = await supabase
     .from("products")
     .update({
       name,
@@ -179,8 +180,12 @@ export async function updateProduct(
       care,
       origin,
     })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
   if (error) return { ok: false, message: `저장 실패: ${error.message}` };
+  if (!updated)
+    return { ok: false, message: "상품을 찾을 수 없습니다(이미 삭제되었을 수 있음)." };
 
   await logAdminAction(user, {
     action: "product.update",
