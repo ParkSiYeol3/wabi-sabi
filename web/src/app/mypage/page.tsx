@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { Container } from "@/components/container";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { LogoutButton } from "@/components/logout-button";
 import { DeleteAccountSection } from "@/components/delete-account-section";
@@ -61,12 +61,13 @@ export default async function MyPage() {
             aria-label="이름"
             className="rounded-none"
           />
-          <Button
-            type="submit"
+          <SubmitButton
+            styled
+            pendingText="저장 중…"
             className="rounded-none bg-wabi-accent px-6 hover:bg-wabi-accent/90"
           >
             저장
-          </Button>
+          </SubmitButton>
         </form>
       </section>
 
@@ -90,13 +91,13 @@ export default async function MyPage() {
                 </div>
                 <form action={deleteAddress}>
                   <input type="hidden" name="id" value={a.id} />
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingText="…"
                     aria-label="배송지 삭제"
-                    className="p-2 text-wabi-fg-muted hover:text-wabi-fg"
+                    className="cursor-pointer p-2 text-wabi-fg-muted hover:text-wabi-fg"
                   >
                     <Trash2 className="size-4" />
-                  </button>
+                  </SubmitButton>
                 </form>
               </li>
             ))}
@@ -123,12 +124,13 @@ export default async function MyPage() {
             placeholder="상세주소"
             className="rounded-none sm:col-span-2"
           />
-          <Button
-            type="submit"
+          <SubmitButton
+            styled
+            pendingText="추가 중…"
             className="rounded-none bg-wabi-accent hover:bg-wabi-accent/90 sm:col-span-2"
           >
             배송지 추가
-          </Button>
+          </SubmitButton>
         </form>
       </section>
 

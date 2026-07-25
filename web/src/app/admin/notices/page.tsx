@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
@@ -45,12 +45,13 @@ export default async function AdminNoticesPage() {
               placeholder="내용"
               className="w-full rounded-lg border border-wabi-border bg-wabi-bg/60 px-3 py-2 text-sm outline-none transition-colors focus:border-wabi-fg"
             />
-            <Button
-              type="submit"
+            <SubmitButton
+              styled
+              pendingText="등록 중…"
               className="rounded-lg bg-wabi-accent hover:bg-wabi-accent/90"
             >
               등록
-            </Button>
+            </SubmitButton>
           </form>
         </section>
 
@@ -85,12 +86,12 @@ export default async function AdminNoticesPage() {
                         <td className="px-4 py-3">
                           <form action={deleteNotice}>
                             <input type="hidden" name="id" value={n.id} />
-                            <button
-                              type="submit"
+                            <SubmitButton
+                              pendingText="삭제 중…"
                               className="cursor-pointer text-xs text-red-700 underline-offset-2 transition-colors hover:text-red-800 hover:underline"
                             >
                               삭제
-                            </button>
+                            </SubmitButton>
                           </form>
                         </td>
                       </tr>

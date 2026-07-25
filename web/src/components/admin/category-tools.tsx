@@ -6,6 +6,7 @@ import {
   deleteCategory,
 } from "@/app/admin/categories/actions";
 import type { ActionResult } from "@/app/admin/products/types";
+import { SubmitButton } from "@/components/submit-button";
 
 // 카테고리 행 도구 (0036) — 숨김/노출 토글 + 빈 분류 삭제.
 // 삭제는 서버가 하위·상품 유무를 재검증하고 결과 메시지를 돌려준다.
@@ -29,12 +30,12 @@ export function CategoryTools({
       <form action={toggleCategoryActive}>
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="is_active" value={String(isActive)} />
-        <button
-          type="submit"
+        <SubmitButton
+          pendingText="변경 중…"
           className="cursor-pointer text-xs underline underline-offset-2 transition-colors hover:text-wabi-accent"
         >
           {isActive ? "노출중" : "숨김"}
-        </button>
+        </SubmitButton>
       </form>
       {deletable && (
         <form action={deleteAction}>

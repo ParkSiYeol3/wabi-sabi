@@ -3,6 +3,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { won, formatDateKST, trackingSearchUrl } from "@/lib/orders";
 import { OrderStatusBadge } from "@/components/order-status-badge";
 import { PageHeader, TablePanel, EmptyState } from "@/components/admin/ui";
+import { SubmitButton } from "@/components/submit-button";
 import { setTracking, markDelivered } from "./actions";
 
 type Order = {
@@ -88,12 +89,12 @@ export default async function AdminOrdersPage() {
                         placeholder="송장번호"
                         className="w-36 rounded-lg border border-wabi-border bg-wabi-bg/60 px-2.5 py-1.5 text-sm outline-none transition-colors focus:border-wabi-fg"
                       />
-                      <button
-                        type="submit"
+                      <SubmitButton
+                        pendingText="저장 중…"
                         className="cursor-pointer rounded-lg px-2 py-1.5 text-xs text-wabi-fg-muted underline-offset-2 transition-colors hover:text-wabi-fg hover:underline"
                       >
                         저장
-                      </button>
+                      </SubmitButton>
                       {o.tracking_number && (
                         <a
                           href={trackingSearchUrl(o.tracking_number)}
@@ -114,12 +115,12 @@ export default async function AdminOrdersPage() {
                     ) : CAN_DELIVER.includes(o.status) ? (
                       <form action={markDelivered}>
                         <input type="hidden" name="id" value={o.id} />
-                        <button
-                          type="submit"
+                        <SubmitButton
+                          pendingText="처리 중…"
                           className="cursor-pointer rounded-lg border border-wabi-border px-2.5 py-1.5 text-xs transition-colors hover:border-wabi-fg hover:bg-wabi-muted/50"
                         >
                           배송완료 처리
-                        </button>
+                        </SubmitButton>
                       </form>
                     ) : (
                       <span className="text-xs text-wabi-fg-muted">—</span>

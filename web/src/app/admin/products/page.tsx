@@ -12,6 +12,7 @@ import {
   TablePanel,
   EmptyState,
 } from "@/components/admin/ui";
+import { SubmitButton } from "@/components/submit-button";
 import {
   updateStock,
   toggleActive,
@@ -107,13 +108,13 @@ export default async function AdminProductsPage() {
                           <form action={removeProductImage}>
                             <input type="hidden" name="id" value={p.id} />
                             <input type="hidden" name="url" value={url} />
-                            <button
-                              type="submit"
+                            <SubmitButton
+                              pendingText="…"
                               aria-label="이미지 삭제"
                               className="absolute -right-1 -top-1 flex size-4 cursor-pointer items-center justify-center rounded-full bg-red-600 text-[10px] leading-none text-white transition-colors hover:bg-red-700"
                             >
                               ×
-                            </button>
+                            </SubmitButton>
                           </form>
                         </span>
                       ))}
@@ -133,9 +134,12 @@ export default async function AdminProductsPage() {
                         aria-label={`${p.name} 재고 수량`}
                         className="w-16 rounded-lg border border-wabi-border bg-wabi-bg/60 px-2 py-1 outline-none transition-colors focus:border-wabi-fg"
                       />
-                      <button type="submit" className="cursor-pointer text-xs underline-offset-2 transition-colors hover:text-wabi-accent hover:underline">
+                      <SubmitButton
+                        pendingText="저장 중…"
+                        className="cursor-pointer text-xs underline-offset-2 transition-colors hover:text-wabi-accent hover:underline"
+                      >
                         저장
-                      </button>
+                      </SubmitButton>
                       {p.stock === 0 ? (
                         <span className="ml-1 whitespace-nowrap rounded-full border border-red-300 px-2 py-0.5 text-xs text-red-700">
                           품절
@@ -155,9 +159,12 @@ export default async function AdminProductsPage() {
                         name="is_monthly"
                         value={String(p.is_monthly)}
                       />
-                      <button type="submit" className="cursor-pointer text-xs underline transition-colors hover:text-wabi-accent">
+                      <SubmitButton
+                        pendingText="변경 중…"
+                        className="cursor-pointer text-xs underline transition-colors hover:text-wabi-accent"
+                      >
                         {p.is_monthly ? "지정됨" : "지정"}
-                      </button>
+                      </SubmitButton>
                     </form>
                   </td>
                   <td className="px-4 py-3">
@@ -168,9 +175,12 @@ export default async function AdminProductsPage() {
                         name="is_active"
                         value={String(p.is_active)}
                       />
-                      <button type="submit" className="cursor-pointer text-xs underline transition-colors hover:text-wabi-accent">
+                      <SubmitButton
+                        pendingText="변경 중…"
+                        className="cursor-pointer text-xs underline transition-colors hover:text-wabi-accent"
+                      >
                         {p.is_active ? "노출중" : "숨김"}
-                      </button>
+                      </SubmitButton>
                     </form>
                   </td>
                   <td className="px-4 py-3">
@@ -185,12 +195,12 @@ export default async function AdminProductsPage() {
                   <td className="px-4 py-3">
                     <form action={deleteProduct}>
                       <input type="hidden" name="id" value={p.id} />
-                      <button
-                        type="submit"
+                      <SubmitButton
+                        pendingText="삭제 중…"
                         className="cursor-pointer text-xs text-red-700 underline transition-colors hover:text-red-800"
                       >
                         삭제
-                      </button>
+                      </SubmitButton>
                     </form>
                         </td>
                       </tr>

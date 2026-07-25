@@ -17,6 +17,8 @@ export function ProductDetailActions({ product, stock }: Props) {
   const add = useCart((s) => s.add);
   const [qty, setQty] = useState(1);
   const [addons, setAddons] = useState<string[]>([]);
+  // 담기 직후 잠깐 "담겼습니다 ✓" 로 바꿔 클릭이 먹혔음을 알린다(대표님 요청).
+  const [added, setAdded] = useState(false);
   const soldOut = stock <= 0;
 
   function clamp(n: number) {
@@ -85,10 +87,15 @@ export function ProductDetailActions({ product, stock }: Props) {
           type="button"
           variant="outline"
           disabled={soldOut}
-          onClick={() => add(product, qty, addons)}
+          onClick={() => {
+            add(product, qty, addons);
+            setAdded(true);
+            window.setTimeout(() => setAdded(false), 1500);
+          }}
+          aria-live="polite"
           className="flex-1 rounded-none border-wabi-fg"
         >
-          장바구니
+          {added ? "담겼습니다 ✓" : "장바구니"}
         </Button>
         <Button
           type="button"
