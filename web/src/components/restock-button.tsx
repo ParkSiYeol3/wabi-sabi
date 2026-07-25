@@ -39,7 +39,9 @@ export function RestockButton({
         disabled={pending}
         className="w-full rounded-none border-wabi-fg"
       >
-        {subscribed ? (
+        {pending ? (
+          "처리 중…"
+        ) : subscribed ? (
           <>
             <BellOff className="size-4" /> 재입고 알림 취소
           </>

@@ -8,6 +8,7 @@ import {
   removeAboutImage,
 } from "@/app/admin/content/actions";
 import type { ActionResult } from "@/app/admin/products/types";
+import { SubmitButton } from "@/components/submit-button";
 
 // About 매장 사진 업로드·제거 (대표님). 현재 사진 미리보기 + 파일 선택 + 저장.
 export function AboutImageField({ current }: { current: string | null }) {
@@ -67,12 +68,12 @@ export function AboutImageField({ current }: { current: string | null }) {
 
       {current && (
         <form action={removeAboutImage}>
-          <button
-            type="submit"
+          <SubmitButton
+            pendingText="제거 중…"
             className="cursor-pointer text-xs text-red-700 underline underline-offset-2 transition-colors hover:text-red-800"
           >
             사진 제거 (기본 로고로 되돌리기)
-          </button>
+          </SubmitButton>
         </form>
       )}
     </div>

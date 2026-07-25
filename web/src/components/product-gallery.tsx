@@ -37,9 +37,8 @@ export function ProductGallery({
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             className="object-cover"
-            // 첫 장은 LCP 후보라 즉시, 나머지는 스크롤 진입 시 lazy.
-            preload={i === 0}
-            loading={i === 0 ? "eager" : "lazy"}
+            // 첫 장은 LCP 후보라 즉시(priority), 나머지는 스크롤 진입 시 lazy.
+            priority={i === 0}
           />
         </div>
       ))}

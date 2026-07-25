@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { Stars } from "@/components/stars";
 import { ReportReviewButton } from "@/components/report-review-button";
 import {
@@ -77,12 +77,13 @@ export async function ReviewSection({
               placeholder="상품 사용 후기를 남겨주세요"
               className="w-full border border-wabi-border bg-transparent px-3 py-2 text-sm"
             />
-            <Button
-              type="submit"
+            <SubmitButton
+              styled
+              pendingText="등록 중…"
               className="rounded-none bg-wabi-accent hover:bg-wabi-accent/90"
             >
               리뷰 등록
-            </Button>
+            </SubmitButton>
           </form>
         )
       ) : (
@@ -122,9 +123,12 @@ export async function ReviewSection({
                     <form action={deleteReview}>
                       <input type="hidden" name="id" value={r.id} />
                       <input type="hidden" name="product_id" value={productId} />
-                      <button type="submit" className="underline hover:text-red-700">
+                      <SubmitButton
+                        pendingText="삭제 중…"
+                        className="cursor-pointer underline hover:text-red-700"
+                      >
                         삭제
-                      </button>
+                      </SubmitButton>
                     </form>
                   ) : currentUserId ? (
                     <ReportReviewButton reviewId={r.id} productId={productId} />

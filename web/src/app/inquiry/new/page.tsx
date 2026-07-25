@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Container } from "@/components/container";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/submit-button";
 import { createClient } from "@/lib/supabase/server";
 import { createInquiry } from "../actions";
 
@@ -56,12 +56,13 @@ export default async function NewInquiryPage({
           비밀글 (작성자와 관리자만 볼 수 있습니다)
         </label>
         <div className="flex gap-2">
-          <Button
-            type="submit"
+          <SubmitButton
+            styled
+            pendingText="등록 중…"
             className="rounded-none bg-wabi-accent hover:bg-wabi-accent/90"
           >
             등록
-          </Button>
+          </SubmitButton>
         </div>
       </form>
     </Container>

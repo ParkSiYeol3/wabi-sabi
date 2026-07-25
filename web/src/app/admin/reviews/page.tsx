@@ -2,6 +2,7 @@ import { Stars } from "@/components/stars";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { PageHeader, EmptyState } from "@/components/admin/ui";
+import { SubmitButton } from "@/components/submit-button";
 import { adminDeleteReview, adminSetReviewHidden } from "./actions";
 
 type Row = {
@@ -126,21 +127,21 @@ export default async function AdminReviewsPage() {
                     name="hidden"
                     value={r.hidden ? "false" : "true"}
                   />
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingText="변경 중…"
                     className="cursor-pointer text-xs text-wabi-fg-muted underline transition-colors hover:text-wabi-fg"
                   >
                     {r.hidden ? "숨김 해제" : "숨기기"}
-                  </button>
+                  </SubmitButton>
                 </form>
                 <form action={adminDeleteReview}>
                   <input type="hidden" name="id" value={r.id} />
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingText="삭제 중…"
                     className="cursor-pointer text-xs text-red-700 underline transition-colors hover:text-red-800"
                   >
                     삭제
-                  </button>
+                  </SubmitButton>
                 </form>
               </div>
               </li>
