@@ -34,6 +34,7 @@ type DetailRow = {
   material: string | null;
   size: string | null;
   care: string | null;
+  origin: string | null;
   images: unknown;
   category_id: string | null;
   categories: { slug: string; name_en: string; name_ko: string } | null;
@@ -45,7 +46,7 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
   const { data } = await db
     .from("products")
     .select(
-      "id, name, price, stock, description, material, size, care, images, category_id, categories(slug, name_en, name_ko)",
+      "id, name, price, stock, description, material, size, care, origin, images, category_id, categories(slug, name_en, name_ko)",
     )
     .eq("id", id)
     .eq("is_active", true)
@@ -61,6 +62,7 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
     material: data.material,
     size: data.size,
     care: data.care,
+    origin: data.origin,
     images: imageList(data.images),
     category: data.categories,
   };
