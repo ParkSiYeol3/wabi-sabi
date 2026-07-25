@@ -21,6 +21,8 @@ const productSchema = z.object({
   stock: stockSchema,
   categoryId: uuidSchema.nullable(),
   isMonthly: z.boolean(),
+  // 상품 설명 — 상세 페이지에 노출된다. 비우면 null(설명 없이 렌더).
+  description: z.string().trim().max(2000).nullable(),
 });
 
 function imageFiles(formData: FormData): File[] {
@@ -48,13 +50,14 @@ export async function createProduct(
     stock: numField(formData.get("stock")),
     categoryId: String(formData.get("category_id") || "") || null,
     isMonthly: formData.get("is_monthly") === "on",
+    description: String(formData.get("description") || "").trim() || null,
   });
   if (!parsed.success)
     return {
       ok: false,
       message: "상품명·가격·재고를 확인해주세요. (가격·재고는 0 이상 정수)",
     };
-  const { name, price, stock, categoryId, isMonthly } = parsed.data;
+  const { name, price, stock, categoryId, isMonthly, description } = parsed.data;
 
   const supabase = createAdminClient();
   const { data: inserted, error: insertError } = await supabase
@@ -65,6 +68,7 @@ export async function createProduct(
       stock,
       category_id: categoryId,
       is_monthly: isMonthly,
+      description,
     })
     .select("id")
     .single();
