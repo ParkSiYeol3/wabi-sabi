@@ -42,6 +42,30 @@ export async function uploadProductImages(
   return { urls, failures };
 }
 
+// 사이트 단일 이미지 업로드(About 매장 사진 등) — 상품과 같은 버킷의 site/ 하위.
+// 성공 시 공개 URL, 실패 시 error. (어드민 service_role 전용)
+export async function uploadSiteImage(
+  file: File,
+  name: string,
+): Promise<{ url: string | null; error?: string }> {
+  if (!file || file.size === 0) return { url: null, error: "파일이 비어 있습니다." };
+  const supabase = createAdminClient();
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `site/${name}-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}.${ext}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const { error } = await supabase.storage
+    .from(PRODUCT_BUCKET)
+    .upload(path, buffer, {
+      contentType: file.type || "image/jpeg",
+      upsert: false,
+    });
+  if (error) return { url: null, error: error.message };
+  const { data } = supabase.storage.from(PRODUCT_BUCKET).getPublicUrl(path);
+  return { url: data.publicUrl };
+}
+
 // 공개 URL → 버킷 내부 경로 추출 (삭제용). 실패 시 null.
 export function storagePathFromUrl(url: string): string | null {
   const marker = `/storage/v1/object/public/${PRODUCT_BUCKET}/`;

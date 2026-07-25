@@ -8,9 +8,11 @@ import {
   DEFAULT_PILLAR_LABELS,
   HOME_CTA_KEY,
   DEFAULT_HOME_CTA,
+  ABOUT_IMAGE_KEY,
 } from "@/lib/queries/content";
 import { PageHeader, SectionHeading } from "@/components/admin/ui";
 import { ContentField } from "@/components/admin/content-field";
+import { AboutImageField } from "@/components/admin/about-image-field";
 
 export default async function AdminContentPage() {
   // 각 편집 값(미저장이면 기본 문구). 병렬 조회.
@@ -23,6 +25,7 @@ export default async function AdminContentPage() {
     sabi,
     select,
     cta,
+    aboutImage,
   ] = await Promise.all([
     getSiteContent(PHILOSOPHY_KEY),
     getSiteContent(HOME_PILLAR_LABEL_KEYS[0]),
@@ -32,6 +35,7 @@ export default async function AdminContentPage() {
     getSiteContent(HOME_PILLAR_KEYS[1]),
     getSiteContent(HOME_PILLAR_KEYS[2]),
     getSiteContent(HOME_CTA_KEY),
+    getSiteContent(ABOUT_IMAGE_KEY),
   ]);
 
   return (
@@ -52,6 +56,16 @@ export default async function AdminContentPage() {
             value={philosophy ?? DEFAULT_PHILOSOPHY}
             rows={12}
           />
+        </section>
+
+        {/* About 매장 사진 — 소개 문단 옆 이미지 */}
+        <section className="space-y-3">
+          <SectionHeading>About 매장 사진</SectionHeading>
+          <p className="text-xs text-wabi-fg-muted">
+            About 소개 문단 옆에 표시됩니다. 정사각형으로 잘려 보이니 매장이
+            가운데 오도록 올려주세요. 없으면 기본 로고가 표시됩니다.
+          </p>
+          <AboutImageField current={aboutImage} />
         </section>
 
         {/* 홈 철학 3주(侘·寂·選) — 곡선 여정에 등장하는 본문. 한자·라벨은 고정. */}

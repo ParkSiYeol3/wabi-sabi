@@ -6,6 +6,11 @@ import { createPublicClient } from "@/lib/supabase/public";
 
 export const PHILOSOPHY_KEY = "philosophy";
 
+// About 매장 사진 URL (대표님 지시 — 소개 문단 옆 이미지). site_content 에 URL 만
+// 저장하고, 파일은 스토리지에 올린다. 값이 없으면 About 은 로고 마크로 폴백한다.
+// 텍스트 편집(CONTENT_KEYS)과 달리 업로드라 별도 액션(saveAboutImage)이 다룬다.
+export const ABOUT_IMAGE_KEY = "about_image";
+
 // 홈 하드코딩 문구를 편집 가능하게 이전(#245·#247). 한자(侘·寂·選)만 브랜드
 // 상징이라 코드 고정, 제목(라벨)·본문·CTA 는 편집한다. 키는 saveContent enum·
 // admin 폼과 동기. 라벨/본문 키는 같은 순서(와비→사비→큐레이션)로 대응한다.
