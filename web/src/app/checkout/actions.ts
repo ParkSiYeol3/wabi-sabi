@@ -15,6 +15,8 @@ import {
 const cartLineSchema = z.object({
   id: z.string().uuid(),
   quantity: z.number().int().min(1).max(99),
+  // 라인 단위 추가 옵션 코드(#253). 가격은 서버 addons.ts 정가로 재계산(불신).
+  addons: z.array(z.string().trim().max(40)).max(10).default([]),
 });
 // 중복 상품 id 거부 — 같은 상품을 여러 줄로 쪼개면 라인별 재고 체크를
 // 우회해 재고 이상 주문 가능(줄마다 stock ≥ qty 만 검사되므로).
@@ -37,17 +39,16 @@ const deliverySchema = z.object({
   detail: z.string().trim().max(100).optional(),
   memo: z.string().trim().max(200).optional(),
 });
-// 추가 옵션(애드온, #250) — 선택 코드 목록 + 선물 포장 메시지. 가격은 클라이언트가
-// 주지 않는다(서버 addons.ts 정가로 재계산 — 변조 무해).
-const addonsSchema = z.object({
-  codes: z.array(z.string().trim().max(40)).max(10),
+// 선물 메시지(#253) — 애드온은 이제 라인 단위(cartLineSchema.addons)라, 결제
+// 화면은 주문당 1개인 선물 메시지·보내는 분만 받는다(선물 포장 라인이 있을 때).
+const giftMessageSchema = z.object({
   sender: z.string().trim().max(50).optional(),
   message: z.string().trim().max(300).optional(),
 });
 
 export type CartLine = z.infer<typeof cartLineSchema>;
 export type DeliveryInput = z.infer<typeof deliverySchema>;
-export type AddonsInput = z.infer<typeof addonsSchema>;
+export type GiftMessageInput = z.infer<typeof giftMessageSchema>;
 
 export type SavedAddress = {
   id: string;
@@ -82,7 +83,7 @@ export type CreateOrderResult =
 export async function createPendingOrder(
   linesInput: CartLine[],
   deliveryInput: DeliveryInput,
-  addonsInput: AddonsInput,
+  giftInput: GiftMessageInput,
 ): Promise<CreateOrderResult> {
   const supabase = await createClient();
   const {
@@ -107,12 +108,12 @@ export async function createPendingOrder(
           ? "전화번호 형식이 올바르지 않습니다."
           : "배송지를 올바르게 입력해 주세요.",
     };
-  const addonsParsed = addonsSchema.safeParse(addonsInput);
-  if (!addonsParsed.success)
-    return { ok: false, error: "추가 옵션이 올바르지 않습니다." };
+  const giftParsed = giftMessageSchema.safeParse(giftInput);
+  if (!giftParsed.success)
+    return { ok: false, error: "선물 메시지가 올바르지 않습니다." };
   const lines = linesParsed.data;
   const delivery = deliveryParsed.data;
-  const addons = addonsParsed.data;
+  const gift = giftParsed.data;
 
   // 남용 가드(rate limit) — 외부 인프라 없이 DB 기준:
   // ① 미결제(pending) 5건 이상 → 차단(방치 주문은 일일 cron 정리)
@@ -147,33 +148,36 @@ export async function createPendingOrder(
 
   const priceMap = new Map(products.map((p) => [p.id, p]));
   let subtotal = 0;
+  let giftSelected = false;
   const items: {
     product_id: string;
     product_name: string;
     price: number;
     quantity: number;
+    addons: { code: string; name: string; price: number }[];
   }[] = [];
   for (const line of lines) {
     const p = priceMap.get(line.id);
     if (!p) return { ok: false, error: "유효하지 않은 상품이 있습니다." };
     if (p.stock < line.quantity)
       return { ok: false, error: `'${p.name}' 재고가 부족합니다.` };
-    subtotal += p.price * line.quantity;
+    // 애드온 금액은 서버 정가(addons.ts)로 재계산 — 클라이언트가 준 값 불신.
+    // 라인당 1세트라 수량과 무관하게 라인 1회 부과. 스냅샷으로 주문 시점 고정.
+    const lineAddons = addonSnapshot(line.addons);
+    const lineAddonTotal = addonsTotal(line.addons);
+    if (resolveAddons(line.addons).some((a) => a.code === GIFT_WRAP_CODE))
+      giftSelected = true;
+    subtotal += p.price * line.quantity + lineAddonTotal;
     items.push({
       product_id: p.id,
       product_name: p.name,
       price: p.price,
       quantity: line.quantity,
+      addons: lineAddons,
     });
   }
-  // 애드온 금액은 서버 정가(addons.ts)로 재계산 — 클라이언트가 준 가격 불신.
-  // 스냅샷은 주문 시점 이름·가격 고정(이후 정가가 바뀌어도 과거 주문 불변).
-  const addonTotal = addonsTotal(addons.codes);
-  const addonSnap = addonSnapshot(addons.codes);
-  const giftSelected = resolveAddons(addons.codes).some(
-    (a) => a.code === GIFT_WRAP_CODE,
-  );
-  const amount = subtotal + addonTotal;
+  // 라인별 애드온이 subtotal 에 이미 합산됐다(서버 정가 기준).
+  const amount = subtotal;
 
   const orderNumber = `WSB${Date.now().toString(36).toUpperCase()}`;
   const fullAddress = [delivery.postcode, delivery.address, delivery.detail]
@@ -193,7 +197,6 @@ export async function createPendingOrder(
       phone: delivery.phone,
       address: fullAddress,
       delivery_memo: delivery.memo || null,
-      selected_addons: addonSnap,
     })
     .select("id")
     .single();
@@ -209,17 +212,19 @@ export async function createPendingOrder(
     return { ok: false, error: "주문 항목 저장에 실패했습니다." };
   }
 
-  // 선물 포장 선택 시 메시지·보내는 분(gift_options — 주문당 1행 UNIQUE).
-  // 저장 실패를 성공으로 넘기면 포장비는 청구됐는데 메시지·보내는 분이 유실된다
-  // → order_items 실패와 동일하게 주문을 정리하고 실패 반환(결제 전이라 안전).
+  // 선물 포장이 담긴 라인이 있으면 메시지·보내는 분(gift_options — 주문당 1행,
+  // 메시지는 주문 단위). 저장 실패를 성공으로 넘기면 포장비는 청구됐는데
+  // 메시지가 유실되므로 주문을 정리하고 실패 반환(결제 전이라 안전).
   if (giftSelected) {
-    const giftAddon = addonSnap.find((a) => a.code === GIFT_WRAP_CODE);
+    const giftPrice = items
+      .flatMap((it) => it.addons)
+      .find((a) => a.code === GIFT_WRAP_CODE)?.price;
     const { error: giftErr } = await admin.from("gift_options").insert({
       order_id: order.id,
       package_type: GIFT_WRAP_CODE,
-      extra_price: giftAddon?.price ?? 0,
-      sender_name: addons.sender || null,
-      message: addons.message || null,
+      extra_price: giftPrice ?? 0,
+      sender_name: gift.sender || null,
+      message: gift.message || null,
     });
     if (giftErr) {
       await admin.from("orders").delete().eq("id", order.id);

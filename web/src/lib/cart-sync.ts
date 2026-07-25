@@ -25,6 +25,7 @@ export function enqueueCartWrite(
 type CartRow = {
   product_id: string;
   quantity: number;
+  addons: string[] | null;
   products: {
     name: string;
     price: number;
@@ -38,7 +39,7 @@ export async function loadServerCart(): Promise<CartItem[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("cart_items")
-    .select("product_id, quantity, products(name, price, images, is_active)")
+    .select("product_id, quantity, addons, products(name, price, images, is_active)")
     .order("updated_at", { ascending: true })
     .returns<CartRow[]>();
   if (error) throw error;
@@ -51,6 +52,7 @@ export async function loadServerCart(): Promise<CartItem[]> {
       price: r.products!.price,
       image: r.products!.images?.[0] ?? null,
       quantity: r.quantity,
+      addons: Array.isArray(r.addons) ? r.addons : [],
     }));
 }
 
@@ -59,6 +61,7 @@ export async function upsertServerItem(
   userId: string,
   productId: string,
   quantity: number,
+  addons: string[] = [],
 ): Promise<void> {
   const supabase = createClient();
   if (quantity <= 0) {
@@ -75,6 +78,7 @@ export async function upsertServerItem(
       user_id: userId,
       product_id: productId,
       quantity: Math.min(quantity, 99),
+      addons,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id,product_id" },
@@ -127,6 +131,8 @@ export async function mergeGuestCart(
       user_id: userId,
       product_id: g.id,
       quantity: Math.min((serverQty.get(g.id) ?? 0) + g.quantity, 99),
+      // 라인당 1세트 — 병합 시 게스트가 고른 옵션을 유지한다.
+      addons: g.addons ?? [],
       updated_at: new Date().toISOString(),
     }));
     const { error: writeErr } = await supabase

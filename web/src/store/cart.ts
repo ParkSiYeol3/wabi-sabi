@@ -13,13 +13,19 @@ export interface CartItem {
   price: number;
   image?: string | null;
   quantity: number;
+  // 라인 단위 추가 옵션 코드(#253). 라인당 1세트 — 같은 상품 재담기 시 최신으로 덮어쓴다.
+  addons: string[];
 }
 
 interface CartState {
   items: CartItem[];
   // 로그인 사용자 id — 있으면 조작을 서버에 write-through(낙관적). 없으면 게스트(로컬).
   userId: string | null;
-  add: (item: Omit<CartItem, "quantity">, qty?: number) => void;
+  add: (
+    item: Omit<CartItem, "quantity" | "addons">,
+    qty?: number,
+    addons?: string[],
+  ) => void;
   remove: (id: string) => void;
   setQty: (id: string, qty: number) => void;
   clear: () => void;
@@ -35,28 +41,29 @@ export const useCart = create<CartState>()(
     (set, get) => ({
       items: [],
       userId: null,
-      add: (item, qty = 1) => {
+      add: (item, qty = 1, addons = []) => {
         set((s) => {
           const existing = s.items.find((i) => i.id === item.id);
           if (existing) {
+            // 라인당 옵션 1세트 — 재담기 시 수량은 더하고 옵션은 최신으로 덮어쓴다.
             return {
               items: s.items.map((i) =>
                 i.id === item.id
-                  ? { ...i, quantity: Math.min(i.quantity + qty, 99) }
+                  ? { ...i, quantity: Math.min(i.quantity + qty, 99), addons }
                   : i,
               ),
             };
           }
           // 신규 항목도 상한 99 (서버는 upsert 시 clamp 되므로 로컬과 맞춤).
           return {
-            items: [...s.items, { ...item, quantity: Math.min(qty, 99) }],
+            items: [...s.items, { ...item, quantity: Math.min(qty, 99), addons }],
           };
         });
         const { userId, items } = get();
         if (userId) {
           const next = items.find((i) => i.id === item.id)?.quantity ?? qty;
           void enqueueCartWrite(userId, () =>
-            upsertServerItem(userId, item.id, next),
+            upsertServerItem(userId, item.id, next, addons),
           );
         }
       },
@@ -75,9 +82,13 @@ export const useCart = create<CartState>()(
                   i.id === id ? { ...i, quantity: Math.min(qty, 99) } : i,
                 ),
         }));
-        const { userId } = get();
-        if (userId)
-          void enqueueCartWrite(userId, () => upsertServerItem(userId, id, qty));
+        const { userId, items } = get();
+        if (userId) {
+          const addons = items.find((i) => i.id === id)?.addons ?? [];
+          void enqueueCartWrite(userId, () =>
+            upsertServerItem(userId, id, qty, addons),
+          );
+        }
       },
       clear: () => {
         const { userId } = get();

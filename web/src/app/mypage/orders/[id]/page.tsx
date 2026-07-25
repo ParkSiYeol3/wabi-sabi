@@ -30,8 +30,12 @@ type Detail = {
   tracking_number: string | null;
   ordered_at: string;
   delivered_at: string | null;
-  selected_addons: { code: string; name: string; price: number }[] | null;
-  order_items: { product_name: string; quantity: number; price: number }[];
+  order_items: {
+    product_name: string;
+    quantity: number;
+    price: number;
+    addons: { code: string; name: string; price: number }[] | null;
+  }[];
   gift_options: { message: string | null }[];
 };
 
@@ -53,7 +57,7 @@ export default async function OrderDetailPage({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, total_price, recipient, phone, address, delivery_memo, tracking_number, ordered_at, delivered_at, selected_addons, order_items(product_name, quantity, price), gift_options(message)",
+      "id, order_number, status, total_price, recipient, phone, address, delivery_memo, tracking_number, ordered_at, delivered_at, order_items(product_name, quantity, price, addons), gift_options(message)",
     )
     .eq("id", orderId)
     .maybeSingle<Detail>();
@@ -87,28 +91,29 @@ export default async function OrderDetailPage({
       <section className="mt-10">
         <h2 className="text-base font-medium">주문 상품</h2>
         <ul className="mt-4 divide-y divide-wabi-border border-y border-wabi-border text-sm">
-          {order.order_items.map((it, i) => (
-            <li key={i} className="flex items-center justify-between gap-4 py-3">
-              <span>
-                {it.product_name}
-                {it.quantity > 1 && (
-                  <span className="text-wabi-fg-muted"> × {it.quantity}</span>
+          {order.order_items.map((it, i) => {
+            const lineAddons = it.addons ?? [];
+            const addonSum = lineAddons.reduce((s, a) => s + a.price, 0);
+            return (
+              <li key={i} className="py-3">
+                <div className="flex items-center justify-between gap-4">
+                  <span>
+                    {it.product_name}
+                    {it.quantity > 1 && (
+                      <span className="text-wabi-fg-muted"> × {it.quantity}</span>
+                    )}
+                  </span>
+                  <span>{won(it.price * it.quantity + addonSum)}</span>
+                </div>
+                {lineAddons.length > 0 && (
+                  <p className="mt-1 text-xs text-wabi-fg-muted">
+                    + {lineAddons.map((a) => a.name).join(", ")}
+                  </p>
                 )}
-              </span>
-              <span>{won(it.price * it.quantity)}</span>
-            </li>
-          ))}
-        </ul>
-        {order.selected_addons && order.selected_addons.length > 0 && (
-          <ul className="mt-3 space-y-1 text-sm text-wabi-fg-muted">
-            {order.selected_addons.map((a) => (
-              <li key={a.code} className="flex items-center justify-between">
-                <span>{a.name}</span>
-                <span>{won(a.price)}</span>
               </li>
-            ))}
-          </ul>
-        )}
+            );
+          })}
+        </ul>
         <p className="mt-4 flex items-center justify-between text-sm font-medium">
           <span>결제 금액</span>
           <span>{won(order.total_price)}</span>
