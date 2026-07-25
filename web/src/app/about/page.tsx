@@ -8,6 +8,7 @@ import {
   getSiteContent,
   PHILOSOPHY_KEY,
   DEFAULT_PHILOSOPHY,
+  ABOUT_IMAGE_KEY,
   toParagraphs,
 } from "@/lib/queries/content";
 
@@ -40,9 +41,11 @@ const criteria = [
 const stagger = [0, 100, 200] as const;
 
 export default async function AboutPage() {
-  const philosophy = toParagraphs(
-    (await getSiteContent(PHILOSOPHY_KEY)) ?? DEFAULT_PHILOSOPHY,
-  );
+  const [philosophyRaw, aboutImage] = await Promise.all([
+    getSiteContent(PHILOSOPHY_KEY),
+    getSiteContent(ABOUT_IMAGE_KEY),
+  ]);
+  const philosophy = toParagraphs(philosophyRaw ?? DEFAULT_PHILOSOPHY);
   return (
     <>
       {/* 철학 — 히어로 없이 바로 본문(대표님 피드백, 히어로 제거) */}
@@ -72,17 +75,29 @@ export default async function AboutPage() {
             </dl>
           </Reveal>
 
-          {/* 브랜드 이미지 자리 — 실매장/작품 사진 등록 전까지 로고 마크로 채운다 */}
+          {/* 매장 사진 — 어드민에서 업로드(대표님). 없으면 로고 마크 폴백 */}
           <Reveal delay={100}>
-            <div className="flex aspect-square items-center justify-center overflow-hidden bg-wabi-subtle">
-              <Image
-                src="/brand/logo-mark.png"
-                alt=""
-                width={280}
-                height={139}
-                className="h-auto w-1/2 opacity-15"
-              />
-            </div>
+            {aboutImage ? (
+              <div className="relative aspect-square overflow-hidden bg-wabi-subtle">
+                <Image
+                  src={aboutImage}
+                  alt="와비사비 매장"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover"
+                />
+              </div>
+            ) : (
+              <div className="flex aspect-square items-center justify-center overflow-hidden bg-wabi-subtle">
+                <Image
+                  src="/brand/logo-mark.png"
+                  alt=""
+                  width={280}
+                  height={139}
+                  className="h-auto w-1/2 opacity-15"
+                />
+              </div>
+            )}
           </Reveal>
         </div>
       </Container>
