@@ -45,32 +45,14 @@ export default async function AboutPage() {
   );
   return (
     <>
-      {/* 히어로 — 큰 헤드라인 */}
-      <section className="border-b border-wabi-border">
-        <Container className="py-28 text-center md:py-40">
-          <Reveal>
-            <p className="text-xs uppercase tracking-[0.3em] text-wabi-fg-muted">
-              Wabi-Sabi
-            </p>
-            <h1 className="mt-6 text-4xl font-semibold tracking-tight md:text-6xl">
-              불완전함의 미학
-            </h1>
-            <p className="mx-auto mt-6 max-w-lg text-sm leading-8 text-wabi-fg-muted md:text-base">
-              시간의 흔적이 담긴 수공예 도자기와 생활 오브제.
-              <br className="hidden sm:block" />
-              장인의 손끝에서 태어난 유일무이한 작품을 큐레이션합니다.
-            </p>
-          </Reveal>
-        </Container>
-      </section>
-
-      {/* 철학 */}
+      {/* 철학 — 히어로 없이 바로 본문(대표님 피드백, 히어로 제거) */}
       <Container className="py-24 md:py-32">
         <div className="grid gap-16 md:grid-cols-2 md:items-center">
           <Reveal>
-            <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
+            {/* 히어로 제거로 이 헤딩이 페이지 h1 (SEO·접근성) */}
+            <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
 わび-さび <span className="text-wabi-fg-muted">(Wabi-sabi)</span>
-            </h2>
+            </h1>
             <div className="mt-8 space-y-5 text-sm leading-8 text-wabi-fg-muted md:text-[15px]">
               {philosophy.map((p, i) => (
                 <p key={i}>{p}</p>
