@@ -17,7 +17,9 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          # 런타임 정렬: Vercel(package.json engines)·@types/node 와 동일한 24.x.
+          # 타입이 런타임보다 앞서면 없는 API 가 타입검사를 통과할 수 있다(#230 교훈).
+          node-version: 24
           cache: npm
           cache-dependency-path: web/package-lock.json
 
