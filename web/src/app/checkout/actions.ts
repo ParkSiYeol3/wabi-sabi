@@ -3,8 +3,12 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
-
-const GIFT_PRICE = 3000;
+import {
+  addonsTotal,
+  addonSnapshot,
+  resolveAddons,
+  GIFT_WRAP_CODE,
+} from "@/lib/addons";
 
 // 입력 스키마 (보안_체크리스트 P1 입력 검증) — 서버 액션은 공개 엔드포인트,
 // 폼을 거치지 않은 임의 페이로드(음수 수량·초대형 문자열 등)를 여기서 차단.
@@ -33,15 +37,17 @@ const deliverySchema = z.object({
   detail: z.string().trim().max(100).optional(),
   memo: z.string().trim().max(200).optional(),
 });
-const giftSchema = z.object({
-  enabled: z.boolean(),
+// 추가 옵션(애드온, #250) — 선택 코드 목록 + 선물 포장 메시지. 가격은 클라이언트가
+// 주지 않는다(서버 addons.ts 정가로 재계산 — 변조 무해).
+const addonsSchema = z.object({
+  codes: z.array(z.string().trim().max(40)).max(10),
   sender: z.string().trim().max(50).optional(),
   message: z.string().trim().max(300).optional(),
 });
 
 export type CartLine = z.infer<typeof cartLineSchema>;
 export type DeliveryInput = z.infer<typeof deliverySchema>;
-export type GiftInput = z.infer<typeof giftSchema>;
+export type AddonsInput = z.infer<typeof addonsSchema>;
 
 export type SavedAddress = {
   id: string;
@@ -76,7 +82,7 @@ export type CreateOrderResult =
 export async function createPendingOrder(
   linesInput: CartLine[],
   deliveryInput: DeliveryInput,
-  giftInput: GiftInput,
+  addonsInput: AddonsInput,
 ): Promise<CreateOrderResult> {
   const supabase = await createClient();
   const {
@@ -101,12 +107,12 @@ export async function createPendingOrder(
           ? "전화번호 형식이 올바르지 않습니다."
           : "배송지를 올바르게 입력해 주세요.",
     };
-  const giftParsed = giftSchema.safeParse(giftInput);
-  if (!giftParsed.success)
-    return { ok: false, error: "선물 옵션이 올바르지 않습니다." };
+  const addonsParsed = addonsSchema.safeParse(addonsInput);
+  if (!addonsParsed.success)
+    return { ok: false, error: "추가 옵션이 올바르지 않습니다." };
   const lines = linesParsed.data;
   const delivery = deliveryParsed.data;
-  const gift = giftParsed.data;
+  const addons = addonsParsed.data;
 
   // 남용 가드(rate limit) — 외부 인프라 없이 DB 기준:
   // ① 미결제(pending) 5건 이상 → 차단(방치 주문은 일일 cron 정리)
@@ -160,7 +166,14 @@ export async function createPendingOrder(
       quantity: line.quantity,
     });
   }
-  const amount = subtotal + (gift.enabled ? GIFT_PRICE : 0);
+  // 애드온 금액은 서버 정가(addons.ts)로 재계산 — 클라이언트가 준 가격 불신.
+  // 스냅샷은 주문 시점 이름·가격 고정(이후 정가가 바뀌어도 과거 주문 불변).
+  const addonTotal = addonsTotal(addons.codes);
+  const addonSnap = addonSnapshot(addons.codes);
+  const giftSelected = resolveAddons(addons.codes).some(
+    (a) => a.code === GIFT_WRAP_CODE,
+  );
+  const amount = subtotal + addonTotal;
 
   const orderNumber = `WSB${Date.now().toString(36).toUpperCase()}`;
   const fullAddress = [delivery.postcode, delivery.address, delivery.detail]
@@ -180,6 +193,7 @@ export async function createPendingOrder(
       phone: delivery.phone,
       address: fullAddress,
       delivery_memo: delivery.memo || null,
+      selected_addons: addonSnap,
     })
     .select("id")
     .single();
@@ -195,14 +209,22 @@ export async function createPendingOrder(
     return { ok: false, error: "주문 항목 저장에 실패했습니다." };
   }
 
-  if (gift.enabled) {
-    await admin.from("gift_options").insert({
+  // 선물 포장 선택 시 메시지·보내는 분(gift_options — 주문당 1행 UNIQUE).
+  // 저장 실패를 성공으로 넘기면 포장비는 청구됐는데 메시지·보내는 분이 유실된다
+  // → order_items 실패와 동일하게 주문을 정리하고 실패 반환(결제 전이라 안전).
+  if (giftSelected) {
+    const giftAddon = addonSnap.find((a) => a.code === GIFT_WRAP_CODE);
+    const { error: giftErr } = await admin.from("gift_options").insert({
       order_id: order.id,
-      package_type: "gift",
-      extra_price: GIFT_PRICE,
-      sender_name: gift.sender || null,
-      message: gift.message || null,
+      package_type: GIFT_WRAP_CODE,
+      extra_price: giftAddon?.price ?? 0,
+      sender_name: addons.sender || null,
+      message: addons.message || null,
     });
+    if (giftErr) {
+      await admin.from("orders").delete().eq("id", order.id);
+      return { ok: false, error: "선물 포장 정보 저장에 실패했습니다." };
+    }
   }
 
   const first = items[0];
