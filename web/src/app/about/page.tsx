@@ -13,7 +13,7 @@ import {
 } from "@/lib/queries/content";
 
 export const metadata: Metadata = {
-  title: "About",
+  title: "소개",
   description: "와비-사비, 불완전함과 무상함의 아름다움을 받아들이는 미학",
 };
 

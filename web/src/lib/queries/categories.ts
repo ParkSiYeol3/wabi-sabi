@@ -21,12 +21,26 @@ type CategoryDbRow = {
 };
 
 async function fetchRows(): Promise<CategoryDbRow[]> {
-  const db = createPublicClient();
-  const { data } = await db
-    .from("categories")
-    .select("id, slug, name_ko, name_en, parent_id, is_active")
-    .order("sort_order");
-  return (data ?? []) as CategoryDbRow[];
+  // 푸터가 모든 페이지에 카테고리를 넣으면서 정적 프리렌더(예: /cart·/_not-found)
+  // 에서도 이 조회가 돈다. 빌드 환경에 Supabase env 가 없으면 클라 생성이
+  // throw 하므로, 그 경우엔 조용히 빈 배열 → 호출부가 코드 트리로 폴백한다.
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    return [];
+  }
+  try {
+    const db = createPublicClient();
+    const { data } = await db
+      .from("categories")
+      .select("id, slug, name_ko, name_en, parent_id, is_active")
+      .order("sort_order");
+    return (data ?? []) as CategoryDbRow[];
+  } catch (err) {
+    console.error("[categories] fetch 실패", err);
+    return [];
+  }
 }
 
 // 공개 내비용 트리 — 숨김(is_active=false)은 제외. 숨긴 대분류의 하위도

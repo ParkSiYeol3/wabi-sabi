@@ -18,7 +18,7 @@ import { getCategoryTree } from "@/lib/queries/categories";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Shop",
+  title: "상품",
   description: "WABI-SABI 수공예 도자기·생활 오브제 컬렉션",
 };
 

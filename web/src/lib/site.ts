@@ -47,10 +47,11 @@ export const legalNav = [
   { label: "교환·환불 안내", href: "/legal/refund" },
 ] as const;
 
+// 내비 라벨 — 사용자 직관성 위해 한국어(대표님). 경로·slug 는 그대로.
 export const nav = [
-  { label: "Shop", href: "/shop" },
-  { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
+  { label: "상품", href: "/shop" },
+  { label: "소개", href: "/about" },
+  { label: "오시는 길", href: "/contact" },
 ] as const;
 
 // Shop 카테고리 2계층 트리 (#193, 대표님 피드백 — 상품군 확장: 다도·액세서리 등).

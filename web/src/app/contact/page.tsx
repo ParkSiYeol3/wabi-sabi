@@ -5,7 +5,7 @@ import { MapCard } from "@/components/map-card";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Contact",
+  title: "오시는 길",
   description: "WABI-SABI 매장 방문 안내 및 문의",
 };
 

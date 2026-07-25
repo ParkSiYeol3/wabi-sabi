@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { site, business, legalNav } from "@/lib/site";
+import { site, business, legalNav, nav, MONTHLY_SLUG } from "@/lib/site";
+import { getCategoryTree } from "@/lib/queries/categories";
 
 // 전자상거래법 §10 — 사업자 정보 표시 (#106).
 // 아직 못 받은 값(개인정보보호책임자 등)은 빈 문자열이며, 여기서 걸러 렌더하지
 // 않는다. 허위 정보 표시가 미표시보다 나쁘므로 임의로 채우지 말 것.
-// 표기 방식은 무신사·컬리 관행(#199) — 파이프 구분 한 문단, 작은 저대비 글씨.
-function businessParts(): string[] {
+function businessLines(): string[] {
   const parts = [
     `상호 ${business.companyName}`,
     `대표 ${business.ceo}`,
@@ -18,7 +18,7 @@ function businessParts(): string[] {
   return parts.filter((p): p is string => Boolean(p));
 }
 
-// 공정위 통신판매사업자 정보공개 팝업 — 무신사·컬리처럼 "사업자정보확인" 링크 제공.
+// 공정위 통신판매사업자 정보공개 팝업 — 무신사·컬리처럼 "사업자정보확인" 링크.
 function ftcUrl(): string | null {
   const digits = business.businessNumber.replace(/\D/g, "");
   return digits.length === 10
@@ -26,75 +26,94 @@ function ftcUrl(): string | null {
     : null;
 }
 
-export function SiteFooter() {
-  const ftc = ftcUrl();
-  return (
-    <footer className="mt-auto bg-wabi-footer text-white">
-      <div className="mx-auto max-w-300 px-5 py-12">
-        <div className="flex items-center gap-2">
-          <span className="font-serif-jp text-base">わび-さび</span>
-          <span className="text-xs tracking-[0.2em] text-white/70">
-            {site.name}
-          </span>
-        </div>
+type FooterLink = { label: string; href: string };
 
-        <nav
-          className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-white/70"
-          aria-label="고객 안내"
-        >
-          <Link href="/notice" className="hover:text-white">
-            공지사항
-          </Link>
-          <Link href="/inquiry" className="hover:text-white">
-            문의
-          </Link>
-          <Link href="/review" className="hover:text-white">
-            리뷰
-          </Link>
-          {legalNav.map((l) => (
+function LinkColumn({ title, links }: { title: string; links: FooterLink[] }) {
+  return (
+    <div className="min-w-28">
+      <h3 className="text-[11px] font-medium uppercase tracking-[0.15em] text-white/40">
+        {title}
+      </h3>
+      <ul className="mt-3 space-y-2">
+        {links.map((l) => (
+          <li key={l.href + l.label}>
             <Link
-              key={l.href}
               href={l.href}
-              // 개인정보처리방침은 다른 고지와 구분되게 표시(관행·가독성)
-              className={
-                l.href === "/legal/privacy"
-                  ? "font-medium text-white/90 hover:text-white"
-                  : "hover:text-white"
-              }
+              className="text-[13px] text-white/70 transition-colors hover:text-white"
             >
               {l.label}
             </Link>
-          ))}
-        </nav>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
-        {/* 사업자 정보 — 파이프 구분 한 문단, 눈에 띄지 않는 저대비 소자(무신사·컬리식) */}
-        <address className="mt-7 text-[11px] leading-relaxed not-italic text-white/40">
-          {businessParts().map((part, i) => (
-            <span key={part} className="whitespace-nowrap">
-              {i > 0 && <span className="mx-1.5 text-white/25">|</span>}
-              {part}
-            </span>
-          ))}
-          {ftc && (
-            <span className="whitespace-nowrap">
-              <span aria-hidden className="mx-1.5 text-white/25">
-                |
+// 푸터 — 좌측에 사이트의 모든 분류 페이지를 한눈에 나열, 우측에 사업자 정보를
+// 붙인다(대표님 피드백, tableofcraft 참고). 카테고리는 DB(getCategoryTree)에서.
+export async function SiteFooter() {
+  const ftc = ftcUrl();
+  const tree = await getCategoryTree();
+
+  // 상품 열: 전체 상품 → 이 달의 상품 → 대분류들.
+  const shopLinks: FooterLink[] = [
+    { label: "전체 상품", href: "/shop" },
+    { label: "이 달의 상품", href: `/shop?category=${MONTHLY_SLUG}` },
+    ...tree.map((c) => ({ label: c.ko, href: `/shop?category=${c.slug}` })),
+  ];
+  // 안내 열: 소개·오시는 길(내비) + 고객 게시판.
+  const guideLinks: FooterLink[] = [
+    ...nav.filter((n) => n.href !== "/shop"),
+    { label: "공지사항", href: "/notice" },
+    { label: "문의", href: "/inquiry" },
+    { label: "리뷰", href: "/review" },
+  ];
+
+  return (
+    <footer className="mt-auto bg-wabi-footer text-white">
+      <div className="mx-auto max-w-300 px-5 py-14">
+        <div className="flex flex-col gap-12 lg:flex-row lg:justify-between">
+          {/* 좌측 — 모든 분류 페이지 한눈에 */}
+          <nav
+            className="flex flex-wrap gap-x-12 gap-y-10"
+            aria-label="사이트 안내"
+          >
+            <LinkColumn title="상품" links={shopLinks} />
+            <LinkColumn title="안내" links={guideLinks} />
+            <LinkColumn title="약관" links={[...legalNav]} />
+          </nav>
+
+          {/* 우측 — 브랜드 + 사업자 정보 */}
+          <div className="lg:text-right">
+            <div className="flex items-center gap-2 lg:justify-end">
+              <span className="font-serif-jp text-base">わび-さび</span>
+              <span className="text-xs tracking-[0.2em] text-white/70">
+                {site.name}
               </span>
-              <a
-                href={ftc}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline underline-offset-2 hover:text-white/70"
-              >
-                사업자정보확인<span className="sr-only"> (새 창 열림)</span>
-              </a>
-            </span>
-          )}
-        </address>
-
-        <p className="mt-3 text-[11px] text-white/40">
-          © {new Date().getFullYear()} {site.name}. All rights reserved.
-        </p>
+            </div>
+            <address className="mt-5 space-y-1 text-[11px] not-italic leading-relaxed text-white/40">
+              {businessLines().map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+              {ftc && (
+                <p>
+                  <a
+                    href={ftc}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2 hover:text-white/70"
+                  >
+                    사업자정보확인<span className="sr-only"> (새 창 열림)</span>
+                  </a>
+                </p>
+              )}
+            </address>
+            <p className="mt-4 text-[11px] text-white/40">
+              © {new Date().getFullYear()} {site.name}. All rights reserved.
+            </p>
+          </div>
+        </div>
       </div>
     </footer>
   );
