@@ -10,7 +10,7 @@ import { useCart, cartTotal } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { useMounted } from "@/hooks/use-mounted";
 import { won } from "@/lib/orders";
-import { ADDONS, addonsTotal, GIFT_WRAP_CODE } from "@/lib/addons";
+import { addonsTotal, GIFT_WRAP_CODE } from "@/lib/addons";
 import {
   createPendingOrder,
   getMyAddresses,
@@ -37,8 +37,9 @@ export default function CheckoutPage() {
   const items = useCart((s) => s.items);
   const subtotal = useCart(cartTotal);
 
-  const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
-  const giftSelected = selectedCodes.includes(GIFT_WRAP_CODE);
+  // 애드온은 이제 라인 단위(상세에서 선택 — #253). 결제 화면은 라인별 애드온을
+  // 합산해 보여주고, 선물 포장이 담긴 라인이 있으면 메시지만 받는다.
+  const giftInCart = items.some((i) => i.addons.includes(GIFT_WRAP_CODE));
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [delivery, setDelivery] = useState(EMPTY_DELIVERY);
@@ -104,13 +105,8 @@ export default function CheckoutPage() {
     );
   }
 
-  const addonSum = addonsTotal(selectedCodes);
+  const addonSum = items.reduce((n, i) => n + addonsTotal(i.addons), 0);
   const total = subtotal + addonSum;
-
-  const toggleAddon = (code: string, checked: boolean) =>
-    setSelectedCodes((prev) =>
-      checked ? [...prev, code] : prev.filter((c) => c !== code),
-    );
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -122,8 +118,7 @@ export default function CheckoutPage() {
     }
 
     const fd = new FormData(e.currentTarget);
-    const addonsInput = {
-      codes: selectedCodes,
+    const giftInput = {
       sender: String(fd.get("sender") || ""),
       message: String(fd.get("message") || ""),
     };
@@ -131,9 +126,13 @@ export default function CheckoutPage() {
     setLoading(true);
     try {
       const res = await createPendingOrder(
-        items.map((i) => ({ id: i.id, quantity: i.quantity })),
+        items.map((i) => ({
+          id: i.id,
+          quantity: i.quantity,
+          addons: i.addons,
+        })),
         delivery,
-        addonsInput,
+        giftInput,
       );
       if (!res.ok) {
         setError(res.error);
@@ -197,22 +196,11 @@ export default function CheckoutPage() {
             </div>
           </section>
 
-          <section>
-            <h2 className="text-lg font-medium">추가 옵션</h2>
-            <div className="mt-4 space-y-2">
-              {ADDONS.map((a) => (
-                <label key={a.code} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={selectedCodes.includes(a.code)}
-                    onChange={(e) => toggleAddon(a.code, e.target.checked)}
-                  />
-                  {a.name} (+{won(a.price)})
-                </label>
-              ))}
-            </div>
-            {/* 선물 포장 선택 시 메시지·보내는 분 */}
-            {giftSelected && (
+          {/* 추가 옵션은 상품 상세에서 선택(#253). 선물 포장이 담긴 라인이 있으면
+              메시지·보내는 분만 여기서 받는다(주문당 1개). */}
+          {giftInCart && (
+            <section>
+              <h2 className="text-lg font-medium">선물 메시지</h2>
               <div className="mt-4 grid gap-3">
                 <Input name="sender" aria-label="보내는 분" placeholder="보내는 분" className="rounded-none" />
                 <textarea
@@ -223,8 +211,8 @@ export default function CheckoutPage() {
                   className="resize-none border border-wabi-border bg-transparent px-3 py-2 text-sm outline-none focus:border-wabi-fg"
                 />
               </div>
-            )}
-          </section>
+            </section>
+          )}
         </div>
 
         <aside className="h-fit border border-wabi-border p-6">
@@ -244,12 +232,12 @@ export default function CheckoutPage() {
               <dt className="text-wabi-fg-muted">상품 합계</dt>
               <dd>{won(subtotal)}</dd>
             </div>
-            {ADDONS.filter((a) => selectedCodes.includes(a.code)).map((a) => (
-              <div key={a.code} className="flex justify-between">
-                <dt className="text-wabi-fg-muted">{a.name}</dt>
-                <dd>{won(a.price)}</dd>
+            {addonSum > 0 && (
+              <div className="flex justify-between">
+                <dt className="text-wabi-fg-muted">추가 옵션</dt>
+                <dd>{won(addonSum)}</dd>
               </div>
-            ))}
+            )}
             <div className="flex justify-between pt-2 text-base font-semibold">
               <dt>총 결제금액</dt>
               <dd>{won(total)}</dd>

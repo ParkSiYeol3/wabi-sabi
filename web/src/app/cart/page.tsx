@@ -7,6 +7,7 @@ import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
 import { useCart, cartTotal } from "@/store/cart";
 import { useMounted } from "@/hooks/use-mounted";
+import { resolveAddons, addonsTotal } from "@/lib/addons";
 
 const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
 
@@ -16,6 +17,8 @@ export default function CartPage() {
   const remove = useCart((s) => s.remove);
   const total = useCart(cartTotal);
   const mounted = useMounted();
+  // 라인별 애드온(#253) 합산 — cartTotal 은 상품가만이라 별도로 더한다.
+  const addonSum = items.reduce((n, i) => n + addonsTotal(i.addons), 0);
 
   // 영속 store 복원 전(SSR/첫 페인트)에는 빈 상태로 깜빡이지 않게 가드
   if (!mounted) {
@@ -80,6 +83,11 @@ export default function CartPage() {
               <p className="mt-1 text-xs text-wabi-fg-muted">
                 {won(item.price)}
               </p>
+              {item.addons.length > 0 && (
+                <p className="mt-1 text-xs text-wabi-fg-muted">
+                  + {resolveAddons(item.addons).map((a) => a.name).join(", ")}
+                </p>
+              )}
             </div>
 
             {/* 수량 */}
@@ -106,7 +114,7 @@ export default function CartPage() {
             </div>
 
             <p className="w-24 text-right text-sm">
-              {won(item.price * item.quantity)}
+              {won(item.price * item.quantity + addonsTotal(item.addons))}
             </p>
 
             <button
@@ -124,7 +132,7 @@ export default function CartPage() {
       {/* 합계 */}
       <div className="mt-8 flex items-center justify-between">
         <span className="text-sm text-wabi-fg-muted">총 결제금액</span>
-        <span className="text-xl font-semibold">{won(total)}</span>
+        <span className="text-xl font-semibold">{won(total + addonSum)}</span>
       </div>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
