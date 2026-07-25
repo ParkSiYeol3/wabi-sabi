@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { HideOnAdmin } from "@/components/hide-on-admin";
 import { SITE_URL } from "@/lib/site-url";
 import { business } from "@/lib/site";
 
@@ -98,7 +99,9 @@ export default function RootLayout({
           <main id="main-content" className="flex-1">
             {children}
           </main>
-          <SiteFooter />
+          <HideOnAdmin>
+            <SiteFooter />
+          </HideOnAdmin>
         </AuthProvider>
       </body>
     </html>

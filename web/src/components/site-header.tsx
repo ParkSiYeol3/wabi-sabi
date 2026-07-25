@@ -23,7 +23,8 @@ export function SiteHeader() {
 
   // 홈은 곡선만으로 시작하는 무드 페이지(#197 대표님 피드백) — 상단바 자체를 없앤다.
   // 탐색은 여정 끝 CTA(Shop)와 푸터가 담당한다.
-  if (pathname === "/") return null;
+  // 어드민(#238)은 자체 사이드바 셸을 쓰므로 사이트 헤더를 숨긴다.
+  if (pathname === "/" || pathname.startsWith("/admin")) return null;
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-wabi-border bg-wabi-bg/90 backdrop-blur">

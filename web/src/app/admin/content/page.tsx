@@ -4,14 +4,18 @@ import {
   PHILOSOPHY_KEY,
   DEFAULT_PHILOSOPHY,
 } from "@/lib/queries/content";
+import { PageHeader } from "@/components/admin/ui";
 import { saveContent } from "./actions";
 
 export default async function AdminContentPage() {
   const philosophy = (await getSiteContent(PHILOSOPHY_KEY)) ?? DEFAULT_PHILOSOPHY;
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-lg font-medium">사이트 콘텐츠</h2>
+    <>
+      <PageHeader
+        title="사이트 콘텐츠"
+        description="홈·About에 노출되는 소개 문구를 편집합니다."
+      />
 
       <form action={saveContent} className="max-w-2xl space-y-3">
         <input type="hidden" name="key" value={PHILOSOPHY_KEY} />
@@ -29,15 +33,15 @@ export default async function AdminContentPage() {
           defaultValue={philosophy}
           rows={14}
           required
-          className="w-full border border-wabi-border bg-transparent p-3 text-sm leading-7"
+          className="w-full rounded-lg border border-wabi-border bg-wabi-bg/60 p-3 text-sm leading-7 outline-none transition-colors focus:border-wabi-fg"
         />
         <Button
           type="submit"
-          className="rounded-none bg-wabi-accent hover:bg-wabi-accent/90"
+          className="rounded-lg bg-wabi-accent hover:bg-wabi-accent/90"
         >
           저장
         </Button>
       </form>
-    </div>
+    </>
   );
 }

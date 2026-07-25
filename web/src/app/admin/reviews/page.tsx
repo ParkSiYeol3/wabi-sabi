@@ -1,6 +1,7 @@
 import { Stars } from "@/components/stars";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
+import { PageHeader, EmptyState } from "@/components/admin/ui";
 import { adminDeleteReview, adminSetReviewHidden } from "./actions";
 
 type Row = {
@@ -57,34 +58,33 @@ export default async function AdminReviewsPage() {
   const reportedCount = reportsByReview.size;
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-lg font-medium">
-        리뷰 목록 ({sorted.length})
-        {reportedCount > 0 && (
-          <span className="ml-2 text-sm text-red-700">
-            · 신고 {reportedCount}건
-          </span>
-        )}
-      </h2>
+    <>
+      <PageHeader
+        title="리뷰"
+        description={
+          reportedCount > 0
+            ? `리뷰 ${sorted.length}개 · 신고 ${reportedCount}건 (신고 우선 정렬)`
+            : `리뷰 ${sorted.length}개 (최신순)`
+        }
+      />
 
-      {!sorted.length && (
-        <p className="text-sm text-wabi-fg-muted">등록된 리뷰가 없습니다.</p>
-      )}
-
-      <ul className="space-y-5">
-        {sorted.map((r) => {
-          const report = reportsByReview.get(r.id);
-          return (
-            <li
-              key={r.id}
-              className={`flex items-start justify-between gap-4 border p-4 ${
-                r.hidden
-                  ? "border-wabi-border bg-wabi-subtle"
-                  : report
-                    ? "border-red-300"
-                    : "border-wabi-border"
-              }`}
-            >
+      {!sorted.length ? (
+        <EmptyState>등록된 리뷰가 없습니다.</EmptyState>
+      ) : (
+        <ul className="space-y-4">
+          {sorted.map((r) => {
+            const report = reportsByReview.get(r.id);
+            return (
+              <li
+                key={r.id}
+                className={`flex items-start justify-between gap-4 rounded-xl border bg-wabi-bg/40 p-4 shadow-sm ${
+                  r.hidden
+                    ? "border-wabi-border bg-wabi-subtle/70"
+                    : report
+                      ? "border-red-300"
+                      : "border-wabi-border"
+                }`}
+              >
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <Stars value={r.rating} size={14} />
@@ -95,12 +95,12 @@ export default async function AdminReviewsPage() {
                     </span>
                   )}
                   {r.hidden && (
-                    <span className="border border-wabi-border px-1.5 py-0.5 text-xs text-wabi-fg-muted">
+                    <span className="rounded-full border border-wabi-border px-2 py-0.5 text-xs text-wabi-fg-muted">
                       숨김
                     </span>
                   )}
                   {report && (
-                    <span className="bg-red-600 px-1.5 py-0.5 text-xs font-medium text-white">
+                    <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-medium text-white">
                       신고 {report.count}
                     </span>
                   )}
@@ -143,10 +143,11 @@ export default async function AdminReviewsPage() {
                   </button>
                 </form>
               </div>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </>
   );
 }
