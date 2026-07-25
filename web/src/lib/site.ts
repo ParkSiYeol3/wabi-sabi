@@ -22,9 +22,7 @@ export const site = {
   naverPlaceId: "2012676632",
   instagram: "@wasa.kr",
   instagramUrl: "https://www.instagram.com/wasa.kr",
-  // 네이버 스마트스토어 — 자사몰 외 판매 채널(#201). 푸터·Contact·JSON-LD sameAs 에 노출.
-  naverStoreUrl: "https://smartstore.naver.com/wasa_kr",
-  email: "info@wasa.kr",
+  email: "0_wabisabi@naver.com",
 } as const;
 
 // 전자상거래법 §10 사업자 정보 표시 의무 (#106).
@@ -34,7 +32,7 @@ export const business = {
   companyName: "와비사비",
   ceo: "김종순",
   address: "충남 천안시 동남구 대흥로 338 1층 2호 (31122)",
-  email: "info@wasa.kr",
+  email: "0_wabisabi@naver.com",
   // 대표님 확인 2026-07-16 — 발급 완료값 입력. 푸터·법적고지에 자동 노출됨.
   businessNumber: "411-74-00574", // 사업자등록번호
   mailOrderNumber: "2026-충남천안-1000", // 통신판매업신고번호

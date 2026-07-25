@@ -60,7 +60,7 @@ test("푸터 — 전자상거래법 사업자 표시", async ({ page }) => {
 
 test("contact — 지도 카드와 채널 링크", async ({ page }) => {
   await page.goto("/contact");
-  await expect(page.getByText("네이버 스마트스토어")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "인스타그램" })).toBeVisible();
   // 지도 SDK 렌더는 외부 요인(콘솔 등록 등)에 취약 — 스모크는 지도 링크 3종으로 검증
   for (const name of ["네이버 지도", "카카오맵", "구글 지도"]) {
     await expect(page.getByRole("link", { name })).toBeVisible();
