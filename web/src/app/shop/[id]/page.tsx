@@ -135,17 +135,13 @@ export default async function ProductDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: productJsonLd(product, reviewStats) }}
       />
-      <div className="grid gap-12 md:grid-cols-2">
-        {/* 이미지 갤러리 — 썸네일 클릭 시 메인 전환.
-            key 로 상품별 재마운트해 이전 상품의 썸네일 선택이 남지 않게 한다. */}
-        <ProductGallery
-          key={product.id}
-          images={product.images}
-          name={product.name}
-        />
+      {/* items-start: 정보 컬럼 sticky 가 동작하도록(stretch 면 sticky 무력) */}
+      <div className="grid items-start gap-12 md:grid-cols-2">
+        {/* 이미지 갤러리 — 여러 장을 세로로 나열, 스크롤로 본다(#248). */}
+        <ProductGallery images={product.images} name={product.name} />
 
-        {/* 정보 */}
-        <div>
+        {/* 정보 — 이미지가 길어도 담기·가격이 늘 보이게 sticky(데스크톱). */}
+        <div className="md:sticky md:top-8">
           {product.category && (
             <Link
               href={`/shop?category=${product.category.slug}`}
