@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
-import { won, formatDateKST } from "@/lib/orders";
+import { won, formatDateKST, trackingSearchUrl } from "@/lib/orders";
 import { OrderStatusBadge } from "@/components/order-status-badge";
 import { PageHeader, TablePanel, EmptyState } from "@/components/admin/ui";
 import { setTracking, markDelivered } from "./actions";
@@ -94,6 +94,16 @@ export default async function AdminOrdersPage() {
                       >
                         저장
                       </button>
+                      {o.tracking_number && (
+                        <a
+                          href={trackingSearchUrl(o.tracking_number)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 text-xs text-wabi-fg-muted underline-offset-2 transition-colors hover:text-wabi-fg hover:underline"
+                        >
+                          조회<span className="sr-only"> (새 창 열림)</span>
+                        </a>
+                      )}
                     </form>
                   </td>
                   <td className="px-4 py-3">
