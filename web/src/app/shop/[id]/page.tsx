@@ -125,6 +125,7 @@ export default async function ProductDetailPage({
   const main = product.images[0] ?? null;
   const specs = [
     { label: "소재", value: product.material },
+    { label: "원산지", value: product.origin },
     { label: "사이즈", value: product.size },
     { label: "주의사항", value: product.care },
   ].filter((s) => s.value);

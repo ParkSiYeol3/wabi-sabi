@@ -17,6 +17,7 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
   const [categoryId, setCategoryId] = useState("");
   const [isMonthly, setIsMonthly] = useState(false);
   const [description, setDescription] = useState("");
+  const [origin, setOrigin] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   // 성공 시에만 폼 초기화 (실패 시 입력값 유지). 액션 래퍼에서 처리 — effect 내 setState 회피.
@@ -30,6 +31,7 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
         setCategoryId("");
         setIsMonthly(false);
         setDescription("");
+        setOrigin("");
         if (fileRef.current) fileRef.current.value = "";
       }
       return result;
@@ -82,6 +84,16 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
           </option>
         ))}
       </select>
+      {/* 원산지(0035) — 상세 스펙에 표시. 비우면 표시 생략 */}
+      <Input
+        name="origin"
+        maxLength={120}
+        aria-label="원산지"
+        placeholder="원산지 (예: 대한민국)"
+        value={origin}
+        onChange={(e) => setOrigin(e.target.value)}
+        className="rounded-none"
+      />
       <label className="flex items-center gap-2 text-sm text-wabi-fg-muted">
         <input
           type="checkbox"

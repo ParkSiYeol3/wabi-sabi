@@ -32,6 +32,8 @@ export interface ProductDetail {
   material: string | null;
   size: string | null;
   care: string | null;
+  // 원산지 (0035, 대표님 지시) — 상품정보고시 항목. 없으면 표시 생략.
+  origin: string | null;
   images: string[];
   category: { slug: string; name_en: string; name_ko: string } | null;
 }
