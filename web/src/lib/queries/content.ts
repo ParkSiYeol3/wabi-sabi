@@ -88,8 +88,11 @@ export async function getPublicContent(
 }
 
 // 빈 줄로 구분된 텍스트를 문단 배열로. 빈 문단은 제거.
+// 브라우저 textarea 는 개행을 CRLF(\r\n)로 저장할 수 있어(#251), \n{2,} 만으로는
+// \r\n\r\n 을 문단 경계로 못 잡는다 → CRLF 를 LF 로 정규화한 뒤 분리한다.
 export function toParagraphs(text: string): string[] {
   return text
+    .replace(/\r\n/g, "\n")
     .split(/\n{2,}/)
     .map((p) => p.trim())
     .filter(Boolean);
