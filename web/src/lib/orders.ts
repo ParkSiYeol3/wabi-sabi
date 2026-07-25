@@ -22,6 +22,15 @@ export function formatDateKST(iso: string): string {
   return new Date(iso).toLocaleDateString("ko-KR", { timeZone: KST });
 }
 
+// 송장번호 배송조회 링크 (#240) — 어드민은 tracking_number 만 저장하고 택배사
+// 컬럼이 없다(스키마 최소). 네이버 통합검색에 송장번호를 넘기면 택배사를 자동
+// 감지해 조회 위젯을 띄우므로, 택배사 선택 없이 조회를 위임한다. 외부 링크(새 탭)라
+// CSP frame/connect-src 와 무관하다.
+export function trackingSearchUrl(invoice: string): string {
+  const q = encodeURIComponent(`${invoice.trim()} 택배조회`);
+  return `https://search.naver.com/search.naver?query=${q}`;
+}
+
 // 청약철회 기간 — 수령일부터 7일 (교환·환불 안내 #106).
 export const WITHDRAWAL_DAYS = 7;
 

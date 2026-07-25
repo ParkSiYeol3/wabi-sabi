@@ -5,7 +5,12 @@ import { Container } from "@/components/container";
 import { CancelOrderButton } from "@/components/cancel-order-button";
 import { OrderStatusBadge } from "@/components/order-status-badge";
 import { createClient } from "@/lib/supabase/server";
-import { won, formatDateKST, withdrawalDeadlineKST } from "@/lib/orders";
+import {
+  won,
+  formatDateKST,
+  withdrawalDeadlineKST,
+  trackingSearchUrl,
+} from "@/lib/orders";
 import { parseUuid } from "@/lib/validation";
 
 export const metadata: Metadata = { title: "주문 상세" };
@@ -110,8 +115,22 @@ export default async function OrderDetailPage({
             <Row label="배송 요청" value={order.delivery_memo} />
           )}
           {order.tracking_number && (
-            // 송장번호는 저장돼 있었지만 고객에게 보여줄 곳이 없었다 (#137).
-            <Row label="송장번호" value={order.tracking_number} mono />
+            // 송장번호는 저장돼 있었지만 고객에게 보여줄 곳이 없었고(#137), 번호만
+            // 있어 직접 택배사를 찾아가야 했다 → 통합 배송조회 링크를 함께 준다(#240).
+            <div className="flex gap-4">
+              <dt className="w-24 shrink-0 text-wabi-fg-muted">송장번호</dt>
+              <dd className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="font-mono">{order.tracking_number}</span>
+                <a
+                  href={trackingSearchUrl(order.tracking_number)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs underline underline-offset-2 hover:text-wabi-fg"
+                >
+                  배송조회<span className="sr-only"> (새 창 열림)</span> →
+                </a>
+              </dd>
+            </div>
           )}
           {gift && (
             <Row
@@ -120,6 +139,18 @@ export default async function OrderDetailPage({
             />
           )}
         </dl>
+
+        {/* 배송 중이면 조회 CTA 를 눈에 띄게 — 고객이 가장 자주 확인하는 동작 */}
+        {order.status === "shipping" && order.tracking_number && (
+          <a
+            href={trackingSearchUrl(order.tracking_number)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-5 inline-flex items-center gap-2 rounded-lg border border-wabi-fg px-4 py-2 text-sm transition-colors hover:bg-wabi-fg hover:text-wabi-bg"
+          >
+            배송 조회하기<span className="sr-only"> (새 창 열림)</span> →
+          </a>
+        )}
       </section>
 
       {/* 청약철회 안내 — 수령일이 기산점 (#124) */}
