@@ -1,8 +1,24 @@
 import Link from "next/link";
+import {
+  Truck,
+  MessageCircle,
+  Flag,
+  PackageX,
+  TriangleAlert,
+  ShoppingBag,
+  Banknote,
+} from "lucide-react";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { won, formatDateKST } from "@/lib/orders";
 import { OrderStatusBadge } from "@/components/order-status-badge";
 import { LOW_STOCK_THRESHOLD } from "@/lib/inventory";
+import {
+  PageHeader,
+  SectionHeading,
+  Panel,
+  StatTile,
+  EmptyState,
+} from "@/components/admin/ui";
 
 type Summary = {
   awaiting_ship: number;
@@ -83,48 +99,20 @@ function weekdayKo(day: string): string {
   });
 }
 
-// 처리 대기 카드 — 0 이면 회색, 있으면 강조. tone: alert(빨강, 즉시 처리)·warn(주황, 주의).
-function ActionCard({
-  href,
-  label,
-  count,
-  unit = "건",
-  tone = "alert",
-}: {
-  href: string;
-  label: string;
-  count: number;
-  unit?: string;
-  tone?: "alert" | "warn";
-}) {
-  const active = count > 0;
-  const border = tone === "warn" ? "border-amber-300" : "border-red-300";
-  // 크림 배경(#205) 기준 WCAG AA — amber-700·red-600 은 크림에서 4.5:1 미달이라 한 단계 진하게.
-  const text = tone === "warn" ? "text-amber-800" : "text-red-700";
-  return (
-    <Link
-      href={href}
-      className={`border p-5 transition-colors hover:bg-wabi-subtle ${
-        active ? border : "border-wabi-border"
-      }`}
-    >
-      <p className="text-sm text-wabi-fg-muted">{label}</p>
-      <p
-        className={`mt-1 text-2xl font-semibold ${
-          active ? text : "text-wabi-fg-muted"
-        }`}
-      >
-        {count.toLocaleString("ko-KR")}
-        <span className="ml-1 text-sm font-normal">{unit}</span>
-      </p>
-    </Link>
-  );
-}
-
 export default async function AdminHome() {
   if (!adminConfigured()) {
     // service_role 키가 없으면 요약 수치가 부정확하다(레이아웃에 별도 경고 배너 있음).
-    return <LinkGrid />;
+    return (
+      <>
+        <PageHeader
+          title="대시보드"
+          description="service_role 키 설정 후 요약이 표시됩니다."
+        />
+        <EmptyState>
+          왼쪽 메뉴에서 각 관리 페이지로 이동할 수 있습니다.
+        </EmptyState>
+      </>
+    );
   }
 
   const { summary: s, trend, lowStock, recent } = await loadDashboard();
@@ -132,37 +120,51 @@ export default async function AdminHome() {
 
   return (
     <div className="space-y-10">
+      <PageHeader
+        title="대시보드"
+        description="처리 대기 항목과 오늘 현황을 한눈에."
+      />
+
       {/* 처리 대기 */}
       <section>
-        <h2 className="text-lg font-medium">처리 대기</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <ActionCard
+        <SectionHeading>처리 대기</SectionHeading>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <StatTile
             href="/admin/orders"
             label="발송 대기"
-            count={s.awaiting_ship}
+            value={s.awaiting_ship}
+            icon={Truck}
+            tone="alert"
           />
-          <ActionCard
+          <StatTile
             href="/admin/inquiries"
             label="미답변 문의"
-            count={s.unanswered}
+            value={s.unanswered}
+            icon={MessageCircle}
+            tone="alert"
           />
-          <ActionCard
+          <StatTile
             href="/admin/reviews"
             label="신고된 리뷰"
-            count={s.reported_reviews}
+            value={s.reported_reviews}
             unit="개"
+            icon={Flag}
+            tone="alert"
           />
-          <ActionCard
+          <StatTile
             href="/admin/products"
             label="품절 상품"
-            count={s.out_of_stock}
+            value={s.out_of_stock}
             unit="개"
+            icon={PackageX}
+            tone="alert"
           />
-          <ActionCard
+          <StatTile
             href="/admin/products"
             label={`재고 부족 (${LOW_STOCK_THRESHOLD}개 이하)`}
-            count={s.low_stock}
+            value={s.low_stock}
             unit="개"
+            icon={TriangleAlert}
             tone="warn"
           />
         </div>
@@ -170,34 +172,29 @@ export default async function AdminHome() {
 
       {/* 오늘 현황 (KST) */}
       <section>
-        <h2 className="text-lg font-medium">오늘 현황</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="border border-wabi-border p-5">
-            <p className="text-sm text-wabi-fg-muted">오늘 주문</p>
-            <p className="mt-1 text-2xl font-semibold">
-              {s.today_orders.toLocaleString("ko-KR")}
-              <span className="ml-1 text-sm font-normal">건</span>
-            </p>
-          </div>
-          <div className="border border-wabi-border p-5">
-            <p className="text-sm text-wabi-fg-muted">오늘 매출</p>
-            <p className="mt-1 text-2xl font-semibold">{won(s.today_revenue)}</p>
-          </div>
-          <div className="border border-wabi-border p-5">
-            <p className="text-sm text-wabi-fg-muted">배송 중</p>
-            <p className="mt-1 text-2xl font-semibold text-wabi-fg-muted">
-              {s.shipping.toLocaleString("ko-KR")}
-              <span className="ml-1 text-sm font-normal">건</span>
-            </p>
-          </div>
+        <SectionHeading>오늘 현황</SectionHeading>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <StatTile
+            label="오늘 주문"
+            value={s.today_orders}
+            unit="건"
+            icon={ShoppingBag}
+          />
+          <StatTile
+            label="오늘 매출"
+            value={won(s.today_revenue)}
+            icon={Banknote}
+            tone="accent"
+          />
+          <StatTile label="배송 중" value={s.shipping} unit="건" icon={Truck} />
         </div>
       </section>
 
       {/* 최근 7일 매출 추이 (KST) — 외부 차트 라이브러리 없이 CSS 막대.
           수치가 막대 위·아래 텍스트로 그대로 보이므로 별도 대체 텍스트 불요. */}
       <section>
-        <h2 className="text-lg font-medium">최근 7일 매출</h2>
-        <div className="mt-4 border border-wabi-border p-5">
+        <SectionHeading>최근 7일 매출</SectionHeading>
+        <Panel className="mt-3 p-5">
           <div className="flex items-end justify-between gap-2">
             {trend.map((t) => (
               <div
@@ -205,13 +202,15 @@ export default async function AdminHome() {
                 className="flex flex-1 flex-col items-center gap-1"
                 title={`${t.day} — 주문 ${t.orders}건 · ${won(t.revenue)}`}
               >
-                <span className="text-xs text-wabi-fg-muted">
+                <span className="text-xs text-wabi-fg-muted tabular-nums">
                   {compactWon(t.revenue)}
                 </span>
                 <div className="flex h-28 w-full max-w-12 items-end">
                   <div
                     className={
-                      t.revenue > 0 ? "w-full bg-wabi-accent/80" : "w-full bg-wabi-border"
+                      t.revenue > 0
+                        ? "w-full rounded-t-md bg-wabi-accent/80"
+                        : "w-full rounded-t-md bg-wabi-border"
                     }
                     style={{
                       height:
@@ -221,7 +220,7 @@ export default async function AdminHome() {
                     }}
                   />
                 </div>
-                <span className="text-xs text-wabi-fg-muted">
+                <span className="text-xs text-wabi-fg-muted tabular-nums">
                   {t.day.slice(5).replace("-", "/")}
                 </span>
                 <span className="text-[10px] text-wabi-fg-muted">
@@ -230,33 +229,33 @@ export default async function AdminHome() {
               </div>
             ))}
           </div>
-        </div>
+        </Panel>
       </section>
 
       {/* 재고 주의 + 최근 주문 — 카드 숫자만으론 어떤 상품·주문인지 한 번 더 들어가야
           해서, 첫 화면에서 바로 보이게 목록을 둔다. */}
-      <div className="grid gap-10 lg:grid-cols-2 lg:gap-6">
+      <div className="grid gap-6 lg:grid-cols-2">
         <section>
-          <h2 className="text-lg font-medium">재고 주의 상품</h2>
-          <div className="mt-4 border border-wabi-border">
-            {lowStock.length === 0 ? (
-              <p className="p-5 text-sm text-wabi-fg-muted">
-                재고 주의 상품이 없습니다.
-              </p>
-            ) : (
+          <SectionHeading>재고 주의 상품</SectionHeading>
+          {lowStock.length === 0 ? (
+            <p className="mt-3 rounded-xl border border-wabi-border bg-wabi-bg/30 p-5 text-sm text-wabi-fg-muted">
+              재고 주의 상품이 없습니다.
+            </p>
+          ) : (
+            <Panel className="mt-3 overflow-hidden">
               <ul className="divide-y divide-wabi-border">
                 {lowStock.map((p) => (
                   <li key={p.id}>
                     <Link
                       href="/admin/products"
-                      className="flex items-center justify-between gap-4 p-4 text-sm transition-colors hover:bg-wabi-subtle"
+                      className="flex items-center justify-between gap-4 p-4 text-sm transition-colors hover:bg-wabi-muted/50"
                     >
                       <span className="truncate">{p.name}</span>
                       <span
                         className={
                           p.stock === 0
-                            ? "shrink-0 font-medium text-red-700"
-                            : "shrink-0 font-medium text-amber-800"
+                            ? "shrink-0 font-medium text-red-700 tabular-nums"
+                            : "shrink-0 font-medium text-amber-800 tabular-nums"
                         }
                       >
                         {p.stock === 0 ? "품절" : `${p.stock}개`}
@@ -265,29 +264,33 @@ export default async function AdminHome() {
                   </li>
                 ))}
               </ul>
-            )}
-          </div>
+            </Panel>
+          )}
         </section>
 
         <section>
-          <h2 className="text-lg font-medium">최근 주문</h2>
-          <div className="mt-4 border border-wabi-border">
-            {recent.length === 0 ? (
-              <p className="p-5 text-sm text-wabi-fg-muted">주문이 없습니다.</p>
-            ) : (
+          <SectionHeading>최근 주문</SectionHeading>
+          {recent.length === 0 ? (
+            <p className="mt-3 rounded-xl border border-wabi-border bg-wabi-bg/30 p-5 text-sm text-wabi-fg-muted">
+              주문이 없습니다.
+            </p>
+          ) : (
+            <Panel className="mt-3 overflow-hidden">
               <ul className="divide-y divide-wabi-border">
                 {recent.map((o) => (
                   <li key={o.id}>
                     <Link
                       href="/admin/orders"
-                      className="flex items-center justify-between gap-4 p-4 text-sm transition-colors hover:bg-wabi-subtle"
+                      className="flex items-center justify-between gap-4 p-4 text-sm transition-colors hover:bg-wabi-muted/50"
                     >
                       <span className="flex min-w-0 items-center gap-2">
                         <OrderStatusBadge status={o.status} />
                         <span className="truncate">{o.recipient}</span>
                       </span>
                       <span className="shrink-0 text-right">
-                        <span className="block">{won(o.total_price)}</span>
+                        <span className="block tabular-nums">
+                          {won(o.total_price)}
+                        </span>
                         <span className="block text-xs text-wabi-fg-muted">
                           {formatDateKST(o.ordered_at)}
                         </span>
@@ -296,43 +299,10 @@ export default async function AdminHome() {
                   </li>
                 ))}
               </ul>
-            )}
-          </div>
+            </Panel>
+          )}
         </section>
       </div>
-
-      {/* 바로가기 */}
-      <section>
-        <h2 className="text-lg font-medium">관리</h2>
-        <div className="mt-4">
-          <LinkGrid />
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function LinkGrid() {
-  const items = [
-    { href: "/admin/products", title: "상품 관리", desc: "상품 등록·수정·재고·노출" },
-    { href: "/admin/orders", title: "주문 관리", desc: "주문 조회·송장 입력" },
-    { href: "/admin/inquiries", title: "문의", desc: "고객 문의 답변" },
-    { href: "/admin/reviews", title: "리뷰", desc: "신고 처리·숨김·삭제" },
-    { href: "/admin/audit", title: "감사로그", desc: "어드민 액션 기록 조회" },
-    { href: "/admin/errors", title: "에러 로그", desc: "클라이언트 에러 조회" },
-  ];
-  return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      {items.map((it) => (
-        <Link
-          key={it.href}
-          href={it.href}
-          className="border border-wabi-border p-6 transition-colors hover:bg-wabi-subtle"
-        >
-          <h3 className="font-medium">{it.title}</h3>
-          <p className="mt-1 text-sm text-wabi-fg-muted">{it.desc}</p>
-        </Link>
-      ))}
     </div>
   );
 }

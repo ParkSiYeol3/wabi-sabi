@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
+import { PageHeader, TablePanel, EmptyState } from "@/components/admin/ui";
 
 export const metadata: Metadata = { title: "에러 로그" };
 
@@ -18,9 +19,13 @@ export default async function AdminErrorsPage() {
   await requireAdmin();
   if (!adminConfigured())
     return (
-      <p className="text-sm text-wabi-fg-muted">
-        <code>SUPABASE_SERVICE_ROLE_KEY</code> 미설정 — 에러 로그를 조회할 수 없습니다.
-      </p>
+      <>
+        <PageHeader title="에러 로그" />
+        <EmptyState>
+          <code>SUPABASE_SERVICE_ROLE_KEY</code> 미설정 — 에러 로그를 조회할 수
+          없습니다.
+        </EmptyState>
+      </>
     );
 
   const admin = createAdminClient();
@@ -32,46 +37,49 @@ export default async function AdminErrorsPage() {
     .returns<ErrorRow[]>();
 
   return (
-    <div>
-      <h2 className="text-lg font-medium">에러 로그</h2>
-      <p className="mt-1 text-sm text-wabi-fg-muted">
-        클라이언트 에러 최근 200건 (최신순). digest 로 Vercel 서버 로그와 상관.
-      </p>
+    <>
+      <PageHeader
+        title="에러 로그"
+        description="클라이언트 에러 최근 200건 (최신순). digest 로 Vercel 서버 로그와 상관."
+      />
 
       {!rows || rows.length === 0 ? (
-        <p className="mt-10 text-center text-sm text-wabi-fg-muted">
-          기록이 없습니다.
-        </p>
+        <EmptyState>기록이 없습니다.</EmptyState>
       ) : (
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-wabi-border text-left text-xs text-wabi-fg-muted">
-                <th className="py-2 pr-4 font-medium">시각</th>
-                <th className="py-2 pr-4 font-medium">경로</th>
-                <th className="py-2 pr-4 font-medium">메시지</th>
-                <th className="py-2 font-medium">digest</th>
+        <TablePanel>
+          <table className="w-full text-sm">
+            <thead className="border-b border-wabi-border bg-wabi-subtle/50 text-left text-xs text-wabi-fg-muted">
+              <tr>
+                <th className="px-4 py-3 font-medium">시각</th>
+                <th className="px-4 py-3 font-medium">경로</th>
+                <th className="px-4 py-3 font-medium">메시지</th>
+                <th className="px-4 py-3 font-medium">digest</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-wabi-border">
               {rows.map((r) => (
-                <tr key={r.id} className="border-b border-wabi-border/60 align-top">
-                  <td className="py-2 pr-4 whitespace-nowrap text-wabi-fg-muted">
-                    {new Date(r.created_at).toLocaleString("ko-KR")}
+                <tr
+                  key={r.id}
+                  className="align-top transition-colors hover:bg-wabi-muted/40"
+                >
+                  <td className="px-4 py-3 whitespace-nowrap text-wabi-fg-muted">
+                    {new Date(r.created_at).toLocaleString("ko-KR", {
+                      timeZone: "Asia/Seoul",
+                    })}
                   </td>
-                  <td className="py-2 pr-4 whitespace-nowrap text-xs">
+                  <td className="px-4 py-3 whitespace-nowrap text-xs">
                     {r.url ?? "—"}
                   </td>
-                  <td className="py-2 pr-4 text-xs">{r.message ?? "—"}</td>
-                  <td className="py-2 whitespace-nowrap font-mono text-xs text-wabi-fg-muted">
+                  <td className="px-4 py-3 text-xs">{r.message ?? "—"}</td>
+                  <td className="px-4 py-3 whitespace-nowrap font-mono text-xs text-wabi-fg-muted">
                     {r.digest ?? "—"}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </TablePanel>
       )}
-    </div>
+    </>
   );
 }

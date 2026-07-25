@@ -6,6 +6,12 @@ import { isLowStock } from "@/lib/inventory";
 import { ProductCreateForm } from "@/components/admin/product-create-form";
 import { ProductImageAdder } from "@/components/admin/product-image-adder";
 import {
+  PageHeader,
+  SectionHeading,
+  TablePanel,
+  EmptyState,
+} from "@/components/admin/ui";
+import {
   updateStock,
   toggleActive,
   toggleMonthly,
@@ -58,35 +64,45 @@ export default async function AdminProductsPage() {
     }));
 
   return (
-    <div className="space-y-10">
-      {/* 새 상품 — 클라이언트 폼: 실패 시 입력값 유지 + 결과 메시지 */}
-      <section>
-        <h2 className="text-lg font-medium">새 상품 등록</h2>
-        <ProductCreateForm categories={categories ?? []} />
-      </section>
+    <>
+      <PageHeader title="상품 관리" description="상품 등록·재고·노출·삭제." />
 
-      {/* 목록 */}
-      <section>
-        <h2 className="text-lg font-medium">
-          상품 목록 ({products?.length ?? 0})
-        </h2>
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-150 text-sm">
-            <thead className="border-b border-wabi-border text-left text-xs text-wabi-fg-muted">
-              <tr>
-                <th className="py-2">이미지</th>
-                <th className="py-2">상품명</th>
-                <th className="py-2">가격</th>
-                <th className="py-2">재고</th>
-                <th className="py-2">이 달의 상품</th>
-                <th className="py-2">노출</th>
-                <th className="py-2">삭제</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-wabi-border">
-              {products?.map((p) => (
-                <tr key={p.id}>
-                  <td className="py-3">
+      <div className="space-y-10">
+        {/* 새 상품 — 클라이언트 폼: 실패 시 입력값 유지 + 결과 메시지 */}
+        <section>
+          <SectionHeading>새 상품 등록</SectionHeading>
+          <ProductCreateForm categories={categories ?? []} />
+        </section>
+
+        {/* 목록 */}
+        <section>
+          <SectionHeading>상품 목록 ({products?.length ?? 0})</SectionHeading>
+          {!products?.length ? (
+            <div className="mt-3">
+              <EmptyState>등록된 상품이 없습니다.</EmptyState>
+            </div>
+          ) : (
+            <div className="mt-3">
+              <TablePanel>
+                <table className="w-full min-w-150 text-sm">
+                  <thead className="border-b border-wabi-border bg-wabi-subtle/50 text-left text-xs text-wabi-fg-muted">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">이미지</th>
+                      <th className="px-4 py-3 font-medium">상품명</th>
+                      <th className="px-4 py-3 font-medium">가격</th>
+                      <th className="px-4 py-3 font-medium">재고</th>
+                      <th className="px-4 py-3 font-medium">이 달의 상품</th>
+                      <th className="px-4 py-3 font-medium">노출</th>
+                      <th className="px-4 py-3 font-medium">삭제</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-wabi-border">
+                    {products.map((p) => (
+                      <tr
+                        key={p.id}
+                        className="transition-colors hover:bg-wabi-muted/40"
+                      >
+                        <td className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-1">
                       {(p.images ?? []).map((url) => (
                         <span key={url} className="relative">
@@ -113,9 +129,9 @@ export default async function AdminProductsPage() {
                       <ProductImageAdder productId={p.id} />
                     </div>
                   </td>
-                  <td className="py-3">{p.name}</td>
-                  <td className="py-3">{won(p.price)}</td>
-                  <td className="py-3">
+                  <td className="px-4 py-3">{p.name}</td>
+                  <td className="px-4 py-3">{won(p.price)}</td>
+                  <td className="px-4 py-3">
                     <form action={updateStock} className="flex items-center gap-1">
                       <input type="hidden" name="id" value={p.id} />
                       <input
@@ -123,23 +139,24 @@ export default async function AdminProductsPage() {
                         type="number"
                         min={0}
                         defaultValue={p.stock}
-                        className="w-16 border border-wabi-border bg-transparent px-2 py-1"
+                        aria-label={`${p.name} 재고 수량`}
+                        className="w-16 rounded-lg border border-wabi-border bg-wabi-bg/60 px-2 py-1 outline-none transition-colors focus:border-wabi-fg"
                       />
-                      <button type="submit" className="cursor-pointer text-xs underline transition-colors hover:text-wabi-accent">
+                      <button type="submit" className="cursor-pointer text-xs underline-offset-2 transition-colors hover:text-wabi-accent hover:underline">
                         저장
                       </button>
                       {p.stock === 0 ? (
-                        <span className="ml-1 whitespace-nowrap border border-red-300 px-1.5 py-0.5 text-xs text-red-700">
+                        <span className="ml-1 whitespace-nowrap rounded-full border border-red-300 px-2 py-0.5 text-xs text-red-700">
                           품절
                         </span>
                       ) : isLowStock(p.stock) ? (
-                        <span className="ml-1 whitespace-nowrap border border-amber-300 px-1.5 py-0.5 text-xs text-amber-800">
+                        <span className="ml-1 whitespace-nowrap rounded-full border border-amber-300 px-2 py-0.5 text-xs text-amber-800">
                           부족
                         </span>
                       ) : null}
                     </form>
                   </td>
-                  <td className="py-3">
+                  <td className="px-4 py-3">
                     <form action={toggleMonthly}>
                       <input type="hidden" name="id" value={p.id} />
                       <input
@@ -152,7 +169,7 @@ export default async function AdminProductsPage() {
                       </button>
                     </form>
                   </td>
-                  <td className="py-3">
+                  <td className="px-4 py-3">
                     <form action={toggleActive}>
                       <input type="hidden" name="id" value={p.id} />
                       <input
@@ -165,7 +182,7 @@ export default async function AdminProductsPage() {
                       </button>
                     </form>
                   </td>
-                  <td className="py-3">
+                  <td className="px-4 py-3">
                     <form action={deleteProduct}>
                       <input type="hidden" name="id" value={p.id} />
                       <button
@@ -175,13 +192,16 @@ export default async function AdminProductsPage() {
                         삭제
                       </button>
                     </form>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TablePanel>
+            </div>
+          )}
+        </section>
+      </div>
+    </>
   );
 }
