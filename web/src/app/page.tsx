@@ -44,7 +44,7 @@ export default async function Home({
   searchParams: Promise<{ left?: string }>;
 }) {
   // 홈 공개 데이터는 캐시된 단일 로더로 (#177). searchParams(탈퇴 안내)는 캐시 밖.
-  const [{ philosophy }, { left }] = await Promise.all([
+  const [{ philosophy, pillars, cta }, { left }] = await Promise.all([
     getHomeData(),
     searchParams,
   ]);
@@ -65,7 +65,7 @@ export default async function Home({
            스크린리더용 페이지 제목만 숨김 제공. ── */}
       <h1 className="sr-only">WABI-SABI — 하루의 결을 따라 흐르는 그릇 셀렉트숍</h1>
       <section className="pb-0 pt-6 md:pt-10">
-        <HelixJourney />
+        <HelixJourney pillarBodies={pillars} />
       </section>
 
       {/* ── 여정의 끝 — 그제야 브랜드. 선 끝에 로고가 바로 이어진다(#213 9차) ── */}
@@ -103,25 +103,12 @@ export default async function Home({
               href="/shop"
               className="group relative inline-block overflow-hidden rounded-3xl border border-[#423c30]/70 px-6 py-3 text-center [font-family:var(--ws-mono)] text-[10px] leading-relaxed tracking-[1.5px] text-[#423c30] md:rounded-full md:px-9 md:py-4 md:text-[12px] md:tracking-[2px]"
             >
-              <span>
-                당신의 하루에 놓일 그릇, 천천히 둘러보세요{" "}
-                <span
-                  aria-hidden
-                  className="inline-block transition-transform duration-500 ease-out group-hover:translate-x-1 group-focus-visible:translate-x-1 motion-reduce:transition-none"
-                >
-                  →
-                </span>
-              </span>
+              <span>{cta}</span>
               <span
                 aria-hidden
                 className="absolute inset-0 flex translate-y-full items-center justify-center bg-[#423c30] px-6 text-[#f3ebdd] transition-transform duration-500 ease-out group-hover:translate-y-0 group-focus-visible:translate-y-0 motion-reduce:transition-none md:px-9"
               >
-                <span>
-                  당신의 하루에 놓일 그릇, 천천히 둘러보세요{" "}
-                  <span className="inline-block transition-transform duration-500 ease-out group-hover:translate-x-1 group-focus-visible:translate-x-1 motion-reduce:transition-none">
-                    →
-                  </span>
-                </span>
+                <span>{cta}</span>
               </span>
             </Link>
           </div>
