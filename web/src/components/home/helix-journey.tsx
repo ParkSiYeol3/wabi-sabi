@@ -97,8 +97,10 @@ function helixSegments(
 // (대표님 피드백 — 멘트 사이 스크롤 간격 좁히기). 피치(코일 밀도)는 그대로,
 // 바퀴 수만 줄여 여정을 압축했다. 상하 여백 동일(yStart = vbH−yEnd) —
 // 3주 캔버스 중앙 대칭, 2번째(寂) 50%.
-const DESKTOP = { vb: "0 0 1000 2530", geom: helixSegments(500, 300, 430, 0.3, 95, 2435, 6, 384) };
-const MOBILE = { vb: "0 0 1000 5244", geom: helixSegments(500, 300, 430, 0.3, 197, 5047, 6, 384) };
+// axis = 가운데 수직 점선(시간 축, #197 원안 — 대표님 피드백으로 복원)의
+// [y1, y2]. 곡선 시작/끝보다 30u 씩 길게 뻗어 여정 전체를 관통한다.
+const DESKTOP = { vb: "0 0 1000 2530", geom: helixSegments(500, 300, 430, 0.3, 95, 2435, 6, 384), axis: [65, 2465] as const };
+const MOBILE = { vb: "0 0 1000 5244", geom: helixSegments(500, 300, 430, 0.3, 197, 5047, 6, 384), axis: [167, 5077] as const };
 
 // #213 7차: 곡선(원뿔 나선)에 집중하는 동안 멘트·점 임시 오프용 플래그.
 const SHOW_MOMENTS = true;
@@ -248,6 +250,25 @@ export function HelixJourney({
           className={`${cls} h-auto w-full overflow-visible`}
           aria-hidden
         >
+          {/* 시간 축 — 가운데 수직 점선(#197 원안, 대표님 피드백으로 복원).
+              정적 요소라 스크럽 없이 늘 보이고, 코일이 위에 겹쳐 그려진다. */}
+          <line
+            x1="500"
+            y1={cfg.axis[0]}
+            x2="500"
+            y2={cfg.axis[1]}
+            stroke="#423c30"
+            strokeWidth="1"
+            strokeDasharray="1 6"
+            opacity="0.55"
+          />
+          {/* 축 상단 화살촉(위 방향) — 원안 그대로 */}
+          <path
+            d={`M500 ${cfg.axis[0]} L493 ${cfg.axis[0] + 22} M500 ${cfg.axis[0]} L507 ${cfg.axis[0] + 22}`}
+            fill="none"
+            stroke="#423c30"
+            strokeWidth="1.1"
+          />
           {/* 입체 스프링(#213) — 뒷면(옅고 가늘게)을 먼저, 앞면이 교차점에서 덮는다.
               각 세그먼트는 자기 길이만큼의 dash 로 숨겨져 있다가 누적 순서대로 그려진다. */}
           {[false, true].map((frontPass) =>
