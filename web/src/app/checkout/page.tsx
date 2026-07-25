@@ -10,6 +10,7 @@ import { useCart, cartTotal } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { useMounted } from "@/hooks/use-mounted";
 import { won } from "@/lib/orders";
+import { ADDONS, addonsTotal, GIFT_WRAP_CODE } from "@/lib/addons";
 import {
   createPendingOrder,
   getMyAddresses,
@@ -25,7 +26,6 @@ const EMPTY_DELIVERY = {
   memo: "",
 };
 
-const GIFT_PRICE = 3000;
 const CLIENT_KEY = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY;
 
 // 결제창(window) 방식 — API 개별 연동 키 사용 (결제위젯은 전자결제 계약 후 전환).
@@ -37,7 +37,8 @@ export default function CheckoutPage() {
   const items = useCart((s) => s.items);
   const subtotal = useCart(cartTotal);
 
-  const [gift, setGift] = useState(false);
+  const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
+  const giftSelected = selectedCodes.includes(GIFT_WRAP_CODE);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [delivery, setDelivery] = useState(EMPTY_DELIVERY);
@@ -103,7 +104,13 @@ export default function CheckoutPage() {
     );
   }
 
-  const total = subtotal + (gift ? GIFT_PRICE : 0);
+  const addonSum = addonsTotal(selectedCodes);
+  const total = subtotal + addonSum;
+
+  const toggleAddon = (code: string, checked: boolean) =>
+    setSelectedCodes((prev) =>
+      checked ? [...prev, code] : prev.filter((c) => c !== code),
+    );
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -115,8 +122,8 @@ export default function CheckoutPage() {
     }
 
     const fd = new FormData(e.currentTarget);
-    const giftInput = {
-      enabled: gift,
+    const addonsInput = {
+      codes: selectedCodes,
       sender: String(fd.get("sender") || ""),
       message: String(fd.get("message") || ""),
     };
@@ -126,7 +133,7 @@ export default function CheckoutPage() {
       const res = await createPendingOrder(
         items.map((i) => ({ id: i.id, quantity: i.quantity })),
         delivery,
-        giftInput,
+        addonsInput,
       );
       if (!res.ok) {
         setError(res.error);
@@ -191,12 +198,21 @@ export default function CheckoutPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-medium">선물 포장</h2>
-            <label className="mt-4 flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={gift} onChange={(e) => setGift(e.target.checked)} />
-              선물 포장하기 (+{won(GIFT_PRICE)})
-            </label>
-            {gift && (
+            <h2 className="text-lg font-medium">추가 옵션</h2>
+            <div className="mt-4 space-y-2">
+              {ADDONS.map((a) => (
+                <label key={a.code} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={selectedCodes.includes(a.code)}
+                    onChange={(e) => toggleAddon(a.code, e.target.checked)}
+                  />
+                  {a.name} (+{won(a.price)})
+                </label>
+              ))}
+            </div>
+            {/* 선물 포장 선택 시 메시지·보내는 분 */}
+            {giftSelected && (
               <div className="mt-4 grid gap-3">
                 <Input name="sender" aria-label="보내는 분" placeholder="보내는 분" className="rounded-none" />
                 <textarea
@@ -228,12 +244,12 @@ export default function CheckoutPage() {
               <dt className="text-wabi-fg-muted">상품 합계</dt>
               <dd>{won(subtotal)}</dd>
             </div>
-            {gift && (
-              <div className="flex justify-between">
-                <dt className="text-wabi-fg-muted">선물 포장</dt>
-                <dd>{won(GIFT_PRICE)}</dd>
+            {ADDONS.filter((a) => selectedCodes.includes(a.code)).map((a) => (
+              <div key={a.code} className="flex justify-between">
+                <dt className="text-wabi-fg-muted">{a.name}</dt>
+                <dd>{won(a.price)}</dd>
               </div>
-            )}
+            ))}
             <div className="flex justify-between pt-2 text-base font-semibold">
               <dt>총 결제금액</dt>
               <dd>{won(total)}</dd>
