@@ -207,6 +207,42 @@ export default async function ProductDetailPage({
               ))}
             </dl>
           )}
+
+          {/* 교환·반품 안내 (#241, 갭 분석 3) — 구매 결정 순간에 정보가 없어
+              /legal 까지 가야 했다. 확정된 것만 요약(배송비 금액은 미정이라 제외,
+              허위표시 방지). 수공예 개체차 고지는 도자기 클레임 예방에 특히 중요.
+              details/summary 무JS 접이식(홈·shop 사이드바와 동일 패턴). */}
+          <details className="mt-8 border-t border-wabi-border pt-4 text-sm">
+            <summary className="cursor-pointer list-none font-medium marker:content-none">
+              <span className="inline-flex w-full items-center justify-between">
+                교환·반품 안내
+                <span aria-hidden className="text-wabi-fg-muted">
+                  ＋
+                </span>
+              </span>
+            </summary>
+            <div className="mt-4 space-y-3 text-wabi-fg-muted">
+              <p>
+                수공예 도자기·공예품은 하나씩 손으로 만들어 색상·질감·크기·굽의
+                형태에 <strong className="font-medium text-wabi-fg">개체별 미세한
+                차이</strong>가 있습니다. 이는 하자가 아닌 고유한 특성입니다.
+              </p>
+              <p>
+                단순 변심에 의한 청약철회는 상품 수령 후{" "}
+                <strong className="font-medium text-wabi-fg">7일 이내</strong>에
+                요청할 수 있으며, 반품 배송비는 고객이 부담합니다. 파손·오배송 등
+                판매자 귀책 사유는 수령 후{" "}
+                <strong className="font-medium text-wabi-fg">3개월 이내</strong>에
+                무료로 교환·환불해 드립니다.
+              </p>
+              <Link
+                href="/legal/refund"
+                className="inline-block underline underline-offset-2 hover:text-wabi-fg"
+              >
+                교환·환불 안내 자세히 보기 →
+              </Link>
+            </div>
+          </details>
         </div>
       </div>
 
