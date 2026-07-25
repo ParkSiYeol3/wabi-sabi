@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createProduct } from "@/app/admin/products/actions";
 import type { ActionResult } from "@/app/admin/products/types";
+import { ORIGINS, originLabel } from "@/lib/origins";
 
 type Category = { id: string; name_ko: string; name_en: string };
 
@@ -100,15 +101,21 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
         onChange={(e) => setMaterial(e.target.value)}
         className="rounded-none"
       />
-      <Input
+      {/* 원산지 — "Made in" 고정, 나라만 선택(대표님). 저장값은 완성형 문자열 */}
+      <select
         name="origin"
-        maxLength={120}
         aria-label="원산지"
-        placeholder="원산지 (예: 대한민국)"
         value={origin}
         onChange={(e) => setOrigin(e.target.value)}
-        className="rounded-none"
-      />
+        className="h-9 border border-wabi-border bg-transparent px-3 text-sm"
+      >
+        <option value="">원산지 선택 안 함</option>
+        {ORIGINS.map((o) => (
+          <option key={o.value} value={o.value}>
+            {originLabel(o)}
+          </option>
+        ))}
+      </select>
       <Input
         name="size"
         maxLength={500}
