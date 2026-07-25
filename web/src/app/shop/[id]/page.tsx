@@ -228,9 +228,12 @@ export default async function ProductDetailPage({
                 차이</strong>가 있습니다. 이는 하자가 아닌 고유한 특성입니다.
               </p>
               <p>
-                상품 수령 후 <strong className="font-medium text-wabi-fg">7일
-                이내</strong>에 교환·반품을 요청할 수 있습니다. 단순 변심은 반품
-                배송비를 부담하시며, 파손·오배송 등 판매자 귀책은 무료로 처리됩니다.
+                단순 변심에 의한 청약철회는 상품 수령 후{" "}
+                <strong className="font-medium text-wabi-fg">7일 이내</strong>에
+                요청할 수 있으며, 반품 배송비는 고객이 부담합니다. 파손·오배송 등
+                판매자 귀책 사유는 수령 후{" "}
+                <strong className="font-medium text-wabi-fg">3개월 이내</strong>에
+                무료로 교환·환불해 드립니다.
               </p>
               <Link
                 href="/legal/refund"
