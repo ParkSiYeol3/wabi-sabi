@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import {
   getSiteContent,
   PHILOSOPHY_KEY,
@@ -9,52 +8,9 @@ import {
   DEFAULT_PILLAR_LABELS,
   HOME_CTA_KEY,
   DEFAULT_HOME_CTA,
-  type ContentKey,
 } from "@/lib/queries/content";
 import { PageHeader, SectionHeading } from "@/components/admin/ui";
-import { saveContent } from "./actions";
-
-// 편집 가능한 텍스트 한 칸 — 개별 form(단일 key upsert). 라벨·설명·현재값·행수.
-function ContentField({
-  contentKey,
-  label,
-  hint,
-  value,
-  rows,
-}: {
-  contentKey: ContentKey;
-  label: string;
-  hint?: string;
-  value: string;
-  rows: number;
-}) {
-  return (
-    <form action={saveContent} className="space-y-2">
-      <input type="hidden" name="key" value={contentKey} />
-      <div>
-        <label htmlFor={contentKey} className="block text-sm font-medium">
-          {label}
-        </label>
-        {hint && <p className="mt-1 text-xs text-wabi-fg-muted">{hint}</p>}
-      </div>
-      <textarea
-        id={contentKey}
-        name="value"
-        defaultValue={value}
-        rows={rows}
-        required
-        maxLength={5000}
-        className="w-full rounded-lg border border-wabi-border bg-wabi-bg/60 p-3 text-sm leading-7 outline-none transition-colors focus:border-wabi-fg"
-      />
-      <Button
-        type="submit"
-        className="rounded-lg bg-wabi-accent hover:bg-wabi-accent/90"
-      >
-        저장
-      </Button>
-    </form>
-  );
-}
+import { ContentField } from "@/components/admin/content-field";
 
 export default async function AdminContentPage() {
   // 각 편집 값(미저장이면 기본 문구). 병렬 조회.

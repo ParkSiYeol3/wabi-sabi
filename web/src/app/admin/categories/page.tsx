@@ -1,9 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { PageHeader, Panel } from "@/components/admin/ui";
-import { updateCategoryName } from "./actions";
+import { CategoryRow } from "@/components/admin/category-row";
 
 type Cat = {
   id: string;
@@ -58,43 +56,5 @@ export default async function AdminCategoriesPage() {
         </div>
       )}
     </>
-  );
-}
-
-function CategoryRow({ cat, child = false }: { cat: Cat; child?: boolean }) {
-  return (
-    <form
-      action={updateCategoryName}
-      className="flex flex-wrap items-center gap-2"
-    >
-      <input type="hidden" name="slug" value={cat.slug} />
-      <span
-        className={`w-24 shrink-0 font-mono text-xs ${child ? "text-wabi-fg-muted" : "text-wabi-fg"}`}
-      >
-        {cat.slug}
-      </span>
-      <Input
-        name="name_ko"
-        defaultValue={cat.name_ko}
-        required
-        maxLength={60}
-        aria-label={`${cat.slug} 한글 이름`}
-        className="w-32"
-      />
-      <Input
-        name="name_en"
-        defaultValue={cat.name_en}
-        required
-        maxLength={60}
-        aria-label={`${cat.slug} 영문 이름`}
-        className="w-32"
-      />
-      <Button
-        type="submit"
-        className="rounded-lg bg-wabi-accent px-4 hover:bg-wabi-accent/90"
-      >
-        저장
-      </Button>
-    </form>
   );
 }
