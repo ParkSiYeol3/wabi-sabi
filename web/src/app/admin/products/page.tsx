@@ -42,9 +42,11 @@ export default async function AdminProductsPage() {
     .order("created_at", { ascending: false })
     .returns<Product[]>();
 
+  // 숨김 분류(0036)는 새 상품 연결 선택지에서 제외.
   const { data: categoryRows } = await db
     .from("categories")
     .select("id, name_ko, name_en, parent_id")
+    .eq("is_active", true)
     .order("sort_order")
     .returns<CategoryRow[]>();
 

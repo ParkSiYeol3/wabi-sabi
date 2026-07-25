@@ -30,17 +30,18 @@ export default async function AdminProductEditPage({
       .maybeSingle<ProductEditValues>(),
     db
       .from("categories")
-      .select("id, name_ko, name_en, parent_id")
+      .select("id, name_ko, name_en, parent_id, is_active")
       .order("sort_order")
-      .returns<CategoryRow[]>(),
+      .returns<(CategoryRow & { is_active: boolean })[]>(),
   ]);
   if (!product) notFound();
 
-  // 현재 카테고리가 잎 목록에 없으면(하위 있는 대분류에 직접 연결된 레거시 등)
-  // select 가 "카테고리 없음"으로 폴백해 저장 시 조용히 초기화된다(CodeRabbit
-  // #261) — 그 경우 현재 값을 선택지에 추가해 유지되게 한다.
+  // 선택지는 노출 중(0036) 잎 분류만. 현재 카테고리가 그 목록에 없으면
+  // (하위 있는 대분류 직접 연결·숨김 분류 등) select 가 "카테고리 없음"으로
+  // 폴백해 저장 시 조용히 초기화된다(CodeRabbit #261) — 현재 값을 선택지에
+  // 추가해 유지되게 한다.
   const rows = categoryRows ?? [];
-  const categories = leafCategoryOptions(rows);
+  const categories = leafCategoryOptions(rows.filter((c) => c.is_active));
   if (
     product.category_id &&
     !categories.some((c) => c.id === product.category_id)
@@ -49,7 +50,7 @@ export default async function AdminProductEditPage({
     if (cur)
       categories.push({
         id: cur.id,
-        name_ko: `${cur.name_ko} (대분류)`,
+        name_ko: `${cur.name_ko}${cur.is_active ? " (대분류)" : " (숨김 분류)"}`,
         name_en: cur.name_en,
       });
   }
