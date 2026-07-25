@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
-import { categorySlugs } from "@/lib/site";
+import { getCategorySlugs } from "@/lib/queries/categories";
 import type { ProductCardData } from "@/components/product-card";
 
 type ProductRow = {
@@ -74,7 +74,7 @@ export async function getProducts({
 
   if (monthly) query = query.eq("is_monthly", true);
   if (filterByCategory)
-    query = query.in("categories.slug", categorySlugs(category!));
+    query = query.in("categories.slug", await getCategorySlugs(category!));
   if (q && q.trim()) query = query.ilike("name", `%${q.trim()}%`);
 
   // 정렬
@@ -126,9 +126,9 @@ async function loadShopBrowse(
     .eq("is_active", true);
 
   if (monthly) query = query.eq("is_monthly", true);
-  // 대분류 slug 는 하위 소분류까지 확장해 매칭한다(#193 2계층 트리).
+  // 대분류 slug 는 하위 소분류까지 확장해 매칭한다(#193 2계층 트리, 0036 DB 판).
   else if (filterByCategory)
-    query = query.in("categories.slug", categorySlugs(category));
+    query = query.in("categories.slug", await getCategorySlugs(category));
 
   if (sort === "price_asc") query = query.order("price", { ascending: true });
   else if (sort === "price_desc")

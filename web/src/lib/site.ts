@@ -106,17 +106,8 @@ export const categoryTree: readonly CategoryNode[] = [
   { slug: "gift", ko: "선물", en: "Gift" },
 ] as const;
 
-// 필터용 slug 확장 — 대분류 slug 면 자신+하위 전부, 소분류면 자신만.
-// 모르는 slug 는 [slug] 그대로 돌려 DB 매칭 실패(빈 결과)로 흐르게 한다.
-export function categorySlugs(slug: string): string[] {
-  for (const node of categoryTree) {
-    if (node.slug === slug)
-      return [slug, ...(node.children?.map((c) => c.slug) ?? [])];
-    const child = node.children?.find((c) => c.slug === slug);
-    if (child) return [slug];
-  }
-  return [slug];
-}
+// (필터용 slug 확장 categorySlugs 는 0036 DB 구조 승격으로
+//  lib/queries/categories.ts getCategorySlugs 로 이동 — 어드민 추가 분류 반영.)
 
 // 이 달의 상품 — Shop 탭에서 카테고리와 같은 줄에 노출하되 필터는 is_monthly 로 동작.
 export const MONTHLY_SLUG = "monthly";
