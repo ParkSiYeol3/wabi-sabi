@@ -65,8 +65,9 @@ export function ProductGallery({
               // 폭이 층마다 달라 대략치로 지정(레이아웃 시프트만 방지).
               sizes="(max-width: 768px) 90vw, 45vw"
               className="object-cover"
-              // 첫 장은 LCP 후보라 즉시(priority), 나머지는 스크롤 진입 시 lazy.
-              priority={i === 0}
+              // 첫 장은 LCP 후보라 preload(<link> 삽입), 나머지는 기본 lazy.
+              // Next 16 은 priority 를 deprecate 하고 preload 로 대체했다.
+              preload={i === 0}
             />
           </div>
         );
