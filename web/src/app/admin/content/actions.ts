@@ -5,12 +5,12 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { logAdminAction } from "@/lib/audit";
-import { PHILOSOPHY_KEY } from "@/lib/queries/content";
+import { CONTENT_KEYS } from "@/lib/queries/content";
 
-// 편집 가능 콘텐츠 저장 (#160). key 는 허용된 것만(enum), 값 길이 제한.
+// 편집 가능 콘텐츠 저장 (#160·#245). key 는 허용된 것만(enum), 값 길이 제한.
 // service_role 로 upsert(RLS write 정책 없음 → 서버 전용). 홈·About 재검증.
 const schema = z.object({
-  key: z.enum([PHILOSOPHY_KEY]),
+  key: z.enum(CONTENT_KEYS),
   value: z.string().trim().min(1).max(5000),
 });
 
