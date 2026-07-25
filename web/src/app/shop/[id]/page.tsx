@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import Image from "next/image";
+import { ImageIcon } from "lucide-react";
 import { Container } from "@/components/container";
 import { ProductCard } from "@/components/product-card";
 import { ProductGallery } from "@/components/product-gallery";
@@ -136,13 +138,32 @@ export default async function ProductDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: productJsonLd(product, reviewStats) }}
       />
-      {/* items-start: 정보 컬럼 sticky 가 동작하도록(stretch 면 sticky 무력) */}
+      {/* 히어로 — 첫(메인) 사진 + 정보. 스크롤을 내리면 정보와 함께 위로 사라지고
+          아래 스캐터 사진만 이어진다(대표님 시안 — 정보를 우측에 고정하지 않음). */}
       <div className="grid items-start gap-12 md:grid-cols-2">
-        {/* 이미지 갤러리 — 여러 장을 세로로 나열, 스크롤로 본다(#248). */}
-        <ProductGallery images={product.images} name={product.name} />
+        <div className="relative aspect-square overflow-hidden bg-wabi-muted">
+          {main ? (
+            <Image
+              src={main}
+              alt={product.name}
+              fill
+              sizes="(max-width: 768px) 100vw, 45vw"
+              className="object-cover"
+              preload
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <ImageIcon
+                className="size-12 text-wabi-fg-muted/40"
+                strokeWidth={1}
+                aria-hidden
+              />
+            </div>
+          )}
+        </div>
 
-        {/* 정보 — 이미지가 길어도 담기·가격이 늘 보이게 sticky(데스크톱). */}
-        <div className="md:sticky md:top-8">
+        {/* 정보 — 히어로에만. sticky 아님(첫 사진과 함께 스크롤). */}
+        <div>
           {product.category && (
             <Link
               href={`/shop?category=${product.category.slug}`}
@@ -242,6 +263,9 @@ export default async function ProductDetailPage({
           </details>
         </div>
       </div>
+
+      {/* 나머지 사진 — 전체 폭에 불규칙 흩뿌림(중앙 정렬 없음). 스크롤 시 이어짐. */}
+      <ProductGallery images={product.images.slice(1)} name={product.name} />
 
       {/* 리뷰 (대표님 피드백 — 게시판 3종) */}
       <ReviewSection productId={product.id} currentUserId={user?.id ?? null} />
