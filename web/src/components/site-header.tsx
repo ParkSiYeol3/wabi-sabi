@@ -58,7 +58,7 @@ export function SiteHeader() {
               href="/admin"
               className="text-sm font-medium tracking-wide text-wabi-accent transition-colors hover:opacity-80"
             >
-              Admin
+              관리자
             </Link>
           )}
         </nav>
@@ -121,7 +121,7 @@ export function SiteHeader() {
               onClick={() => setOpen(false)}
               className="py-3 text-sm font-medium tracking-wide text-wabi-accent"
             >
-              Admin
+              관리자
             </Link>
           )}
         </nav>
