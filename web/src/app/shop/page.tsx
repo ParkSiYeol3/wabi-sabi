@@ -38,10 +38,18 @@ export default async function ShopPage({
 }) {
   const sp = await searchParams;
   const sort = (sp.sort as ProductSort) || "newest";
+  const query = sp.q?.trim();
   // 검색어가 있으면 캐시 밖(입력 무한), 없으면 캐시된 탐색 경로(카테고리×정렬 유한).
-  const products = sp.q?.trim()
+  const products = query
     ? await getProducts({ category: sp.category, q: sp.q, sort })
     : await getShopBrowse({ category: sp.category, sort });
+
+  // 검색 결과가 없으면 이탈하지 않게 최신 상품을 추천한다(갭 분석 4). 캐시된
+  // 탐색 쿼리 재사용 — 검색 실패 시에만 실행하므로 정상 경로엔 부하가 없다.
+  const suggestions =
+    products.length === 0 && query
+      ? (await getShopBrowse({ sort: "newest" })).slice(0, 4)
+      : [];
 
   return (
     <Container className="py-16">
@@ -174,9 +182,45 @@ export default async function ShopPage({
       </div>
 
       {products.length === 0 ? (
-        <p className="mt-16 pb-10 text-center text-sm text-wabi-fg-muted">
-          {sp.q ? `'${sp.q}' 검색 결과가 없습니다.` : "준비 중인 상품입니다."}
-        </p>
+        <div className="mt-16 pb-10">
+          <p className="text-center text-sm text-wabi-fg-muted">
+            {query ? `'${sp.q}' 검색 결과가 없습니다.` : "준비 중인 상품입니다."}
+          </p>
+          {query && (
+            <p className="mt-3 text-center">
+              <Link
+                href="/shop"
+                className="text-xs text-wabi-fg-muted underline underline-offset-2 hover:text-wabi-fg"
+              >
+                전체 상품 보기 →
+              </Link>
+            </p>
+          )}
+          {suggestions.length > 0 && (
+            <section className="mt-14">
+              <h2 className="text-center text-sm font-medium">
+                이런 상품은 어떠세요
+              </h2>
+              <ul className="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
+                {suggestions.map((p) => (
+                  <li key={p.id}>
+                    <ProductCard product={p} />
+                    <AddToCartButton
+                      product={{
+                        id: p.id,
+                        name: p.name,
+                        price: p.price,
+                        image: p.image,
+                      }}
+                      soldOut={typeof p.stock === "number" && p.stock <= 0}
+                      className="mt-3 w-full"
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
       ) : (
         <ul className="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
           {products.map((p, i) => {
