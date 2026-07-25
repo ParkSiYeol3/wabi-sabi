@@ -44,10 +44,8 @@ export default async function Home({
   searchParams: Promise<{ left?: string }>;
 }) {
   // 홈 공개 데이터는 캐시된 단일 로더로 (#177). searchParams(탈퇴 안내)는 캐시 밖.
-  const [{ philosophy, pillars, cta }, { left }] = await Promise.all([
-    getHomeData(),
-    searchParams,
-  ]);
+  const [{ philosophy, pillarLabels, pillars, cta }, { left }] =
+    await Promise.all([getHomeData(), searchParams]);
 
   return (
     <div
@@ -65,7 +63,7 @@ export default async function Home({
            스크린리더용 페이지 제목만 숨김 제공. ── */}
       <h1 className="sr-only">WABI-SABI — 하루의 결을 따라 흐르는 그릇 셀렉트숍</h1>
       <section className="pb-0 pt-6 md:pt-10">
-        <HelixJourney pillarBodies={pillars} />
+        <HelixJourney pillarLabels={pillarLabels} pillarBodies={pillars} />
       </section>
 
       {/* ── 여정의 끝 — 그제야 브랜드. 선 끝에 로고가 바로 이어진다(#213 9차) ── */}

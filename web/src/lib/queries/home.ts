@@ -4,6 +4,8 @@ import {
   DEFAULT_PHILOSOPHY,
   HOME_PILLAR_KEYS,
   DEFAULT_PILLARS,
+  HOME_PILLAR_LABEL_KEYS,
+  DEFAULT_PILLAR_LABELS,
   HOME_CTA_KEY,
   DEFAULT_HOME_CTA,
   CONTENT_KEYS,
@@ -16,24 +18,28 @@ export const HOME_CONTENT_TAG = "home-content";
 
 export type HomeData = {
   philosophy: string[];
-  pillars: string[]; // 철학 3주 본문(HOME_PILLAR_KEYS 순서, 라벨은 코드 고정)
+  pillarLabels: string[]; // 철학 3주 제목(라벨) — 한자는 코드 고정
+  pillars: string[]; // 철학 3주 본문(HOME_PILLAR_KEYS 순서)
   cta: string; // 홈 하단 Shop CTA 문구
 };
 
 // 홈에 필요한 공개 편집 콘텐츠. 상품 카드가 철학 멘트로 바뀌면서(#225) 상품
-// 쿼리는 사라졌고, 이제 편집 가능 문구(#245)를 site_content 에서 한 번에 읽는다.
+// 쿼리는 사라졌고, 이제 편집 가능 문구(#245·#247)를 site_content 에서 한 번에 읽는다.
 async function loadHomeData(): Promise<HomeData> {
   const content = await getPublicContent(CONTENT_KEYS);
 
   const philosophy = toParagraphs(
     content[PHILOSOPHY_KEY]?.trim() || DEFAULT_PHILOSOPHY,
   );
+  const pillarLabels = HOME_PILLAR_LABEL_KEYS.map(
+    (k) => content[k]?.trim() || DEFAULT_PILLAR_LABELS[k],
+  );
   const pillars = HOME_PILLAR_KEYS.map(
     (k) => content[k]?.trim() || DEFAULT_PILLARS[k],
   );
   const cta = content[HOME_CTA_KEY]?.trim() || DEFAULT_HOME_CTA;
 
-  return { philosophy, pillars, cta };
+  return { philosophy, pillarLabels, pillars, cta };
 }
 
 // 120초 캐시 + 태그. 콘텐츠는 자주 바뀌지 않고, 바뀌면 어드민이 태그를 무효화한다.
