@@ -210,15 +210,21 @@ export async function createPendingOrder(
   }
 
   // 선물 포장 선택 시 메시지·보내는 분(gift_options — 주문당 1행 UNIQUE).
+  // 저장 실패를 성공으로 넘기면 포장비는 청구됐는데 메시지·보내는 분이 유실된다
+  // → order_items 실패와 동일하게 주문을 정리하고 실패 반환(결제 전이라 안전).
   if (giftSelected) {
     const giftAddon = addonSnap.find((a) => a.code === GIFT_WRAP_CODE);
-    await admin.from("gift_options").insert({
+    const { error: giftErr } = await admin.from("gift_options").insert({
       order_id: order.id,
       package_type: GIFT_WRAP_CODE,
       extra_price: giftAddon?.price ?? 0,
       sender_name: addons.sender || null,
       message: addons.message || null,
     });
+    if (giftErr) {
+      await admin.from("orders").delete().eq("id", order.id);
+      return { ok: false, error: "선물 포장 정보 저장에 실패했습니다." };
+    }
   }
 
   const first = items[0];
