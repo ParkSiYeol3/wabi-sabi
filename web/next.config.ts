@@ -92,9 +92,12 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.cdninstagram.com" },
       { protocol: "https", hostname: "**.fbcdn.net" },
       // 소셜 로그인 프로필 사진 — Google·Kakao 아바타 CDN(헤더 아바타).
-      // next/image 프록시라 CSP img-src 'self' 로 커버됨.
+      // next/image 프록시(same-origin)라 CSP img-src 'self' 로 커버되고,
+      // http 소스도 프록시가 대신 받아 https 로 서빙하므로 혼합콘텐츠 없음.
+      // 카카오 프로필 이미지는 http://*.kakaocdn.net 로 오는 경우가 있어 http 도 허용.
       { protocol: "https", hostname: "*.googleusercontent.com" },
       { protocol: "https", hostname: "*.kakaocdn.net" },
+      { protocol: "http", hostname: "*.kakaocdn.net" },
     ],
   },
 };

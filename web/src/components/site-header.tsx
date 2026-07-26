@@ -13,6 +13,8 @@ import { useAuthStore } from "@/store/auth";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  // 아바타 로드 실패(호스트·만료 등) 시 기본 아이콘으로 폴백.
+  const [avatarError, setAvatarError] = useState(false);
   const pathname = usePathname();
   const count = useCart(cartCount);
   const mounted = useMounted();
@@ -89,13 +91,14 @@ export function SiteHeader() {
             aria-label={mounted && user ? "마이페이지" : "로그인"}
             className="rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted"
           >
-            {avatarUrl ? (
+            {avatarUrl && !avatarError ? (
               <Image
                 src={avatarUrl}
                 alt=""
                 width={28}
                 height={28}
                 sizes="28px"
+                onError={() => setAvatarError(true)}
                 className="size-7 rounded-full object-cover ring-1 ring-wabi-border"
               />
             ) : (
