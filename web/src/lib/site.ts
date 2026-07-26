@@ -31,7 +31,7 @@ export const site = {
 export const business = {
   companyName: "와비사비",
   ceo: "김종순",
-  address: "충남 천안시 동남구 대흥로 338 1층 2호 (31122)",
+  address: "충남 천안시 동남구 대흥로 338 1층 2호 와비사비 (31122)",
   email: "0_wabisabi@naver.com",
   // 대표님 확인 2026-07-16 — 발급 완료값 입력. 푸터·법적고지에 자동 노출됨.
   businessNumber: "411-74-00574", // 사업자등록번호
