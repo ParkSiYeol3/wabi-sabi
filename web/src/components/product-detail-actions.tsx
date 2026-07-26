@@ -77,9 +77,10 @@ export function ProductDetailActions({ product, stock }: Props) {
             <Plus className="size-3.5" />
           </button>
         </div>
-        <span className="text-xs text-wabi-fg-muted">
-          {soldOut ? "품절" : `재고 ${stock}개`}
-        </span>
+        {/* 재고 수량은 숨긴다(대표님) — 품절 여부만 표시. */}
+        {soldOut && (
+          <span className="text-xs text-wabi-fg-muted">품절</span>
+        )}
       </div>
 
       <div className="flex gap-3">
