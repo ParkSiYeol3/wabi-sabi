@@ -66,7 +66,7 @@ export function AdminSidebar() {
       <aside className="hidden w-56 shrink-0 border-r border-wabi-border bg-wabi-subtle/60 md:block">
         <div className="sticky top-0 max-h-dvh overflow-y-auto p-4">
           <Link
-            href="/"
+            href="/shop"
             className="mb-6 flex items-center gap-2 px-3 py-1 text-sm font-semibold text-wabi-fg transition-colors hover:text-wabi-fg-muted"
           >
             <ChevronLeft className="size-4" />
@@ -84,7 +84,9 @@ export function AdminSidebar() {
         <div className="flex items-center justify-between border-b border-wabi-border bg-wabi-subtle/60 px-4 py-3">
           <span className="text-sm font-semibold text-wabi-fg">
             {activeLabel(pathname)}
-            <span className="ml-1.5 font-normal text-wabi-fg-muted">· Admin</span>
+            <span className="ml-1.5 font-normal text-wabi-fg-muted">
+              · Admin
+            </span>
           </span>
           <button
             type="button"
