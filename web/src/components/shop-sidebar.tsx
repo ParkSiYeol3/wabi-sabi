@@ -45,6 +45,13 @@ export function ShopSidebar({
   tree: CategoryNode[];
 }) {
   const current = sp.category;
+  // 대분류(또는 그 소분류)가 선택되면 그 대분류만 노출 — 다른 대분류는 통째로
+  // 숨긴다(대표님 — TABLEWARE 선택 시 OBJECTS 안 보이게). 전체·이 달의 상품
+  // 에선 둘 다 보여 대분류를 고를 수 있게 한다.
+  const activeGroup = tree.find(
+    (n) => n.slug === current || n.children?.some((c) => c.slug === current),
+  );
+  const visibleNodes = activeGroup ? [activeGroup] : tree;
 
   return (
     <nav aria-label="카테고리" className="w-44 shrink-0">
@@ -62,7 +69,7 @@ export function ShopSidebar({
           "[대분류] 전체" 링크는 없애고 대분류 헤더 자체가 그 대분류 전체 필터
           역할을 한다. 비활성 대분류는 헤더 링크만 보이고 소분류는 숨긴다. */}
       <div className="mt-3 space-y-1 border-t border-wabi-border pt-3">
-        {tree.map((node) => {
+        {visibleNodes.map((node) => {
           const childActive = !!node.children?.some((c) => c.slug === current);
           const groupActive = current === node.slug || childActive;
           return (

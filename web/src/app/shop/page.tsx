@@ -55,11 +55,24 @@ export default async function ShopPage({
       ? (await getShopBrowse({ sort: "newest" })).slice(0, 4)
       : [];
 
+  // 페이지 타이틀 = 선택 카테고리명(대표님 — TABLEWARE 누르면 TABLEWARE 로).
+  // 대분류 이름(name_ko)이 이미 TABLEWARE·OBJECTS 라 그대로 쓴다. 소분류는 그
+  // 소분류명, 이 달의 상품·전체는 각각. 못 찾으면 "Shop".
+  const heading = !sp.category
+    ? "Shop"
+    : sp.category === MONTHLY_SLUG
+      ? "이 달의 상품"
+      : (tree.find((n) => n.slug === sp.category)?.ko ??
+        tree
+          .flatMap((n) => n.children ?? [])
+          .find((c) => c.slug === sp.category)?.ko ??
+        "Shop");
+
   return (
     <Container className="py-16">
       {/* 헤더 — 타이틀 + 결과 수 */}
       <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl font-semibold tracking-wide">Shop</h1>
+        <h1 className="text-2xl font-semibold tracking-wide">{heading}</h1>
         <span className="text-xs text-wabi-fg-muted">
           {products.length}개 상품
         </span>
