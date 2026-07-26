@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
 import { MONTHLY_SLUG, type CategoryNode } from "@/lib/site";
 import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
 import { CtaLink } from "@/components/cta-link";
@@ -59,63 +58,39 @@ export function ShopSidebar({
         이 달의 상품
       </SideLink>
 
+      {/* 대분류 목록 — 선택된 대분류만 그 소분류를 펼친다(대표님). 별도의
+          "[대분류] 전체" 링크는 없애고 대분류 헤더 자체가 그 대분류 전체 필터
+          역할을 한다. 비활성 대분류는 헤더 링크만 보이고 소분류는 숨긴다. */}
       <div className="mt-3 space-y-1 border-t border-wabi-border pt-3">
-        {tree.map((node) =>
-          node.children ? (
-            <details
-              key={node.slug}
-              open={
-                current === node.slug ||
-                node.children.some((c) => c.slug === current)
-              }
-              className="group"
-            >
-              <summary className="flex cursor-pointer list-none items-center justify-between py-1.5 text-sm text-wabi-fg-muted transition-colors hover:text-wabi-fg [&::-webkit-details-marker]:hidden">
-                <span
-                  className={cn(
-                    (current === node.slug ||
-                      node.children.some((c) => c.slug === current)) &&
-                      "font-medium text-wabi-fg",
-                  )}
-                >
-                  {node.ko}{" "}
-                  <span className="text-xs text-wabi-fg-muted">{node.en}</span>
-                </span>
-                <ChevronDown
-                  className="size-3.5 transition-transform group-open:rotate-180"
-                  aria-hidden
-                />
-              </summary>
-              <div className="mb-1 border-l border-wabi-border pl-3">
-                {/* 대분류 전체 보기(하위 포함 필터) */}
-                <SideLink
-                  href={buildShopQuery(sp, { category: node.slug })}
-                  active={current === node.slug}
-                >
-                  {node.ko} 전체
-                </SideLink>
-                {node.children.map((c) => (
-                  <SideLink
-                    key={c.slug}
-                    href={buildShopQuery(sp, { category: c.slug })}
-                    active={current === c.slug}
-                  >
-                    {c.ko}
-                  </SideLink>
-                ))}
-              </div>
-            </details>
-          ) : (
-            <SideLink
-              key={node.slug}
-              href={buildShopQuery(sp, { category: node.slug })}
-              active={current === node.slug}
-            >
-              {node.ko}{" "}
-              <span className="text-xs text-wabi-fg-muted">{node.en}</span>
-            </SideLink>
-          ),
-        )}
+        {tree.map((node) => {
+          const childActive = !!node.children?.some((c) => c.slug === current);
+          const groupActive = current === node.slug || childActive;
+          return (
+            <div key={node.slug}>
+              <SideLink
+                href={buildShopQuery(sp, { category: node.slug })}
+                active={current === node.slug}
+                className={cn(groupActive && "font-medium text-wabi-fg")}
+              >
+                {node.ko}{" "}
+                <span className="text-xs text-wabi-fg-muted">{node.en}</span>
+              </SideLink>
+              {node.children && groupActive && (
+                <div className="mb-1 border-l border-wabi-border pl-3">
+                  {node.children.map((c) => (
+                    <SideLink
+                      key={c.slug}
+                      href={buildShopQuery(sp, { category: c.slug })}
+                      active={current === c.slug}
+                    >
+                      {c.ko}
+                    </SideLink>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* 오늘의 와비사비(자유게시판) — 홈 Shop CTA 와 같은 채워지는 아웃라인
