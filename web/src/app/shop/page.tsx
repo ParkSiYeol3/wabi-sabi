@@ -114,12 +114,7 @@ export default async function ShopPage({
             className="mt-3 flex flex-wrap gap-2 lg:hidden"
             aria-label={`${node.ko} 소분류`}
           >
-            <FilterLink
-              href={buildQuery(sp, { category: node.slug })}
-              active={sp.category === node.slug}
-            >
-              {node.ko} 전체
-            </FilterLink>
+            {/* "[대분류] 전체" 칩 제거(대표님) — 위 대분류 칩이 그 역할 */}
             {node.children.map((ch) => (
               <FilterLink
                 key={ch.slug}
