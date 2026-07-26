@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Song_Myung, Cormorant_Garamond, Noto_Serif_JP } from "next/font/google";
+import { Cormorant_Garamond, Noto_Serif_JP } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
 import { SiteHeader } from "@/components/site-header";
@@ -8,14 +9,15 @@ import { HideOnAdmin } from "@/components/hide-on-admin";
 import { SITE_URL } from "@/lib/site-url";
 import { business } from "@/lib/site";
 
-// 붓 획 느낌 명조로 전 사이트 통일(대표님 — 일본 명조 같은 필기체 느낌).
-// 한글=Song Myung(송명조, 붓 명조), 라틴=Cormorant(우아한 세리프), 일본어
-// 가나=Noto Serif JP 폴백. 스택 순서로 글자별 담당 폰트가 갈린다(라틴→Cormorant,
-// 한글→Song Myung, 가나→Noto Serif JP). next/font/google 이 CJK 를 unicode-range
-// 청크로 self-host 하므로 CSP·외부요청 없이 안전.
-const songMyung = Song_Myung({
-  variable: "--font-song-myung",
-  weight: "400",
+// 붓 획 느낌 + 얇고 가독성 좋은 명조로 통일(대표님 — Song Myung 은 두껍고
+// 가독성↓). 한글=마루부리 Light(네이버, OFL — 붓 부리가 살아있는 얇은 명조,
+// 전체 self-host, 한글 완성형 11172자 전부 커버), 라틴=Cormorant, 일본어
+// 가나=Noto Serif JP 폴백. 스택 순서로 글자별 담당(라틴→Cormorant, 한글→마루부리,
+// 가나→Noto Serif JP). 셀프호스팅이라 CSP·외부요청 없음.
+const maruburi = localFont({
+  src: "../fonts/MaruBuri-Light.woff2",
+  weight: "300",
+  variable: "--font-maruburi",
   display: "swap",
 });
 const cormorant = Cormorant_Garamond({
@@ -85,7 +87,7 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${cormorant.variable} ${songMyung.variable} ${notoSerifJp.variable} h-full antialiased`}
+      className={`${cormorant.variable} ${maruburi.variable} ${notoSerifJp.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <script
