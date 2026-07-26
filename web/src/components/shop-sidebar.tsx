@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Camera } from "lucide-react";
 import { MONTHLY_SLUG, type CategoryNode } from "@/lib/site";
 import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
 import { cn } from "@/lib/utils";
@@ -116,6 +116,15 @@ export function ShopSidebar({
           ),
         )}
       </div>
+
+      {/* 오늘의 와비사비(자유게시판) — 소분류보다 눈에 띄게 강조 버튼(대표님) */}
+      <Link
+        href="/today"
+        className="mt-5 flex items-center gap-2 rounded-lg bg-wabi-accent px-3 py-2.5 text-sm font-medium text-white transition-colors hover:bg-wabi-accent/90"
+      >
+        <Camera className="size-4" strokeWidth={1.75} aria-hidden />
+        오늘의 와비사비
+      </Link>
     </nav>
   );
 }
