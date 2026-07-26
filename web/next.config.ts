@@ -91,6 +91,10 @@ const nextConfig: NextConfig = {
       // next/image 가 서버에서 프록시하므로 CSP img-src 'self' 로 커버됨(추가 불필요).
       { protocol: "https", hostname: "*.cdninstagram.com" },
       { protocol: "https", hostname: "**.fbcdn.net" },
+      // 소셜 로그인 프로필 사진 — Google·Kakao 아바타 CDN(헤더 아바타).
+      // next/image 프록시라 CSP img-src 'self' 로 커버됨.
+      { protocol: "https", hostname: "*.googleusercontent.com" },
+      { protocol: "https", hostname: "*.kakaocdn.net" },
     ],
   },
 };
