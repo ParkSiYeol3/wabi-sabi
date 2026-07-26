@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ChevronDown, Camera } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { MONTHLY_SLUG, type CategoryNode } from "@/lib/site";
 import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
+import { CtaLink } from "@/components/cta-link";
 import { cn } from "@/lib/utils";
 
 // Shop 좌측 카테고리 사이드바 (#195, 대표님 피드백 — biomedium.kr 참고).
@@ -117,14 +118,9 @@ export function ShopSidebar({
         )}
       </div>
 
-      {/* 오늘의 와비사비(자유게시판) — 소분류보다 눈에 띄게 강조 버튼(대표님) */}
-      <Link
-        href="/today"
-        className="mt-5 flex items-center gap-2 rounded-lg bg-wabi-accent px-3 py-2.5 text-sm font-medium text-white transition-colors hover:bg-wabi-accent/90"
-      >
-        <Camera className="size-4" strokeWidth={1.75} aria-hidden />
-        오늘의 와비사비
-      </Link>
+      {/* 오늘의 와비사비(자유게시판) — 홈 Shop CTA 와 같은 채워지는 아웃라인
+          버튼으로 소분류보다 눈에 띄게(대표님) */}
+      <CtaLink href="/today" label="오늘의 와비사비" full className="mt-5" />
     </nav>
   );
 }
