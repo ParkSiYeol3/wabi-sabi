@@ -47,11 +47,12 @@ export const legalNav = [
   { label: "교환·환불 안내", href: "/legal/refund" },
 ] as const;
 
-// 내비 라벨 — 사용자 직관성 위해 한국어(대표님). 경로·slug 는 그대로.
+// 내비 — 2대분류(TABLEWARE·OBJECTS) + SHOWROOM(소개=오시는 길 합침)(0037, 대표님).
+// TABLEWARE·OBJECTS 는 대분류 shop 필터로, SHOWROOM 은 소개 페이지로 간다.
 export const nav = [
-  { label: "상품", href: "/shop" },
-  { label: "소개", href: "/about" },
-  { label: "오시는 길", href: "/contact" },
+  { label: "TABLEWARE", href: "/shop?category=tableware" },
+  { label: "OBJECTS", href: "/shop?category=objects" },
+  { label: "SHOWROOM", href: "/about" },
 ] as const;
 
 // Shop 카테고리 2계층 트리 (#193, 대표님 피드백 — 상품군 확장: 다도·액세서리 등).
@@ -63,48 +64,37 @@ export type CategoryNode = CategoryLeaf & {
   children?: readonly CategoryLeaf[];
 };
 
+// 2대분류 재편(0037, 대표님 지시): 그릇류 TABLEWARE / 오브제·소품 OBJECTS.
+// 대분류 이름은 영문 대문자로 노출, 소분류는 한글. DB(0037)와 함께 진실 —
+// 트리를 바꾸면 마이그도 함께. 이 코드 트리는 DB 조회 실패 시 폴백이다.
 export const categoryTree: readonly CategoryNode[] = [
   {
     slug: "tableware",
-    ko: "식기",
+    ko: "TABLEWARE",
     en: "Tableware",
     children: [
       { slug: "plate", ko: "접시", en: "Plate" },
       { slug: "bowl", ko: "볼", en: "Bowl" },
       { slug: "cup", ko: "컵", en: "Cup" },
       { slug: "cutlery", ko: "커트러리", en: "Cutlery" },
-    ],
-  },
-  {
-    slug: "tea",
-    ko: "다도",
-    en: "Tea",
-    children: [
       { slug: "teaware", ko: "다기", en: "Teaware" },
       { slug: "fan", ko: "부채", en: "Fan" },
     ],
   },
   {
-    slug: "accessory",
-    ko: "액세서리",
-    en: "Accessory",
+    slug: "objects",
+    ko: "OBJECTS",
+    en: "Objects",
     children: [
       { slug: "keyring", ko: "키링", en: "Keyring" },
       { slug: "necklace", ko: "목걸이", en: "Necklace" },
       { slug: "bracelet", ko: "팔찌", en: "Bracelet" },
       { slug: "hairtie", ko: "머리끈", en: "Hair Tie" },
-    ],
-  },
-  {
-    slug: "living",
-    ko: "리빙",
-    en: "Living",
-    children: [
       { slug: "life", ko: "생활 소품", en: "Life" },
       { slug: "craft", ko: "공예", en: "Craft" },
+      { slug: "gift", ko: "선물", en: "Gift" },
     ],
   },
-  { slug: "gift", ko: "선물", en: "Gift" },
 ] as const;
 
 // (필터용 slug 확장 categorySlugs 는 0036 DB 구조 승격으로

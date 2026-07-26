@@ -69,6 +69,10 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
+  // /contact 를 소개(SHOWROOM)로 합침(0037, 대표님) — 기존 링크·북마크 영구 이전.
+  async redirects() {
+    return [{ source: "/contact", destination: "/about", permanent: true }];
+  },
   // 상품 이미지 업로드(서버 액션 FormData) — 기본 1MB → 다중 이미지 허용
   experimental: {
     serverActions: {
