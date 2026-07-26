@@ -20,6 +20,13 @@ export function SiteHeader() {
   const isAdmin = useAuthStore((s) => s.isAdmin);
   const accountHref = mounted && user ? "/mypage" : "/auth";
   const showAdmin = mounted && isAdmin;
+  // 소셜 로그인 프로필 사진 — 로그인 시 마이페이지 아이콘 대신 아바타로(대표님).
+  // Google=avatar_url/picture, Kakao=avatar_url. 없으면 기본 아이콘.
+  const meta = user?.user_metadata as
+    | { avatar_url?: string; picture?: string }
+    | undefined;
+  const avatarUrl =
+    mounted && user ? (meta?.avatar_url ?? meta?.picture ?? null) : null;
 
   // 홈은 곡선만으로 시작하는 무드 페이지(#197 대표님 피드백) — 상단바 자체를 없앤다.
   // 탐색은 여정 끝 CTA(Shop)와 푸터가 담당한다.
@@ -82,7 +89,18 @@ export function SiteHeader() {
             aria-label={mounted && user ? "마이페이지" : "로그인"}
             className="rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted"
           >
-            <User className="size-5" strokeWidth={1.5} />
+            {avatarUrl ? (
+              <Image
+                src={avatarUrl}
+                alt=""
+                width={28}
+                height={28}
+                sizes="28px"
+                className="size-7 rounded-full object-cover ring-1 ring-wabi-border"
+              />
+            ) : (
+              <User className="size-5" strokeWidth={1.5} />
+            )}
           </Link>
           <button
             type="button"
