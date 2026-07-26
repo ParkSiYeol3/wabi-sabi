@@ -1,42 +1,13 @@
 import Image from "next/image";
 import { CtaLink } from "@/components/cta-link";
-import { Cormorant_Garamond, Space_Mono } from "next/font/google";
-import localFont from "next/font/local";
 import { Reveal } from "@/components/reveal";
 import { HelixJourney } from "@/components/home/helix-journey";
 import { SmoothScroll } from "@/components/home/smooth-scroll";
 import { getHomeData } from "@/lib/queries/home";
 
-// 홈 전용 무드 폰트 (#209) — 대표님 피드백: 기존 궁서보다 얇은 궁서 느낌.
-// (Hahmlet Light 는 진지함이 부족해 기각 → 마루부리 Light 로 교체.)
-// 마루부리(네이버, SIL OFL — 셀프호스팅 합법)는 붓의 부리가 살아있는 전통
-// 세리프라 궁서의 진지함을 유지하면서 Light 웨이트로 얇다. 셀프호스팅이라
-// 외부 요청·CSP 변경 없음. 모든 기기(PC·모바일) 동일 렌더.
-// 라틴 이탤릭은 Cormorant 가 먼저 받는다. 전역 토큰은 건드리지 않고 홈 래퍼의
-// CSS 변수로만 쓴다(리스크 격리).
-// 홈에서 쓰는 웨이트는 400(본문·이탤릭)·500(제목 font-medium)뿐 — 600 제외(#211).
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  style: ["normal", "italic"],
-  variable: "--font-cormorant",
-  display: "swap",
-});
-const spaceMono = Space_Mono({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-ws-mono",
-  display: "swap",
-});
-// KS X 1001 완성형 2350자 + 라틴·약물 서브셋(fonttools) — 원본 425KB → 201KB.
-// 서브셋 밖 희귀 음절·한자는 스택 폴백(시스템 세리프)으로 렌더된다(#211).
-// 원본은 hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/ 에서 재획득 가능.
-const maruburi = localFont({
-  src: "../fonts/MaruBuri-Light.subset.woff2",
-  weight: "300",
-  variable: "--font-maruburi",
-  display: "swap",
-});
+// 홈도 전 사이트와 같은 단일 명조로 통일(대표님) — 기존 무드 폰트(마루부리·
+// Cormorant·Space Mono)를 걷어내고 Noto Serif(KR+JP 폴백)만 쓴다.
+// --ws-serif/--ws-mono 는 예전 이름만 유지하고 값은 명조로 맞춘다.
 
 export default async function Home({
   searchParams,
@@ -49,7 +20,7 @@ export default async function Home({
 
   return (
     <div
-      className={`${cormorant.variable} ${spaceMono.variable} ${maruburi.variable} overflow-x-clip bg-[#f3ebdd] text-[#423c30] [--ws-serif:var(--font-cormorant),var(--font-maruburi),Gungsuh,GungSeo,serif] [--ws-mono:var(--font-ws-mono),monospace]`}
+      className="overflow-x-clip bg-[#f3ebdd] text-[#423c30] [--ws-mono:var(--font-noto-serif-kr),var(--font-noto-serif-jp),serif] [--ws-serif:var(--font-noto-serif-kr),var(--font-noto-serif-jp),serif]"
     >
       {/* 휠 스크롤 이징 — 홈에서만 (#197 6차) */}
       <SmoothScroll />

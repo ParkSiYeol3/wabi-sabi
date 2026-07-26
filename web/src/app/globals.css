@@ -94,8 +94,12 @@
   --color-wabi-accent: var(--wabi-accent);
   --color-wabi-footer: var(--wabi-footer);
 
-  --font-sans: var(--font-pretendard), ui-sans-serif, system-ui, sans-serif;
-  --font-serif-jp: var(--font-noto-serif-jp), serif;
+  /* 단일 명조 통일(대표님) — 본문·제목·브랜드 전부 Noto Serif.
+     한글=KR, 가나=JP 폴백(같은 디자인). 토큰 이름은 호환 위해 유지. */
+  --font-serif: var(--font-noto-serif-kr), var(--font-noto-serif-jp), ui-serif,
+    serif;
+  --font-sans: var(--font-serif);
+  --font-serif-jp: var(--font-serif);
 }
 
 @layer base {

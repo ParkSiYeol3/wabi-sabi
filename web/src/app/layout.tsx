@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Noto_Sans_KR, Noto_Serif_JP } from "next/font/google";
+import { Noto_Serif_KR, Noto_Serif_JP } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
 import { SiteHeader } from "@/components/site-header";
@@ -8,15 +8,16 @@ import { HideOnAdmin } from "@/components/hide-on-admin";
 import { SITE_URL } from "@/lib/site-url";
 import { business } from "@/lib/site";
 
-// 본문/제목 — Pretendard 대체 (추후 Pretendard 로컬폰트로 교체 가능)
-const notoSansKr = Noto_Sans_KR({
-  variable: "--font-pretendard",
+// 전 사이트 단일 명조 통일(대표님 — わび-さび 명조가 제일 예쁘다). 본문·제목·
+// 브랜드까지 전부 Noto Serif. 한글은 Noto Serif KR, 일본어 가나는 Noto Serif JP
+// 로 폴백 — 둘은 같은 Noto Serif 디자인이라 이음매가 없다. next/font/google 이
+// CJK 글리프를 unicode-range 청크로 self-host 하므로 CSP·성능 안전.
+const notoSerifKr = Noto_Serif_KR({
+  variable: "--font-noto-serif-kr",
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
-
-// わび-さび 브랜드 액센트 (명조)
 const notoSerifJp = Noto_Serif_JP({
   variable: "--font-noto-serif-jp",
   subsets: ["latin"],
@@ -77,7 +78,7 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${notoSansKr.variable} ${notoSerifJp.variable} h-full antialiased`}
+      className={`${notoSerifKr.variable} ${notoSerifJp.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <script

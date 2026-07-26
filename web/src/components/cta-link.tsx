@@ -28,7 +28,7 @@ export function CtaLink({
     <Link
       href={href}
       className={cn(
-        "group relative overflow-hidden border border-[#423c30]/70 text-center [font-family:var(--ws-mono)] leading-relaxed text-[#423c30]",
+        "group relative overflow-hidden border border-[#423c30]/70 text-center [font-family:var(--font-serif-jp)] leading-relaxed text-[#423c30]",
         full ? "block w-full" : "inline-block",
         sizeCls,
         className,
