@@ -94,9 +94,9 @@
   --color-wabi-accent: var(--wabi-accent);
   --color-wabi-footer: var(--wabi-footer);
 
-  /* 붓 명조 통일(대표님) — 라틴=Cormorant, 한글=Song Myung, 가나=Noto Serif JP.
-     스택 순서로 글자별 담당이 갈린다. 토큰 이름은 호환 위해 유지. */
-  --font-serif: var(--font-cormorant), var(--font-song-myung),
+  /* 붓 명조 통일(대표님) — 라틴=Cormorant, 한글=마루부리 Light(얇은 붓 명조),
+     가나=Noto Serif JP. 스택 순서로 글자별 담당. 토큰 이름은 호환 위해 유지. */
+  --font-serif: var(--font-cormorant), var(--font-maruburi),
     var(--font-noto-serif-jp), ui-serif, serif;
   --font-sans: var(--font-serif);
   --font-serif-jp: var(--font-serif);
