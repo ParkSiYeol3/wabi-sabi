@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { Clock, MapPin, AtSign, Mail } from "lucide-react";
 import { Container } from "@/components/container";
 import { Reveal } from "@/components/reveal";
 import { InstagramFeed } from "@/components/instagram-feed";
+import { MapCard } from "@/components/map-card";
 import { site } from "@/lib/site";
 import {
   getSiteContent,
@@ -62,17 +64,6 @@ export default async function AboutPage() {
               ))}
             </div>
 
-            {/* 영업시간 */}
-            <dl className="mt-10 border-t border-wabi-border pt-6 text-sm">
-              <div className="flex gap-6">
-                <dt className="w-16 shrink-0 font-medium">Open</dt>
-                <dd className="text-wabi-fg-muted">{site.hours}</dd>
-              </div>
-              <div className="mt-2 flex gap-6">
-                <dt className="w-16 shrink-0 font-medium">Closed</dt>
-                <dd className="text-wabi-fg-muted">{site.closed}</dd>
-              </div>
-            </dl>
           </Reveal>
 
           {/* 매장 사진 — 어드민에서 업로드(대표님). 없으면 로고 마크 폴백 */}
@@ -136,9 +127,80 @@ export default async function AboutPage() {
         </Container>
       </section>
 
+      {/* 방문 안내 (SHOWROOM) — 구 /contact 를 소개로 합침(#, 대표님). 매장 방문
+          정보(영업시간·위치·인스타·문의) + 지도. */}
+      <section id="visit">
+        <Container className="py-24 md:py-32">
+          <Reveal>
+            <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
+              오시는 길{" "}
+              <span className="text-wabi-fg-muted">Showroom</span>
+            </h2>
+          </Reveal>
+          <div className="mt-12 grid gap-12 md:grid-cols-2 md:items-start">
+            <ul className="space-y-8">
+              <VisitItem
+                icon={<Clock className="size-5" strokeWidth={1.5} />}
+                title="영업 시간"
+              >
+                <p>{site.hours}</p>
+                <p className="text-wabi-fg-muted">{site.closed}</p>
+              </VisitItem>
+              <VisitItem
+                icon={<MapPin className="size-5" strokeWidth={1.5} />}
+                title="위치"
+              >
+                <p>{site.place}</p>
+                <p className="text-wabi-fg-muted">{site.address}</p>
+                <p className="text-wabi-fg-muted">{site.addressNote}</p>
+              </VisitItem>
+              <VisitItem
+                icon={<AtSign className="size-5" strokeWidth={1.5} />}
+                title="인스타그램"
+              >
+                <a href={site.instagramUrl} className="hover:underline">
+                  {site.instagram}
+                </a>
+              </VisitItem>
+              <VisitItem
+                icon={<Mail className="size-5" strokeWidth={1.5} />}
+                title="문의"
+              >
+                <a href={`mailto:${site.email}`} className="hover:underline">
+                  {site.email}
+                </a>
+              </VisitItem>
+            </ul>
+            <MapCard />
+          </div>
+        </Container>
+      </section>
+
       <Reveal>
         <InstagramFeed />
       </Reveal>
     </>
+  );
+}
+
+function VisitItem({
+  icon,
+  title,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <li className="flex gap-4">
+      <span className="mt-0.5 text-wabi-fg" aria-hidden>
+        {icon}
+      </span>
+      <div className="text-sm">
+        <h3 className="font-medium">{title}</h3>
+        <div className="mt-1 space-y-0.5">{children}</div>
+      </div>
+    </li>
   );
 }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { site, business, legalNav, nav, MONTHLY_SLUG } from "@/lib/site";
+import { site, business, legalNav, MONTHLY_SLUG } from "@/lib/site";
 import { getCategoryTree } from "@/lib/queries/categories";
 
 // 전자상거래법 §10 — 사업자 정보 표시 (#106).
@@ -62,9 +62,9 @@ export async function SiteFooter() {
     { label: "이 달의 상품", href: `/shop?category=${MONTHLY_SLUG}` },
     ...tree.map((c) => ({ label: c.ko, href: `/shop?category=${c.slug}` })),
   ];
-  // 안내 열: 소개·오시는 길(내비) + 고객 게시판.
+  // 안내 열: SHOWROOM(소개=오시는 길 합침) + 고객 게시판.
   const guideLinks: FooterLink[] = [
-    ...nav.filter((n) => n.href !== "/shop"),
+    { label: "SHOWROOM", href: "/about" },
     { label: "공지사항", href: "/notice" },
     { label: "문의", href: "/inquiry" },
     { label: "리뷰", href: "/review" },
