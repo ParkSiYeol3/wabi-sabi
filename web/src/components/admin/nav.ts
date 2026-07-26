@@ -7,6 +7,7 @@ import {
   Megaphone,
   MessageCircle,
   Star,
+  Camera,
   FileText,
   ScrollText,
   Bug,
@@ -41,6 +42,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { href: "/admin/inquiries", label: "문의", icon: MessageCircle },
       { href: "/admin/reviews", label: "리뷰", icon: Star },
+      { href: "/admin/moments", label: "오늘의 와비사비", icon: Camera },
       { href: "/admin/notices", label: "공지", icon: Megaphone },
       { href: "/admin/newsletter", label: "뉴스레터", icon: Mail },
     ],

@@ -65,6 +65,7 @@ export async function SiteFooter() {
   // 안내 열: SHOWROOM(소개=오시는 길 합침) + 고객 게시판.
   const guideLinks: FooterLink[] = [
     { label: "SHOWROOM", href: "/about" },
+    { label: "오늘의 와비사비", href: "/today" },
     { label: "공지사항", href: "/notice" },
     { label: "문의", href: "/inquiry" },
     { label: "리뷰", href: "/review" },
