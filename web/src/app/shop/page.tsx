@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Form from "next/form";
-import { Search, Camera } from "lucide-react";
+import { Search } from "lucide-react";
 import { Container } from "@/components/container";
+import { CtaLink } from "@/components/cta-link";
 import { ProductCard } from "@/components/product-card";
 import { Reveal } from "@/components/reveal";
 import { Input } from "@/components/ui/input";
@@ -93,14 +94,11 @@ export default async function ShopPage({
         })}
       </nav>
 
-      {/* 오늘의 와비사비(자유게시판) — 모바일 강조 버튼(데스크톱은 사이드바). */}
-      <Link
-        href="/today"
-        className="mt-3 inline-flex items-center gap-2 rounded-lg bg-wabi-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-wabi-accent/90 lg:hidden"
-      >
-        <Camera className="size-4" strokeWidth={1.75} aria-hidden />
-        오늘의 와비사비
-      </Link>
+      {/* 오늘의 와비사비(자유게시판) — 모바일 강조 버튼(데스크톱은 사이드바).
+          홈 Shop CTA 와 같은 채워지는 아웃라인. */}
+      <div className="mt-3 lg:hidden">
+        <CtaLink href="/today" label="오늘의 와비사비" />
+      </div>
 
       {/* 모바일 소분류 줄 — 선택된 대분류(또는 그 소분류)가 있을 때만 */}
       {(() => {

@@ -29,7 +29,10 @@ function AuthForm() {
     if (!authLoading && user) router.replace(redirect);
   }, [authLoading, user, redirect, router]);
 
-  const [tab, setTab] = useState<Tab>("login");
+  // ?tab=signup 이면 회원가입 탭으로 시작(푸터 회원가입 링크 등).
+  const [tab, setTab] = useState<Tab>(
+    params.get("tab") === "signup" ? "signup" : "login",
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);

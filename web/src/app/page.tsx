@@ -1,5 +1,5 @@
-import Link from "next/link";
 import Image from "next/image";
+import { CtaLink } from "@/components/cta-link";
 import { Cormorant_Garamond, Space_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import { Reveal } from "@/components/reveal";
@@ -92,23 +92,8 @@ export default async function Home({
         {/* 철학 3주(侘·寂·選)는 곡선 여정 안으로 이동(#225) — 여기선 반복하지 않는다 */}
         <Reveal>
           <div className="mt-14">
-            {/* 채워지는 아웃라인 CTA (#231) — 호버/포커스 시 먹색 판이 아래에서
-                차오르며 글자까지 크림색으로 바뀐다. 색 전환을 따로 주면 판이
-                절반만 올라온 순간 글자가 배경에 묻히므로, 반전된 문구를 판 위에
-                얹어 함께 슬라이드시킨다(마스킹). 판 레이어는 aria-hidden —
-                스크린리더가 같은 문장을 두 번 읽지 않게. */}
-            <Link
-              href="/shop"
-              className="group relative inline-block overflow-hidden rounded-3xl border border-[#423c30]/70 px-6 py-3 text-center [font-family:var(--ws-mono)] text-[10px] leading-relaxed tracking-[1.5px] text-[#423c30] md:rounded-full md:px-9 md:py-4 md:text-[12px] md:tracking-[2px]"
-            >
-              <span>{cta}</span>
-              <span
-                aria-hidden
-                className="absolute inset-0 flex translate-y-full items-center justify-center bg-[#423c30] px-6 text-[#f3ebdd] transition-transform duration-500 ease-out group-hover:translate-y-0 group-focus-visible:translate-y-0 motion-reduce:transition-none md:px-9"
-              >
-                <span>{cta}</span>
-              </span>
-            </Link>
+            {/* 채워지는 아웃라인 CTA(#231) — CtaLink 공유(오늘의 와비사비 버튼과 동일) */}
+            <CtaLink href="/shop" label={cta} size="lg" />
           </div>
         </Reveal>
       </section>
