@@ -83,13 +83,6 @@ export async function SiteFooter() {
             <LinkColumn title="상품" links={shopLinks} />
             <LinkColumn title="안내" links={guideLinks} />
             <LinkColumn title="약관" links={[...legalNav]} />
-            <LinkColumn
-              title="계정"
-              links={[
-                { label: "로그인", href: "/auth" },
-                { label: "회원가입", href: "/auth?tab=signup" },
-              ]}
-            />
           </nav>
 
           {/* 우측 — 브랜드 + 사업자 정보 */}
