@@ -48,11 +48,17 @@ export function SiteHeader() {
             preload
             className="h-6 w-auto"
           />
-          <span className="text-sm font-bold tracking-[0.2em]">{site.name}</span>
+          {/* 로고 = Cormorant Garamond(대표님) */}
+          <span className="text-sm font-bold tracking-[0.2em] [font-family:var(--font-cormorant)]">
+            {site.name}
+          </span>
         </Link>
 
-        {/* 데스크톱 내비 */}
-        <nav className="hidden md:flex md:items-center md:gap-10" aria-label="주요 메뉴">
+        {/* 데스크톱 내비 = Pretendard(대표님) */}
+        <nav
+          className="hidden md:flex md:items-center md:gap-10 [font-family:var(--font-pretendard)]"
+          aria-label="주요 메뉴"
+        >
           {nav.map((item) => (
             <Link
               key={item.href}
@@ -125,7 +131,10 @@ export function SiteHeader() {
           "transition-all duration-200",
         )}
       >
-        <nav className="flex flex-col px-5 py-2" aria-label="모바일 메뉴">
+        <nav
+          className="flex flex-col px-5 py-2 [font-family:var(--font-pretendard)]"
+          aria-label="모바일 메뉴"
+        >
           {nav.map((item) => (
             <Link
               key={item.href}

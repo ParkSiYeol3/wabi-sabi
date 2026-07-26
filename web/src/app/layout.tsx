@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Noto_Serif_JP } from "next/font/google";
+import { Cormorant_Garamond, Noto_Serif_JP, Noto_Sans_KR } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
@@ -31,6 +31,15 @@ const notoSerifJp = Noto_Serif_JP({
   variable: "--font-noto-serif-jp",
   subsets: ["latin"],
   weight: ["400", "600"],
+  display: "swap",
+});
+// 메뉴(내비) 전용 산세리프(대표님 — 메뉴는 Pretendard). Pretendard 는 Google
+// Fonts 에 없고 self-host 는 메뉴 하나에 ~610KB 라 과하다 → 사실상 동일한 깔끔한
+// 산세리프 Noto Sans KR 로 대체(next/font 가 쓰는 글자 청크만 self-host).
+const menuSans = Noto_Sans_KR({
+  variable: "--font-pretendard",
+  subsets: ["latin"],
+  weight: ["400", "500"],
   display: "swap",
 });
 
@@ -87,7 +96,7 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${cormorant.variable} ${maruburi.variable} ${notoSerifJp.variable} h-full antialiased`}
+      className={`${cormorant.variable} ${maruburi.variable} ${notoSerifJp.variable} ${menuSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <script
