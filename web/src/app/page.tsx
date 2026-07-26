@@ -29,7 +29,7 @@ export default async function Home({
 
   return (
     <div
-      className="overflow-x-clip bg-[#f3ebdd] text-[#423c30] [--ws-mono:var(--font-noto-serif-kr),var(--font-noto-serif-jp),serif] [--ws-serif:var(--font-noto-serif-kr),var(--font-noto-serif-jp),serif]"
+      className="overflow-x-clip bg-[#f3ebdd] text-[#423c30] [--ws-mono:var(--font-cormorant),var(--font-song-myung),var(--font-noto-serif-jp),serif] [--ws-serif:var(--font-cormorant),var(--font-song-myung),var(--font-noto-serif-jp),serif]"
     >
       {/* 휠 스크롤 이징 — 홈에서만 (#197 6차) */}
       <SmoothScroll />
