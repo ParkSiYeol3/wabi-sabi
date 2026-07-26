@@ -58,7 +58,10 @@ export function ProductCard({
         <p className="mt-3 text-xs text-wabi-fg-muted">{product.category}</p>
       )}
       <p className="mt-1 text-sm">{product.name}</p>
-      <p className="text-xs text-wabi-fg-muted">{won(product.price)}</p>
+      {/* 가격 강조(대표님) — 이름보다 크게, 흐리지 않게 */}
+      <p className="mt-0.5 text-[15px] font-medium text-wabi-fg">
+        {won(product.price)}
+      </p>
     </Link>
   );
 }
