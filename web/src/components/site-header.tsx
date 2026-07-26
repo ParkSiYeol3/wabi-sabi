@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, ShoppingBag, User } from "lucide-react";
+import { Menu, X, ShoppingBag, User, Heart, Receipt } from "lucide-react";
 import { nav, site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { useCart, cartCount } from "@/store/cart";
@@ -80,6 +80,25 @@ export function SiteHeader() {
 
         {/* 우측 액션 */}
         <div className="flex items-center gap-1">
+          {/* 로그인 시 위시리스트·주문내역 바로가기(대표님 — 눈에 띄게 아이콘) */}
+          {mounted && user && (
+            <>
+              <Link
+                href="/mypage/wishlist"
+                aria-label="위시리스트"
+                className="rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted"
+              >
+                <Heart className="size-5" strokeWidth={1.5} />
+              </Link>
+              <Link
+                href="/mypage/orders"
+                aria-label="주문 내역"
+                className="rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted"
+              >
+                <Receipt className="size-5" strokeWidth={1.5} />
+              </Link>
+            </>
+          )}
           <Link
             href="/cart"
             aria-label={`장바구니${mounted && count > 0 ? ` (${count}개)` : ""}`}

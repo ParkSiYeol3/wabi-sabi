@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { site, business, legalNav, MONTHLY_SLUG } from "@/lib/site";
 import { getCategoryTree } from "@/lib/queries/categories";
+import { LogoutButton } from "@/components/logout-button";
 
 // 전자상거래법 §10 — 사업자 정보 표시 (#106).
 // 아직 못 받은 값(개인정보보호책임자 등)은 빈 문자열이며, 여기서 걸러 렌더하지
@@ -92,6 +93,10 @@ export async function SiteFooter() {
               <span className="text-xs tracking-[0.2em] text-white/70">
                 {site.name}
               </span>
+            </div>
+            {/* 로그아웃 — 로그인 시에만(빨간 글씨, 대표님). 클라이언트 자체 판정 */}
+            <div className="mt-3 lg:flex lg:justify-end">
+              <LogoutButton variant="link" />
             </div>
             <address className="mt-5 space-y-1 text-[11px] not-italic leading-relaxed text-white/40">
               {businessLines().map((line) => (
