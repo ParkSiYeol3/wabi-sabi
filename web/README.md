@@ -116,6 +116,7 @@ e2e/                  Playwright 스모크 5시나리오
 - **2026-07-26 CTA통일·재고숨김·붓명조·홈로그인(#279~#283)**: CtaLink 공용(오늘의 와비사비=홈 CTA 채워지는 아웃라인)·상품 상세 재고 수량 숨김·**폰트 붓 명조 통일**(한글 Song Myung·라틴 Cormorant·가나 Noto Serif JP, next/font 가 CJK 청크 self-host)·홈 CTA 아래 회색 로그인/회원가입.
 - **2026-07-26 마루부리 Light·소셜 아바타(#285~#286)**: 폰트 최종 한글 마루부리 Light(얇은 붓 명조, 풀 woff2 self-host 11172자). 소셜 로그인 시 헤더에 프로필 아바타(user_metadata) — OAuth 코드 완비, 실활성화는 대시보드 설정(👤).
 - **2026-07-26 소셜로그인 활성·폰트역할·헤더단축·shop UX(#288~#293)**: 구글·카카오 OAuth 실연동 완료(카카오 프사 http CDN 픽스 #289). **폰트 역할 분리**(로고 Cormorant/메뉴 Pretendard=Noto Sans KR/메인 MaruBuri #290). 헤더 위시리스트·주문내역 아이콘+로그아웃 빨간글씨·푸터(#291). shop 사이드바 활성 대분류만·타이틀 카테고리명·가격 확대(#288·#292·#293).
+- **2026-07-28 숫자폰트·세션제한·게시판고도화(#296~#298)**: 가격 **숫자 전용 폰트 Cormorant**(.font-numeric, 고객화면 전부·admin 표 제외 #296). **로그인 지속시간 제한**(미활동 30분+절대 7일, SessionTimeout client·localStorage, 개인정보보호 #297). **오늘의 와비사비 고도화**(0039 moment_likes·moment_comments, 더보기 페이지네이션·상세 /today/[id]·공감(하트)·댓글 #298).
 
 ## 주요 라우트
 | 경로 | 내용 |
