@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm i *)",
+      "Bash(npm install*)",
+      "Bash(npm update*)",
+      "Bash(npm ls *)",
+      "Bash(npm audit*)",
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(python3 -)",
+      "Bash(curl -s https://wabi-sabi-nu.vercel.app/robots.txt)",
+      "Bash(curl -s https://wasa.kr*)",
+      "Bash(curl -s -o *)",
+      "Bash(git commit -q -m ' *)",
+      "Bash(node -e \"const s=require\\('./package.json'\\).scripts; console.log\\(JSON.stringify\\(s,null,2\\)\\)\")",
+      "Bash(node --env-file=.env.local -e ' *)",
+      "Bash(git commit *)",
+      "Bash(git add *)",
+      "Bash(git push*)",
+      "Bash(git status*)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git fetch*)",
+      "Bash(git rebase *)",
+      "Bash(git branch *)",
+      "Bash(git -C *)",
+      "Bash(gh pr *)",
+      "Bash(gh run *)",
+      "Bash(gh api *)",
+      "Bash(gh issue *)",
+      "Bash(grep -vE '^<|^```|Repository:|^#!/|^set |^echo|^cat |^fd |^git ls|^💡|^🌐|^🏁|Citations|^- [12]:|mintlify|github.com/supabase')"
+    ]
+  }
+}

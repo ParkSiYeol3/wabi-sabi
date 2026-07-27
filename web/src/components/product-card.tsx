@@ -58,8 +58,8 @@ export function ProductCard({
         <p className="mt-3 text-xs text-wabi-fg-muted">{product.category}</p>
       )}
       <p className="mt-1 text-sm">{product.name}</p>
-      {/* 가격 강조(대표님) — 확실히 크게, 흐리지 않게 */}
-      <p className="mt-1 text-xl font-semibold text-wabi-fg">
+      {/* 가격 강조(대표님) — 확실히 크게, 흐리지 않게. 숫자는 Cormorant(대표님) */}
+      <p className="mt-1 text-xl font-semibold text-wabi-fg font-numeric">
         {won(product.price)}
       </p>
     </Link>

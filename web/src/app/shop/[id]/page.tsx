@@ -176,7 +176,9 @@ export default async function ProductDetailPage({
             <h1 className="text-2xl font-semibold">{product.name}</h1>
             <WishlistButton productId={product.id} initial={wished} />
           </div>
-          <p className="mt-4 text-xl">{won(product.price)}</p>
+          <p className="mt-4 text-2xl font-semibold font-numeric">
+            {won(product.price)}
+          </p>
 
           {product.description && (
             <p className="mt-6 text-sm leading-7 text-wabi-fg-muted">

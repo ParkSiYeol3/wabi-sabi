@@ -103,7 +103,9 @@ export default async function OrderDetailPage({
                       <span className="text-wabi-fg-muted"> × {it.quantity}</span>
                     )}
                   </span>
-                  <span>{won(it.price * it.quantity + addonSum)}</span>
+                  <span className="font-numeric">
+                    {won(it.price * it.quantity + addonSum)}
+                  </span>
                 </div>
                 {lineAddons.length > 0 && (
                   <p className="mt-1 text-xs text-wabi-fg-muted">
@@ -116,7 +118,7 @@ export default async function OrderDetailPage({
         </ul>
         <p className="mt-4 flex items-center justify-between text-sm font-medium">
           <span>결제 금액</span>
-          <span>{won(order.total_price)}</span>
+          <span className="font-numeric">{won(order.total_price)}</span>
         </p>
       </section>
 
