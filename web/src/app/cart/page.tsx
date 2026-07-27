@@ -80,7 +80,7 @@ export default function CartPage() {
 
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm">{item.name}</p>
-              <p className="mt-1 text-xs text-wabi-fg-muted">
+              <p className="mt-1 text-xs text-wabi-fg-muted font-numeric">
                 {won(item.price)}
               </p>
               {item.addons.length > 0 && (
@@ -113,7 +113,7 @@ export default function CartPage() {
               </button>
             </div>
 
-            <p className="w-24 text-right text-sm">
+            <p className="w-24 text-right text-sm font-numeric">
               {won(item.price * item.quantity + addonsTotal(item.addons))}
             </p>
 
@@ -132,7 +132,9 @@ export default function CartPage() {
       {/* 합계 */}
       <div className="mt-8 flex items-center justify-between">
         <span className="text-sm text-wabi-fg-muted">총 결제금액</span>
-        <span className="text-xl font-semibold">{won(total + addonSum)}</span>
+        <span className="text-xl font-semibold font-numeric">
+          {won(total + addonSum)}
+        </span>
       </div>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">

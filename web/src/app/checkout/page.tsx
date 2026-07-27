@@ -223,24 +223,24 @@ export default function CheckoutPage() {
                 <span className="min-w-0 truncate text-wabi-fg-muted">
                   {i.name} × {i.quantity}
                 </span>
-                <span>{won(i.price * i.quantity)}</span>
+                <span className="font-numeric">{won(i.price * i.quantity)}</span>
               </li>
             ))}
           </ul>
           <dl className="mt-6 space-y-2 border-t border-wabi-border pt-4 text-sm">
             <div className="flex justify-between">
               <dt className="text-wabi-fg-muted">상품 합계</dt>
-              <dd>{won(subtotal)}</dd>
+              <dd className="font-numeric">{won(subtotal)}</dd>
             </div>
             {addonSum > 0 && (
               <div className="flex justify-between">
                 <dt className="text-wabi-fg-muted">추가 옵션</dt>
-                <dd>{won(addonSum)}</dd>
+                <dd className="font-numeric">{won(addonSum)}</dd>
               </div>
             )}
             <div className="flex justify-between pt-2 text-base font-semibold">
               <dt>총 결제금액</dt>
-              <dd>{won(total)}</dd>
+              <dd className="font-numeric">{won(total)}</dd>
             </div>
           </dl>
 

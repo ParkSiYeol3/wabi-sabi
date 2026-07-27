@@ -102,6 +102,17 @@
   --font-serif-jp: var(--font-serif);
 }
 
+@layer utilities {
+  /* 숫자 전용 폰트(대표님 — 숫자만 따로) : 가격 등 고객 화면 숫자를 Cormorant
+     Garamond 로. 라틴 세리프라 숫자 라이닝 정렬이 우아하다. "원" 같은 한글은
+     스택 폴백(마루부리)이 담당. lining-nums 로 대문자 높이 정렬, tabular-nums
+     로 자릿수 폭 고정(가격 흔들림 방지). */
+  .font-numeric {
+    font-family: var(--font-cormorant), var(--font-maruburi), ui-serif, serif;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
