@@ -7,6 +7,11 @@ import { createClient } from "@/lib/supabase/server";
 import { adminConfigured } from "@/lib/supabase/admin";
 import { rateLimit } from "@/lib/rate-limit";
 import { uploadSiteImage, deleteProductImage } from "@/lib/storage";
+import {
+  getMomentsPage,
+  MOMENTS_PAGE_SIZE,
+  type MomentCard,
+} from "@/lib/queries/moments";
 
 // "오늘의 와비사비" 게시 — 로그인 사용자, 사진 필수 + 짧은 글(선택).
 // 사진 업로드는 서버(service_role)에서 처리하므로 사용자 스토리지 RLS 불요.
@@ -98,5 +103,141 @@ export async function deleteMoment(formData: FormData) {
     return;
   }
   await deleteProductImage(row.image_url);
+  revalidatePath("/today");
+  revalidatePath(`/today/${id}`);
+
+  // 상세에서 삭제한 경우 목록으로 복귀(그리드는 redirect 없이 revalidate 만).
+  const redirectTo = String(formData.get("redirect") || "");
+  if (redirectTo.startsWith("/") && !redirectTo.startsWith("//"))
+    redirect(redirectTo);
+}
+
+// 더보기 — 다음 페이지를 서버에서 받아 클라이언트가 이어붙인다(0039 페이지네이션).
+export async function loadMoreMoments(
+  offset: number,
+): Promise<{ moments: MomentCard[]; hasMore: boolean }> {
+  const safeOffset = Number.isFinite(offset) && offset > 0 ? Math.floor(offset) : 0;
+  return getMomentsPage(safeOffset, MOMENTS_PAGE_SIZE);
+}
+
+// 공감 토글 — 로그인 본인 1건(PK 로 중복 차단). 최신 개수·본인 여부를 돌려준다.
+export async function toggleLike(
+  momentId: string,
+): Promise<{ liked: boolean; count: number } | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  if (!z.string().uuid().safeParse(momentId).success) return null;
+
+  const { data: existing } = await supabase
+    .from("moment_likes")
+    .select("moment_id")
+    .eq("moment_id", momentId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existing) {
+    await supabase
+      .from("moment_likes")
+      .delete()
+      .eq("moment_id", momentId)
+      .eq("user_id", user.id);
+  } else {
+    const { error } = await supabase
+      .from("moment_likes")
+      .insert({ moment_id: momentId, user_id: user.id });
+    // 23505 = 유니크 충돌(동시 클릭) — 이미 눌린 것이므로 무시.
+    if (error && error.code !== "23505") {
+      console.error("[moment] like 실패", error);
+      return null;
+    }
+  }
+
+  const { count } = await supabase
+    .from("moment_likes")
+    .select("*", { count: "exact", head: true })
+    .eq("moment_id", momentId);
+
+  revalidatePath("/today");
+  revalidatePath(`/today/${momentId}`);
+  return { liked: !existing, count: count ?? 0 };
+}
+
+// 댓글 등록 — 로그인 본인, 1~500자. 도배 방지 시간 30건.
+export type CommentResult = { ok: boolean; message: string };
+const commentSchema = z.string().trim().min(1).max(500);
+
+export async function createComment(
+  _prev: CommentResult | null,
+  formData: FormData,
+): Promise<CommentResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return { ok: false, message: "로그인 후 댓글을 남길 수 있습니다." };
+
+  const momentId = String(formData.get("moment_id") || "");
+  if (!z.string().uuid().safeParse(momentId).success)
+    return { ok: false, message: "잘못된 요청입니다." };
+
+  const parsed = commentSchema.safeParse(String(formData.get("body") || ""));
+  if (!parsed.success)
+    return { ok: false, message: "댓글은 1~500자로 써주세요." };
+
+  const { ok } = await rateLimit(`comment:${user.id}`, 30, 3_600);
+  if (!ok)
+    return { ok: false, message: "너무 자주 남겼습니다. 잠시 후 다시 시도하세요." };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("name")
+    .eq("id", user.id)
+    .maybeSingle<{ name: string | null }>();
+  const authorName =
+    profile?.name?.trim() || user.email?.split("@")[0] || "와비사비 손님";
+
+  const { error } = await supabase.from("moment_comments").insert({
+    moment_id: momentId,
+    user_id: user.id,
+    author_name: authorName,
+    body: parsed.data,
+  });
+  if (error) {
+    console.error("[comment] insert 실패", error);
+    return { ok: false, message: "등록에 실패했습니다. 잠시 후 다시 시도하세요." };
+  }
+
+  revalidatePath(`/today/${momentId}`);
+  revalidatePath("/today");
+  return { ok: true, message: "등록되었습니다." };
+}
+
+// 본인 댓글 삭제 — RLS(delete own) + user_id 조건 이중 방어.
+export async function deleteComment(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const id = String(formData.get("id") || "");
+  const momentId = String(formData.get("moment_id") || "");
+  if (!z.string().uuid().safeParse(id).success) return;
+
+  const { error } = await supabase
+    .from("moment_comments")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error) {
+    console.error("[comment] delete 실패", id, error);
+    return;
+  }
+  if (z.string().uuid().safeParse(momentId).success)
+    revalidatePath(`/today/${momentId}`);
   revalidatePath("/today");
 }
