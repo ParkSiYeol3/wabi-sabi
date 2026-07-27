@@ -29,6 +29,10 @@ function AuthForm() {
     if (!authLoading && user) router.replace(redirect);
   }, [authLoading, user, redirect, router]);
 
+  // 세션 만료로 튕겨온 경우 사유 안내(SessionTimeout — 미활동 30분·절대 7일).
+  const timedOut = params.get("reason") === "timeout";
+  const timeoutKind = params.get("kind");
+
   // ?tab=signup 이면 회원가입 탭으로 시작(푸터 회원가입 링크 등).
   const [tab, setTab] = useState<Tab>(
     params.get("tab") === "signup" ? "signup" : "login",
@@ -112,6 +116,16 @@ function AuthForm() {
     <div className="w-full max-w-sm border border-wabi-border p-8">
       {/* 시각적으론 탭이 제목 역할 — 스크린리더용 페이지 제목만 별도 제공 */}
       <h1 className="sr-only">로그인 · 회원가입</h1>
+      {timedOut && (
+        <p
+          role="status"
+          className="mb-6 border border-wabi-border bg-wabi-subtle/40 px-4 py-3 text-sm leading-6 text-wabi-fg-muted"
+        >
+          {timeoutKind === "max"
+            ? "보안을 위해 로그인 후 7일이 지나 자동 로그아웃되었습니다. 다시 로그인해 주세요."
+            : "30분간 활동이 없어 자동 로그아웃되었습니다. 다시 로그인해 주세요."}
+        </p>
+      )}
       <div className="grid grid-cols-2 border-b border-wabi-border">
         {(["login", "signup"] as const).map((t) => (
           <button

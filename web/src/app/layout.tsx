@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Noto_Serif_JP, Noto_Sans_KR } from "next/font/googl
 import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
+import { SessionTimeout } from "@/components/session-timeout";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { HideOnAdmin } from "@/components/hide-on-admin";
@@ -104,6 +105,8 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: siteJsonLd }}
         />
         <AuthProvider>
+          {/* 로그인 지속시간 제한(미활동 30분·절대 7일) — 개인정보보호 정책 */}
+          <SessionTimeout />
           {/* 키보드 사용자용 본문 바로가기 (a11y) */}
           <a
             href="#main-content"
