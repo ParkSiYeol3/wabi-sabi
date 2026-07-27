@@ -23,9 +23,12 @@ export function SessionTimeout() {
   const user = useAuthStore((s) => s.user);
   const router = useRouter();
   const pathname = usePathname();
-  // 만료 시 최신 라우터/경로 참조(리스너 재바인딩 없이).
+  // 만료 시 최신 라우터/경로 참조(리스너 재바인딩 없이). render 중이 아니라
+  // 별도 effect 에서 갱신(react-hooks/refs — ref 는 render 중 접근 금지).
   const nav = useRef({ router, pathname });
-  nav.current = { router, pathname };
+  useEffect(() => {
+    nav.current = { router, pathname };
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
