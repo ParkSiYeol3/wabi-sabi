@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useCart, cartTotal } from "@/store/cart";
 import { useMounted } from "@/hooks/use-mounted";
 import { resolveAddons, addonsTotal } from "@/lib/addons";
-
-const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
+import { Price } from "@/components/price";
 
 export default function CartPage() {
   const items = useCart((s) => s.items);
@@ -80,8 +79,8 @@ export default function CartPage() {
 
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm">{item.name}</p>
-              <p className="mt-1 text-xs text-wabi-fg-muted font-numeric">
-                {won(item.price)}
+              <p className="mt-1 text-xs text-wabi-fg-muted">
+                <Price value={item.price} />
               </p>
               {item.addons.length > 0 && (
                 <p className="mt-1 text-xs text-wabi-fg-muted">
@@ -113,8 +112,8 @@ export default function CartPage() {
               </button>
             </div>
 
-            <p className="w-24 text-right text-sm font-numeric">
-              {won(item.price * item.quantity + addonsTotal(item.addons))}
+            <p className="w-24 text-right text-sm">
+              <Price value={item.price * item.quantity + addonsTotal(item.addons)} />
             </p>
 
             <button
@@ -132,8 +131,8 @@ export default function CartPage() {
       {/* 합계 */}
       <div className="mt-8 flex items-center justify-between">
         <span className="text-sm text-wabi-fg-muted">총 결제금액</span>
-        <span className="text-xl font-semibold font-numeric">
-          {won(total + addonSum)}
+        <span className="text-xl font-semibold">
+          <Price value={total + addonSum} />
         </span>
       </div>
 

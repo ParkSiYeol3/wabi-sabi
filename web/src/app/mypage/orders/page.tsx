@@ -7,7 +7,8 @@ import { Container } from "@/components/container";
 import { CancelOrderButton } from "@/components/cancel-order-button";
 import { OrderStatusBadge } from "@/components/order-status-badge";
 import { createClient } from "@/lib/supabase/server";
-import { won, formatDateKST, withdrawalDeadlineKST } from "@/lib/orders";
+import { formatDateKST, withdrawalDeadlineKST } from "@/lib/orders";
+import { Price } from "@/components/price";
 
 export const metadata: Metadata = { title: "주문 내역" };
 
@@ -114,8 +115,8 @@ export default async function OrdersPage() {
                       {first && first.quantity > 1 ? ` ${first.quantity}개` : ""}
                       {rest > 0 ? ` 외 ${rest}건` : ""}
                     </p>
-                    <p className="mt-1 text-sm font-medium font-numeric">
-                      {won(o.total_price)}
+                    <p className="mt-1 text-sm font-medium">
+                      <Price value={o.total_price} />
                     </p>
 
                     {o.delivered_at && (

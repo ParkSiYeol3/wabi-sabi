@@ -11,6 +11,7 @@ import { useAuthStore } from "@/store/auth";
 import { useMounted } from "@/hooks/use-mounted";
 import { won } from "@/lib/orders";
 import { addonsTotal, GIFT_WRAP_CODE } from "@/lib/addons";
+import { Price } from "@/components/price";
 import {
   createPendingOrder,
   getMyAddresses,
@@ -223,24 +224,24 @@ export default function CheckoutPage() {
                 <span className="min-w-0 truncate text-wabi-fg-muted">
                   {i.name} × {i.quantity}
                 </span>
-                <span className="font-numeric">{won(i.price * i.quantity)}</span>
+                <Price value={i.price * i.quantity} />
               </li>
             ))}
           </ul>
           <dl className="mt-6 space-y-2 border-t border-wabi-border pt-4 text-sm">
             <div className="flex justify-between">
               <dt className="text-wabi-fg-muted">상품 합계</dt>
-              <dd className="font-numeric">{won(subtotal)}</dd>
+              <dd><Price value={subtotal} /></dd>
             </div>
             {addonSum > 0 && (
               <div className="flex justify-between">
                 <dt className="text-wabi-fg-muted">추가 옵션</dt>
-                <dd className="font-numeric">{won(addonSum)}</dd>
+                <dd><Price value={addonSum} /></dd>
               </div>
             )}
             <div className="flex justify-between pt-2 text-base font-semibold">
               <dt>총 결제금액</dt>
-              <dd className="font-numeric">{won(total)}</dd>
+              <dd><Price value={total} /></dd>
             </div>
           </dl>
 

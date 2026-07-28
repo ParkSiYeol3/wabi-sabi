@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ClearCart } from "@/components/clear-cart";
 import { confirmPayment } from "@/lib/payments";
 import { createClient } from "@/lib/supabase/server";
-import { won } from "@/lib/orders";
+import { Price } from "@/components/price";
 
 type SP = { paymentKey?: string; orderId?: string; amount?: string };
 
@@ -46,7 +46,7 @@ export default async function CheckoutSuccessPage({
           <CheckCircle2 className="size-12 text-wabi-fg" strokeWidth={1.2} />
           <h1 className="mt-6 text-2xl font-semibold">주문이 완료되었습니다</h1>
           <p className="mt-3 text-sm text-wabi-fg-muted">
-            결제금액 <span className="font-numeric">{won(Number(amount))}</span>
+            결제금액 <Price value={Number(amount)} />
           </p>
           <div className="mt-10 flex gap-3">
             <Button asChild variant="outline" className="rounded-none border-wabi-fg px-8">

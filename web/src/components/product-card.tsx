@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ImageIcon } from "lucide-react";
+import { Price } from "@/components/price";
 
 export interface ProductCardData {
   id: string;
@@ -12,8 +13,6 @@ export interface ProductCardData {
   // 재고 (#131) — 목록에서 품절을 표시하기 위해 필요. 없으면(undefined) 표시하지 않는다.
   stock?: number;
 }
-
-const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
 
 export function ProductCard({
   product,
@@ -58,9 +57,9 @@ export function ProductCard({
         <p className="mt-3 text-xs text-wabi-fg-muted">{product.category}</p>
       )}
       <p className="mt-1 text-sm">{product.name}</p>
-      {/* 가격 강조(대표님) — 확실히 크게, 흐리지 않게. 숫자는 Cormorant(대표님) */}
-      <p className="mt-1 text-xl font-semibold text-wabi-fg font-numeric">
-        {won(product.price)}
+      {/* 가격 강조(대표님) — 숫자 Cormorant 크게, "원" 작고 흐린 접미(Price) */}
+      <p className="mt-1 text-xl font-semibold text-wabi-fg">
+        <Price value={product.price} />
       </p>
     </Link>
   );
