@@ -5,21 +5,17 @@ import { usePathname } from "next/navigation";
 import { Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// 잔잔한 배경음(대표님/시열님) — river 자연음이 메인으로 먼저, 이후 나머지 트랙을
-// 셔플 루프. 브라우저는 소리 있는 자동재생을 막으므로 "첫 상호작용(클릭·키·스크롤)"에
-// 아주 낮은 볼륨으로 은은히 시작하고, 우측 하단 스피커 토글로 끈다. 선호는 localStorage
-// 기억(끈 사람은 다음 방문에 자동 시작 안 함). layout 마운트라 페이지 전환에도 안 끊김.
+// 잔잔한 배경음(대표님/시열님) — TRACKS 를 루프 재생(여러 개면 셔플). 브라우저는
+// 소리 있는 자동재생을 막으므로 "첫 상호작용(클릭·키·스크롤)"에 아주 낮은 볼륨으로
+// 은은히 시작하고, 우측 하단 스피커 토글로 끈다. 선호는 localStorage 기억(끈 사람은
+// 다음 방문에 자동 시작 안 함). layout 마운트라 페이지 전환에도 안 끊김.
 //
 // 첫 방문자는 "클릭하면 소리가 난다"는 걸 알 수 없으므로, 재생 전까지 화면 클릭을
 // 유도하는 힌트(글래스 pill + 이퀄라이저)를 띄운다. 첫 조작에 재생과 함께 사라진다.
 
-const RIVER =
-  "/sounds/38534292-river-with-faraway-bird-sounds-low-water-flowing-sounds-161873.mp3";
-const OTHERS = [
-  "/sounds/leberch-mellow-piano-355602.mp3",
-  "/sounds/the_mountain-instrumental-piano-252954.mp3",
-  "/sounds/enheee-rain-contemplation-139852.mp3",
-];
+// 배경음 트랙 — public/sounds 에 있는 파일. 끝나면 다시 재생(루프). 여러 개면 셔플.
+// (음원 교체·추가 시 이 배열만 수정하면 된다)
+const TRACKS = ["/sounds/the_mountain-instrumental-piano-252954.mp3"];
 const VOLUME = 0.06; // 들릴 듯 말 듯 아주 잔잔하게 — 배경 공기처럼
 const PREF_KEY = "wabi.bgm"; // "on" | "off"
 const HINT_DELAY = 900; // 페이지가 자리잡은 뒤 힌트 등장
@@ -36,8 +32,8 @@ function shuffle<T>(arr: T[]): T[] {
 
 export function AmbientPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null);
-  // 재생 대기열 — 처음엔 river 를 맨 앞에, 뒤는 나머지 셔플.
-  const queueRef = useRef<string[]>([RIVER, ...shuffle(OTHERS)]);
+  // 재생 대기열 — 트랙 셔플. 끝나면 다시 셔플해 이어 재생.
+  const queueRef = useRef<string[]>(shuffle(TRACKS));
   const idxRef = useRef(0);
   const [playing, setPlaying] = useState(false);
   const [hintOn, setHintOn] = useState(false); // 힌트 마운트 여부
@@ -50,13 +46,13 @@ export function AmbientPlayer() {
     window.setTimeout(() => setHintOn(false), 450);
   }
 
-  // 대기열 끝나면 river 없이 나머지만 다시 셔플해 이어 재생.
+  // 대기열 끝나면 다시 셔플해 이어 재생.
   function advance() {
     const audio = audioRef.current;
     if (!audio) return;
     idxRef.current += 1;
     if (idxRef.current >= queueRef.current.length) {
-      queueRef.current = shuffle(OTHERS);
+      queueRef.current = shuffle(TRACKS);
       idxRef.current = 0;
     }
     audio.src = queueRef.current[idxRef.current];
