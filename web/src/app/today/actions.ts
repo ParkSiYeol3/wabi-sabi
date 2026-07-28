@@ -131,6 +131,10 @@ export async function toggleLike(
   if (!user) return null;
   if (!z.string().uuid().safeParse(momentId).success) return null;
 
+  // 도배 방지 — 분당 60회(정상 토글엔 충분, 자동 스팸은 차단). 초과 시 무시.
+  const { ok: allowed } = await rateLimit(`like:${user.id}`, 60, 60);
+  if (!allowed) return null;
+
   const { data: existing } = await supabase
     .from("moment_likes")
     .select("moment_id")
