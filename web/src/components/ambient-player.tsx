@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,8 @@ export function AmbientPlayer() {
   const [playing, setPlaying] = useState(false);
   const [hintOn, setHintOn] = useState(false); // 힌트 마운트 여부
   const [hintShown, setHintShown] = useState(false); // 등장/퇴장 트랜지션
+  // 클릭 유도 힌트는 홈 메인에서만(대표님/시열님) — 다른 페이지 리렌더 시 갑툭튀 방지.
+  const isHome = usePathname() === "/";
 
   function closeHint() {
     setHintShown(false);
@@ -106,12 +109,13 @@ export function AmbientPlayer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 재생 전이고 끈 적 없으면 잠시 뒤 힌트 등장(entrance 트랜지션).
+  // 재생 전이고 끈 적 없으면 잠시 뒤 힌트 등장(entrance 트랜지션). 홈에서만 arm.
   useEffect(() => {
+    if (!isHome) return;
     if (localStorage.getItem(PREF_KEY) === "off") return;
     const t = window.setTimeout(() => setHintOn(true), HINT_DELAY);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [isHome]);
 
   useEffect(() => {
     if (!hintOn) return;
@@ -125,7 +129,7 @@ export function AmbientPlayer() {
 
       {/* 클릭 유도 힌트 — 재생 전에만. pointer-events-none 로 아래 클릭을 막지 않는다
           (힌트를 눌러도 창 리스너가 첫 제스처로 잡아 재생된다). */}
-      {hintOn && !playing && (
+      {isHome && hintOn && !playing && (
         <div className="pointer-events-none fixed inset-x-0 bottom-20 z-40 flex justify-center px-4">
           <div
             className={cn(

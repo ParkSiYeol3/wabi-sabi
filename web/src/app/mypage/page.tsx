@@ -56,11 +56,14 @@ export default async function MyPage() {
         <form action={updateName} className="mt-4 max-w-sm">
           <label
             htmlFor="mypage-nickname"
-            className="text-xs text-wabi-fg-muted"
+            className="text-sm font-medium text-wabi-fg"
           >
-            닉네임 — 커뮤니티·리뷰에 표시됩니다 (2~20자)
+            닉네임
           </label>
-          <div className="mt-1 flex gap-2">
+          <p className="mt-0.5 text-xs text-wabi-fg-muted">
+            커뮤니티·리뷰에 표시됩니다 · 2~20자
+          </p>
+          <div className="mt-2 flex gap-2">
             <Input
               id="mypage-nickname"
               name="name"
