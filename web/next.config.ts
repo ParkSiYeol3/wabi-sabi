@@ -69,9 +69,20 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
-  // /contact 를 소개(SHOWROOM)로 합침(0037, 대표님) — 기존 링크·북마크 영구 이전.
   async redirects() {
-    return [{ source: "/contact", destination: "/about", permanent: true }];
+    return [
+      // /contact 를 소개(SHOWROOM)로 합침(0037, 대표님) — 기존 링크·북마크 영구 이전.
+      { source: "/contact", destination: "/about", permanent: true },
+      // 캐노니컬 강제: Vercel 배포 URL(wabi-sabi-nu.vercel.app)로 들어오면 정식
+      // 도메인 wasa.kr 로 301. 네이버·구글이 vercel.app URL 을 색인·노출하던 문제
+      // (검색 결과 링크가 vercel.app 로 뜸) 해소 — 도메인 하나로 통합(SEO·브랜드).
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "wabi-sabi-nu.vercel.app" }],
+        destination: "https://wasa.kr/:path*",
+        permanent: true,
+      },
+    ];
   },
   // 상품 이미지 업로드(서버 액션 FormData) — 기본 1MB → 다중 이미지 허용
   experimental: {
