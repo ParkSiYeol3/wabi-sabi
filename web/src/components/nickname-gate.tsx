@@ -50,8 +50,19 @@ export function NicknameGate() {
     };
   }, [user]);
 
-  // 로그인 화면에선 띄우지 않는다(가입 흐름과 겹치지 않게).
-  if (needed !== true || pathname === "/auth") return null;
+  // 차단형 모달이 열려 있는 동안 배경 스크롤을 잠근다(a11y — 뒤 내용이 밀려나지
+  // 않게). /auth 에선 모달을 띄우지 않으므로 잠그지 않는다.
+  const open = needed === true && pathname !== "/auth";
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  if (!open) return null;
 
   return (
     <div
