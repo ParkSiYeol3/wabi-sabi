@@ -143,7 +143,7 @@ export default async function AboutPage() {
                 icon={<Clock className="size-5" strokeWidth={1.5} />}
                 title="영업 시간"
               >
-                <p>{site.hours}</p>
+                <p className="font-numeric">{site.hours}</p>
                 <p className="text-wabi-fg-muted">{site.closed}</p>
               </VisitItem>
               <VisitItem
@@ -151,7 +151,7 @@ export default async function AboutPage() {
                 title="위치"
               >
                 <p>{site.place}</p>
-                <p className="text-wabi-fg-muted">{site.address}</p>
+                <p className="font-numeric text-wabi-fg-muted">{site.address}</p>
                 <p className="text-wabi-fg-muted">{site.addressNote}</p>
               </VisitItem>
               <VisitItem

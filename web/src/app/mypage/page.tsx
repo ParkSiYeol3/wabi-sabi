@@ -51,7 +51,7 @@ export default async function MyPage() {
       <section className="mt-12">
         <h2 className="text-lg font-medium">내 정보</h2>
         <div className="mt-4 space-y-1 text-sm text-wabi-fg-muted">
-          <p>이메일: {profile?.email ?? user.email}</p>
+          <p className="font-numeric">이메일: {profile?.email ?? user.email}</p>
         </div>
         <form action={updateName} className="mt-4 max-w-sm">
           <label
@@ -60,7 +60,7 @@ export default async function MyPage() {
           >
             닉네임
           </label>
-          <p className="mt-0.5 text-xs text-wabi-fg-muted">
+          <p className="mt-0.5 font-numeric text-xs text-wabi-fg-muted">
             커뮤니티·리뷰에 표시됩니다 · 2~20자
           </p>
           <div className="mt-2 flex gap-2">
@@ -96,9 +96,11 @@ export default async function MyPage() {
                 <div className="text-sm">
                   <p className="font-medium">
                     {a.recipient}{" "}
-                    <span className="text-wabi-fg-muted">{a.phone}</span>
+                    <span className="font-numeric text-wabi-fg-muted">
+                      {a.phone}
+                    </span>
                   </p>
-                  <p className="mt-1 text-wabi-fg-muted">
+                  <p className="mt-1 font-numeric text-wabi-fg-muted">
                     {a.postcode ? `(${a.postcode}) ` : ""}
                     {a.address} {a.detail}
                   </p>
