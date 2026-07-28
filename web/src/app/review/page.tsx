@@ -42,7 +42,9 @@ export default async function ReviewListPage() {
                   <span className="text-sm font-medium">{r.author_name}</span>
                 </div>
                 <span className="flex items-center gap-3 text-xs text-wabi-fg-muted">
-                  <time>{new Date(r.created_at).toLocaleDateString("ko-KR")}</time>
+                  <time className="font-numeric">
+                    {new Date(r.created_at).toLocaleDateString("ko-KR")}
+                  </time>
                   {user && user.id !== r.user_id && (
                     <ReportReviewButton
                       reviewId={r.id}

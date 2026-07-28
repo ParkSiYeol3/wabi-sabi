@@ -1,11 +1,10 @@
 import Image from "next/image";
-import Link from "next/link";
 import { CtaLink } from "@/components/cta-link";
 import { Reveal } from "@/components/reveal";
 import { HelixJourney } from "@/components/home/helix-journey";
 import { SmoothScroll } from "@/components/home/smooth-scroll";
+import { HomeAuthLinks } from "@/components/home/auth-links";
 import { getHomeData } from "@/lib/queries/home";
-import { createClient } from "@/lib/supabase/server";
 
 // 홈도 전 사이트와 같은 단일 명조로 통일(대표님) — 기존 무드 폰트(마루부리·
 // Cormorant·Space Mono)를 걷어내고 Noto Serif(KR+JP 폴백)만 쓴다.
@@ -17,15 +16,11 @@ export default async function Home({
   searchParams: Promise<{ left?: string }>;
 }) {
   // 홈 공개 데이터는 캐시된 단일 로더로 (#177). searchParams(탈퇴 안내)는 캐시 밖.
-  // searchParams 를 읽어 이미 동적 렌더라 로그인 여부 조회 추가 비용은 없다.
-  const supabase = await createClient();
-  const [{ philosophy, pillarLabels, pillars, cta }, { left }, { data: auth }] =
-    await Promise.all([
-      getHomeData(),
-      searchParams,
-      supabase.auth.getUser(),
-    ]);
-  const loggedIn = !!auth.user;
+  // 로그인 여부는 서버에서 판정하지 않는다 — 소셜 로그인 직후·클라 라우터 캐시로
+  // 상태를 놓쳐 로그인 사용자에게도 로그인 링크가 보이던 문제(#331 후속). CTA 아래
+  // 로그인/회원가입 링크는 HomeAuthLinks(클라)가 스토어로 실시간 판정한다.
+  const [{ philosophy, pillarLabels, pillars, cta }, { left }] =
+    await Promise.all([getHomeData(), searchParams]);
 
   return (
     <div
@@ -75,24 +70,8 @@ export default async function Home({
             {/* 채워지는 아웃라인 CTA(#231) — CtaLink 공유(오늘의 와비사비 버튼과 동일) */}
             <CtaLink href="/shop" label={cta} size="lg" />
 
-            {/* CTA 아래 눈에 띄지 않는 회색 로그인/회원가입(대표님) — 비로그인만 */}
-            {!loggedIn && (
-              <p className="mt-5 [font-family:var(--ws-mono)] text-[11px] tracking-[1px] text-[#423c30]/45">
-                <Link
-                  href="/auth"
-                  className="underline-offset-4 transition-colors hover:text-[#423c30]/80 hover:underline"
-                >
-                  로그인
-                </Link>
-                <span className="mx-2 text-[#423c30]/30">/</span>
-                <Link
-                  href="/auth?tab=signup"
-                  className="underline-offset-4 transition-colors hover:text-[#423c30]/80 hover:underline"
-                >
-                  회원가입
-                </Link>
-              </p>
-            )}
+            {/* CTA 아래 눈에 띄지 않는 회색 로그인/회원가입(대표님) — 비로그인만(클라 판정) */}
+            <HomeAuthLinks />
           </div>
         </Reveal>
       </section>

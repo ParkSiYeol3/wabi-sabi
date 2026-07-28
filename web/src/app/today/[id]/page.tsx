@@ -73,7 +73,7 @@ export default async function MomentDetailPage({ params }: Params) {
         <div className="flex flex-col">
           <div className="flex items-center justify-between text-sm text-wabi-fg-muted">
             <span className="font-medium text-wabi-fg">{moment.author_name}</span>
-            <time>{fmtDate(moment.created_at)}</time>
+            <time className="font-numeric">{fmtDate(moment.created_at)}</time>
           </div>
 
           {moment.body && (
@@ -125,7 +125,7 @@ export default async function MomentDetailPage({ params }: Params) {
                     {c.author_name}
                   </span>
                   <span className="flex items-center gap-2">
-                    <time>{fmtDate(c.created_at)}</time>
+                    <time className="font-numeric">{fmtDate(c.created_at)}</time>
                     {user?.id === c.user_id && (
                       <form action={deleteComment}>
                         <input type="hidden" name="id" value={c.id} />

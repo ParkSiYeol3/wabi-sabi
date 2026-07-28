@@ -29,7 +29,7 @@ export default async function NoticeDetailPage({
       <article className="mx-auto max-w-2xl">
         <header className="border-b border-wabi-border pb-6">
           <h1 className="text-xl font-semibold">{notice.title}</h1>
-          <time className="mt-2 block text-xs text-wabi-fg-muted">
+          <time className="mt-2 block font-numeric text-xs text-wabi-fg-muted">
             {new Date(notice.created_at).toLocaleDateString("ko-KR")}
           </time>
         </header>

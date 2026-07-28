@@ -36,7 +36,7 @@ export default async function InquiryDetailPage({
             )}
             {q.title}
           </h1>
-          <time className="mt-2 block text-xs text-wabi-fg-muted">
+          <time className="mt-2 block font-numeric text-xs text-wabi-fg-muted">
             {new Date(q.created_at).toLocaleDateString("ko-KR")}
           </time>
         </header>
@@ -53,7 +53,7 @@ export default async function InquiryDetailPage({
               {q.answer}
             </div>
             {q.answered_at && (
-              <time className="mt-3 block text-xs text-wabi-fg-muted">
+              <time className="mt-3 block font-numeric text-xs text-wabi-fg-muted">
                 {new Date(q.answered_at).toLocaleDateString("ko-KR")}
               </time>
             )}
