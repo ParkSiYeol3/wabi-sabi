@@ -15,7 +15,7 @@ const OTHERS = [
   "/sounds/the_mountain-instrumental-piano-252954.mp3",
   "/sounds/enheee-rain-contemplation-139852.mp3",
 ];
-const VOLUME = 0.18; // 잔잔하게 — 대화·집중 방해 안 되게
+const VOLUME = 0.06; // 들릴 듯 말 듯 아주 잔잔하게(대표님/시열님) — 배경 공기처럼
 const PREF_KEY = "wabi.bgm"; // "on" | "off"
 
 // Fisher–Yates 셔플(원본 불변).
