@@ -5,6 +5,15 @@
   "engines": {
     "node": "24.x"
   },
+  "//browserslist": "모던 브라우저만 타깃 → SWC 가 불필요한 레거시 폴리필(Array.at·flat·Object.fromEntries 등)을 넣지 않는다(#Lighthouse Legacy JS 14KiB 절감). 대상 기능은 전부 2022+ 브라우저 baseline 이라 실사용자 영향 없음.",
+  "browserslist": [
+    "chrome >= 100",
+    "edge >= 100",
+    "firefox >= 100",
+    "safari >= 15.4",
+    "ios_saf >= 15.4",
+    "not dead"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
