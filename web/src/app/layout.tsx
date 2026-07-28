@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
 import { SessionTimeout } from "@/components/session-timeout";
+import { AmbientPlayer } from "@/components/ambient-player";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { HideOnAdmin } from "@/components/hide-on-admin";
@@ -120,6 +121,10 @@ export default function RootLayout({
           </main>
           <HideOnAdmin>
             <SiteFooter />
+          </HideOnAdmin>
+          {/* 잔잔한 배경음(첫 조작 시 은은히 시작·토글) — 어드민 제외 */}
+          <HideOnAdmin>
+            <AmbientPlayer />
           </HideOnAdmin>
         </AuthProvider>
       </body>
