@@ -86,10 +86,7 @@ export const categoryTree: readonly CategoryNode[] = [
     ko: "OBJECTS",
     en: "Objects",
     children: [
-      { slug: "keyring", ko: "키링", en: "Keyring" },
-      { slug: "necklace", ko: "목걸이", en: "Necklace" },
-      { slug: "bracelet", ko: "팔찌", en: "Bracelet" },
-      { slug: "hairtie", ko: "머리끈", en: "Hair Tie" },
+      { slug: "accessory", ko: "액세서리", en: "Accessory" },
       { slug: "life", ko: "생활 소품", en: "Life" },
       { slug: "craft", ko: "공예", en: "Craft" },
       { slug: "gift", ko: "선물", en: "Gift" },
