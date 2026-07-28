@@ -73,6 +73,9 @@ export const metadata: Metadata = {
   // 전용 name 이라 other 로 넣는다(코드 받으면 naver-site-verification 추가).
   verification: {
     google: "-zsHZOqR95XLcbNQoCrlplHCip2X1cUnpBZH5BJ-hmA",
+    other: {
+      "naver-site-verification": "e801895dfeca654f8497e71965a8bfeee2bd2cb1",
+    },
   },
 };
 
