@@ -222,7 +222,7 @@ export default function CheckoutPage() {
             {items.map((i) => (
               <li key={i.id} className="flex justify-between gap-3">
                 <span className="min-w-0 truncate text-wabi-fg-muted">
-                  {i.name} × {i.quantity}
+                  {i.name} × <span className="font-numeric">{i.quantity}</span>
                 </span>
                 <Price value={i.price * i.quantity} />
               </li>
@@ -256,7 +256,13 @@ export default function CheckoutPage() {
             disabled={loading}
             className="mt-6 w-full rounded-none bg-wabi-accent py-6 text-base hover:bg-wabi-accent/90"
           >
-            {loading ? "처리 중…" : `${won(total)} 결제하기`}
+            {loading ? (
+              "처리 중…"
+            ) : (
+              <>
+                <span className="font-numeric">{won(total)}</span> 결제하기
+              </>
+            )}
           </Button>
         </aside>
       </form>

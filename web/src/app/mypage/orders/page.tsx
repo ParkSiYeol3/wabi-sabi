@@ -96,21 +96,21 @@ export default async function OrdersPage() {
                       <Link
                         href={`/mypage/orders/${o.id}`}
                         aria-label={`주문 ${o.order_number} 상세 보기`}
-                        className="text-sm font-medium underline-offset-4 hover:underline"
+                        className="font-numeric text-sm font-medium underline-offset-4 hover:underline"
                       >
                         {o.order_number}
                       </Link>
                       <OrderStatusBadge status={o.status} />
                     </div>
 
-                    <p className="mt-1.5 text-xs text-wabi-fg-muted">
+                    <p className="mt-1.5 font-numeric text-xs text-wabi-fg-muted">
                       {formatDateKST(o.ordered_at)}
                       {o.delivered_at && (
                         <> · {formatDateKST(o.delivered_at)} 수령</>
                       )}
                     </p>
 
-                    <p className="mt-3 text-sm">
+                    <p className="mt-3 font-numeric text-sm">
                       {first?.product_name}
                       {first && first.quantity > 1 ? ` ${first.quantity}개` : ""}
                       {rest > 0 ? ` 외 ${rest}건` : ""}
@@ -120,7 +120,7 @@ export default async function OrdersPage() {
                     </p>
 
                     {o.delivered_at && (
-                      <p className="mt-3 text-xs text-wabi-fg-muted">
+                      <p className="mt-3 font-numeric text-xs text-wabi-fg-muted">
                         교환·환불 요청은{" "}
                         {withdrawalDeadlineKST(o.delivered_at)}까지 가능합니다.{" "}
                         <Link

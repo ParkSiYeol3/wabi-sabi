@@ -77,12 +77,12 @@ export default async function OrderDetailPage({
       </Link>
 
       <div className="mt-4 flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold tracking-wide">
+        <h1 className="font-numeric text-2xl font-semibold tracking-wide">
           {order.order_number}
         </h1>
         <OrderStatusBadge status={order.status} className="text-sm" />
       </div>
-      <p className="mt-2 text-sm text-wabi-fg-muted">
+      <p className="mt-2 font-numeric text-sm text-wabi-fg-muted">
         {formatDateKST(order.ordered_at)} 주문
         {order.delivered_at && ` · ${formatDateKST(order.delivered_at)} 수령`}
       </p>
@@ -100,7 +100,10 @@ export default async function OrderDetailPage({
                   <span>
                     {it.product_name}
                     {it.quantity > 1 && (
-                      <span className="text-wabi-fg-muted"> × {it.quantity}</span>
+                      <span className="font-numeric text-wabi-fg-muted">
+                        {" "}
+                        × {it.quantity}
+                      </span>
                     )}
                   </span>
                   <Price value={it.price * it.quantity + addonSum} />
@@ -136,7 +139,7 @@ export default async function OrderDetailPage({
             <div className="flex gap-4">
               <dt className="w-24 shrink-0 text-wabi-fg-muted">송장번호</dt>
               <dd className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <span className="font-mono">{order.tracking_number}</span>
+                <span className="font-numeric">{order.tracking_number}</span>
                 <a
                   href={trackingSearchUrl(order.tracking_number)}
                   target="_blank"
@@ -171,7 +174,7 @@ export default async function OrderDetailPage({
 
       {/* 청약철회 안내 — 수령일이 기산점 (#124) */}
       {order.delivered_at && (
-        <p className="mt-8 text-xs text-wabi-fg-muted">
+        <p className="mt-8 font-numeric text-xs text-wabi-fg-muted">
           교환·환불 요청은 {withdrawalDeadlineKST(order.delivered_at)}까지
           가능합니다.{" "}
           <Link href="/legal/refund" className="underline hover:text-wabi-fg">
@@ -202,7 +205,7 @@ function Row({
   return (
     <div className="flex gap-4">
       <dt className="w-24 shrink-0 text-wabi-fg-muted">{label}</dt>
-      <dd className={mono ? "font-mono" : undefined}>{value}</dd>
+      <dd className={mono ? "font-mono" : "font-numeric"}>{value}</dd>
     </div>
   );
 }

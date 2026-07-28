@@ -34,7 +34,7 @@ export default async function NoticeListPage() {
                 className="flex items-center justify-between gap-4 py-4 transition-colors hover:text-wabi-accent"
               >
                 <span className="text-sm">{n.title}</span>
-                <time className="shrink-0 text-xs text-wabi-fg-muted">
+                <time className="shrink-0 font-numeric text-xs text-wabi-fg-muted">
                   {new Date(n.created_at).toLocaleDateString("ko-KR")}
                 </time>
               </Link>

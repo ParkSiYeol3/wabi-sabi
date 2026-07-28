@@ -107,7 +107,7 @@ export function SiteHeader() {
           >
             <ShoppingBag className="size-5" strokeWidth={1.5} />
             {mounted && count > 0 && (
-              <span className="absolute right-0.5 top-0.5 flex min-w-4 items-center justify-center rounded-full bg-wabi-accent px-1 text-[10px] leading-4 text-white">
+              <span className="absolute right-0.5 top-0.5 flex min-w-4 items-center justify-center rounded-full bg-wabi-accent px-1 font-numeric text-[10px] leading-4 text-white">
                 {count}
               </span>
             )}

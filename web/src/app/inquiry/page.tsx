@@ -51,7 +51,7 @@ export default async function InquiryListPage() {
                   >
                     {q.answered ? "답변완료" : "답변대기"}
                   </span>
-                  <time className="text-wabi-fg-muted">
+                  <time className="font-numeric text-wabi-fg-muted">
                     {new Date(q.created_at).toLocaleDateString("ko-KR")}
                   </time>
                 </span>

@@ -73,7 +73,7 @@ export default async function ShopPage({
       {/* 헤더 — 타이틀 + 결과 수 */}
       <div className="flex items-baseline justify-between">
         <h1 className="text-2xl font-semibold tracking-wide">{heading}</h1>
-        <span className="text-xs text-wabi-fg-muted">
+        <span className="font-numeric text-xs text-wabi-fg-muted">
           {products.length}개 상품
         </span>
       </div>

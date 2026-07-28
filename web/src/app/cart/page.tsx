@@ -99,7 +99,10 @@ export default function CartPage() {
               >
                 <Minus className="size-3.5" />
               </button>
-              <span className="w-8 text-center text-sm" aria-live="polite">
+              <span
+                className="w-8 text-center font-numeric text-sm"
+                aria-live="polite"
+              >
                 {item.quantity}
               </span>
               <button

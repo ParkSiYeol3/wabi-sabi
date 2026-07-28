@@ -45,7 +45,7 @@ export function ProductDetailActions({ product, stock }: Props) {
                 onChange={(e) => toggleAddon(a.code, e.target.checked)}
                 disabled={soldOut}
               />
-              {a.name} (+{won(a.price)})
+              {a.name} (+<span className="font-numeric">{won(a.price)}</span>)
             </label>
           ))}
         </div>
@@ -64,7 +64,10 @@ export function ProductDetailActions({ product, stock }: Props) {
           >
             <Minus className="size-3.5" />
           </button>
-          <span className="w-10 text-center text-sm" aria-live="polite">
+          <span
+            className="w-10 text-center font-numeric text-sm"
+            aria-live="polite"
+          >
             {qty}
           </span>
           <button

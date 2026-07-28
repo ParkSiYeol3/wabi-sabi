@@ -93,7 +93,9 @@ export function MomentGrid({
               <div className="mt-auto flex items-center justify-between text-xs text-wabi-fg-muted">
                 <span>{m.author_name}</span>
                 <span className="flex items-center gap-2">
-                  <time>{new Date(m.created_at).toLocaleDateString("ko-KR")}</time>
+                  <time className="font-numeric">
+                    {new Date(m.created_at).toLocaleDateString("ko-KR")}
+                  </time>
                   {currentUserId === m.user_id && (
                     <form
                       action={deleteMoment}
