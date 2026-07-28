@@ -45,7 +45,7 @@ export function MomentGrid({
   return (
     <>
       <ul className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-        {moments.map((m) => (
+        {moments.map((m, i) => (
           <li
             key={m.id}
             className="group flex flex-col border border-wabi-border bg-wabi-bg"
@@ -59,6 +59,9 @@ export function MomentGrid({
                 alt={m.body ? m.body.slice(0, 60) : `${m.author_name}의 순간`}
                 fill
                 sizes="(max-width: 768px) 50vw, 25vw"
+                // 첫 모바일 행(2장)은 above-the-fold LCP 후보 → 즉시 로드.
+                // 여러 장이라 preload 대신 loading=eager (Next 16 이미지 문서 권고).
+                loading={i < 2 ? "eager" : "lazy"}
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
               />
             </Link>
