@@ -11,7 +11,6 @@ import {
   FileText,
   ScrollText,
   Bug,
-  Mail,
 } from "lucide-react";
 
 // 어드민 내비게이션 단일 출처 — 사이드바(데스크톱·모바일)가 공유한다.
@@ -44,7 +43,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { href: "/admin/reviews", label: "리뷰", icon: Star },
       { href: "/admin/moments", label: "오늘의 와비사비", icon: Camera },
       { href: "/admin/notices", label: "공지", icon: Megaphone },
-      { href: "/admin/newsletter", label: "뉴스레터", icon: Mail },
     ],
   },
   {
