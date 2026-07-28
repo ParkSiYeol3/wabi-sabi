@@ -98,7 +98,7 @@ export async function SiteFooter() {
             <div className="mt-3 lg:flex lg:justify-end">
               <LogoutButton variant="link" />
             </div>
-            <address className="mt-5 space-y-1 text-[11px] not-italic leading-relaxed text-white/40">
+            <address className="mt-5 space-y-1 font-numeric text-[11px] not-italic leading-relaxed text-white/40">
               {businessLines().map((line) => (
                 <p key={line}>{line}</p>
               ))}
@@ -115,7 +115,7 @@ export async function SiteFooter() {
                 </p>
               )}
             </address>
-            <p className="mt-4 text-[11px] text-white/40">
+            <p className="mt-4 font-numeric text-[11px] text-white/40">
               © {new Date().getFullYear()} {site.name}. All rights reserved.
             </p>
           </div>

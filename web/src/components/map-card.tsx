@@ -40,7 +40,7 @@ export function MapCard({ className = "" }: { className?: string }) {
 
       <div className="mt-3 text-sm">
         <p className="font-medium">{site.place}</p>
-        <p className="mt-0.5 text-wabi-fg-muted">
+        <p className="mt-0.5 font-numeric text-wabi-fg-muted">
           {site.roadAddress} {site.addressDetail} ({site.postcode})
         </p>
       </div>
