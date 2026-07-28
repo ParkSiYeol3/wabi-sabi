@@ -1,0 +1,12 @@
+-- 0041: 본인 프로필 UPDATE 권한(닉네임 저장 42501 픽스) — 컬럼 한정.
+--
+-- RLS 정책 "own profile update"(0002)는 있었으나 authenticated 롤에 테이블 UPDATE
+-- GRANT 가 없어 본인 프로필 수정이 42501(permission denied)로 막혀 있었다. 지금까지
+-- profiles.name 은 트리거 handle_new_user(SECURITY DEFINER=postgres)로만 채워져 드러나지
+-- 않다가, 닉네임 설정(클라이언트 update)에서 표면화됐다.
+--
+-- ⚠ 보안: 테이블 전체 UPDATE 를 주면 사용자가 본인 행의 role 을 'admin' 으로 바꿔
+-- 권한상승할 수 있다(RLS 는 "본인 행"만 제한할 뿐 컬럼을 막지 않음). 그래서 수정이
+-- 필요한 컬럼(name·nickname_set)에만 컬럼 단위로 부여한다. role·email·id 등은 여전히
+-- 클라이언트가 못 바꾼다.
+grant update (name, nickname_set) on public.profiles to authenticated;
