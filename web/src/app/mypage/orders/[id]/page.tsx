@@ -6,11 +6,11 @@ import { CancelOrderButton } from "@/components/cancel-order-button";
 import { OrderStatusBadge } from "@/components/order-status-badge";
 import { createClient } from "@/lib/supabase/server";
 import {
-  won,
   formatDateKST,
   withdrawalDeadlineKST,
   trackingSearchUrl,
 } from "@/lib/orders";
+import { Price } from "@/components/price";
 import { parseUuid } from "@/lib/validation";
 
 export const metadata: Metadata = { title: "주문 상세" };
@@ -103,9 +103,7 @@ export default async function OrderDetailPage({
                       <span className="text-wabi-fg-muted"> × {it.quantity}</span>
                     )}
                   </span>
-                  <span className="font-numeric">
-                    {won(it.price * it.quantity + addonSum)}
-                  </span>
+                  <Price value={it.price * it.quantity + addonSum} />
                 </div>
                 {lineAddons.length > 0 && (
                   <p className="mt-1 text-xs text-wabi-fg-muted">
@@ -118,7 +116,7 @@ export default async function OrderDetailPage({
         </ul>
         <p className="mt-4 flex items-center justify-between text-sm font-medium">
           <span>결제 금액</span>
-          <span className="font-numeric">{won(order.total_price)}</span>
+          <Price value={order.total_price} />
         </p>
       </section>
 

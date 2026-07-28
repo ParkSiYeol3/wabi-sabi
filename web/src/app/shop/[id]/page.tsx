@@ -10,11 +10,10 @@ import { ProductDetailActions } from "@/components/product-detail-actions";
 import { RestockButton } from "@/components/restock-button";
 import { WishlistButton } from "@/components/wishlist-button";
 import { ReviewSection } from "@/components/review-section";
+import { Price } from "@/components/price";
 import { getCachedProductDetail } from "@/lib/queries/product-detail";
 import { createClient } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/site-url";
-
-const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
 
 export async function generateMetadata({
   params,
@@ -176,8 +175,8 @@ export default async function ProductDetailPage({
             <h1 className="text-2xl font-semibold">{product.name}</h1>
             <WishlistButton productId={product.id} initial={wished} />
           </div>
-          <p className="mt-4 text-2xl font-semibold font-numeric">
-            {won(product.price)}
+          <p className="mt-4 text-2xl font-semibold">
+            <Price value={product.price} />
           </p>
 
           {product.description && (
