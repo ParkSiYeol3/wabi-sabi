@@ -113,6 +113,18 @@
   }
 }
 
+/* 배경음 클릭 유도 힌트의 이퀄라이저 막대(음악이 흐르는 듯) — 재생 안내용.
+   각 막대는 세로로 늘었다 줄며 소리를 연상시킨다. 지연은 유틸 클래스로 준다. */
+@keyframes wabi-eq {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
