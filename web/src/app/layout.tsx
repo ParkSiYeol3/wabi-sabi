@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
 import { SessionTimeout } from "@/components/session-timeout";
+import { NicknameGate } from "@/components/nickname-gate";
 import { AmbientPlayer } from "@/components/ambient-player";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -108,6 +109,8 @@ export default function RootLayout({
         <AuthProvider>
           {/* 로그인 지속시간 제한(미활동 30분·절대 7일) — 개인정보보호 정책 */}
           <SessionTimeout />
+          {/* 가입 후 닉네임 설정 모달(실명 노출 방지) */}
+          <NicknameGate />
           {/* 키보드 사용자용 본문 바로가기 (a11y) */}
           <a
             href="#main-content"
