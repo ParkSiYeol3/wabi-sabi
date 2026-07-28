@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { createProduct } from "@/app/admin/products/actions";
 import type { ActionResult } from "@/app/admin/products/types";
 import { OriginPicker } from "@/components/admin/origin-picker";
+import { AttributePicker } from "@/components/admin/attribute-picker";
+import { MATERIALS, SIZES, CARES } from "@/lib/product-attributes";
 
 type Category = { id: string; name_ko: string; name_en: string };
 
@@ -18,11 +20,9 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
   const [categoryId, setCategoryId] = useState("");
   const [isMonthly, setIsMonthly] = useState(false);
   const [description, setDescription] = useState("");
-  const [material, setMaterial] = useState("");
-  const [size, setSize] = useState("");
-  const [care, setCare] = useState("");
-  // OriginPicker 는 내부 상태라 성공 후 초기화하려면 remount(key 증가)한다.
-  const [originKey, setOriginKey] = useState(0);
+  // 스펙 피커(원산지·소재·사이즈·주의)는 내부 상태라 성공 후 초기화하려면
+  // remount(key 증가)한다 — 하나의 카운터로 넷을 함께 리셋.
+  const [pickerKey, setPickerKey] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // 성공 시에만 폼 초기화 (실패 시 입력값 유지). 액션 래퍼에서 처리 — effect 내 setState 회피.
@@ -36,10 +36,7 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
         setCategoryId("");
         setIsMonthly(false);
         setDescription("");
-        setMaterial("");
-        setSize("");
-        setCare("");
-        setOriginKey((k) => k + 1);
+        setPickerKey((k) => k + 1);
         if (fileRef.current) fileRef.current.value = "";
       }
       return result;
@@ -92,35 +89,33 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
           </option>
         ))}
       </select>
-      {/* 상세 스펙(소재·원산지·사이즈·주의) — 비우면 상세에서 그 행 표시 생략 */}
-      <Input
+      {/* 상세 스펙(소재·원산지·사이즈·주의) — 프리셋 드롭다운 + 직접 입력(대표님).
+          비우면 상세에서 그 행 표시 생략. 넷 다 pickerKey 로 성공 후 함께 리셋. */}
+      <AttributePicker
+        key={`material-${pickerKey}`}
         name="material"
-        maxLength={500}
-        aria-label="소재"
-        placeholder="소재 (예: 도자기)"
-        value={material}
-        onChange={(e) => setMaterial(e.target.value)}
-        className="rounded-none"
+        label="소재"
+        options={MATERIALS}
+        emptyLabel="소재 선택 안 함"
+        customPlaceholder="소재 직접 입력 (예: 도자기)"
       />
       {/* 원산지 — 한·일·중 드롭다운 + 직접 입력(대표님). 저장값은 완성형 문자열 */}
-      <OriginPicker key={originKey} />
-      <Input
+      <OriginPicker key={`origin-${pickerKey}`} />
+      <AttributePicker
+        key={`size-${pickerKey}`}
         name="size"
-        maxLength={500}
-        aria-label="사이즈"
-        placeholder="사이즈 (예: 지름 12cm)"
-        value={size}
-        onChange={(e) => setSize(e.target.value)}
-        className="rounded-none"
+        label="사이즈"
+        options={SIZES}
+        emptyLabel="사이즈 선택 안 함"
+        customPlaceholder="사이즈 직접 입력 (예: 지름 12cm)"
       />
-      <Input
+      <AttributePicker
+        key={`care-${pickerKey}`}
         name="care"
-        maxLength={500}
-        aria-label="주의사항"
-        placeholder="주의사항 (예: 전자레인지 사용 불가)"
-        value={care}
-        onChange={(e) => setCare(e.target.value)}
-        className="rounded-none"
+        label="주의사항"
+        options={CARES}
+        emptyLabel="주의사항 선택 안 함"
+        customPlaceholder="주의사항 직접 입력 (예: 전자레인지 사용 불가)"
       />
       <label className="flex items-center gap-2 text-sm text-wabi-fg-muted">
         <input
