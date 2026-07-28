@@ -68,6 +68,12 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ko_KR",
   },
+  // 검색엔진 소유확인 (SEO — 서치콘솔/서치어드바이저 등록). 각 콘솔에서 받은
+  // content 값. google 은 metadata.verification.google 로 표준 emit, 네이버는
+  // 전용 name 이라 other 로 넣는다(코드 받으면 naver-site-verification 추가).
+  verification: {
+    google: "-zsHZOqR95XLcbNQoCrlplHCip2X1cUnpBZH5BJ-hmA",
+  },
 };
 
 // #16 SEO: 조직·사이트 구조화 데이터 — 검색 결과 브랜드 정보(정적 값만, 이스케이프 불필요).
