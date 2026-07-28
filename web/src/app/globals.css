@@ -125,6 +125,18 @@
   }
 }
 
+/* 클릭 유도 힌트 pill 의 은은한 글로우 — 그림자가 부드럽게 커졌다 작아지며 시선을
+   끈다(색은 브랜드 포그 #423c30 계열 따뜻한 그림자). motion-safe 만. */
+@keyframes wabi-hint-glow {
+  0%,
+  100% {
+    box-shadow: 0 10px 34px -10px rgba(66, 60, 48, 0.3);
+  }
+  50% {
+    box-shadow: 0 14px 46px -8px rgba(66, 60, 48, 0.46);
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

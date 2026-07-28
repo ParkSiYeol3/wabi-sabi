@@ -129,7 +129,10 @@ export function AmbientPlayer() {
         <div className="pointer-events-none fixed inset-x-0 bottom-20 z-40 flex justify-center px-4">
           <div
             className={cn(
-              "flex items-center gap-3 rounded-full border border-wabi-border/60 bg-wabi-bg/70 px-5 py-3 shadow-lg backdrop-blur-md transition-all duration-500 ease-out",
+              "flex items-center gap-3 rounded-full border border-wabi-fg/15 bg-wabi-bg/85 px-6 py-3.5 ring-1 ring-black/5 backdrop-blur-md",
+              // 은은한 글로우(브리딩) — 저모션은 정적 그림자로 폴백.
+              "shadow-[0_10px_34px_-10px_rgba(66,60,48,0.3)] motion-safe:animate-[wabi-hint-glow_2.6s_ease-in-out_infinite]",
+              "transition-[opacity,transform] duration-500 ease-out",
               hintShown ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0",
             )}
           >
@@ -143,7 +146,7 @@ export function AmbientPlayer() {
               <i className="h-4 w-0.75 origin-center rounded-full bg-current [animation-delay:0.3s] motion-safe:animate-[wabi-eq_1s_ease-in-out_infinite]" />
               <i className="h-4 w-0.75 origin-center rounded-full bg-current [animation-delay:0.45s] motion-safe:animate-[wabi-eq_1s_ease-in-out_infinite]" />
             </span>
-            <span className="text-sm tracking-tight text-wabi-fg">
+            <span className="text-sm font-medium tracking-tight text-wabi-fg">
               화면을 클릭하면 잔잔한 배경음이 흐릅니다
             </span>
           </div>
