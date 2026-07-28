@@ -66,6 +66,7 @@ export default async function MomentDetailPage({ params }: Params) {
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             className="object-cover"
+            preload
           />
         </div>
 
