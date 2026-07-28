@@ -10,27 +10,13 @@ import { useEffect, useRef } from "react";
 //   스크롤" 요구). passive scroll + rAF, 상태 없이 ref 직접 조작(프레임당 리렌더 0).
 // - prefers-reduced-motion: 스크럽 없이 완성된 선 + 멘트 전부 표시.
 // - 데스크톱/모바일 SVG 를 각각 프리렌더(CSS 로 전환) — JS 분기가 없어 하이드레이션
-//   레이아웃 시프트가 없다. 모바일은 세로 피치를 늘려 멘트 간격을 확보한다.
+//   레이아웃 시프트가 없다. 모바일은 세로 피치를 늘려 멘트 간격을 확보하고, 코일
+//   반지름을 좁혀 좌우에 멘트 포켓을 낸다(데스크톱과 같은 "바깥 여백" 배치).
 
 // 侘·寂·選 — 브랜드 철학 3주. 곡선 여정 안에서 등장한다(#225, 대표님 피드백 —
 // "카드 대신 저 멘트들"). 한자만 브랜드 상징이라 코드 고정, 제목(라벨)·본문은
 // 대표님이 어드민에서 편집한다(#245·#247) — page 에서 props 로 주입한다.
 const PILLAR_HANJA = ["侘", "寂", "選"] as const;
-
-// 멘트 = 나선 6바퀴의 극점 k=1(좌)·6(우)·11(좌) — 간격 5반바퀴(홀수 간격 =
-// 좌우 교차 유지). 원래 7반바퀴였는데 멘트 사이 빈 스크롤이 1.5화면쯤 돼
-// 길게 느껴졌다(대표님 피드백 — 멘트 사이 간격 좁히기, 스크롤 거리 -29%).
-// 리드인은 반바퀴 — 곡선이 첫 글씨(侘) 직전에 시작.
-// 상하 여백을 같게(yStart = vbH−yEnd) 두어 3주가 캔버스 중앙에 대칭 배치 —
-// 2번째(寂)가 정확히 50%, 1·3번째가 그 위아래 등간격.
-// 테이퍼라 극점 x 가 층마다 다르다: x = 50 ∓ R(k)/10, R(k)=300+10.833k.
-// y 는 여백비를 두 캔버스가 공유하므로 동일:
-// y% = (yStart + (yEnd−yStart)·k/12) / vbH.
-const MOMENT_POS = [
-  { x: 18.9, y: 11.5 },
-  { x: 86.5, y: 50.0 },
-  { x: 8.1, y: 88.5 },
-] as const;
 
 // 입체 스프링 나선 (#213, 대표님 피드백 — 평면 S커브가 아닌 3D 코일).
 // 나선을 앞면/뒷면 반바퀴 세그먼트로 쪼개 누적 순서로 이어 그린다. 선 자체는
@@ -40,12 +26,13 @@ const MOMENT_POS = [
 // 결정적 계산이라 SSR/클라 동일(하이드레이션 안전).
 type HelixSeg = { d: string; front: boolean; len: number; cum: number };
 type HelixGeom = { segs: HelixSeg[]; total: number };
+type MomentPos = { x: number; y: number };
 
 function helixSegments(
   cx: number,
   rTop: number,
   rBot: number,
-  rYRatio: number, // 타원 세로/가로 비 — 원근(약 0.32~0.38)
+  rYRatio: number, // 타원 세로/가로 비 — 원근(약 0.30~0.36)
   yStart: number,
   yEnd: number,
   loops: number,
@@ -86,28 +73,57 @@ function helixSegments(
   return { segs, total: cum };
 }
 
-// "원통을 감싸는" 코일로 보이려면 한 화면에 고리가 1.5~2개는 보여야 한다(#213 2차)
-// — 3.5바퀴/캔버스에선 바퀴당 세로 1200px 라 화면(~900px)엔 늘 반 바퀴 미만만
-// 보여 지그재그로 읽혔다. 7.5바퀴로 촘촘하게(바퀴당 ~550u).
-// 반지름 280(5차 — 320은 카드와 과교차)·타원 진폭 95(카드 상하 클리어런스).
-// 두 캔버스는 반지름과 시작/끝 여백 비율을 공유해 MOMENT_POS 가 동일하게 맞는다.
-// 레퍼런스 비율(#213 8차): 맨 위 고리부터 화면 폭 ~60%(rTop 300), 테이퍼는
-// 은은하게(→430). 타원 납작비 0.30.
-// 6바퀴/캔버스 — 리드인 반바퀴(곡선이 侘 직전에 시작) + 멘트 간격 5반바퀴
-// (대표님 피드백 — 멘트 사이 스크롤 간격 좁히기). 피치(코일 밀도)는 그대로,
-// 바퀴 수만 줄여 여정을 압축했다. 상하 여백 동일(yStart = vbH−yEnd) —
-// 3주 캔버스 중앙 대칭, 2번째(寂) 50%.
-// axis = 가운데 수직 점선(시간 축, #197 원안 — 대표님 피드백으로 복원)의
+// 멘트 3주가 앉는 곡선 극점(좌·우·좌) 좌표를 지오메트리에서 직접 계산한다.
+// 6바퀴=12반바퀴 중 k=1(좌)·loops(우)·2·loops−1(좌) 극점. 극점(cos(kπ)=±1)에선
+// sin(kπ)=0 이라 y 는 피치만으로 정해진다(타원 진폭 무관). 캔버스마다 반지름이
+// 달라도 이 함수로 뽑으면 점·멘트가 정확히 곡선 위에 얹힌다(뷰박스 폭 1000 가정).
+function momentPositions(
+  rTop: number,
+  rBot: number,
+  yStart: number,
+  yEnd: number,
+  vbH: number,
+  loops: number,
+): MomentPos[] {
+  const half = loops * 2;
+  const ks = [1, loops, loops * 2 - 1];
+  return ks.map((k) => {
+    const R = rTop + (rBot - rTop) * (k / half);
+    const dir = k % 2 === 0 ? 1 : -1; // 짝수 반바퀴=우측 극점, 홀수=좌측
+    return {
+      x: +(50 + (dir * R) / 10).toFixed(1),
+      y: +(((yStart + (yEnd - yStart) * (k / half)) / vbH) * 100).toFixed(1),
+    };
+  });
+}
+
+// 데스크톱: 반지름 300→430, 타원 0.30. 6바퀴/캔버스 — 리드인 반바퀴(곡선이 侘
+// 직전에 시작) + 멘트 간격 5반바퀴. axis = 가운데 수직 점선(시간 축, #197 원안)의
 // [y1, y2]. 곡선 시작/끝보다 30u 씩 길게 뻗어 여정 전체를 관통한다.
-const DESKTOP = { vb: "0 0 1000 2530", geom: helixSegments(500, 300, 430, 0.3, 95, 2435, 6, 384), axis: [65, 2465] as const };
-const MOBILE = { vb: "0 0 1000 5244", geom: helixSegments(500, 300, 430, 0.3, 197, 5047, 6, 384), axis: [167, 5077] as const };
+//
+// 모바일: 세로로 길고(피치↑ 멘트 간격 확보) 코일을 좁힌다(175→220) — 폭을 꽉
+// 채우면 납작해 보이고 좌우에 멘트 포켓이 안 나온다(선을 뚫던 원인). 좁히면
+// 코일감이 살고, 데스크톱처럼 바깥 여백에 멘트를 놓을 수 있다. 타원 0.34 로 살짝
+// 더 입체. 극점 좌표(moments)는 각 반지름에서 계산해 점·멘트가 곡선에 정확히 맞는다.
+const DESKTOP = {
+  vb: "0 0 1000 2530",
+  geom: helixSegments(500, 300, 430, 0.3, 95, 2435, 6, 384),
+  moments: momentPositions(300, 430, 95, 2435, 2530, 6),
+  axis: [65, 2465] as const,
+};
+const MOBILE = {
+  vb: "0 0 1000 5244",
+  geom: helixSegments(500, 175, 220, 0.34, 197, 5047, 6, 384),
+  moments: momentPositions(175, 220, 197, 5047, 5244, 6),
+  axis: [167, 5077] as const,
+};
 
 // #213 7차: 곡선(원뿔 나선)에 집중하는 동안 멘트·점 임시 오프용 플래그.
 const SHOW_MOMENTS = true;
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
-// 캔버스 2개(데스크톱·모바일)의 세그먼트 지오메트리 — 효과 루프가 참조.
+// 캔버스 2개(데스크톱·모바일)의 지오메트리 — 효과 루프가 참조.
 const CANVASES = [DESKTOP, MOBILE];
 
 export function HelixJourney({
@@ -124,10 +140,10 @@ export function HelixJourney({
     body: pillarBodies[i] ?? "",
   }));
   const wrapRef = useRef<HTMLDivElement>(null);
-  // segRefs[캔버스][세그먼트] — cfg.geom.segs 와 같은 인덱스.
+  // [캔버스][인덱스] — cfg.geom.segs / cfg.moments 와 같은 인덱스.
   const segRefs = useRef<(SVGPathElement | null)[][]>([[], []]);
-  const momentRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const dotRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const momentRefs = useRef<(HTMLDivElement | null)[][]>([[], []]);
+  const dotRefs = useRef<(HTMLDivElement | null)[][]>([[], []]);
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -142,7 +158,7 @@ export function HelixJourney({
           p.style.strokeDashoffset = "0";
         }
       });
-      momentRefs.current.forEach((m) => {
+      momentRefs.current.flat().forEach((m) => {
         if (m) {
           m.style.opacity = "1";
           m.style.transform = "translateY(-50%)";
@@ -150,7 +166,7 @@ export function HelixJourney({
           m.removeAttribute("inert");
         }
       });
-      dotRefs.current.forEach((d) => {
+      dotRefs.current.flat().forEach((d) => {
         if (d) d.style.opacity = "1";
       });
       return;
@@ -187,25 +203,25 @@ export function HelixJourney({
           el.style.strokeDasharray = `${seg.len}`;
           el.style.strokeDashoffset = `${seg.len * (1 - local)}`;
         });
-      });
 
-      momentRefs.current.forEach((m, i) => {
-        if (!m) return;
-        // 뷰포트 중앙 기준 종형 — 점이 화면 아래면 0, 중앙에서 최대, 지나가면
-        // 다시 소멸. 구간(±0.32vh)이 카드 간 스크롤 간격보다 좁아 앞 카드가
-        // 완전히 사라진 뒤에야 다음 카드가 나타난다.
-        const dotY = top + (MOMENT_POS[i].y / 100) * height;
-        const dist = Math.abs(dotY - vh * 0.5) / (vh * 0.32);
-        const vis = clamp01(1 - dist);
-        m.style.opacity = vis.toFixed(3);
-        m.style.transform = `translateY(-50%) scale(${(0.78 + 0.22 * vis).toFixed(3)})`;
-        // 사라진 카드가 보이지 않는 클릭·포커스 함정이 되지 않게 —
-        // pointer-events 는 포인터만 막으므로 inert 로 키보드 탭·접근성
-        // 트리에서도 함께 제외한다(CodeRabbit #198).
-        m.style.pointerEvents = vis < 0.1 ? "none" : "auto";
-        m.toggleAttribute("inert", vis < 0.1);
-        const dot = dotRefs.current[i];
-        if (dot) dot.style.opacity = vis.toFixed(3); // 점도 함께 — 시작은 곡선만
+        // 멘트 — 뷰포트 중앙 기준 종형. 점이 화면 아래면 0, 중앙에서 최대, 지나가면
+        // 다시 소멸. 구간(±0.32vh)이 멘트 간 스크롤 간격보다 좁아 앞 멘트가 완전히
+        // 사라진 뒤에야 다음 멘트가 나타난다. 캔버스마다 자기 극점 y 를 쓴다.
+        cfg.moments.forEach((pos, i) => {
+          const m = momentRefs.current[ci][i];
+          if (!m) return;
+          const dotY = top + (pos.y / 100) * height;
+          const dist = Math.abs(dotY - vh * 0.5) / (vh * 0.32);
+          const vis = clamp01(1 - dist);
+          m.style.opacity = vis.toFixed(3);
+          m.style.transform = `translateY(-50%) scale(${(0.78 + 0.22 * vis).toFixed(3)})`;
+          // 사라진 멘트가 보이지 않는 클릭·포커스 함정이 되지 않게 — pointer-events
+          // 는 포인터만 막으므로 inert 로 키보드 탭·접근성 트리에서도 제외(CodeRabbit #198).
+          m.style.pointerEvents = vis < 0.1 ? "none" : "auto";
+          m.toggleAttribute("inert", vis < 0.1);
+          const dot = dotRefs.current[ci][i];
+          if (dot) dot.style.opacity = vis.toFixed(3);
+        });
       });
     };
 
@@ -239,110 +255,113 @@ export function HelixJourney({
 
   return (
     <div ref={wrapRef} className="relative mx-auto w-full max-w-265 px-3">
-      {/* 데스크톱/모바일 캔버스 — CSS 로만 전환(레이아웃 시프트 없음) */}
+      {/* 데스크톱/모바일 캔버스 — CSS 로만 전환(레이아웃 시프트 없음). 각 캔버스의
+          곡선 SVG 와 그 위 멘트를 한 컨테이너에 묶어, 멘트가 해당 캔버스 극점에
+          정확히 얹히게 한다(데스크톱·모바일 반지름이 달라도 각자 맞음). */}
       {[
         { cfg: DESKTOP, cls: "hidden md:block", key: "d" },
         { cfg: MOBILE, cls: "md:hidden", key: "m" },
-      ].map(({ cfg, cls, key }, pi) => (
-        <svg
-          key={key}
-          viewBox={cfg.vb}
-          className={`${cls} h-auto w-full overflow-visible`}
-          aria-hidden
-        >
-          {/* 시간 축 — 가운데 수직 점선(#197 원안, 대표님 피드백으로 복원).
-              정적 요소라 스크럽 없이 늘 보이고, 코일이 위에 겹쳐 그려진다. */}
-          <line
-            x1="500"
-            y1={cfg.axis[0]}
-            x2="500"
-            y2={cfg.axis[1]}
-            stroke="#423c30"
-            strokeWidth="1"
-            strokeDasharray="1 6"
-            opacity="0.55"
-          />
-          {/* 축 상단 화살촉(위 방향) — 원안 그대로 */}
-          <path
-            d={`M500 ${cfg.axis[0]} L493 ${cfg.axis[0] + 22} M500 ${cfg.axis[0]} L507 ${cfg.axis[0] + 22}`}
-            fill="none"
-            stroke="#423c30"
-            strokeWidth="1.1"
-          />
-          {/* 입체 스프링(#213) — 뒷면(옅고 가늘게)을 먼저, 앞면이 교차점에서 덮는다.
-              각 세그먼트는 자기 길이만큼의 dash 로 숨겨져 있다가 누적 순서대로 그려진다. */}
-          {[false, true].map((frontPass) =>
-            cfg.geom.segs.map((seg, si) =>
-              seg.front === frontPass ? (
-                <path
-                  key={si}
-                  ref={(el) => {
-                    segRefs.current[pi][si] = el;
-                  }}
-                  d={seg.d}
-                  fill="none"
-                  stroke="#423c30"
-                  strokeWidth={1.3}
-                  opacity={1}
-                  style={{
-                    strokeDasharray: seg.len,
-                    strokeDashoffset: seg.len,
-                  }}
-                />
-              ) : null,
-            ),
-          )}
-        </svg>
-      ))}
-
-      {/* 철학 멘트 — 곡선 위 점 + 극점 바깥 여백 포켓 (#225, 카드 시절 배치 유지).
-          점이 왼쪽 극점이면 왼쪽 여백에(오른쪽 끝을 점에 붙임), 오른쪽 극점이면
-          오른쪽 여백에 — 코일과 겹치지 않는 곳에서 커졌다 작아진다. 모바일은
-          공간이 없어 점 안쪽(고리 입구)에. */}
-      {SHOW_MOMENTS && pillars.map((v, i) => {
-        const pos = MOMENT_POS[i];
-        const dotLeft = pos.x < 50; // 왼쪽 극점 → 멘트는 왼쪽 포켓
-        return (
-          <div key={v.han}>
-            <div
-              ref={(el) => {
-                dotRefs.current[i] = el;
-              }}
-              className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#423c30]"
-              style={{ left: `${pos.x}%`, top: `${pos.y}%`, opacity: 0 }}
+      ].map(({ cfg, cls, key }, ci) => (
+        <div key={key} className={`relative ${cls}`}>
+          <svg
+            viewBox={cfg.vb}
+            className="h-auto w-full overflow-visible"
+            aria-hidden
+          >
+            {/* 시간 축 — 가운데 수직 점선(#197 원안, 대표님 피드백으로 복원).
+                정적 요소라 스크럽 없이 늘 보이고, 코일이 위에 겹쳐 그려진다. */}
+            <line
+              x1="500"
+              y1={cfg.axis[0]}
+              x2="500"
+              y2={cfg.axis[1]}
+              stroke="#423c30"
+              strokeWidth="1"
+              strokeDasharray="1 6"
+              opacity="0.55"
             />
-            <div
-              ref={(el) => {
-                momentRefs.current[i] = el;
-              }}
-              className={`absolute w-[46%] max-w-72 md:w-[26%] ${
-                dotLeft
-                  ? "max-md:left-[calc(var(--dx)*1%+12px)] max-md:text-left md:right-[calc((100-var(--dx))*1%+14px)] md:text-right"
-                  : "max-md:right-[calc((100-var(--dx))*1%+12px)] max-md:text-right md:left-[calc(var(--dx)*1%+14px)] md:text-left"
-              }`}
-              style={{
-                top: `${pos.y}%`,
-                opacity: 0,
-                transform: "translateY(-50%) scale(0.78)",
-                ["--dx" as string]: pos.x,
-              }}
-              // 초기(숨김) 상태 — JS 로드 전에도 키보드·스크린리더에서 제외
-              inert
-            >
-              <div className="[font-family:var(--ws-serif)] text-[40px] leading-none text-[#423c30] md:text-[52px]">
-                {v.han}
-              </div>
-              <div className="mt-3 [font-family:var(--ws-mono)] text-[9px] tracking-[2px] text-[#9a9080] md:text-[10px]">
-                {v.label}
-              </div>
-              <p className="mt-2 [font-family:var(--ws-serif)] text-[14px] leading-[1.6] text-[#524a3a] md:text-[17px]">
-                {v.body}
-              </p>
-            </div>
-          </div>
-        );
-      })}
+            {/* 축 상단 화살촉(위 방향) — 원안 그대로 */}
+            <path
+              d={`M500 ${cfg.axis[0]} L493 ${cfg.axis[0] + 22} M500 ${cfg.axis[0]} L507 ${cfg.axis[0] + 22}`}
+              fill="none"
+              stroke="#423c30"
+              strokeWidth="1.1"
+            />
+            {/* 입체 스프링(#213) — 뒷면을 먼저, 앞면이 교차점에서 덮는다. 각 세그먼트는
+                자기 길이만큼의 dash 로 숨겨져 있다가 누적 순서대로 그려진다. */}
+            {[false, true].map((frontPass) =>
+              cfg.geom.segs.map((seg, si) =>
+                seg.front === frontPass ? (
+                  <path
+                    key={si}
+                    ref={(el) => {
+                      segRefs.current[ci][si] = el;
+                    }}
+                    d={seg.d}
+                    fill="none"
+                    stroke="#423c30"
+                    strokeWidth={1.3}
+                    opacity={1}
+                    style={{
+                      strokeDasharray: seg.len,
+                      strokeDashoffset: seg.len,
+                    }}
+                  />
+                ) : null,
+              ),
+            )}
+          </svg>
 
+          {/* 철학 멘트 — 곡선 위 점 + 극점 바깥 여백 포켓 (#225). 점이 왼쪽 극점이면
+              왼쪽 여백에(오른쪽 끝을 점에 붙임), 오른쪽 극점이면 오른쪽 여백에 —
+              코일과 겹치지 않는 곳에서 커졌다 작아진다. 데스크톱·모바일 동일 배치
+              (모바일도 코일을 좁혀 바깥 포켓을 확보 → 선을 뚫지 않는다). */}
+          {SHOW_MOMENTS &&
+            pillars.map((v, i) => {
+              const pos = cfg.moments[i];
+              const dotLeft = pos.x < 50; // 왼쪽 극점 → 멘트는 왼쪽 포켓
+              return (
+                <div key={v.han}>
+                  <div
+                    ref={(el) => {
+                      dotRefs.current[ci][i] = el;
+                    }}
+                    className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#423c30]"
+                    style={{ left: `${pos.x}%`, top: `${pos.y}%`, opacity: 0 }}
+                  />
+                  <div
+                    ref={(el) => {
+                      momentRefs.current[ci][i] = el;
+                    }}
+                    className={`absolute w-[28%] max-w-72 md:w-[26%] ${
+                      dotLeft
+                        ? "right-[calc((100-var(--dx))*1%+14px)] text-right"
+                        : "left-[calc(var(--dx)*1%+14px)] text-left"
+                    }`}
+                    style={{
+                      top: `${pos.y}%`,
+                      opacity: 0,
+                      transform: "translateY(-50%) scale(0.78)",
+                      ["--dx" as string]: pos.x,
+                    }}
+                    // 초기(숨김) 상태 — JS 로드 전에도 키보드·스크린리더에서 제외
+                    inert
+                  >
+                    <div className="[font-family:var(--ws-serif)] text-[40px] leading-none text-[#423c30] md:text-[52px]">
+                      {v.han}
+                    </div>
+                    <div className="mt-3 [font-family:var(--ws-mono)] text-[9px] tracking-[2px] text-[#9a9080] md:text-[10px]">
+                      {v.label}
+                    </div>
+                    <p className="mt-2 [font-family:var(--ws-serif)] text-[14px] leading-[1.6] text-[#524a3a] md:text-[17px]">
+                      {v.body}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      ))}
     </div>
   );
 }
