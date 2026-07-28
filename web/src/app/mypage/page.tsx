@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { Container } from "@/components/container";
@@ -148,22 +147,6 @@ export default async function MyPage() {
             배송지 추가
           </SubmitButton>
         </form>
-      </section>
-
-      {/* 바로가기 */}
-      <section className="mt-14 flex gap-4 text-sm">
-        <Link
-          href="/mypage/orders"
-          className="text-wabi-fg-muted hover:text-wabi-fg"
-        >
-          주문 내역 →
-        </Link>
-        <Link
-          href="/mypage/wishlist"
-          className="text-wabi-fg-muted hover:text-wabi-fg"
-        >
-          위시리스트 →
-        </Link>
       </section>
 
       <DeleteAccountSection />
