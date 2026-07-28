@@ -53,21 +53,32 @@ export default async function MyPage() {
         <div className="mt-4 space-y-1 text-sm text-wabi-fg-muted">
           <p>이메일: {profile?.email ?? user.email}</p>
         </div>
-        <form action={updateName} className="mt-4 flex max-w-sm gap-2">
-          <Input
-            name="name"
-            defaultValue={profile?.name ?? ""}
-            placeholder="이름"
-            aria-label="이름"
-            className="rounded-none"
-          />
-          <SubmitButton
-            styled
-            pendingText="저장 중…"
-            className="rounded-none bg-wabi-accent px-6 hover:bg-wabi-accent/90"
+        <form action={updateName} className="mt-4 max-w-sm">
+          <label
+            htmlFor="mypage-nickname"
+            className="text-xs text-wabi-fg-muted"
           >
-            저장
-          </SubmitButton>
+            닉네임 — 커뮤니티·리뷰에 표시됩니다 (2~20자)
+          </label>
+          <div className="mt-1 flex gap-2">
+            <Input
+              id="mypage-nickname"
+              name="name"
+              defaultValue={profile?.name ?? ""}
+              placeholder="닉네임"
+              aria-label="닉네임"
+              minLength={2}
+              maxLength={20}
+              className="rounded-none"
+            />
+            <SubmitButton
+              styled
+              pendingText="저장 중…"
+              className="rounded-none bg-wabi-accent px-6 hover:bg-wabi-accent/90"
+            >
+              저장
+            </SubmitButton>
+          </div>
         </form>
       </section>
 

@@ -20,8 +20,9 @@ const addressSchema = z.object({
 });
 
 export async function updateName(formData: FormData) {
-  const name = String(formData.get("name") || "").trim().slice(0, 50);
-  if (!name) return;
+  // 닉네임 — 커뮤니티·리뷰 표시 이름(2~20자). 모달(setNickname)과 정책 일치.
+  const name = String(formData.get("name") || "").trim().slice(0, 20);
+  if (name.length < 2) return;
 
   const supabase = await createClient();
   const {
