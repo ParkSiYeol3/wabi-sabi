@@ -65,3 +65,66 @@ export async function adminDeleteMoment(formData: FormData) {
   revalidatePath("/today");
   revalidatePath("/admin/moments");
 }
+
+// 상세 재검증용 — moment_id 가 유효하면 그 상세도 무효화한다.
+function revalidateMoment(momentId: string) {
+  if (idSchema.safeParse(momentId).success)
+    revalidatePath(`/today/${momentId}`);
+}
+
+// 댓글 모더레이션 — 숨김 토글 / 삭제. service_role 로 RLS 우회.
+export async function adminSetCommentHidden(formData: FormData) {
+  const user = await requireAdmin();
+  if (!adminConfigured()) return;
+
+  const id = String(formData.get("id") || "");
+  const momentId = String(formData.get("moment_id") || "");
+  const hidden = String(formData.get("hidden")) === "true";
+  if (!idSchema.safeParse(id).success) return;
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("moment_comments")
+    .update({ hidden })
+    .eq("id", id);
+  if (error) {
+    console.error("[admin] comment 숨김 실패", id, error);
+    return;
+  }
+  await logAdminAction(user, {
+    action: "moment_comment.set_hidden",
+    targetTable: "moment_comments",
+    targetId: id,
+    meta: { hidden },
+  });
+  revalidatePath("/today");
+  revalidateMoment(momentId);
+  revalidatePath("/admin/moments");
+}
+
+export async function adminDeleteComment(formData: FormData) {
+  const user = await requireAdmin();
+  if (!adminConfigured()) return;
+
+  const id = String(formData.get("id") || "");
+  const momentId = String(formData.get("moment_id") || "");
+  if (!idSchema.safeParse(id).success) return;
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("moment_comments")
+    .delete()
+    .eq("id", id);
+  if (error) {
+    console.error("[admin] comment 삭제 실패", id, error);
+    return;
+  }
+  await logAdminAction(user, {
+    action: "moment_comment.delete",
+    targetTable: "moment_comments",
+    targetId: id,
+  });
+  revalidatePath("/today");
+  revalidateMoment(momentId);
+  revalidatePath("/admin/moments");
+}
