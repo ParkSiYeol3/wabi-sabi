@@ -48,8 +48,8 @@ export function SiteHeader() {
             preload
             className="h-6 w-auto"
           />
-          {/* 로고 = Cormorant Garamond(대표님) */}
-          <span className="text-sm font-bold tracking-[0.2em] [font-family:var(--font-cormorant)]">
+          {/* 로고 = Cormorant Garamond(대표님). 모바일에서 2줄로 줄바꿈되던 것 방지 */}
+          <span className="whitespace-nowrap text-sm font-bold tracking-[0.2em] [font-family:var(--font-cormorant)]">
             {site.name}
           </span>
         </Link>
@@ -80,20 +80,21 @@ export function SiteHeader() {
 
         {/* 우측 액션 */}
         <div className="flex items-center gap-1">
-          {/* 로그인 시 위시리스트·주문내역 바로가기(대표님 — 눈에 띄게 아이콘) */}
+          {/* 로그인 시 위시리스트·주문내역 바로가기(대표님 — 눈에 띄게 아이콘).
+              모바일에선 공간이 좁아(로고 2줄) 상단에서 빼고 메뉴 안에 넣는다 → 데스크톱만. */}
           {mounted && user && (
             <>
               <Link
                 href="/mypage/wishlist"
                 aria-label="위시리스트"
-                className="rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted"
+                className="hidden rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted md:inline-flex"
               >
                 <Heart className="size-5" strokeWidth={1.5} />
               </Link>
               <Link
                 href="/mypage/orders"
                 aria-label="주문 내역"
-                className="rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted"
+                className="hidden rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted md:inline-flex"
               >
                 <Receipt className="size-5" strokeWidth={1.5} />
               </Link>
@@ -146,7 +147,7 @@ export function SiteHeader() {
       <div
         className={cn(
           "overflow-hidden border-t border-wabi-border md:hidden",
-          open ? "max-h-64" : "max-h-0 border-t-0",
+          open ? "max-h-96" : "max-h-0 border-t-0",
           "transition-all duration-200",
         )}
       >
@@ -172,6 +173,29 @@ export function SiteHeader() {
             >
               관리자
             </Link>
+          )}
+          {/* 로그인 시 위시리스트·주문내역 — 모바일은 상단 아이콘 대신 메뉴 안에(대표님,
+              참고 시안 GUIDE 섹션). 구분선으로 메뉴와 나눈다. */}
+          {mounted && user && (
+            <>
+              <div className="my-1 border-t border-wabi-border" />
+              <Link
+                href="/mypage/wishlist"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 py-3 text-sm tracking-wide text-wabi-fg-muted transition-colors hover:text-wabi-fg"
+              >
+                <Heart className="size-4" strokeWidth={1.5} />
+                위시리스트
+              </Link>
+              <Link
+                href="/mypage/orders"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 py-3 text-sm tracking-wide text-wabi-fg-muted transition-colors hover:text-wabi-fg"
+              >
+                <Receipt className="size-4" strokeWidth={1.5} />
+                주문 내역
+              </Link>
+            </>
           )}
         </nav>
       </div>
