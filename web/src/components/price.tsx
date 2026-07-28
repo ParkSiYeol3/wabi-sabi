@@ -13,7 +13,7 @@ export function Price({
   return (
     <span className={className}>
       <span className="font-numeric">{value.toLocaleString("ko-KR")}</span>
-      <span className="ml-0.5 align-middle text-[0.78em] font-normal text-wabi-fg-muted">
+      <span className="relative top-[-0.09em] ml-0.5 align-middle text-[0.78em] font-normal text-wabi-fg-muted">
         원
       </span>
     </span>
