@@ -8,10 +8,12 @@ export function Price({
   value: number;
   className?: string;
 }) {
+  // "원"은 baseline 에 두면 작아서 큰 숫자 밑으로 가라앉아 보인다 → align-middle 로
+  // 숫자 중앙선에 맞춰 올린다(대표님/시열님 "동일선상").
   return (
     <span className={className}>
       <span className="font-numeric">{value.toLocaleString("ko-KR")}</span>
-      <span className="ml-0.5 text-[0.72em] font-normal text-wabi-fg-muted">
+      <span className="ml-0.5 align-middle text-[0.78em] font-normal text-wabi-fg-muted">
         원
       </span>
     </span>
