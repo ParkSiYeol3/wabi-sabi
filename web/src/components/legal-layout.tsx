@@ -13,8 +13,10 @@ export function LegalPage({
   return (
     <Container className="py-16">
       <h1 className="text-2xl font-semibold tracking-wide">{title}</h1>
-      <p className="mt-2 text-xs text-wabi-fg-muted">시행일 {effectiveDate}</p>
-      <div className="mt-10 max-w-3xl space-y-8 text-sm leading-7 text-wabi-fg-muted">
+      <p className="mt-2 font-numeric text-xs text-wabi-fg-muted">
+        시행일 {effectiveDate}
+      </p>
+      <div className="mt-10 max-w-3xl space-y-8 font-numeric text-sm leading-7 text-wabi-fg-muted">
         {children}
       </div>
     </Container>

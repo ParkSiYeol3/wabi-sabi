@@ -119,7 +119,7 @@ function AuthForm() {
       {timedOut && (
         <p
           role="status"
-          className="mb-6 border border-wabi-border bg-wabi-subtle/40 px-4 py-3 text-sm leading-6 text-wabi-fg-muted"
+          className="mb-6 border border-wabi-border bg-wabi-subtle/40 px-4 py-3 font-numeric text-sm leading-6 text-wabi-fg-muted"
         >
           {timeoutKind === "max"
             ? "보안을 위해 로그인 후 7일이 지나 자동 로그아웃되었습니다. 다시 로그인해 주세요."
@@ -180,7 +180,7 @@ function AuthForm() {
             aria-describedby={tab === "signup" ? "password-hint" : undefined}
           />
           {tab === "signup" && (
-            <p id="password-hint" className="mt-1 text-xs text-wabi-fg-muted">
+            <p id="password-hint" className="mt-1 font-numeric text-xs text-wabi-fg-muted">
               8자 이상, 영문과 숫자를 포함해 주세요.
             </p>
           )}
