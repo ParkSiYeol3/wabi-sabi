@@ -89,7 +89,7 @@ export function NicknameGate() {
             maxLength={20}
             placeholder="사용할 닉네임 (2~20자)"
             aria-label="닉네임"
-            className="rounded-none"
+            className="rounded-none font-numeric"
           />
           {state && !state.ok && (
             <p role="alert" className="text-sm text-red-700">

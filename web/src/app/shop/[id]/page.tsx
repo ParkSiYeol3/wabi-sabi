@@ -240,7 +240,7 @@ export default async function ProductDetailPage({
                 </span>
               </span>
             </summary>
-            <div className="mt-4 space-y-3 text-wabi-fg-muted">
+            <div className="mt-4 space-y-3 font-numeric text-wabi-fg-muted">
               <p>
                 수공예 도자기·공예품은 하나씩 손으로 만들어 색상·질감·크기·굽의
                 형태에 <strong className="font-medium text-wabi-fg">개체별 미세한
