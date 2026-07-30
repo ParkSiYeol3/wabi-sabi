@@ -12,6 +12,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: BASE, lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: `${BASE}/shop`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { url: `${BASE}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    // 공개 게시판 — 신선한 콘텐츠라 색인 가치 높다. 내부 링크(푸터)로만 크롤되던
+    // 것을 사이트맵에 명시해 색인을 확실히 한다. 문의(/inquiry)는 비밀글 위주라 제외.
+    { url: `${BASE}/today`, lastModified: now, changeFrequency: "daily", priority: 0.6 },
+    { url: `${BASE}/notice`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
+    { url: `${BASE}/review`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     // 법적고지 (#106) — 색인 대상(전자상거래 필수 고지라 검색 노출이 정상)
     { url: `${BASE}/legal/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${BASE}/legal/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },

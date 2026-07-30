@@ -26,7 +26,7 @@ const criteria = [
   {
     en: "Trace of Hands",
     ko: "손의 흔적",
-    body: "물레 자국, 유약의 흐름, 어긋난 좌우 — 같은 형태가 둘 없는 물건만 들입니다.",
+    body: "물레 자국, 유약의 흐름, 어긋난 좌우. 같은 형태가 둘 없는 물건만 들입니다.",
   },
   {
     en: "Everyday Use",
@@ -36,7 +36,7 @@ const criteria = [
   {
     en: "Time",
     ko: "시간",
-    body: "쓸수록 길이 들고, 낡음이 결이 되는 — 오래 곁에 둘수록 좋아지는 것만 남깁니다.",
+    body: "쓸수록 길이 들고, 낡음이 결이 되는. 오래 곁에 둘수록 좋아지는 것만 남깁니다.",
   },
 ] as const;
 
@@ -56,14 +56,13 @@ export default async function AboutPage() {
           <Reveal>
             {/* 히어로 제거로 이 헤딩이 페이지 h1 (SEO·접근성) */}
             <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-わび-さび <span className="text-wabi-fg-muted">(Wabi-sabi)</span>
+              わび-さび <span className="text-wabi-fg-muted">(Wabi-sabi)</span>
             </h1>
             <div className="mt-8 space-y-5 text-sm leading-8 text-wabi-fg-muted md:text-[15px]">
               {philosophy.map((p, i) => (
                 <p key={i}>{p}</p>
               ))}
             </div>
-
           </Reveal>
 
           {/* 매장 사진 — 어드민에서 업로드(대표님). 없으면 로고 마크 폴백 */}
@@ -133,8 +132,7 @@ export default async function AboutPage() {
         <Container className="py-24 md:py-32">
           <Reveal>
             <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-              오시는 길{" "}
-              <span className="text-wabi-fg-muted">Showroom</span>
+              오시는 길 <span className="text-wabi-fg-muted">Showroom</span>
             </h2>
           </Reveal>
           <div className="mt-12 grid gap-12 md:grid-cols-2 md:items-start">
@@ -151,7 +149,9 @@ export default async function AboutPage() {
                 title="위치"
               >
                 <p>{site.place}</p>
-                <p className="font-numeric text-wabi-fg-muted">{site.address}</p>
+                <p className="font-numeric text-wabi-fg-muted">
+                  {site.address}
+                </p>
                 <p className="text-wabi-fg-muted">{site.addressNote}</p>
               </VisitItem>
               <VisitItem
