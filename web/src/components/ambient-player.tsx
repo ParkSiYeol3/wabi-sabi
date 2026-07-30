@@ -15,10 +15,15 @@ import { cn } from "@/lib/utils";
 
 // 배경음 트랙 — public/sounds 에 있는 파일. 끝나면 다시 재생(루프). 여러 개면 셔플.
 // (음원 교체·추가 시 이 배열만 수정하면 된다)
-const TRACKS = ["/sounds/the_mountain-instrumental-piano-252954.mp3"];
+const TRACKS = [
+  "/sounds/38534292-golden-forest-with-birds-and-running-stream-sounds-171319.mp3",
+];
 const VOLUME = 0.06; // 들릴 듯 말 듯 아주 잔잔하게 — 배경 공기처럼
 const PREF_KEY = "wabi.bgm"; // "on" | "off"
 const HINT_DELAY = 900; // 페이지가 자리잡은 뒤 힌트 등장
+// 원본 앞 0~53초 구간만 반복(대표님) — 이 지점에서 처음으로 되감아 뒤쪽은 안 쓴다.
+// (원본 파일은 그대로 두고 재생 구간만 코드로 제한 — 파일 재인코딩 불필요)
+const LOOP_END = 53;
 
 // Fisher–Yates 셔플(원본 불변).
 function shuffle<T>(arr: T[]): T[] {
@@ -57,6 +62,12 @@ export function AmbientPlayer() {
     }
     audio.src = queueRef.current[idxRef.current];
     void audio.play().catch(() => {});
+  }
+
+  // 0~53초 구간만 재생 — 그 지점 도달 시 처음으로 되감는다(끊김 없이 계속 재생).
+  function onTimeUpdate() {
+    const audio = audioRef.current;
+    if (audio && audio.currentTime >= LOOP_END) audio.currentTime = 0;
   }
 
   async function start() {
@@ -121,7 +132,12 @@ export function AmbientPlayer() {
 
   return (
     <>
-      <audio ref={audioRef} onEnded={advance} preload="none" />
+      <audio
+        ref={audioRef}
+        onTimeUpdate={onTimeUpdate}
+        onEnded={advance}
+        preload="none"
+      />
 
       {/* 클릭 유도 힌트 — 재생 전에만. pointer-events-none 로 아래 클릭을 막지 않는다
           (힌트를 눌러도 창 리스너가 첫 제스처로 잡아 재생된다). */}
