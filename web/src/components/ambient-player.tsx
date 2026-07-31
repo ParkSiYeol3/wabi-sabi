@@ -6,9 +6,13 @@ import { Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // 잔잔한 배경음(대표님/시열님) — TRACKS 를 루프 재생(여러 개면 셔플). 브라우저는
-// 소리 있는 자동재생을 막으므로 "첫 상호작용(클릭·키·스크롤)"에 아주 낮은 볼륨으로
+// 소리 있는 자동재생을 막으므로 "첫 클릭/탭(또는 키 입력)"에 아주 낮은 볼륨으로
 // 은은히 시작하고, 우측 하단 스피커 토글로 끈다. 선호는 localStorage 기억(끈 사람은
 // 다음 방문에 자동 시작 안 함). layout 마운트라 페이지 전환에도 안 끊김.
+//
+// 트리거는 click(+keydown)만 — scroll·touchstart 를 넣으면 모바일에서 화면을 살짝
+// 넘기기만 해도 소리가 나 당황스럽다(공공장소 등). click 은 스크롤이 아닌 실제 탭에만
+// 발생하므로 힌트("화면을 클릭하면…")와도 일치한다.
 //
 // 첫 방문자는 "클릭하면 소리가 난다"는 걸 알 수 없으므로, 재생 전까지 화면 클릭을
 // 유도하는 힌트(글래스 pill + 이퀄라이저)를 띄운다. 첫 조작에 재생과 함께 사라진다.
@@ -104,11 +108,11 @@ export function AmbientPlayer() {
       remove();
     };
     const remove = () => {
-      ["pointerdown", "keydown", "scroll", "touchstart"].forEach((e) =>
+      ["click", "keydown"].forEach((e) =>
         window.removeEventListener(e, onFirst),
       );
     };
-    ["pointerdown", "keydown", "scroll", "touchstart"].forEach((e) =>
+    ["click", "keydown"].forEach((e) =>
       window.addEventListener(e, onFirst, { passive: true }),
     );
     return remove;
