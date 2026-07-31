@@ -15,8 +15,9 @@ import {
 } from "@/lib/queries/content";
 
 export const metadata: Metadata = {
-  title: "소개",
-  description: "와비-사비, 불완전함과 무상함의 아름다움을 받아들이는 미학",
+  title: "소개 · 천안 신부동 쇼룸",
+  description:
+    "천안 신부동 와비사비(WABI-SABI) 그릇·생활소품 편집샵 소개와 쇼룸 안내 — 영업시간·오시는 길·매장 위치. 불완전함의 아름다움을 담은 셀렉션.",
 };
 
 // 고르는 기준 (#227) — 브랜드 철학(侘·寂·選)은 홈 곡선 여정이 맡는다(#225).

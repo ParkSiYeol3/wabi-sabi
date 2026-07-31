@@ -36,7 +36,11 @@ export default async function Home({
 
       {/* ── 진입 즉시 곡선만 (#197 대표님 무드 — 코멘트·로고 일절 없음).
            스크린리더용 페이지 제목만 숨김 제공. ── */}
-      <h1 className="sr-only">WABI-SABI — 하루의 결을 따라 흐르는 그릇 셀렉트숍</h1>
+      {/* SEO 롱테일 키워드 — 홈은 곡선 무드라 시각적 제목이 없어, 크롤러·스크린리더용
+          H1 에 브랜드+지역 키워드를 담는다(천안·신부동·그릇·편집샵). */}
+      <h1 className="sr-only">
+        와비사비 WABI-SABI — 천안 신부동 수공예 그릇·생활소품 편집샵
+      </h1>
       <section className="pb-0 pt-6 md:pt-10">
         <HelixJourney pillarLabels={pillarLabels} pillarBodies={pillars} />
       </section>
