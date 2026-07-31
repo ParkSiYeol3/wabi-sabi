@@ -57,7 +57,8 @@ export function MomentLikeButton({
       aria-pressed={liked}
       aria-label={liked ? "공감 취소" : "공감"}
       className={cn(
-        "inline-flex items-center gap-1 transition-colors",
+        // 세로 패딩으로 탭 영역 확보(모바일) — 음수 마진으로 주변 정렬은 유지.
+        "-my-1.5 inline-flex items-center gap-1 py-1.5 transition-colors",
         liked ? "text-red-600" : "text-wabi-fg-muted hover:text-wabi-fg",
       )}
     >
