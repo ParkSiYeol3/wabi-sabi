@@ -55,16 +55,20 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
+  // SEO — 일반명사 "와비사비"는 경쟁이 심해 신규 도메인이 상위 노출되기 어렵다.
+  // 브랜드+지역 롱테일 키워드(천안·신부동·그릇·편집샵)로 타이틀·설명을 채워
+  // '천안 와비사비', '신부동 와비사비', '와비사비 그릇' 검색을 노린다.
   title: {
-    default: "WABI-SABI [わび-さび] — Living Select Shop",
-    template: "%s | WABI-SABI",
+    default: "와비사비 WABI-SABI — 천안 신부동 수공예 그릇·생활소품 편집샵",
+    template: "%s | 와비사비 WABI-SABI",
   },
   description:
-    "불완전함의 아름다움. 시간의 흔적이 담긴 수공예 도자기와 생활 오브제를 큐레이션합니다. Tableware · Objects · Craft · Gifts",
+    "천안 신부동 수공예 그릇·생활소품 편집샵 와비사비(WABI-SABI). 시간의 흔적이 담긴 도자기와 생활 오브제를 큐레이션합니다. Tableware · Objects · Craft · Gifts",
   metadataBase: new URL(SITE_URL),
   openGraph: {
-    title: "WABI-SABI [わび-さび]",
-    description: "불완전함의 아름다움 — 수공예 도자기·생활 오브제 셀렉트샵",
+    title: "와비사비 WABI-SABI — 천안 신부동 그릇·소품 편집샵",
+    description:
+      "천안 신부동 수공예 그릇·생활소품 편집샵. 불완전함의 아름다움을 담은 도자기·생활 오브제를 큐레이션합니다.",
     type: "website",
     locale: "ko_KR",
   },
@@ -84,6 +88,9 @@ const siteJsonLd = JSON.stringify({
   "@context": "https://schema.org",
   "@type": "OnlineStore",
   name: "WABI-SABI 와비사비",
+  alternateName: "와비사비 그릇 편집샵",
+  description:
+    "천안 신부동 수공예 그릇·생활소품 편집샵. 시간의 흔적이 담긴 도자기와 생활 오브제를 큐레이션합니다.",
   url: SITE_URL,
   // 브랜드 엔티티 연결 — 인스타그램
   sameAs: ["https://www.instagram.com/wasa.kr"],
