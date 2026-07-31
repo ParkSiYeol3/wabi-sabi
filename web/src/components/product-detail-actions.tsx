@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Minus, Plus } from "lucide-react";
+import Image from "next/image";
+import { Minus, Plus, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Price } from "@/components/price";
 import { useCart, type CartItem } from "@/store/cart";
@@ -11,9 +12,11 @@ import { ADDONS, won } from "@/lib/addons";
 type Props = {
   product: Omit<CartItem, "quantity" | "addons">;
   stock: number;
+  /** 애드온 코드별 썸네일 URL(대표님 어드민 업로드). 없으면 사진 자리만 표시. */
+  addonImages?: Record<string, string | undefined>;
 };
 
-export function ProductDetailActions({ product, stock }: Props) {
+export function ProductDetailActions({ product, stock, addonImages }: Props) {
   const router = useRouter();
   const add = useCart((s) => s.add);
   const [qty, setQty] = useState(1);
@@ -54,18 +57,47 @@ export function ProductDetailActions({ product, stock }: Props) {
           fieldset/legend 로 스크린리더에 옵션 그룹임을 알린다. */}
       <fieldset>
         <legend className="text-sm text-wabi-fg-muted">추가 옵션</legend>
-        <div className="mt-2 space-y-1.5">
-          {ADDONS.map((a) => (
-            <label key={a.code} className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={addons.includes(a.code)}
-                onChange={(e) => toggleAddon(a.code, e.target.checked)}
-                disabled={soldOut}
-              />
-              {a.name} (+<span className="font-numeric">{won(a.price)}</span>)
-            </label>
-          ))}
+        <div className="mt-2 space-y-2">
+          {ADDONS.map((a) => {
+            const img = addonImages?.[a.code];
+            return (
+              <label
+                key={a.code}
+                className="flex items-center gap-3 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={addons.includes(a.code)}
+                  onChange={(e) => toggleAddon(a.code, e.target.checked)}
+                  disabled={soldOut}
+                />
+                {/* 옵션 사진 — 대표님 어드민 업로드. 없으면 사진 자리(플레이스홀더). */}
+                <span className="relative size-14 shrink-0 overflow-hidden rounded border border-wabi-border bg-wabi-muted">
+                  {img ? (
+                    <Image
+                      src={img}
+                      alt={a.name}
+                      fill
+                      sizes="56px"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <span className="flex size-full items-center justify-center">
+                      <ImageIcon
+                        className="size-5 text-wabi-fg-muted/40"
+                        strokeWidth={1}
+                        aria-hidden
+                      />
+                    </span>
+                  )}
+                </span>
+                <span className="min-w-0">
+                  {a.name} (+
+                  <span className="font-numeric">{won(a.price)}</span>)
+                </span>
+              </label>
+            );
+          })}
         </div>
       </fieldset>
 

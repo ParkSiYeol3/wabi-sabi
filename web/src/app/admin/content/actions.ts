@@ -5,7 +5,12 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { logAdminAction } from "@/lib/audit";
-import { CONTENT_KEYS, ABOUT_IMAGE_KEY } from "@/lib/queries/content";
+import {
+  CONTENT_KEYS,
+  ABOUT_IMAGE_KEY,
+  addonImageKey,
+} from "@/lib/queries/content";
+import { ADDONS } from "@/lib/addons";
 import { uploadSiteImage, deleteProductImage } from "@/lib/storage";
 import type { ActionResult } from "@/app/admin/products/types";
 
@@ -132,5 +137,91 @@ export async function removeAboutImage(formData: FormData) {
     targetId: ABOUT_IMAGE_KEY,
   });
   revalidatePath("/about");
+  revalidatePath("/admin/content");
+}
+
+// 추가 옵션(애드온) 사진 업로드 (대표님) — 코드별 site_content 키에 URL 저장.
+// About 사진과 동일 패턴. 상품 상세는 동적 렌더라 다음 요청에 자동 반영된다.
+export async function saveAddonImage(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const user = await requireAdmin();
+  if (!adminConfigured())
+    return { ok: false, message: "서버 설정 오류(service_role 미설정)" };
+
+  const code = String(formData.get("code") || "");
+  if (!ADDONS.some((a) => a.code === code))
+    return { ok: false, message: "알 수 없는 옵션입니다." };
+
+  const file = formData
+    .getAll("image")
+    .find((f): f is File => f instanceof File && f.size > 0);
+  if (!file) return { ok: false, message: "사진 파일을 선택하세요." };
+  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type))
+    return { ok: false, message: "png·jpg·webp 만 업로드할 수 있습니다." };
+  if (file.size > 12 * 1024 * 1024)
+    return { ok: false, message: "이미지는 12MB 이하여야 합니다." };
+
+  const { url, error } = await uploadSiteImage(file, "addon");
+  if (!url)
+    return { ok: false, message: `업로드 실패: ${error ?? "알 수 없는 오류"}` };
+
+  const key = addonImageKey(code);
+  const supabase = createAdminClient();
+  const { data: prev } = await supabase
+    .from("site_content")
+    .select("value")
+    .eq("key", key)
+    .maybeSingle();
+
+  const { error: upErr } = await supabase.from("site_content").upsert({
+    key,
+    value: url,
+    updated_at: new Date().toISOString(),
+  });
+  if (upErr) {
+    await deleteProductImage(url); // 저장 실패 시 방금 올린 파일 회수
+    console.error("[admin] 옵션 사진 저장 실패", key, upErr);
+    return { ok: false, message: "저장에 실패했습니다. 잠시 후 다시 시도하세요." };
+  }
+
+  const old = prev?.value?.trim();
+  if (old && old !== url) await deleteProductImage(old);
+
+  await logAdminAction(user, {
+    action: "content.addon_image",
+    targetTable: "site_content",
+    targetId: key,
+  });
+  revalidatePath("/admin/content");
+  return { ok: true, message: "옵션 사진이 저장되었습니다." };
+}
+
+// 추가 옵션 사진 제거 → 상세에서 사진 자리(플레이스홀더)로 되돌린다.
+export async function removeAddonImage(formData: FormData) {
+  const user = await requireAdmin();
+  if (!adminConfigured()) return;
+
+  const code = String(formData.get("code") || "");
+  if (!ADDONS.some((a) => a.code === code)) return;
+
+  const key = addonImageKey(code);
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("site_content")
+    .select("value")
+    .eq("key", key)
+    .maybeSingle();
+  const url = data?.value?.trim();
+
+  await supabase.from("site_content").delete().eq("key", key);
+  if (url) await deleteProductImage(url);
+
+  await logAdminAction(user, {
+    action: "content.addon_image_remove",
+    targetTable: "site_content",
+    targetId: key,
+  });
   revalidatePath("/admin/content");
 }
