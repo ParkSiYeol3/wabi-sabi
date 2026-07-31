@@ -12,6 +12,12 @@ import { WishlistButton } from "@/components/wishlist-button";
 import { ReviewSection } from "@/components/review-section";
 import { Price } from "@/components/price";
 import { getCachedProductDetail } from "@/lib/queries/product-detail";
+import {
+  getPublicContent,
+  ADDON_IMAGE_KEYS,
+  addonImageKey,
+} from "@/lib/queries/content";
+import { ADDONS } from "@/lib/addons";
 import { createClient } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/site-url";
 
@@ -94,6 +100,12 @@ export default async function ProductDetailPage({
   const bundle = await getCachedProductDetail(id);
   if (!bundle) notFound();
   const { product, related, stats: reviewStats } = bundle;
+
+  // 추가 옵션 썸네일 — 대표님 어드민 업로드(site_content). 코드별 URL 로 정리.
+  const addonImageMap = await getPublicContent(ADDON_IMAGE_KEYS);
+  const addonImages = Object.fromEntries(
+    ADDONS.map((a) => [a.code, addonImageMap[addonImageKey(a.code)]]),
+  );
 
   // 위시리스트 초기 상태 (로그인 시) — 사용자별이라 캐시 밖.
   const supabase = await createClient();
@@ -192,6 +204,7 @@ export default async function ProductDetailPage({
               image: main,
             }}
             stock={product.stock}
+            addonImages={addonImages}
           />
 
           {/* 품절이면 재입고 알림 (#166) — 로그인 사용자만(발송 주소 = 계정 이메일) */}

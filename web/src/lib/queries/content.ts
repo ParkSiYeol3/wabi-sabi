@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
+import { ADDONS } from "@/lib/addons";
 
 // 편집 가능한 사이트 콘텐츠 (#160·#245) — 대표님이 어드민에서 고칠 수 있는 텍스트.
 // 값이 없으면(미저장) 기본 문구로 폴백한다. site_content(key,value) 단일 테이블.
@@ -10,6 +11,13 @@ export const PHILOSOPHY_KEY = "philosophy";
 // 저장하고, 파일은 스토리지에 올린다. 값이 없으면 About 은 로고 마크로 폴백한다.
 // 텍스트 편집(CONTENT_KEYS)과 달리 업로드라 별도 액션(saveAboutImage)이 다룬다.
 export const ABOUT_IMAGE_KEY = "about_image";
+
+// 추가 옵션(애드온) 썸네일 이미지 — 코드별 site_content 키(예: addon_image_gift_wrap).
+// 상품 상세의 옵션 목록에 작은 사진으로 표시된다. 값이 없으면 상세에서 사진 자리
+// (플레이스홀더)만 확보해 둔다. About 사진과 동일한 업로드 패턴(스토리지 URL 저장,
+// saveAddonImage 액션). 가격·이름은 코드(lib/addons.ts) 진실, 사진만 DB.
+export const addonImageKey = (code: string) => `addon_image_${code}`;
+export const ADDON_IMAGE_KEYS = ADDONS.map((a) => addonImageKey(a.code));
 
 // 홈 하드코딩 문구를 편집 가능하게 이전(#245·#247). 한자(侘·寂·選)만 브랜드
 // 상징이라 코드 고정, 제목(라벨)·본문·CTA 는 편집한다. 키는 saveContent enum·
