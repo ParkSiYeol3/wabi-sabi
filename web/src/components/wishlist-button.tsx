@@ -59,7 +59,7 @@ export function WishlistButton({
       aria-pressed={on}
       aria-label={on ? "위시리스트에서 제거" : "위시리스트에 추가"}
       className={cn(
-        "inline-flex items-center justify-center rounded-md p-2 transition-colors hover:bg-wabi-muted disabled:opacity-50",
+        "inline-flex items-center justify-center rounded-md p-3 transition-colors hover:bg-wabi-muted disabled:opacity-50",
         className,
       )}
     >

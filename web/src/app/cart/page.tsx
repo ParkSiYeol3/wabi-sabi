@@ -123,7 +123,7 @@ export default function CartPage() {
               type="button"
               aria-label={`${item.name} 삭제`}
               onClick={() => remove(item.id)}
-              className="p-2 text-wabi-fg-muted hover:text-wabi-fg"
+              className="flex size-11 shrink-0 items-center justify-center text-wabi-fg-muted transition-colors hover:text-wabi-fg"
             >
               <X className="size-4" />
             </button>
