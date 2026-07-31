@@ -176,7 +176,7 @@ export default function CheckoutPage() {
                 aria-label="저장된 배송지 선택"
                 defaultValue={addresses[0]?.id}
                 onChange={(e) => onSelectAddress(e.target.value)}
-                className="mt-4 w-full rounded-none border border-wabi-border bg-transparent px-3 py-2 text-sm outline-none focus:border-wabi-fg sm:max-w-md"
+                className="mt-4 w-full rounded-none border border-wabi-border bg-transparent px-3 py-2 text-base outline-none focus:border-wabi-fg sm:max-w-md md:text-sm"
               >
                 {addresses.map((a) => (
                   <option key={a.id} value={a.id}>
@@ -209,7 +209,7 @@ export default function CheckoutPage() {
                   rows={3}
                   aria-label="메시지 카드 내용"
                   placeholder="메시지 카드 내용"
-                  className="resize-none border border-wabi-border bg-transparent px-3 py-2 text-sm outline-none focus:border-wabi-fg"
+                  className="resize-none border border-wabi-border bg-transparent px-3 py-2 text-base outline-none focus:border-wabi-fg md:text-sm"
                 />
               </div>
             </section>

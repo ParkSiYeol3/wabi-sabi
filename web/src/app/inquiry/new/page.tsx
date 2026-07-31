@@ -49,7 +49,7 @@ export default async function NewInquiryPage({
           rows={8}
           aria-label="문의 내용"
           placeholder="문의 내용을 입력하세요"
-          className="w-full border border-wabi-border bg-transparent px-3 py-2 text-sm"
+          className="w-full border border-wabi-border bg-transparent px-3 py-2 text-base md:text-sm"
         />
         <label className="flex items-center gap-2 text-sm text-wabi-fg-muted">
           <input type="checkbox" name="is_secret" className="size-4" />

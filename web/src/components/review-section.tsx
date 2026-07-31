@@ -60,7 +60,7 @@ export async function ReviewSection({
               <select
                 name="rating"
                 defaultValue="5"
-                className="border border-wabi-border bg-transparent px-2 py-1 text-sm"
+                className="border border-wabi-border bg-transparent px-2 py-1 text-base md:text-sm"
               >
                 {[5, 4, 3, 2, 1].map((n) => (
                   <option key={n} value={n}>
@@ -75,7 +75,7 @@ export async function ReviewSection({
               rows={3}
               aria-label="리뷰 내용"
               placeholder="상품 사용 후기를 남겨주세요"
-              className="w-full border border-wabi-border bg-transparent px-3 py-2 text-sm"
+              className="w-full border border-wabi-border bg-transparent px-3 py-2 text-base md:text-sm"
             />
             <SubmitButton
               styled

@@ -60,7 +60,7 @@ export function ProductDetailActions({ product, stock }: Props) {
             aria-label="수량 감소"
             disabled={soldOut}
             onClick={() => setQty((q) => clamp(q - 1))}
-            className="p-2 hover:bg-wabi-muted disabled:opacity-40"
+            className="flex size-11 items-center justify-center hover:bg-wabi-muted disabled:opacity-40"
           >
             <Minus className="size-3.5" />
           </button>
@@ -75,7 +75,7 @@ export function ProductDetailActions({ product, stock }: Props) {
             aria-label="수량 증가"
             disabled={soldOut || qty >= stock}
             onClick={() => setQty((q) => clamp(q + 1))}
-            className="p-2 hover:bg-wabi-muted disabled:opacity-40"
+            className="flex size-11 items-center justify-center hover:bg-wabi-muted disabled:opacity-40"
           >
             <Plus className="size-3.5" />
           </button>

@@ -27,7 +27,7 @@ export function MomentCommentForm({ momentId }: { momentId: string }) {
         required
         aria-label="댓글"
         placeholder="댓글을 남겨주세요 (500자 이내)"
-        className="w-full resize-y border border-wabi-border bg-transparent px-3 py-2 font-numeric text-sm outline-none transition-colors focus:border-wabi-fg"
+        className="w-full resize-y border border-wabi-border bg-transparent px-3 py-2 font-numeric text-base outline-none transition-colors focus:border-wabi-fg md:text-sm"
       />
       <div className="flex items-center gap-3">
         <Button

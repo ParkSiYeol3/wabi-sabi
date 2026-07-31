@@ -95,7 +95,7 @@ export default function CartPage() {
                 type="button"
                 aria-label="수량 감소"
                 onClick={() => setQty(item.id, item.quantity - 1)}
-                className="p-2 hover:bg-wabi-muted"
+                className="flex size-11 items-center justify-center hover:bg-wabi-muted"
               >
                 <Minus className="size-3.5" />
               </button>
@@ -109,7 +109,7 @@ export default function CartPage() {
                 type="button"
                 aria-label="수량 증가"
                 onClick={() => setQty(item.id, item.quantity + 1)}
-                className="p-2 hover:bg-wabi-muted"
+                className="flex size-11 items-center justify-center hover:bg-wabi-muted"
               >
                 <Plus className="size-3.5" />
               </button>
