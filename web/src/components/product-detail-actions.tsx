@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Price } from "@/components/price";
 import { useCart, type CartItem } from "@/store/cart";
 import { ADDONS, won } from "@/lib/addons";
 
@@ -29,6 +30,23 @@ export function ProductDetailActions({ product, stock }: Props) {
     setAddons((prev) =>
       checked ? [...prev, code] : prev.filter((c) => c !== code),
     );
+
+  // 스티키 바에 보여줄 합계 — 수량 × 단가 + 선택한 애드온.
+  const addonSum = ADDONS.filter((a) => addons.includes(a.code)).reduce(
+    (s, a) => s + a.price,
+    0,
+  );
+  const total = product.price * qty + addonSum;
+
+  function addToCart() {
+    add(product, qty, addons);
+    setAdded(true);
+    window.setTimeout(() => setAdded(false), 1500);
+  }
+  function buyNow() {
+    add(product, qty, addons);
+    router.push("/cart");
+  }
 
   return (
     <div className="mt-8 space-y-4">
@@ -86,16 +104,13 @@ export function ProductDetailActions({ product, stock }: Props) {
         )}
       </div>
 
-      <div className="flex gap-3">
+      {/* 데스크톱 — 인라인 버튼(정보 옆에서 바로 보임). 모바일은 하단 스티키 바로 대체. */}
+      <div className="hidden gap-3 md:flex">
         <Button
           type="button"
           variant="outline"
           disabled={soldOut}
-          onClick={() => {
-            add(product, qty, addons);
-            setAdded(true);
-            window.setTimeout(() => setAdded(false), 1500);
-          }}
+          onClick={addToCart}
           aria-live="polite"
           className="flex-1 rounded-none border-wabi-fg"
         >
@@ -104,11 +119,38 @@ export function ProductDetailActions({ product, stock }: Props) {
         <Button
           type="button"
           disabled={soldOut}
-          onClick={() => {
-            add(product, qty, addons);
-            router.push("/cart");
-          }}
+          onClick={buyNow}
           className="flex-1 rounded-none bg-wabi-accent hover:bg-wabi-accent/90"
+        >
+          바로 구매
+        </Button>
+      </div>
+
+      {/* 모바일 스티키 구매 바 — 사진·스펙·리뷰를 스크롤해도 담기/구매가 항상 손닿는
+          곳에 있게(커머스 표준). 합계는 수량·애드온 반영. 데스크톱은 위 인라인 사용.
+          safe-area 로 아이폰 홈 인디케이터를 피한다. */}
+      <div
+        className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-2 border-t border-wabi-border bg-wabi-bg/95 px-4 py-3 backdrop-blur md:hidden"
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+      >
+        <p className="min-w-0 flex-1 text-lg font-semibold text-wabi-fg">
+          <Price value={total} />
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={soldOut}
+          onClick={addToCart}
+          aria-live="polite"
+          className="rounded-none border-wabi-fg px-4"
+        >
+          {added ? "담김 ✓" : soldOut ? "품절" : "장바구니"}
+        </Button>
+        <Button
+          type="button"
+          disabled={soldOut}
+          onClick={buyNow}
+          className="rounded-none bg-wabi-accent px-5 hover:bg-wabi-accent/90"
         >
           바로 구매
         </Button>
