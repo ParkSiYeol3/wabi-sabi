@@ -70,15 +70,16 @@ export function ProductDetailActions({ product, stock, addonImages }: Props) {
                   checked={addons.includes(a.code)}
                   onChange={(e) => toggleAddon(a.code, e.target.checked)}
                   disabled={soldOut}
+                  className="shrink-0"
                 />
                 {/* 옵션 사진 — 대표님 어드민 업로드. 없으면 사진 자리(플레이스홀더). */}
-                <span className="relative size-14 shrink-0 overflow-hidden rounded border border-wabi-border bg-wabi-muted">
+                <span className="relative size-12 shrink-0 overflow-hidden rounded border border-wabi-border bg-wabi-muted">
                   {img ? (
                     <Image
                       src={img}
                       alt={a.name}
                       fill
-                      sizes="56px"
+                      sizes="48px"
                       className="object-cover"
                     />
                   ) : (
@@ -91,9 +92,12 @@ export function ProductDetailActions({ product, stock, addonImages }: Props) {
                     </span>
                   )}
                 </span>
-                <span className="min-w-0">
-                  {a.name} (+
-                  <span className="font-numeric">{won(a.price)}</span>)
+                {/* 이름 + 가격 — 가격은 줄바꿈 방지(nowrap)로 "(+4,000원)"이 쪼개지지 않게. */}
+                <span className="min-w-0 flex-1">
+                  {a.name}{" "}
+                  <span className="whitespace-nowrap text-wabi-fg-muted">
+                    (+<span className="font-numeric">{won(a.price)}</span>)
+                  </span>
                 </span>
               </label>
             );

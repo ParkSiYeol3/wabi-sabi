@@ -108,7 +108,7 @@ export default async function AboutPage() {
             {criteria.map((v, i) => (
               <Reveal key={v.en} delay={stagger[i]}>
                 <div className="text-center md:border-l md:border-wabi-border md:first:border-l-0 md:px-8">
-                  <span className="text-2xl font-light text-wabi-fg-muted/60">
+                  <span className="font-numeric text-2xl font-light text-wabi-fg-muted/60">
                     0{i + 1}
                   </span>
                   <h3 className="mt-5 text-lg font-medium tracking-wide">

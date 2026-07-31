@@ -20,7 +20,9 @@ export const site = {
   postcode: "31122",
   // 네이버는 검색을 거치지 않고 등록된 플레이스로 직접 진입 — 항상 정확히 뜬다.
   naverPlaceId: "2012676632",
-  instagram: "@wasa.kr",
+  // 표시용 핸들 — 화면에서 앞에 @ 아이콘(AtSign)을 함께 그리므로 값에는 @ 를 빼
+  // 이중 @(@@wasa.kr)를 막는다.
+  instagram: "wasa.kr",
   instagramUrl: "https://www.instagram.com/wasa.kr",
   email: "0_wabisabi@naver.com",
 } as const;
