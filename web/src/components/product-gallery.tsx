@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { ProductImageZoom } from "@/components/product-image-zoom";
 
 // 상품 상세 "나머지" 이미지 스캐터 (#248 → 불규칙 배치, 대표님 시안 tableofcraft).
 // 첫(메인) 사진은 상단 히어로에서 정보와 함께 보여주고, 여기선 나머지 사진을
@@ -51,12 +51,10 @@ export function ProductGallery({
             key={i}
             className={`relative overflow-hidden bg-wabi-muted ${gap} ${SLOTS[i % SLOTS.length]} ${RATIOS[i % RATIOS.length]}`}
           >
-            <Image
+            <ProductImageZoom
               src={src}
               alt={`${name} 상세 이미지 ${i + 2}`}
-              fill
               sizes="(max-width: 768px) 100vw, 60vw"
-              className="object-cover"
             />
           </div>
         );

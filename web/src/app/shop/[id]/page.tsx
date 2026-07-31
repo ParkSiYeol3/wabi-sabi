@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import { ImageIcon } from "lucide-react";
 import { Container } from "@/components/container";
 import { ProductCard } from "@/components/product-card";
 import { ProductGallery } from "@/components/product-gallery";
+import { ProductImageZoom } from "@/components/product-image-zoom";
 import { ProductDetailActions } from "@/components/product-detail-actions";
 import { RestockButton } from "@/components/restock-button";
 import { WishlistButton } from "@/components/wishlist-button";
@@ -132,7 +132,8 @@ export default async function ProductDetailPage({
   ].filter((s) => s.value);
 
   return (
-    <Container className="py-16">
+    // 모바일 하단 스티키 구매 바가 콘텐츠를 가리지 않게 아래 여백 확보(데스크톱은 무바).
+    <Container className="pt-16 pb-28 md:pb-16">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: productJsonLd(product, reviewStats) }}
@@ -142,12 +143,10 @@ export default async function ProductDetailPage({
       <div className="grid items-start gap-12 md:grid-cols-2">
         <div className="relative aspect-square overflow-hidden bg-wabi-muted">
           {main ? (
-            <Image
+            <ProductImageZoom
               src={main}
               alt={product.name}
-              fill
               sizes="(max-width: 768px) 100vw, 45vw"
-              className="object-cover"
               preload
             />
           ) : (

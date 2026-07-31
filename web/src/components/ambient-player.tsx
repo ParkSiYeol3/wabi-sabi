@@ -174,7 +174,7 @@ export function AmbientPlayer() {
         onClick={toggle}
         aria-label={playing ? "배경음 끄기" : "배경음 켜기"}
         aria-pressed={playing}
-        className="fixed bottom-5 right-5 z-40 flex size-10 items-center justify-center rounded-full border border-wabi-border bg-wabi-bg/80 text-wabi-fg-muted shadow-sm backdrop-blur transition-colors hover:text-wabi-fg"
+        className="fixed bottom-20 right-5 z-40 flex size-10 items-center justify-center rounded-full border border-wabi-border bg-wabi-bg/80 text-wabi-fg-muted shadow-sm backdrop-blur transition-colors hover:text-wabi-fg md:bottom-5"
       >
         {playing ? (
           <Volume2 className="size-4" strokeWidth={1.5} />
