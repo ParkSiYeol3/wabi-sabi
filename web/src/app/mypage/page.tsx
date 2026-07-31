@@ -109,7 +109,7 @@ export default async function MyPage() {
                   <SubmitButton
                     pendingText="…"
                     aria-label="배송지 삭제"
-                    className="cursor-pointer p-2 text-wabi-fg-muted hover:text-wabi-fg"
+                    className="flex size-11 cursor-pointer items-center justify-center text-wabi-fg-muted hover:text-wabi-fg"
                   >
                     <Trash2 className="size-4" />
                   </SubmitButton>

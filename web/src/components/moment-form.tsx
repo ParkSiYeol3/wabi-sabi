@@ -44,7 +44,7 @@ export function MomentForm() {
         maxLength={500}
         aria-label="글 (선택)"
         placeholder="일상 속 우리 그릇 이야기를 짧게 남겨주세요 (선택)"
-        className="w-full resize-y border border-wabi-border bg-transparent px-3 py-2 text-sm outline-none transition-colors focus:border-wabi-fg"
+        className="w-full resize-y border border-wabi-border bg-transparent px-3 py-2 text-base outline-none transition-colors focus:border-wabi-fg md:text-sm"
       />
       <div className="flex items-center gap-3">
         <Button

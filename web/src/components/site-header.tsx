@@ -87,14 +87,14 @@ export function SiteHeader() {
               <Link
                 href="/mypage/wishlist"
                 aria-label="위시리스트"
-                className="hidden rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted md:inline-flex"
+                className="hidden rounded-md p-3 text-wabi-fg transition-colors hover:bg-wabi-muted md:inline-flex"
               >
                 <Heart className="size-5" strokeWidth={1.5} />
               </Link>
               <Link
                 href="/mypage/orders"
                 aria-label="주문 내역"
-                className="hidden rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted md:inline-flex"
+                className="hidden rounded-md p-3 text-wabi-fg transition-colors hover:bg-wabi-muted md:inline-flex"
               >
                 <Receipt className="size-5" strokeWidth={1.5} />
               </Link>
@@ -103,7 +103,7 @@ export function SiteHeader() {
           <Link
             href="/cart"
             aria-label={`장바구니${mounted && count > 0 ? ` (${count}개)` : ""}`}
-            className="relative rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted"
+            className="relative rounded-md p-3 text-wabi-fg transition-colors hover:bg-wabi-muted"
           >
             <ShoppingBag className="size-5" strokeWidth={1.5} />
             {mounted && count > 0 && (
@@ -115,7 +115,7 @@ export function SiteHeader() {
           <Link
             href={accountHref}
             aria-label={mounted && user ? "마이페이지" : "로그인"}
-            className="rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted"
+            className="rounded-md p-3 text-wabi-fg transition-colors hover:bg-wabi-muted"
           >
             {avatarUrl && !avatarError ? (
               <Image
@@ -136,7 +136,7 @@ export function SiteHeader() {
             aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
-            className="rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted md:hidden"
+            className="rounded-md p-3 text-wabi-fg transition-colors hover:bg-wabi-muted md:hidden"
           >
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
