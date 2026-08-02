@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { ADDONS } from "@/lib/addons";
@@ -34,12 +35,22 @@ export const HOME_PILLAR_LABEL_KEYS = [
 ] as const;
 export const HOME_CTA_KEY = "home_cta";
 
+// 정식 오픈 준비중 안내(대표님) — 토스 라이브·실상품·가격 확정 전, 손님이 결제를
+// 시도했다 실패하지 않도록 진입 시 안내 모달을 띄운다. on/off 는 대표님이 어드민에서
+// 조작(값 "on" 이면 표시). 문구(PREP_NOTICE_TEXT_KEY)는 편집 가능(CONTENT_KEYS).
+// SEO 는 다치지 않는다 — 본문은 그대로 SSR 되고, 닫으면 자유 열람이라 색인 유지.
+export const PREP_NOTICE_KEY = "prep_notice"; // 토글: 값 "on" = 표시
+export const PREP_NOTICE_TEXT_KEY = "prep_notice_text"; // 안내 본문(편집 가능)
+export const DEFAULT_PREP_NOTICE_TEXT =
+  "지금은 정식 오픈을 준비하는 기간입니다. 상품과 결제가 곧 열립니다. 둘러보시는 건 자유로우니 편히 구경해 주세요.";
+
 // 편집 가능한 전체 키 — 액션 enum·타입 안전의 단일 출처.
 export const CONTENT_KEYS = [
   PHILOSOPHY_KEY,
   ...HOME_PILLAR_LABEL_KEYS,
   ...HOME_PILLAR_KEYS,
   HOME_CTA_KEY,
+  PREP_NOTICE_TEXT_KEY,
 ] as const;
 export type ContentKey = (typeof CONTENT_KEYS)[number];
 
@@ -99,6 +110,25 @@ export async function getPublicContent(
   }
   return map;
 }
+
+// 준비중 안내 상태(전역 layout 에서 매 요청 필요) — 캐시 + 태그. 대표님이 켜고/끄면
+// 어드민 액션이 PREP_NOTICE_TAG 를 무효화한다. anon 캐시라 쿠키 의존 없음.
+export const PREP_NOTICE_TAG = "prep-notice";
+
+export type PrepNotice = { enabled: boolean; text: string };
+
+async function loadPrepNotice(): Promise<PrepNotice> {
+  const map = await getPublicContent([PREP_NOTICE_KEY, PREP_NOTICE_TEXT_KEY]);
+  return {
+    enabled: map[PREP_NOTICE_KEY]?.trim() === "on",
+    text: map[PREP_NOTICE_TEXT_KEY]?.trim() || DEFAULT_PREP_NOTICE_TEXT,
+  };
+}
+
+export const getPrepNotice = unstable_cache(loadPrepNotice, ["prep-notice"], {
+  revalidate: 120,
+  tags: [PREP_NOTICE_TAG],
+});
 
 // 빈 줄로 구분된 텍스트를 문단 배열로. 빈 문단은 제거.
 // 브라우저 textarea 는 개행을 CRLF(\r\n)로 저장할 수 있어(#251), \n{2,} 만으로는

@@ -10,12 +10,16 @@ import {
   DEFAULT_HOME_CTA,
   ABOUT_IMAGE_KEY,
   addonImageKey,
+  PREP_NOTICE_KEY,
+  PREP_NOTICE_TEXT_KEY,
+  DEFAULT_PREP_NOTICE_TEXT,
 } from "@/lib/queries/content";
 import { ADDONS, won } from "@/lib/addons";
 import { PageHeader, SectionHeading } from "@/components/admin/ui";
 import { ContentField } from "@/components/admin/content-field";
 import { AboutImageField } from "@/components/admin/about-image-field";
 import { AddonImageField } from "@/components/admin/addon-image-field";
+import { PrepNoticeField } from "@/components/admin/prep-notice-field";
 
 export default async function AdminContentPage() {
   // 각 편집 값(미저장이면 기본 문구). 병렬 조회.
@@ -29,6 +33,8 @@ export default async function AdminContentPage() {
     select,
     cta,
     aboutImage,
+    prepNotice,
+    prepNoticeText,
     ...addonImages
   ] = await Promise.all([
     getSiteContent(PHILOSOPHY_KEY),
@@ -40,6 +46,8 @@ export default async function AdminContentPage() {
     getSiteContent(HOME_PILLAR_KEYS[2]),
     getSiteContent(HOME_CTA_KEY),
     getSiteContent(ABOUT_IMAGE_KEY),
+    getSiteContent(PREP_NOTICE_KEY),
+    getSiteContent(PREP_NOTICE_TEXT_KEY),
     ...ADDONS.map((a) => getSiteContent(addonImageKey(a.code))),
   ]);
 
@@ -51,6 +59,23 @@ export default async function AdminContentPage() {
       />
 
       <div className="max-w-2xl space-y-12">
+        {/* 정식 오픈 준비중 안내 — 결제·상품 준비 전 방문자에게 안내창 표시. 오픈 시 끈다. */}
+        <section className="space-y-3 rounded-lg border border-wabi-accent/40 bg-wabi-accent/5 p-4">
+          <SectionHeading>정식 오픈 준비중 안내</SectionHeading>
+          <p className="text-xs text-wabi-fg-muted">
+            토스 결제·상품 준비가 끝나기 전, 방문자가 결제를 시도했다 실패하지
+            않도록 진입 시 안내창을 띄웁니다. 정식 오픈하면 체크를 해제해 끄세요.
+          </p>
+          <PrepNoticeField enabled={prepNotice === "on"} />
+          <ContentField
+            contentKey={PREP_NOTICE_TEXT_KEY}
+            label="안내 문구"
+            hint="안내창에 표시될 문장입니다."
+            value={prepNoticeText ?? DEFAULT_PREP_NOTICE_TEXT}
+            rows={3}
+          />
+        </section>
+
         {/* 소개 문구 — 홈·About 공용 */}
         <section className="space-y-3">
           <SectionHeading>브랜드 소개 문구</SectionHeading>
