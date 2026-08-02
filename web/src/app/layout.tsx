@@ -5,6 +5,8 @@ import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
 import { SessionTimeout } from "@/components/session-timeout";
 import { NicknameGate } from "@/components/nickname-gate";
+import { PrepNotice } from "@/components/prep-notice";
+import { getPrepNotice } from "@/lib/queries/content";
 import { AmbientPlayer } from "@/components/ambient-player";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -107,11 +109,14 @@ const siteJsonLd = JSON.stringify({
   },
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // 정식 오픈 준비중 안내(대표님) — 전역 마운트로 홈뿐 아니라 검색·링크로 상품
+  // 페이지에 바로 들어온 손님도 결제 전에 안내를 본다. 캐시된 조회라 TTFB 영향 미미.
+  const prepNotice = await getPrepNotice();
   return (
     <html
       lang="ko"
@@ -127,6 +132,8 @@ export default function RootLayout({
           <SessionTimeout />
           {/* 가입 후 닉네임 설정 모달(실명 노출 방지) */}
           <NicknameGate />
+          {/* 정식 오픈 준비중 안내(대표님 어드민 on/off) — 어드민 경로 제외는 내부 판정 */}
+          <PrepNotice enabled={prepNotice.enabled} text={prepNotice.text} />
           {/* 키보드 사용자용 본문 바로가기 (a11y) */}
           <a
             href="#main-content"

@@ -9,6 +9,7 @@ import {
   CONTENT_KEYS,
   ABOUT_IMAGE_KEY,
   addonImageKey,
+  PREP_NOTICE_KEY,
 } from "@/lib/queries/content";
 import { ADDONS } from "@/lib/addons";
 import { uploadSiteImage, deleteProductImage } from "@/lib/storage";
@@ -58,6 +59,48 @@ export async function saveContent(
   revalidatePath("/about");
   revalidatePath("/admin/content");
   return { ok: true, message: "저장되었습니다." };
+}
+
+// 정식 오픈 준비중 안내 on/off (대표님) — site_content 의 prep_notice 를 "on"/"off"
+// 로 저장. 전역 layout 이 캐시로 읽으므로 태그를 무효화해 즉시 반영한다.
+export async function togglePrepNotice(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const user = await requireAdmin();
+  if (!adminConfigured())
+    return { ok: false, message: "서버 설정 오류(service_role 미설정)" };
+
+  const enabled = String(formData.get("enabled")) === "on" ? "on" : "off";
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("site_content").upsert({
+    key: PREP_NOTICE_KEY,
+    value: enabled,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) {
+    console.error("[admin] 준비중 안내 저장 실패", error);
+    return { ok: false, message: "저장에 실패했습니다. 잠시 후 다시 시도하세요." };
+  }
+
+  await logAdminAction(user, {
+    action: "content.prep_notice",
+    targetTable: "site_content",
+    targetId: PREP_NOTICE_KEY,
+  });
+
+  // 전역 layout 이 읽는 캐시(getPrepNotice, revalidate 120s)를 재검증. "layout"
+  // 타입으로 루트 레이아웃을 무효화해 모든 경로에 반영(캐시 만료 120s 가 안전망).
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/content");
+  return {
+    ok: true,
+    message:
+      enabled === "on"
+        ? "준비중 안내를 켰습니다. 방문자에게 표시됩니다."
+        : "준비중 안내를 껐습니다.",
+  };
 }
 
 // About 매장 사진 업로드 (대표님 지시). 스토리지에 올리고 URL 을 site_content 에
