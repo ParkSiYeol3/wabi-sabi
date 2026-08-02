@@ -118,11 +118,26 @@ export const PREP_NOTICE_TAG = "prep-notice";
 export type PrepNotice = { enabled: boolean; text: string };
 
 async function loadPrepNotice(): Promise<PrepNotice> {
-  const map = await getPublicContent([PREP_NOTICE_KEY, PREP_NOTICE_TEXT_KEY]);
-  return {
-    enabled: map[PREP_NOTICE_KEY]?.trim() === "on",
-    text: map[PREP_NOTICE_TEXT_KEY]?.trim() || DEFAULT_PREP_NOTICE_TEXT,
-  };
+  const off: PrepNotice = { enabled: false, text: DEFAULT_PREP_NOTICE_TEXT };
+  // 전역 layout 에서 호출 → 정적 프리렌더(/_not-found 등)와 env 미설정 빌드에서도
+  // 절대 터지지 않아야 한다. Supabase env 가 없으면(빌드/CI) 안내 없이 진행하고,
+  // 조회 오류도 안전측(표시 안 함)으로 폴백해 사이트 전체가 죽지 않게 한다.
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    return off;
+  }
+  try {
+    const map = await getPublicContent([PREP_NOTICE_KEY, PREP_NOTICE_TEXT_KEY]);
+    return {
+      enabled: map[PREP_NOTICE_KEY]?.trim() === "on",
+      text: map[PREP_NOTICE_TEXT_KEY]?.trim() || DEFAULT_PREP_NOTICE_TEXT,
+    };
+  } catch (e) {
+    console.error("[prep-notice] 조회 실패 — 안내 생략", e);
+    return off;
+  }
 }
 
 export const getPrepNotice = unstable_cache(loadPrepNotice, ["prep-notice"], {
