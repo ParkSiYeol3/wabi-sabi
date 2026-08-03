@@ -84,9 +84,11 @@ function momentPositions(
   yEnd: number,
   vbH: number,
   loops: number,
+  // 멘트가 앉는 극점(반바퀴 인덱스). 기본은 리드인 반바퀴 + 5반바퀴 간격.
+  // 모바일은 앞쪽에 리드인 코일을 더 둬(k 오프셋) 첫 멘트에 스크롤 runway 를 준다.
+  ks: number[] = [1, loops, loops * 2 - 1],
 ): MomentPos[] {
   const half = loops * 2;
-  const ks = [1, loops, loops * 2 - 1];
   return ks.map((k) => {
     const R = rTop + (rBot - rTop) * (k / half);
     const dir = k % 2 === 0 ? 1 : -1; // 짝수 반바퀴=우측 극점, 홀수=좌측
@@ -113,12 +115,22 @@ const DESKTOP = {
   geom: helixSegments(500, 300, 430, 0.3, 95, 2435, 6, 384),
   moments: momentPositions(300, 430, 95, 2435, 2530, 6),
   axis: [65, 2465] as const,
+  fade: 0.32, // 멘트 페이드 구간(±fade·vh) — 종형 반폭
 };
+// 모바일: 리드인 코일(빈 여백 대신 곡선)로 첫 멘트에 스크롤 runway 를 준다(#348 후속).
+// 첫 멘트(侘)가 로드 시 화면 중앙 근처라 정지상태에서도 위치기반 페이드로 희미하게
+// 보이던 문제 → 멘트를 극점 k=[3,6,9]에 둬 侘 앞에 1.5바퀴 리드인 코일이 그려지고,
+// 侘 는 뷰포트 아래(페이드 밖)에서 시작해 스크롤하며 서서히 나타난다. 데스크톱처럼
+// 위가 빈 게 아니라 선이 흘러내리며 채운다. 원 크기·타원비(0.6)는 그대로. loops 5,
+// 멘트 간격은 여전히 3반바퀴(k 3→6→9)라 여정 모양은 동일. 뒤 반바퀴는 로고로 잇는 꼬리.
 const MOBILE = {
-  vb: "0 0 1000 3600",
-  geom: helixSegments(500, 300, 430, 0.6, 175, 3300, 4, 320),
-  moments: momentPositions(300, 430, 175, 3300, 3600, 4),
-  axis: [145, 3430] as const,
+  vb: "0 0 1000 4860",
+  geom: helixSegments(500, 300, 430, 0.6, 120, 4800, 6, 480),
+  moments: momentPositions(300, 430, 120, 4800, 4860, 6, [5, 8, 11]),
+  axis: [80, 4820] as const,
+  // 모바일은 페이드 구간을 좁혀(0.20) 멘트 간 겹침을 막고, 첫 멘트가 리드인 코일
+  // 끝(뷰포트 아래)에서 확실히 0 으로 시작하게 한다.
+  fade: 0.2,
 };
 
 // 모바일 멘트 세로 미세보정(%): 마지막 극점 選(i=2)은 아래 종단 루프가 본문 자리로
@@ -219,7 +231,7 @@ export function HelixJourney({
           const m = momentRefs.current[ci][i];
           if (!m) return;
           const dotY = top + (pos.y / 100) * height;
-          const dist = Math.abs(dotY - vh * 0.5) / (vh * 0.32);
+          const dist = Math.abs(dotY - vh * 0.5) / (vh * cfg.fade);
           const vis = clamp01(1 - dist);
           m.style.opacity = vis.toFixed(3);
           m.style.transform = `translateY(-50%) scale(${(0.78 + 0.22 * vis).toFixed(3)})`;
