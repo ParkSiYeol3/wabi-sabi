@@ -115,10 +115,10 @@ const DESKTOP = {
   axis: [65, 2465] as const,
 };
 const MOBILE = {
-  vb: "0 0 1000 3850",
-  geom: helixSegments(500, 285, 405, 0.52, 175, 3650, 5, 320),
-  moments: momentPositions(285, 405, 175, 3650, 3850, 5),
-  axis: [145, 3680] as const,
+  vb: "0 0 1000 3600",
+  geom: helixSegments(500, 300, 430, 0.6, 175, 3300, 4, 320),
+  moments: momentPositions(300, 430, 175, 3300, 3600, 4),
+  axis: [145, 3430] as const,
 };
 
 // #213 7차: 곡선(원뿔 나선)에 집중하는 동안 멘트·점 임시 오프용 플래그.
@@ -342,7 +342,11 @@ export function HelixJourney({
                     // 후광(radial-gradient, 가장자리는 투명)으로 텍스트 가독성을 낸다.
                     className={
                       ci === 1
-                        ? "absolute left-[4%] right-[4%] px-4 py-6 text-center [background:radial-gradient(ellipse_at_center,rgba(243,235,221,0.94)_38%,rgba(243,235,221,0)_74%)]"
+                        ? `absolute px-4 py-6 [background:radial-gradient(ellipse_at_center,rgba(243,235,221,0.94)_44%,rgba(243,235,221,0)_78%)] ${
+                            dotLeft
+                              ? "left-[32%] right-[3%] text-left"
+                              : "left-[3%] right-[32%] text-right"
+                          }`
                         : `absolute w-[28%] max-w-72 md:w-[26%] ${
                             dotLeft
                               ? "right-[calc((100-var(--dx))*1%+14px)] text-right"
