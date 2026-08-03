@@ -22,10 +22,12 @@ export function CtaLink({
   full?: boolean;
   className?: string;
 }) {
+  // 각진 사각형(rounded-none) — 상세·장바구니 등 다른 버튼과 통일(대표님). 홈 Shop
+  // CTA·"오늘의 와비사비" 버튼 공유라 둘 다 함께 네모가 된다.
   const sizeCls =
     size === "lg"
-      ? "rounded-3xl px-6 py-3 text-[10px] tracking-[1.5px] md:rounded-full md:px-9 md:py-4 md:text-[12px] md:tracking-[2px]"
-      : "rounded-full px-5 py-2.5 text-[10px] tracking-[1.5px] md:text-[11px]";
+      ? "rounded-none px-6 py-3 text-[10px] tracking-[1.5px] md:px-9 md:py-4 md:text-[12px] md:tracking-[2px]"
+      : "rounded-none px-5 py-2.5 text-[10px] tracking-[1.5px] md:text-[11px]";
   const overlayPad = size === "lg" ? "px-6 md:px-9" : "px-5";
 
   return (

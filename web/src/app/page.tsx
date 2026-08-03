@@ -55,13 +55,14 @@ export default async function Home({
             height={139}
             className="mx-auto h-14 w-auto md:h-20"
           />
+          {/* 영어 로마자(Wabi-sabi) 제거·わび-さび 만 가운데(대표님 모바일 피드백) */}
           <h2 className="mt-6 [font-family:var(--ws-serif)] text-[clamp(30px,4.6vw,52px)] font-medium leading-[1.1]">
-            わび-さび{" "}
-            <span className="italic text-[#8f8676]">Wabi-sabi</span>
+            わび-さび
           </h2>
         </Reveal>
         <Reveal>
-          <div className="mx-auto mt-8 max-w-155 space-y-4 [font-family:var(--ws-serif)] text-[17px] leading-[1.7] text-[#524a3a] md:text-[19px]">
+          {/* 본문 글자 축소 + 곡선 멘트 본문과 크기 통일(대표님) — 14px / md 17px */}
+          <div className="mx-auto mt-8 max-w-155 space-y-4 [font-family:var(--ws-serif)] text-[14px] leading-[1.7] text-[#524a3a] md:text-[17px]">
             {philosophy.map((p, i) => (
               <p key={i}>{p}</p>
             ))}
