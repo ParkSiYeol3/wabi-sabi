@@ -121,6 +121,11 @@ const MOBILE = {
   axis: [145, 3430] as const,
 };
 
+// 모바일 멘트 세로 미세보정(%): 마지막 극점 選(i=2)은 아래 종단 루프가 본문 자리로
+// 들어와, 멘트 블록만 위 열린 공간으로 올린다(점은 곡선에 그대로 — 멘트가 여백에
+// 떠 보이는 의도된 배치). 侘·寂 은 이미 좌측 여백이 깨끗해 보정 없음.
+const MOBILE_MOMENT_NUDGE = [6, 0, -9];
+
 // #213 7차: 곡선(원뿔 나선)에 집중하는 동안 멘트·점 임시 오프용 플래그.
 const SHOW_MOMENTS = true;
 
@@ -323,6 +328,9 @@ export function HelixJourney({
             pillars.map((v, i) => {
               const pos = cfg.moments[i];
               const dotLeft = pos.x < 50; // 왼쪽 극점 → 멘트는 왼쪽 포켓
+              // 멘트 블록 세로 위치 — 모바일은 극점별 미세보정(점은 pos.y 그대로).
+              const commentTop =
+                ci === 1 ? pos.y + (MOBILE_MOMENT_NUDGE[i] ?? 0) : pos.y;
               return (
                 <div key={v.han}>
                   <div
@@ -342,11 +350,9 @@ export function HelixJourney({
                     // 후광(radial-gradient, 가장자리는 투명)으로 텍스트 가독성을 낸다.
                     className={
                       ci === 1
-                        ? `absolute px-4 py-6 [background:radial-gradient(ellipse_at_center,rgba(243,235,221,0.94)_44%,rgba(243,235,221,0)_78%)] ${
-                            dotLeft
-                              ? "left-[32%] right-[3%] text-left"
-                              : "left-[3%] right-[32%] text-right"
-                          }`
+                        ? // 모바일: 큰 코일의 스파인이 각 극점 프레임에서 우측에 놓이므로
+                          // 멘트는 좌측 열린 공간에만 앉힌다(후광 없이 온전히 여백에).
+                          "absolute left-[7%] right-[42%] text-left"
                         : `absolute w-[28%] max-w-72 md:w-[26%] ${
                             dotLeft
                               ? "right-[calc((100-var(--dx))*1%+14px)] text-right"
@@ -354,7 +360,7 @@ export function HelixJourney({
                           }`
                     }
                     style={{
-                      top: `${pos.y}%`,
+                      top: `${commentTop}%`,
                       opacity: 0,
                       transform: "translateY(-50%) scale(0.78)",
                       ["--dx" as string]: pos.x,
