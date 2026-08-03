@@ -248,25 +248,37 @@ export function HelixJourney({
       });
     };
 
-    const update = () => {
+    // 모바일(터치): 네이티브 스크롤은 그대로 두고, 스크롤 위치를 읽어 그리는 연출
+    // (선 드로잉·멘트 페이드)만 rAF 에서 이징해 더 매끄럽게 따라오게 한다(대표님 —
+    // "웹처럼 부드럽게"). 데스크톱은 SmoothScroll 이 이미 스크롤 자체를 이징하므로
+    // 여기선 직접 따라가 이중 스무딩(둥둥 뜨는 랙)을 피한다. pointer:coarse 로 구분.
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    let renderTop = wrap.getBoundingClientRect().top;
+
+    const frame = () => {
       raf = 0;
       const rect = wrap.getBoundingClientRect();
       height = rect.height;
       vh = window.innerHeight;
-      render(rect.top);
+      const targetTop = rect.top;
+      if (coarse) {
+        renderTop += (targetTop - renderTop) * 0.12; // 연출 글라이드(약 0.3s — 더 미끄럽게)
+        if (Math.abs(targetTop - renderTop) < 0.5) renderTop = targetTop;
+      } else {
+        renderTop = targetTop;
+      }
+      render(renderTop);
+      // 진입 드로잉 중이거나(모바일) 아직 목표에 안 붙었으면 계속 돈다 — 정착하면
+      // 자동 정지(유휴 시 0 프레임), 스크롤 이벤트가 다시 깨운다.
+      if (!introDone || (coarse && Math.abs(targetTop - renderTop) >= 0.5))
+        raf = requestAnimationFrame(frame);
     };
 
     const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
+      if (!raf) raf = requestAnimationFrame(frame);
     };
 
-    update(); // 중간 로드(새로고침)에서도 현재 스크롤 기준으로 즉시 동기화
-    // 진입 드로잉 동안만 도는 rAF — 완료되면 자동 정지(이후는 스크롤 이벤트만).
-    const introTick = () => {
-      update();
-      if (!introDone) requestAnimationFrame(introTick);
-    };
-    requestAnimationFrame(introTick);
+    frame(); // 즉시 동기화 + 루프 시동(intro 동안·모바일 정착까지 계속)
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
     return () => {
