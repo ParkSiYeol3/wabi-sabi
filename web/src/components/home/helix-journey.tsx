@@ -262,7 +262,7 @@ export function HelixJourney({
       vh = window.innerHeight;
       const targetTop = rect.top;
       if (coarse) {
-        renderTop += (targetTop - renderTop) * 0.18; // 연출 글라이드(약 0.2s)
+        renderTop += (targetTop - renderTop) * 0.12; // 연출 글라이드(약 0.3s — 더 미끄럽게)
         if (Math.abs(targetTop - renderTop) < 0.5) renderTop = targetTop;
       } else {
         renderTop = targetTop;
