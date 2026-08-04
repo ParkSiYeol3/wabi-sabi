@@ -56,6 +56,7 @@ export const nav = [
   { label: "TABLEWARE", href: "/shop?category=tableware" },
   { label: "OBJECTS", href: "/shop?category=objects" },
   { label: "GIFT", href: "/gift" },
+  { label: "MAKERS", href: "/makers" },
   { label: "SHOWROOM", href: "/about" },
 ] as const;
 
@@ -93,7 +94,7 @@ export const categoryTree: readonly CategoryNode[] = [
       { slug: "accessory", ko: "액세서리", en: "Accessory" },
       { slug: "life", ko: "생활 소품", en: "Life" },
       { slug: "craft", ko: "공예", en: "Craft" },
-      { slug: "gift", ko: "선물", en: "Gift" },
+      // 선물 소분류 제거 — GIFT 대분류(/gift)로 대체(대표님). DB 는 0045 로 숨김.
     ],
   },
 ] as const;
