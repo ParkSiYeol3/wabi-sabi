@@ -61,7 +61,7 @@ export default async function Home({
           </h2>
         </Reveal>
         <Reveal>
-          {/* 본문 글자 축소 + 곡선 멘트 본문과 크기 통일(대표님) — 14px / md 17px */}
+          {/* 본문 글자 — 곡선 멘트 본문과 크기 통일(대표님) — 14px / md 17px */}
           <div className="mx-auto mt-8 max-w-155 space-y-4 [font-family:var(--ws-serif)] text-[14px] leading-[1.7] text-[#524a3a] md:text-[17px]">
             {philosophy.map((p, i) => (
               <p key={i}>{p}</p>
