@@ -51,10 +51,15 @@ export function ShopSidebar({
       <SideLink href={buildShopQuery(sp, { category: undefined })} active={!current}>
         전체
       </SideLink>
+      {/* 이 달의 상품 — 특별 표시(대표님): 액센트 색 + 작은 마크로 큐레이션 강조 */}
       <SideLink
         href={buildShopQuery(sp, { category: MONTHLY_SLUG })}
         active={current === MONTHLY_SLUG}
+        className="text-wabi-accent hover:text-wabi-accent"
       >
+        <span aria-hidden className="mr-1">
+          ✦
+        </span>
         이 달의 상품
       </SideLink>
 

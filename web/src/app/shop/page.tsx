@@ -93,7 +93,11 @@ export default async function ShopPage({
           <FilterLink
             href={buildQuery(sp, { category: MONTHLY_SLUG })}
             active={sp.category === MONTHLY_SLUG}
+            accent
           >
+            <span aria-hidden className="mr-1">
+              ✦
+            </span>
             이 달의 상품
           </FilterLink>
         </nav>
@@ -250,6 +254,7 @@ function FilterLink({
   href,
   active,
   current = active,
+  accent = false,
   children,
 }: {
   href: string;
@@ -257,6 +262,8 @@ function FilterLink({
   active: boolean;
   /** 정확히 현재 필터인 링크만 aria-current — 기본은 active 와 동일 */
   current?: boolean;
+  /** 이 달의 상품처럼 특별 강조 — 액센트 색(대표님). 활성 시 채워진다. */
+  accent?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -265,9 +272,13 @@ function FilterLink({
       aria-current={current ? "true" : undefined}
       className={cn(
         "border px-4 py-1.5 text-xs transition-colors",
-        active
-          ? "border-wabi-fg text-wabi-fg"
-          : "border-wabi-border text-wabi-fg-muted hover:border-wabi-fg hover:text-wabi-fg",
+        accent
+          ? active
+            ? "border-wabi-accent bg-wabi-accent text-white"
+            : "border-wabi-accent text-wabi-accent hover:bg-wabi-accent hover:text-white"
+          : active
+            ? "border-wabi-fg text-wabi-fg"
+            : "border-wabi-border text-wabi-fg-muted hover:border-wabi-fg hover:text-wabi-fg",
       )}
     >
       {children}

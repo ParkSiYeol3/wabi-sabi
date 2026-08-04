@@ -10,6 +10,7 @@ type ProductRow = {
   price: number;
   stock: number;
   images: unknown;
+  is_monthly: boolean;
   categories: { slug: string; name_en: string } | null;
 };
 
@@ -67,8 +68,8 @@ export async function getProducts({
     .from("products")
     .select(
       filterByCategory
-        ? "id, name, price, stock, images, categories!inner(slug, name_en)"
-        : "id, name, price, stock, images, categories(slug, name_en)",
+        ? "id, name, price, stock, images, is_monthly, categories!inner(slug, name_en)"
+        : "id, name, price, stock, images, is_monthly, categories(slug, name_en)",
     )
     .eq("is_active", true);
 
@@ -95,6 +96,7 @@ export async function getProducts({
     stock: p.stock,
     image: firstImage(p.images),
     category: p.categories?.name_en,
+    isMonthly: p.is_monthly,
   }));
 }
 
@@ -122,7 +124,7 @@ async function loadShopBrowse(
 
   let query = db
     .from("products")
-    .select(`id, name, price, stock, images, ${join}`)
+    .select(`id, name, price, stock, images, is_monthly, ${join}`)
     .eq("is_active", true);
 
   if (monthly) query = query.eq("is_monthly", true);
@@ -145,6 +147,7 @@ async function loadShopBrowse(
     stock: p.stock,
     image: firstImage(p.images),
     category: p.categories?.name_en,
+    isMonthly: p.is_monthly,
   }));
 }
 

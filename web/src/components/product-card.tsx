@@ -12,6 +12,8 @@ export interface ProductCardData {
   href?: string;
   // 재고 (#131) — 목록에서 품절을 표시하기 위해 필요. 없으면(undefined) 표시하지 않는다.
   stock?: number;
+  // 이 달의 상품(is_monthly) — 카드 좌상단에 "이 달" 씰로 특별 표시(대표님). 없으면 미표시.
+  isMonthly?: boolean;
 }
 
 export function ProductCard({
@@ -30,6 +32,13 @@ export function ProductCard({
   return (
     <Link href={href} className="group block">
       <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-wabi-muted">
+        {product.isMonthly && (
+          // 이 달의 상품 씰 — 좌상단, 절제된 강조(espresso 배경·크림 글씨). 품절
+          // 오버레이 위(z-20)에 둬 품절이어도 "이 달" 표식은 보이게.
+          <span className="absolute left-2 top-2 z-20 rounded-full bg-wabi-fg/90 px-2 py-0.5 text-[10px] font-medium tracking-wide text-wabi-bg">
+            이 달
+          </span>
+        )}
         {soldOut && (
           // 이미지 위 오버레이 — 목록에서 품절을 못 보고 클릭하는 일이 없도록.
           <span className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 text-sm tracking-wide text-wabi-fg">
