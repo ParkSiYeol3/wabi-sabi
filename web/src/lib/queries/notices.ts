@@ -37,8 +37,14 @@ async function loadNotices(): Promise<NoticeSummary[]> {
   return data;
 }
 
+// tags: 어드민 생성/삭제가 revalidateTag("notices") 로 즉시 무효화한다.
+// revalidatePath 는 unstable_cache 데이터 엔트리를 무효화하지 못해(경로 캐시만),
+// 태그 없이는 최대 revalidate(120s) 동안 삭제·추가가 반영되지 않았다(대표님 제보).
+// 이 조회는 루트 레이아웃(상단 공지 바)에서도 쓰여 모든 경로에 영향 → 태그 무효화로
+// 한 번에 갱신한다.
 export const getNotices = unstable_cache(loadNotices, ["notices-list"], {
   revalidate: 120,
+  tags: ["notices"],
 });
 
 // 공지 단건 (없으면 null). id 가 캐시 키에 포함된다.
@@ -56,4 +62,5 @@ async function loadNotice(id: string): Promise<Notice | null> {
 
 export const getNotice = unstable_cache(loadNotice, ["notice-detail"], {
   revalidate: 120,
+  tags: ["notices"],
 });

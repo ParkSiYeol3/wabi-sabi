@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { parseUuid } from "@/lib/validation";
@@ -26,6 +26,10 @@ export async function createNotice(formData: FormData) {
     targetId: inserted?.id ?? null,
     meta: { title },
   });
+  // 태그 무효화 — unstable_cache(getNotices/getNotice)를 즉시 갱신(상단 공지 바
+  // 포함 전 경로). revalidatePath 는 경로 캐시만 지워 데이터 캐시가 남았다.
+  // updateTag: 서버 액션 전용 즉시 무효화(read-your-own-writes, Next 16).
+  updateTag("notices");
   revalidatePath("/admin/notices");
   revalidatePath("/notice");
 }
@@ -44,8 +48,8 @@ export async function deleteNotice(formData: FormData) {
     targetTable: "notices",
     targetId: id,
   });
+  updateTag("notices");
   revalidatePath("/admin/notices");
   revalidatePath("/notice");
   revalidatePath(`/notice/${id}`); // 캐시된 상세가 삭제 후에도 남지 않게
-
 }
