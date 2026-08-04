@@ -79,57 +79,38 @@ export default async function ShopPage({
         </span>
       </div>
 
-      {/* 카테고리 칩 (WSB-007) — 모바일·태블릿 전용. 데스크톱은 좌측 사이드바(#195). */}
-      <nav className="mt-8 flex flex-wrap gap-2 lg:hidden" aria-label="카테고리">
-        <FilterLink href={buildQuery(sp, { category: undefined })} active={!sp.category}>
-          전체
-        </FilterLink>
-        <FilterLink
-          href={buildQuery(sp, { category: MONTHLY_SLUG })}
-          active={sp.category === MONTHLY_SLUG}
-        >
-          이 달의 상품
-        </FilterLink>
-        {/* 대분류 칩 — 하위 소분류까지 포함해 필터된다(#193). */}
-        {tree.map((c) => {
-          const groupActive =
-            sp.category === c.slug ||
-            !!c.children?.some((ch) => ch.slug === sp.category);
-          return (
-            <FilterLink
-              key={c.slug}
-              href={buildQuery(sp, { category: c.slug })}
-              active={groupActive}
-              current={sp.category === c.slug}
-            >
-              {c.ko} {c.en}
-            </FilterLink>
-          );
-        })}
-      </nav>
-
-      {/* 오늘의 와비사비(자유게시판) — 모바일 강조 버튼(데스크톱은 사이드바).
-          홈 Shop CTA 와 같은 채워지는 아웃라인. */}
-      <div className="mt-3 lg:hidden">
-        <CtaLink href="/today" label="오늘의 와비사비" />
-      </div>
-
-      {/* 모바일 소분류 줄 — 선택된 대분류(또는 그 소분류)가 있을 때만 */}
-      {(() => {
-        const node = tree.find(
-          (c) =>
-            c.children &&
-            (c.slug === sp.category ||
-              c.children.some((ch) => ch.slug === sp.category)),
-        );
-        if (!node?.children) return null;
-        return (
-          <nav
-            className="mt-3 flex flex-wrap gap-2 lg:hidden"
-            aria-label={`${node.ko} 소분류`}
+      {/* 카테고리 (모바일·태블릿 전용, 데스크톱은 좌측 사이드바 #195).
+          대분류 중복 제거(대표님) — 전체·이 달의 상품 다음에 그룹별로
+          "[그룹] 전체 + 소분류" 를 항상 노출해 소분류를 바로 고르게 한다. */}
+      <div className="mt-8 space-y-2 lg:hidden">
+        <nav className="flex flex-wrap gap-2" aria-label="카테고리">
+          <FilterLink
+            href={buildQuery(sp, { category: undefined })}
+            active={!sp.category}
           >
-            {/* "[대분류] 전체" 칩 제거(대표님) — 위 대분류 칩이 그 역할 */}
-            {node.children.map((ch) => (
+            전체
+          </FilterLink>
+          <FilterLink
+            href={buildQuery(sp, { category: MONTHLY_SLUG })}
+            active={sp.category === MONTHLY_SLUG}
+          >
+            이 달의 상품
+          </FilterLink>
+        </nav>
+        {tree.map((c) => (
+          <nav
+            key={c.slug}
+            className="flex flex-wrap gap-2"
+            aria-label={`${c.ko} 분류`}
+          >
+            {/* 그룹 전체보기 — 대분류를 칩에서 빼는 대신 "[그룹] 전체" 로 유지 */}
+            <FilterLink
+              href={buildQuery(sp, { category: c.slug })}
+              active={sp.category === c.slug}
+            >
+              {c.ko} 전체
+            </FilterLink>
+            {c.children?.map((ch) => (
               <FilterLink
                 key={ch.slug}
                 href={buildQuery(sp, { category: ch.slug })}
@@ -139,8 +120,14 @@ export default async function ShopPage({
               </FilterLink>
             ))}
           </nav>
-        );
-      })()}
+        ))}
+      </div>
+
+      {/* 오늘의 와비사비(자유게시판) — 모바일 강조 버튼(데스크톱은 사이드바).
+          홈 Shop CTA 와 같은 채워지는 아웃라인. */}
+      <div className="mt-3 lg:hidden">
+        <CtaLink href="/today" label="오늘의 와비사비" />
+      </div>
 
       <div className="mt-8 flex items-start gap-10">
         {/* 데스크톱 좌측 사이드바 — 소분류 토글 (#195, biomedium 참고) */}

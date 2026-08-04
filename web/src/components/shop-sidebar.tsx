@@ -45,13 +45,6 @@ export function ShopSidebar({
   tree: CategoryNode[];
 }) {
   const current = sp.category;
-  // 대분류(또는 그 소분류)가 선택되면 그 대분류만 노출 — 다른 대분류는 통째로
-  // 숨긴다(대표님 — TABLEWARE 선택 시 OBJECTS 안 보이게). 전체·이 달의 상품
-  // 에선 둘 다 보여 대분류를 고를 수 있게 한다.
-  const activeGroup = tree.find(
-    (n) => n.slug === current || n.children?.some((c) => c.slug === current),
-  );
-  const visibleNodes = activeGroup ? [activeGroup] : tree;
 
   return (
     <nav aria-label="카테고리" className="w-44 shrink-0">
@@ -65,45 +58,41 @@ export function ShopSidebar({
         이 달의 상품
       </SideLink>
 
-      {/* 대분류 목록 — 선택된 대분류만 그 소분류를 펼친다(대표님). 별도의
-          "[대분류] 전체" 링크는 없애고 대분류 헤더 자체가 그 대분류 전체 필터
-          역할을 한다. 비활성 대분류는 헤더 링크만 보이고 소분류는 숨긴다. */}
-      <div className="mt-3 space-y-1 border-t border-wabi-border pt-3">
-        {visibleNodes.map((node) => {
-          const childActive = !!node.children?.some((c) => c.slug === current);
-          const groupActive = current === node.slug || childActive;
-          return (
-            <div key={node.slug}>
-              <SideLink
-                href={buildShopQuery(sp, { category: node.slug })}
-                active={current === node.slug}
-                className={cn(groupActive && "font-medium text-wabi-fg")}
-              >
-                {node.ko}
-                {/* 영문 부제는 값이 있을 때만 — 대분류 name_en 이 "-"(대표님이 비운
-                    값)이면 "TABLEWARE -" 처럼 작대기만 남아 이를 숨긴다. */}
-                {node.en && node.en.trim() && node.en.trim() !== "-" && (
-                  <span className="ml-1 text-xs text-wabi-fg-muted">
-                    {node.en}
-                  </span>
-                )}
-              </SideLink>
-              {node.children && groupActive && (
-                <div className="mb-1 border-l border-wabi-border pl-3">
-                  {node.children.map((c) => (
-                    <SideLink
-                      key={c.slug}
-                      href={buildShopQuery(sp, { category: c.slug })}
-                      active={current === c.slug}
-                    >
-                      {c.ko}
-                    </SideLink>
-                  ))}
-                </div>
+      {/* 대분류 그룹 — 두 그룹의 소분류를 항상 펼쳐 보여준다(대표님 — 대분류를
+          먼저 고르지 않아도 소분류를 바로 선택). 대분류 헤더는 그 그룹 "전체보기"
+          링크 역할(예: TABLEWARE 헤더 = 그릇류 전체). */}
+      <div className="mt-3 space-y-3 border-t border-wabi-border pt-3">
+        {tree.map((node) => (
+          <div key={node.slug}>
+            <SideLink
+              href={buildShopQuery(sp, { category: node.slug })}
+              active={current === node.slug}
+              className="font-medium"
+            >
+              {node.ko}
+              {/* 영문 부제는 값이 있을 때만 — 대분류 name_en 이 "-"(대표님이 비운
+                  값)이면 "TABLEWARE -" 처럼 작대기만 남아 이를 숨긴다. */}
+              {node.en && node.en.trim() && node.en.trim() !== "-" && (
+                <span className="ml-1 text-xs text-wabi-fg-muted">
+                  {node.en}
+                </span>
               )}
-            </div>
-          );
-        })}
+            </SideLink>
+            {node.children && node.children.length > 0 && (
+              <div className="mb-1 border-l border-wabi-border pl-3">
+                {node.children.map((c) => (
+                  <SideLink
+                    key={c.slug}
+                    href={buildShopQuery(sp, { category: c.slug })}
+                    active={current === c.slug}
+                  >
+                    {c.ko}
+                  </SideLink>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* 오늘의 와비사비(자유게시판) — 홈 Shop CTA 와 같은 채워지는 아웃라인
