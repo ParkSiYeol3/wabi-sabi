@@ -20,5 +20,12 @@ export async function GET(req: Request) {
     .select("id");
 
   if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
+
+  // 비회원 주문조회 스로틀 로그(0044)도 함께 정리 — 1일 지난 시도 기록 삭제(무한 증가 방지).
+  await admin
+    .from("guest_lookup_throttle")
+    .delete()
+    .lt("attempted_at", cutoff);
+
   return Response.json({ ok: true, cancelled: data?.length ?? 0 });
 }
