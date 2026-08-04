@@ -49,12 +49,12 @@ export const legalNav = [
   { label: "교환·환불 안내", href: "/legal/refund" },
 ] as const;
 
-// 내비 — 2대분류(TABLEWARE·OBJECTS) + GIFT(선물) + SHOWROOM(소개=오시는 길 합침).
-// TABLEWARE·OBJECTS 는 대분류 shop 필터, GIFT 는 선물 안내·큐레이션(/gift, 대표님),
-// SHOWROOM 은 소개 페이지로 간다.
+// 내비 — SHOP + GIFT(선물) + MAKERS + SHOWROOM(소개=오시는 길 합침).
+// TABLEWARE·OBJECTS 를 대분류 내비에서 빼고 단일 SHOP 진입점으로 통합(대표님) —
+// shop 안에서 소분류(접시·볼·액세서리 등)를 직접 고르게 해 대분류 중복을 없앴다.
+// GIFT 는 선물 안내·큐레이션(/gift), MAKERS 는 작가 소개, SHOWROOM 은 소개 페이지.
 export const nav = [
-  { label: "TABLEWARE", href: "/shop?category=tableware" },
-  { label: "OBJECTS", href: "/shop?category=objects" },
+  { label: "SHOP", href: "/shop" },
   { label: "GIFT", href: "/gift" },
   { label: "MAKERS", href: "/makers" },
   { label: "SHOWROOM", href: "/about" },
