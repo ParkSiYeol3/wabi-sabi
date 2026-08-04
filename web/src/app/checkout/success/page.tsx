@@ -18,6 +18,8 @@ export default async function CheckoutSuccessPage({
 
   let success = false;
   let message = "결제 정보가 올바르지 않습니다.";
+  // 비회원 주문(user_id null)이면 주문 내역 페이지가 없으므로 버튼을 숨기고 안내한다.
+  let isMember = false;
 
   if (paymentKey && orderId) {
     // 승인·확정은 서버 공용 로직(lib/payments) — 금액은 DB 주문 기준(쿼리 amount 불신),
@@ -33,6 +35,7 @@ export default async function CheckoutSuccessPage({
         data: { user },
       } = await supabase.auth.getUser();
       if (user) {
+        isMember = true;
         await supabase.from("cart_items").delete().eq("user_id", user.id);
       }
     } else message = confirm.error ?? "결제 승인 실패";
@@ -48,10 +51,22 @@ export default async function CheckoutSuccessPage({
           <p className="mt-3 text-sm text-wabi-fg-muted">
             결제금액 <Price value={Number(amount)} />
           </p>
+          {/* 비회원은 주문 내역 페이지가 없다 — 버튼을 숨기고 회원가입을 안내한다. */}
+          {!isMember && (
+            <p className="mt-4 text-xs text-wabi-fg-muted">
+              비회원 주문이 완료되었습니다.{" "}
+              <Link href="/auth" className="underline underline-offset-2">
+                회원가입
+              </Link>{" "}
+              하시면 주문 내역을 확인하실 수 있습니다.
+            </p>
+          )}
           <div className="mt-10 flex gap-3">
-            <Button asChild variant="outline" className="rounded-none border-wabi-fg px-8">
-              <Link href="/mypage/orders">주문 내역</Link>
-            </Button>
+            {isMember && (
+              <Button asChild variant="outline" className="rounded-none border-wabi-fg px-8">
+                <Link href="/mypage/orders">주문 내역</Link>
+              </Button>
+            )}
             <Button asChild className="rounded-none bg-wabi-accent px-8 hover:bg-wabi-accent/90">
               <Link href="/shop">쇼핑 계속하기</Link>
             </Button>

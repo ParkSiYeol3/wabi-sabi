@@ -147,7 +147,7 @@ export default function CartPage() {
         >
           <Link href="/shop">쇼핑 계속하기</Link>
         </Button>
-        {/* 결제 플로우 — /checkout 가드가 비로그인만 /auth 로 보냄 */}
+        {/* 결제 플로우 — 회원·비회원 모두 /checkout 진입 가능(게스트 주문 허용) */}
         <Button
           asChild
           className="rounded-none bg-wabi-accent px-10 hover:bg-wabi-accent/90"

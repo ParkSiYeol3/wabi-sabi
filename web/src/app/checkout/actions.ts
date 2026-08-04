@@ -89,7 +89,8 @@ export async function createPendingOrder(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "로그인이 필요합니다." };
+  // 비회원도 주문 가능(대표님) — 로그인 게이트 없음. user 가 null 이면 게스트 주문
+  // (user_id null)으로 진행한다. 남용 가드는 아래에서 회원=user_id / 비회원=전화번호.
   // 주문 쓰기는 서버 전용(0012 에서 사용자 insert 정책 회수) — service_role 필수
   if (!adminConfigured())
     return { ok: false, error: "주문 처리를 위한 서버 설정이 없습니다." };
@@ -118,22 +119,28 @@ export async function createPendingOrder(
   // 남용 가드(rate limit) — 외부 인프라 없이 DB 기준:
   // ① 미결제(pending) 5건 이상 → 차단(방치 주문은 일일 cron 정리)
   // ② 최근 1시간 주문 생성 10건 이상 → 차단
-  const { count: pendingCount } = await supabase
+  // 회원은 user_id, 비회원은 전화번호(+user_id null) 기준으로 집계한다. 비회원 주문은
+  // RLS(본인 전용)로 사용자 클라이언트에선 조회되지 않으므로 admin(service_role)으로 센다.
+  const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const scopePending = admin
     .from("orders")
     .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id)
     .eq("status", "pending");
+  const { count: pendingCount } = await (user
+    ? scopePending.eq("user_id", user.id)
+    : scopePending.is("user_id", null).eq("phone", delivery.phone));
   if ((pendingCount ?? 0) >= 5)
     return {
       ok: false,
       error: "미결제 주문이 많습니다. 기존 주문을 결제하거나 잠시 후 다시 시도해 주세요.",
     };
-  const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { count: recentCount } = await supabase
+  const scopeRecent = admin
     .from("orders")
     .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id)
     .gte("ordered_at", hourAgo);
+  const { count: recentCount } = await (user
+    ? scopeRecent.eq("user_id", user.id)
+    : scopeRecent.is("user_id", null).eq("phone", delivery.phone));
   if ((recentCount ?? 0) >= 10)
     return { ok: false, error: "주문 시도가 너무 잦습니다. 잠시 후 다시 시도해 주세요." };
 
@@ -185,11 +192,11 @@ export async function createPendingOrder(
     .join(" ");
 
   // 쓰기는 service_role — 사용자 직접 insert 는 0012 로 차단됨(#62).
-  // user_id 는 서버 세션에서 확정하므로 위조 불가.
+  // user_id 는 서버 세션에서 확정하므로 위조 불가(비회원이면 null — 게스트 주문).
   const { data: order, error: orderErr } = await admin
     .from("orders")
     .insert({
-      user_id: user.id,
+      user_id: user?.id ?? null,
       order_number: orderNumber,
       status: "pending",
       total_price: amount,

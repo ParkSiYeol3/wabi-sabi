@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { loadTossPayments } from "@tosspayments/tosspayments-sdk";
+import { loadTossPayments, ANONYMOUS } from "@tosspayments/tosspayments-sdk";
 import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,9 +50,9 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (!mounted || authLoading) return;
-    if (!user) router.replace("/auth?redirect=/checkout");
-    else if (items.length === 0) router.replace("/cart");
-  }, [mounted, authLoading, user, items.length, router]);
+    // 비회원도 구매 가능(대표님) — 로그인 게이트 제거. 빈 장바구니만 되돌린다.
+    if (items.length === 0) router.replace("/cart");
+  }, [mounted, authLoading, items.length, router]);
 
   // 저장 배송지 로드 — 있으면 가장 최근 것을 최초 1회만 자동 채움(이후 수정 가능).
   useEffect(() => {
@@ -141,7 +141,8 @@ export default function CheckoutPage() {
       }
 
       const toss = await loadTossPayments(CLIENT_KEY);
-      const payment = toss.payment({ customerKey: user!.id });
+      // 비회원은 토스 ANONYMOUS 키로 일회성 결제(대표님 — 게스트 구매 허용).
+      const payment = toss.payment({ customerKey: user?.id ?? ANONYMOUS });
       await payment.requestPayment({
         method: "CARD",
         amount: { currency: "KRW", value: res.amount },
@@ -149,7 +150,7 @@ export default function CheckoutPage() {
         orderName: res.orderName,
         successUrl: `${window.location.origin}/checkout/success`,
         failUrl: `${window.location.origin}/checkout/fail`,
-        customerEmail: user!.email ?? undefined,
+        customerEmail: user?.email ?? undefined,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "결제 요청 실패");
