@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 const TRACKS = [
   "/sounds/38534292-golden-forest-with-birds-and-running-stream-sounds-171319.mp3",
 ];
-const VOLUME = 0.06; // 들릴 듯 말 듯 아주 잔잔하게 — 배경 공기처럼
+const VOLUME = 0.035; // 들릴 듯 말 듯 아주 잔잔하게 — 배경 공기처럼(대표님: 더 줄임)
 const PREF_KEY = "wabi.bgm"; // "on" | "off"
 const HINT_DELAY = 900; // 페이지가 자리잡은 뒤 힌트 등장
 // 원본 앞 0~53초 구간만 반복(대표님) — 이 지점에서 처음으로 되감아 뒤쪽은 안 쓴다.
