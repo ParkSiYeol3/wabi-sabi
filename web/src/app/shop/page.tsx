@@ -57,9 +57,10 @@ export default async function ShopPage({
 
   // 페이지 타이틀 = 선택 카테고리명(대표님 — TABLEWARE 누르면 TABLEWARE 로).
   // 대분류 이름(name_ko)이 이미 TABLEWARE·OBJECTS 라 그대로 쓴다. 소분류는 그
-  // 소분류명, 이 달의 상품·전체는 각각. 못 찾으면 "Shop".
+  // 소분류명, 이 달의 상품·전체는 각각. 전체는 "상품"(한글=명조 폰트로 사이트와
+  // 통일 — 영문 "Shop"은 라틴 Cormorant 라 홀로 튀었다, 대표님).
   const heading = !sp.category
-    ? "Shop"
+    ? "상품"
     : sp.category === MONTHLY_SLUG
       ? "이 달의 상품"
       : (tree.find((n) => n.slug === sp.category)?.ko ??

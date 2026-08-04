@@ -79,8 +79,14 @@ export function ShopSidebar({
                 active={current === node.slug}
                 className={cn(groupActive && "font-medium text-wabi-fg")}
               >
-                {node.ko}{" "}
-                <span className="text-xs text-wabi-fg-muted">{node.en}</span>
+                {node.ko}
+                {/* 영문 부제는 값이 있을 때만 — 대분류 name_en 이 "-"(대표님이 비운
+                    값)이면 "TABLEWARE -" 처럼 작대기만 남아 이를 숨긴다. */}
+                {node.en && node.en.trim() && node.en.trim() !== "-" && (
+                  <span className="ml-1 text-xs text-wabi-fg-muted">
+                    {node.en}
+                  </span>
+                )}
               </SideLink>
               {node.children && groupActive && (
                 <div className="mb-1 border-l border-wabi-border pl-3">
