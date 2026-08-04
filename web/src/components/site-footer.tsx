@@ -70,6 +70,7 @@ export async function SiteFooter() {
     { label: "공지사항", href: "/notice" },
     { label: "문의", href: "/inquiry" },
     { label: "리뷰", href: "/review" },
+    { label: "비회원 주문조회", href: "/order-lookup" },
   ];
 
   return (
