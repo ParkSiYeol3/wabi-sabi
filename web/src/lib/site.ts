@@ -49,11 +49,13 @@ export const legalNav = [
   { label: "교환·환불 안내", href: "/legal/refund" },
 ] as const;
 
-// 내비 — 2대분류(TABLEWARE·OBJECTS) + SHOWROOM(소개=오시는 길 합침)(0037, 대표님).
-// TABLEWARE·OBJECTS 는 대분류 shop 필터로, SHOWROOM 은 소개 페이지로 간다.
+// 내비 — 2대분류(TABLEWARE·OBJECTS) + GIFT(선물) + SHOWROOM(소개=오시는 길 합침).
+// TABLEWARE·OBJECTS 는 대분류 shop 필터, GIFT 는 선물 안내·큐레이션(/gift, 대표님),
+// SHOWROOM 은 소개 페이지로 간다.
 export const nav = [
   { label: "TABLEWARE", href: "/shop?category=tableware" },
   { label: "OBJECTS", href: "/shop?category=objects" },
+  { label: "GIFT", href: "/gift" },
   { label: "SHOWROOM", href: "/about" },
 ] as const;
 
