@@ -25,17 +25,14 @@ export const metadata: Metadata = {
 // 카피는 대표님 검토 전제 초안.
 const criteria = [
   {
-    en: "Trace of Hands",
     ko: "손의 흔적",
     body: "물레 자국, 유약의 흐름, 어긋난 좌우. 같은 형태가 둘 없는 물건만 들입니다.",
   },
   {
-    en: "Everyday Use",
     ko: "쓰임",
     body: "장식장이 아니라 식탁 위에서 매일 손에 닿는, 쓰임이 분명한 물건을 고릅니다.",
   },
   {
-    en: "Time",
     ko: "시간",
     body: "쓸수록 길이 들고, 낡음이 결이 되는. 오래 곁에 둘수록 좋아지는 것만 남깁니다.",
   },
@@ -57,7 +54,7 @@ export default async function AboutPage() {
           <Reveal>
             {/* 히어로 제거로 이 헤딩이 페이지 h1 (SEO·접근성) */}
             <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-              わび-さび <span className="text-wabi-fg-muted">(Wabi-sabi)</span>
+              わび-さび
             </h1>
             <div className="mt-8 space-y-5 text-sm leading-8 text-wabi-fg-muted md:text-[15px]">
               {philosophy.map((p, i) => (
@@ -106,16 +103,13 @@ export default async function AboutPage() {
           </Reveal>
           <div className="mt-16 grid gap-12 md:grid-cols-3">
             {criteria.map((v, i) => (
-              <Reveal key={v.en} delay={stagger[i]}>
+              <Reveal key={v.ko} delay={stagger[i]}>
                 <div className="text-center md:border-l md:border-wabi-border md:first:border-l-0 md:px-8">
                   <span className="font-numeric text-2xl font-light text-wabi-fg-muted/60">
                     0{i + 1}
                   </span>
                   <h3 className="mt-5 text-lg font-medium tracking-wide">
                     {v.ko}
-                    <span className="ml-2 text-xs font-normal uppercase tracking-[0.15em] text-wabi-fg-muted">
-                      {v.en}
-                    </span>
                   </h3>
                   <p className="mt-3 text-sm leading-7 text-wabi-fg-muted">
                     {v.body}
@@ -133,7 +127,7 @@ export default async function AboutPage() {
         <Container className="py-24 md:py-32">
           <Reveal>
             <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-              오시는 길 <span className="text-wabi-fg-muted">Showroom</span>
+              오시는 길
             </h2>
           </Reveal>
           <div className="mt-12 grid gap-12 md:grid-cols-2 md:items-start">

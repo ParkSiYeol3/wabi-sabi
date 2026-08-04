@@ -11,7 +11,7 @@ export async function InstagramFeed() {
   return (
     <section className="bg-wabi-subtle">
       <div className="mx-auto max-w-300 px-5 py-20 text-center">
-        <h2 className="text-xl font-semibold">Instagram</h2>
+        <h2 className="text-xl font-semibold">인스타그램</h2>
         <a
           href={site.instagramUrl}
           target="_blank"
