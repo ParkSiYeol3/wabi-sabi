@@ -111,6 +111,17 @@
     font-family: var(--font-cormorant), var(--font-maruburi), ui-serif, serif;
     font-variant-numeric: lining-nums tabular-nums;
   }
+
+  /* 어드민 전체 숫자 통일(대표님 — 관리자 페이지 숫자 폰트 정렬). 본문이 이미
+     Cormorant 스택이라 폰트는 그대로 두고, 숫자만 oldstyle(3·5 가 베이스라인
+     아래로 처지는 형태)→lining+tabular 로 바꾼다. font-variant-numeric 은
+     상속되지만 폼 컨트롤(input/textarea/select)엔 자동 상속 안 돼 명시 지정. */
+  .admin-numeric,
+  .admin-numeric input,
+  .admin-numeric textarea,
+  .admin-numeric select {
+    font-variant-numeric: lining-nums tabular-nums;
+  }
 }
 
 /* 배경음 클릭 유도 힌트의 이퀄라이저 막대(음악이 흐르는 듯) — 재생 안내용.

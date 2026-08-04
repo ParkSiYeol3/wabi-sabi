@@ -71,7 +71,7 @@ export default async function MyPage() {
               aria-label="닉네임"
               minLength={2}
               maxLength={20}
-              className="rounded-none"
+              className="rounded-none font-numeric"
             />
             <SubmitButton
               styled
