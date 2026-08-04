@@ -14,8 +14,19 @@ export interface Notice extends NoticeSummary {
 // 공지는 전부 공개 데이터라 쿠키 없는 anon 클라 + unstable_cache 로 묶는다(홈·상세와 동일).
 // 어드민 공지 생성/삭제 액션이 revalidatePath("/notice"[, `/notice/${id}`]) 로 무효화한다.
 
+// 빌드 환경에 Supabase env 가 없으면(예: CI 프리렌더 /_not-found) createPublicClient
+// 가 throw 하므로, 그 경우엔 조용히 빈 값 → 상단 공지 바는 렌더되지 않는다.
+// (categories.fetchRows 와 동일 가드 — 루트 레이아웃에서 호출되면서 필요해졌다.)
+function envReady(): boolean {
+  return (
+    !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+}
+
 // 공지 목록 (최신순).
 async function loadNotices(): Promise<NoticeSummary[]> {
+  if (!envReady()) return [];
   const db = createPublicClient();
   const { data, error } = await db
     .from("notices")
@@ -32,6 +43,7 @@ export const getNotices = unstable_cache(loadNotices, ["notices-list"], {
 
 // 공지 단건 (없으면 null). id 가 캐시 키에 포함된다.
 async function loadNotice(id: string): Promise<Notice | null> {
+  if (!envReady()) return null;
   const db = createPublicClient();
   const { data, error } = await db
     .from("notices")
