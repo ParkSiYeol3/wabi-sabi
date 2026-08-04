@@ -101,8 +101,12 @@ export const useCart = create<CartState>()(
     }),
     {
       name: "wabi-cart",
-      // userId 는 영속하지 않음 — 세션에서 파생(auth-provider). items 만 게스트 캐시.
-      partialize: (s) => ({ items: s.items }),
+      // userId 는 영속하지 않음 — 세션에서 파생(auth-provider). items 는 "게스트 캐시"만.
+      // 로그인 상태에선 items 를 저장하지 않는다(빈 배열로 영속) — 서버가 진실이므로.
+      // 저장하면 bindUser 가 넣어둔 "서버 카트 사본"이 다음 마운트에서 게스트 카트로
+      // 오인돼 mergeGuestCart 가 자기 자신을 재병합, 로그인/새로고침마다 수량이
+      // 배가되어 99(상한)까지 쌓였다(대표님 제보 버그). 게스트일 때만 로컬 캐시한다.
+      partialize: (s) => ({ items: s.userId ? [] : s.items }),
     },
   ),
 );
