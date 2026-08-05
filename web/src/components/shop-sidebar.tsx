@@ -23,7 +23,9 @@ function SideLink({
       href={href}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "block py-1.5 text-sm transition-colors",
+        // 누르면 살짝 흐려지는 press 피드백(대표님 — 눌렀는지 모르겠다). transition
+        // 으로 색·투명도 함께 부드럽게. 선택된 항목은 진하게(font-medium+text-fg).
+        "block py-1.5 text-sm transition active:opacity-40",
         active
           ? "font-medium text-wabi-fg"
           : "text-wabi-fg-muted hover:text-wabi-fg",
