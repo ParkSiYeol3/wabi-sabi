@@ -49,17 +49,18 @@ export const legalNav = [
   { label: "교환·환불 안내", href: "/legal/refund" },
 ] as const;
 
-// 내비 — COLLECTION + GIFT(선물) + MAKERS + SHOWROOM(소개=오시는 길 합침).
-// TABLEWARE·OBJECTS 를 대분류 내비에서 빼고 단일 진입점으로 통합(대표님) —
-// shop 안에서 소분류(접시·볼·액세서리 등)를 직접 고르게 해 대분류 중복을 없앴다.
-// 라벨은 "SHOP"(노골적 판매) 대신 "COLLECTION"(모아둔 것을 둘러보는 결) 으로 —
-// 판매보다 자연스러운 큐레이션이 브랜드 모토(대표님). 경로는 /shop 유지.
-// GIFT 는 선물 안내·큐레이션(/gift), MAKERS 는 작가 소개, SHOWROOM 은 소개 페이지.
+// 내비 — HOME·COLLECTION·SHOWROOM·NOTICE·Q&A (대표님 페이지 분류 확정).
+//  · HOME=나선형 여정(/), COLLECTION=전체 상품(/shop, 라벨은 "SHOP" 대신 자연스러운
+//    큐레이션 톤 유지), SHOWROOM=오시는 길+브랜드 소개(/about),
+//    NOTICE=공지사항(/notice), Q&A=문의(/inquiry).
+//  · GIFT·MAKERS 는 nav 에서 제외(대표님 분류에서 빠짐) — 페이지(/gift·/makers)는
+//    남겨 두어 필요 시 되살린다.
 export const nav = [
+  { label: "HOME", href: "/" },
   { label: "COLLECTION", href: "/shop" },
-  { label: "GIFT", href: "/gift" },
-  { label: "MAKERS", href: "/makers" },
   { label: "SHOWROOM", href: "/about" },
+  { label: "NOTICE", href: "/notice" },
+  { label: "Q&A", href: "/inquiry" },
 ] as const;
 
 // Shop 카테고리 2계층 트리 (#193, 대표님 피드백 — 상품군 확장: 다도·액세서리 등).

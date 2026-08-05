@@ -63,10 +63,14 @@ export function ShopSidebar({
         이 달의 상품
       </SideLink>
 
+      {/* 오늘의 와비사비(자유게시판) — "이 달의 상품" 바로 아래(대표님). 홈 CTA 와
+          같은 채워지는 아웃라인 버튼으로 눈에 띄게. */}
+      <CtaLink href="/today" label="오늘의 와비사비" full className="mt-3" />
+
       {/* 대분류 그룹 — 두 그룹의 소분류를 항상 펼쳐 보여준다(대표님 — 대분류를
           먼저 고르지 않아도 소분류를 바로 선택). 대분류 헤더는 그 그룹 "전체보기"
           링크 역할(예: TABLEWARE 헤더 = 그릇류 전체). */}
-      <div className="mt-3 space-y-3 border-t border-wabi-border pt-3">
+      <div className="mt-4 space-y-3 border-t border-wabi-border pt-4">
         {tree.map((node) => (
           <div key={node.slug}>
             <SideLink
@@ -99,10 +103,6 @@ export function ShopSidebar({
           </div>
         ))}
       </div>
-
-      {/* 오늘의 와비사비(자유게시판) — 홈 Shop CTA 와 같은 채워지는 아웃라인
-          버튼으로 소분류보다 눈에 띄게(대표님) */}
-      <CtaLink href="/today" label="오늘의 와비사비" full className="mt-5" />
     </nav>
   );
 }

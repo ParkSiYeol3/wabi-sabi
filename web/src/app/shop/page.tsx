@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Form from "next/form";
-import { Search } from "lucide-react";
+import { Search, ChevronDown } from "lucide-react";
 import { Container } from "@/components/container";
 import { CtaLink } from "@/components/cta-link";
 import { ProductCard } from "@/components/product-card";
@@ -69,6 +69,9 @@ export default async function ShopPage({
           .find((c) => c.slug === sp.category)?.ko ??
         "Shop");
 
+  // 모바일 분류 드롭다운 요약에 쓸 현재 선택 라벨 — 미선택은 "전체".
+  const catLabel = sp.category ? heading : "전체";
+
   return (
     <Container className="py-16">
       {/* 헤더 — 타이틀 + 결과 수 */}
@@ -79,59 +82,67 @@ export default async function ShopPage({
         </span>
       </div>
 
-      {/* 카테고리 (모바일·태블릿 전용, 데스크톱은 좌측 사이드바 #195).
-          대분류 중복 제거(대표님) — 전체·이 달의 상품 다음에 그룹별로
-          "[그룹] 전체 + 소분류" 를 항상 노출해 소분류를 바로 고르게 한다. */}
-      <div className="mt-8 space-y-2 lg:hidden">
-        <nav className="flex flex-wrap gap-2" aria-label="카테고리">
-          <FilterLink
-            href={buildQuery(sp, { category: undefined })}
-            active={!sp.category}
-          >
-            전체
-          </FilterLink>
-          <FilterLink
-            href={buildQuery(sp, { category: MONTHLY_SLUG })}
-            active={sp.category === MONTHLY_SLUG}
-            accent
-          >
-            <span aria-hidden className="mr-1">
-              ✦
-            </span>
-            이 달의 상품
-          </FilterLink>
-        </nav>
-        {tree.map((c) => (
-          <nav
-            key={c.slug}
-            className="flex flex-wrap gap-2"
-            aria-label={`${c.ko} 분류`}
-          >
-            {/* 그룹 전체보기 — 대분류를 칩에서 빼는 대신 "[그룹] 전체" 로 유지 */}
+      {/* 카테고리 (모바일·태블릿) — 드롭다운(대표님, 칩이 다 펼쳐져 난잡).
+          기본 접힘, 펴면 그룹별 목록. 데스크톱은 좌측 사이드바(#195). JS 없이
+          details/summary 로 동작(CSP 무관), 요약엔 현재 선택 분류를 보여준다. */}
+      <details className="group mt-8 lg:hidden">
+        <summary className="flex cursor-pointer list-none items-center justify-between border border-wabi-border px-4 py-3 text-sm [&::-webkit-details-marker]:hidden">
+          <span>
+            <span className="text-wabi-fg-muted">분류</span>
+            <span className="mx-2 text-wabi-border">·</span>
+            {catLabel}
+          </span>
+          <ChevronDown className="size-4 shrink-0 text-wabi-fg-muted transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="mt-2 space-y-3 border border-wabi-border p-4">
+          <nav className="flex flex-wrap gap-2" aria-label="카테고리">
             <FilterLink
-              href={buildQuery(sp, { category: c.slug })}
-              active={sp.category === c.slug}
+              href={buildQuery(sp, { category: undefined })}
+              active={!sp.category}
             >
-              {c.ko} 전체
+              전체
             </FilterLink>
-            {c.children?.map((ch) => (
-              <FilterLink
-                key={ch.slug}
-                href={buildQuery(sp, { category: ch.slug })}
-                active={sp.category === ch.slug}
-              >
-                {ch.ko}
-              </FilterLink>
-            ))}
+            <FilterLink
+              href={buildQuery(sp, { category: MONTHLY_SLUG })}
+              active={sp.category === MONTHLY_SLUG}
+              accent
+            >
+              <span aria-hidden className="mr-1">
+                ✦
+              </span>
+              이 달의 상품
+            </FilterLink>
           </nav>
-        ))}
-      </div>
 
-      {/* 오늘의 와비사비(자유게시판) — 모바일 강조 버튼(데스크톱은 사이드바).
-          홈 Shop CTA 와 같은 채워지는 아웃라인. */}
-      <div className="mt-3 lg:hidden">
-        <CtaLink href="/today" label="오늘의 와비사비" />
-      </div>
+          {/* 오늘의 와비사비 — "이 달의 상품" 바로 아래(대표님) */}
+          <CtaLink href="/today" label="오늘의 와비사비" />
+
+          {tree.map((c) => (
+            <nav
+              key={c.slug}
+              className="flex flex-wrap gap-2"
+              aria-label={`${c.ko} 분류`}
+            >
+              {/* 그룹 전체보기 — 대분류를 칩에서 빼는 대신 "[그룹] 전체" 로 유지 */}
+              <FilterLink
+                href={buildQuery(sp, { category: c.slug })}
+                active={sp.category === c.slug}
+              >
+                {c.ko} 전체
+              </FilterLink>
+              {c.children?.map((ch) => (
+                <FilterLink
+                  key={ch.slug}
+                  href={buildQuery(sp, { category: ch.slug })}
+                  active={sp.category === ch.slug}
+                >
+                  {ch.ko}
+                </FilterLink>
+              ))}
+            </nav>
+          ))}
+        </div>
+      </details>
 
       <div className="mt-8 flex items-start gap-10">
         {/* 데스크톱 좌측 사이드바 — 소분류 토글 (#195, biomedium 참고) */}
