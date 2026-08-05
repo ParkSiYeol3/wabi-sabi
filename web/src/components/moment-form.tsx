@@ -1,12 +1,14 @@
 "use client";
 
 import { useActionState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createMoment, type MomentResult } from "@/app/today/actions";
 
 // "오늘의 와비사비" 작성 폼 — 사진 필수 + 짧은 글(선택). 로그인 사용자 전용
 // (page 에서 게이트). 성공 시 입력 초기화.
 export function MomentForm() {
+  const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const [state, action, pending] = useActionState<MomentResult | null, FormData>(
@@ -15,6 +17,9 @@ export function MomentForm() {
       if (result.ok) {
         if (fileRef.current) fileRef.current.value = "";
         if (bodyRef.current) bodyRef.current.value = "";
+        // 서버 데이터(첫 페이지) 재요청 → 방금 올린 글이 그리드에 바로 뜬다
+        // (그리드는 최신 글 id 로 keying 돼 새 데이터로 remount 된다).
+        router.refresh();
       }
       return result;
     },

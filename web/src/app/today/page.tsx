@@ -45,7 +45,11 @@ export default async function TodayPage() {
         )}
       </div>
 
+      {/* key = 최신 글 id — 글 등록·삭제로 서버 첫 페이지가 바뀌면 그리드를 새
+          데이터로 remount 한다. MomentGrid 는 initial 을 useState 초기값으로만
+          쓰므로(더보기 append 유지용) prop 변경이 저절로 반영되지 않기 때문. */}
       <MomentGrid
+        key={moments[0]?.id ?? "empty"}
         initial={moments}
         initialHasMore={hasMore}
         currentUserId={user?.id}
