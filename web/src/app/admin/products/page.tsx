@@ -11,6 +11,7 @@ import {
   SectionHeading,
   TablePanel,
   EmptyState,
+  adminAction,
 } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/submit-button";
 import {
@@ -136,7 +137,7 @@ export default async function AdminProductsPage() {
                       />
                       <SubmitButton
                         pendingText="저장 중…"
-                        className="cursor-pointer text-xs underline-offset-2 transition-colors hover:text-wabi-accent hover:underline"
+                        className={adminAction({ tone: "outline" })}
                       >
                         저장
                       </SubmitButton>
@@ -161,7 +162,9 @@ export default async function AdminProductsPage() {
                       />
                       <SubmitButton
                         pendingText="변경 중…"
-                        className="cursor-pointer text-xs underline transition-colors hover:text-wabi-accent"
+                        className={adminAction({
+                          tone: p.is_monthly ? "solid" : "outline",
+                        })}
                       >
                         {p.is_monthly ? "지정됨" : "지정"}
                       </SubmitButton>
@@ -177,7 +180,9 @@ export default async function AdminProductsPage() {
                       />
                       <SubmitButton
                         pendingText="변경 중…"
-                        className="cursor-pointer text-xs underline transition-colors hover:text-wabi-accent"
+                        className={adminAction({
+                          tone: p.is_active ? "solid" : "outline",
+                        })}
                       >
                         {p.is_active ? "노출중" : "숨김"}
                       </SubmitButton>
@@ -187,7 +192,7 @@ export default async function AdminProductsPage() {
                     {/* 본문(이름·가격·설명·스펙·카테고리) 수정 페이지 */}
                     <Link
                       href={`/admin/products/${p.id}`}
-                      className="text-xs underline underline-offset-2 transition-colors hover:text-wabi-accent"
+                      className={adminAction({ tone: "outline" })}
                     >
                       수정
                     </Link>
@@ -197,7 +202,7 @@ export default async function AdminProductsPage() {
                       <input type="hidden" name="id" value={p.id} />
                       <SubmitButton
                         pendingText="삭제 중…"
-                        className="cursor-pointer text-xs text-red-700 underline transition-colors hover:text-red-800"
+                        className={adminAction({ tone: "danger" })}
                       >
                         삭제
                       </SubmitButton>

@@ -1,9 +1,30 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
+import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 // 어드민 공통 프리미티브 — 페이지마다 제각각이던 border/space-y 를 통일한다.
 // 크림 브랜드 톤: 흰 카드가 아니라 크림 배경 위 은은한 테두리 + 라운딩.
+
+// 어드민 액션 버튼(대표님 — 밑줄 텍스트 링크가 직관적이지 않음 → 깔끔·큼직한
+// 버튼). shadcn Button 의 outline 은 bg-background(흰색)이라 크림과 안 맞아,
+// 브랜드 토큰(wabi-fg/border)으로 직접 짠다. 세 톤: solid(강조·on 상태),
+// outline(기본·off 상태), danger(삭제). 눌림 피드백 active:scale.
+export const adminAction = cva(
+  "inline-flex h-9 items-center justify-center gap-1 rounded-md px-4 text-sm font-medium whitespace-nowrap transition active:scale-95 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      tone: {
+        solid: "bg-wabi-fg text-white hover:bg-wabi-fg/90",
+        outline:
+          "border border-wabi-border bg-transparent text-wabi-fg hover:border-wabi-fg hover:bg-wabi-muted",
+        danger:
+          "border border-red-300 bg-transparent text-red-700 hover:border-red-400 hover:bg-red-50",
+      },
+    },
+    defaultVariants: { tone: "outline" },
+  },
+);
 
 // 페이지 상단 제목 + 선택적 설명·우측 액션. 각 어드민 페이지 최상단에 둔다.
 export function PageHeader({

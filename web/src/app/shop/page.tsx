@@ -74,13 +74,8 @@ export default async function ShopPage({
 
   return (
     <Container className="py-16">
-      {/* 헤더 — 타이틀 + 결과 수 */}
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl font-semibold tracking-wide">{heading}</h1>
-        <span className="font-numeric text-xs text-wabi-fg-muted">
-          {products.length}개 상품
-        </span>
-      </div>
+      {/* 헤더 — 타이틀 ("N개 상품" 표기는 대표님 요청으로 제거) */}
+      <h1 className="text-2xl font-semibold tracking-wide">{heading}</h1>
 
       {/* 카테고리 (모바일·태블릿) — 드롭다운(대표님, 기본 접힘). 펴면 데스크톱
           사이드바와 "똑같은 방식"의 그룹 목록을 그대로 재사용한다(웹처럼
