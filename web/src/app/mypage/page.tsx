@@ -6,8 +6,9 @@ import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { LogoutButton } from "@/components/logout-button";
 import { DeleteAccountSection } from "@/components/delete-account-section";
+import { NicknameForm } from "@/components/nickname-form";
 import { createClient } from "@/lib/supabase/server";
-import { updateName, addAddress, deleteAddress } from "./actions";
+import { addAddress, deleteAddress } from "./actions";
 
 export const metadata: Metadata = { title: "마이페이지" };
 
@@ -52,36 +53,7 @@ export default async function MyPage() {
         <div className="mt-4 space-y-1 text-sm text-wabi-fg-muted">
           <p className="font-numeric">이메일: {profile?.email ?? user.email}</p>
         </div>
-        <form action={updateName} className="mt-4 max-w-sm">
-          <label
-            htmlFor="mypage-nickname"
-            className="text-sm font-medium text-wabi-fg"
-          >
-            닉네임
-          </label>
-          <p className="mt-0.5 font-numeric text-xs text-wabi-fg-muted">
-            커뮤니티 및 리뷰에 표시됩니다 (2~20자)
-          </p>
-          <div className="mt-2 flex gap-2">
-            <Input
-              id="mypage-nickname"
-              name="name"
-              defaultValue={profile?.name ?? ""}
-              placeholder="닉네임"
-              aria-label="닉네임"
-              minLength={2}
-              maxLength={20}
-              className="rounded-none font-numeric"
-            />
-            <SubmitButton
-              styled
-              pendingText="저장 중…"
-              className="rounded-none bg-wabi-accent px-6 hover:bg-wabi-accent/90"
-            >
-              저장
-            </SubmitButton>
-          </div>
-        </form>
+        <NicknameForm defaultName={profile?.name ?? ""} />
       </section>
 
       {/* 배송지 */}

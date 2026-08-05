@@ -19,19 +19,35 @@ const addressSchema = z.object({
   postcode: z.string().trim().max(10),
 });
 
-export async function updateName(formData: FormData) {
+export type UpdateNameResult = { ok: boolean; message: string };
+
+// useActionState 시그니처 — 저장 완료/실패 메시지를 폼에서 인라인 표시(대표님).
+export async function updateName(
+  _prev: UpdateNameResult | null,
+  formData: FormData,
+): Promise<UpdateNameResult> {
   // 닉네임 — 커뮤니티·리뷰 표시 이름(2~20자). 모달(setNickname)과 정책 일치.
   const name = String(formData.get("name") || "").trim().slice(0, 20);
-  if (name.length < 2) return;
+  if (name.length < 2) {
+    return { ok: false, message: "닉네임은 2~20자로 입력해 주세요." };
+  }
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { ok: false, message: "로그인이 필요합니다." };
 
-  await supabase.from("profiles").update({ name }).eq("id", user.id);
+  const { error } = await supabase
+    .from("profiles")
+    .update({ name })
+    .eq("id", user.id);
+  if (error) {
+    return { ok: false, message: "저장에 실패했습니다. 다시 시도해 주세요." };
+  }
+
   revalidatePath("/mypage");
+  return { ok: true, message: "저장되었습니다." };
 }
 
 export async function addAddress(formData: FormData) {
