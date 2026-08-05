@@ -60,7 +60,7 @@ export default async function MyPage() {
             닉네임
           </label>
           <p className="mt-0.5 font-numeric text-xs text-wabi-fg-muted">
-            커뮤니티·리뷰에 표시됩니다 · 2~20자
+            커뮤니티 및 리뷰에 표시됩니다 (2~20자)
           </p>
           <div className="mt-2 flex gap-2">
             <Input
@@ -129,10 +129,33 @@ export default async function MyPage() {
           className="mt-6 grid max-w-xl gap-3 sm:grid-cols-2"
         >
           {/* placeholder 는 접근 가능한 이름이 아니다(입력하면 사라진다) → aria-label 병기 */}
-          <Input name="recipient" required aria-label="받는 분" placeholder="받는 분" className="rounded-none" />
-          <Input name="phone" required aria-label="연락처" placeholder="연락처" className="rounded-none" />
-          <Input name="postcode" aria-label="우편번호" placeholder="우편번호" className="rounded-none" />
-          <Input name="address" required aria-label="주소" placeholder="주소" className="rounded-none" />
+          <Input
+            name="recipient"
+            required
+            aria-label="받는 분"
+            placeholder="받는 분"
+            className="rounded-none"
+          />
+          <Input
+            name="phone"
+            required
+            aria-label="연락처"
+            placeholder="연락처"
+            className="rounded-none"
+          />
+          <Input
+            name="postcode"
+            aria-label="우편번호"
+            placeholder="우편번호"
+            className="rounded-none"
+          />
+          <Input
+            name="address"
+            required
+            aria-label="주소"
+            placeholder="주소"
+            className="rounded-none"
+          />
           <Input
             name="detail"
             aria-label="상세주소"

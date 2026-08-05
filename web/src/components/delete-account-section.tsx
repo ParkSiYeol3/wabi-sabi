@@ -24,8 +24,8 @@ export function DeleteAccountSection() {
       {!open ? (
         <>
           <p className="mt-2 text-sm text-wabi-fg-muted">
-            탈퇴하면 계정과 배송지·위시리스트·장바구니·리뷰가 삭제되며 되돌릴 수
-            없습니다.
+            탈퇴하면 계정과 배송지, 위시리스트, 장바구니, 리뷰가 삭제되며 되돌릴
+            수 없습니다.
           </p>
           <Button
             type="button"
@@ -43,7 +43,7 @@ export function DeleteAccountSection() {
               탈퇴하면 되돌릴 수 없습니다.
             </p>
             <ul className="mt-2 ml-4 list-disc space-y-1 text-xs text-wabi-fg-muted">
-              <li>계정·배송지·위시리스트·장바구니·리뷰가 삭제됩니다.</li>
+              <li>계정, 배송지, 위시리스트, 장바구니, 리뷰가 삭제됩니다.</li>
               <li>
                 주문 내역과 문의 글은 법령에 따라 보관되며(전자상거래법), 작성자
                 정보만 삭제되어 조회할 수 없게 됩니다.
