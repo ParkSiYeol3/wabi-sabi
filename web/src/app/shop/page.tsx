@@ -25,8 +25,8 @@ export const metadata: Metadata = {
 
 const sorts: { key: ProductSort; label: string }[] = [
   { key: "newest", label: "신상품순" },
-  { key: "price_asc", label: "낮은가격순" },
-  { key: "price_desc", label: "높은가격순" },
+  { key: "price_asc", label: "낮은 가격순" },
+  { key: "price_desc", label: "높은 가격순" },
 ];
 
 type SP = ShopSP;
@@ -128,18 +128,20 @@ export default async function ShopPage({
           </button>
         </Form>
 
-        {/* 정렬 (WSB-009) */}
-        <div className="flex shrink-0 gap-4 text-xs">
+        {/* 정렬 (WSB-009) — 알약 버튼(대표님: 희미해서 잘 안 보임 → 진하게·버튼화).
+            선택된 정렬은 채워서 한눈에, 나머지는 또렷한 외곽선. 누르면 살짝 눌리는
+            press 피드백(active). */}
+        <div className="flex shrink-0 flex-wrap gap-2 text-xs">
           {sorts.map((s) => (
             <Link
               key={s.key}
               href={buildQuery(sp, { sort: s.key })}
               aria-current={sort === s.key ? "true" : undefined}
               className={cn(
-                "transition-colors",
+                "border px-3 py-1.5 transition active:scale-95",
                 sort === s.key
-                  ? "font-medium text-wabi-fg"
-                  : "text-wabi-fg-muted hover:text-wabi-fg",
+                  ? "border-wabi-fg bg-wabi-fg text-white"
+                  : "border-wabi-border text-wabi-fg hover:border-wabi-fg hover:bg-wabi-muted",
               )}
             >
               {s.label}
