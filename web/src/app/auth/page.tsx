@@ -63,6 +63,16 @@ function AuthForm() {
     const password = String(form.get("password") || "");
     const supabase = createClient();
 
+    // 명백한 플레이스홀더/예약 도메인(test.com·example.*·.test 등)은 실사용
+    // 이메일이 아니므로 가입·로그인 모두 즉시 차단(대표님 — test@test.com 같은
+    // 가짜 차단). 근본 유효성은 Supabase '이메일 확인'(+Resend SMTP)이 담당한다.
+    if (isPlaceholderEmail(email)) {
+      setError(
+        "사용할 수 없는 이메일입니다. 실제 사용하는 이메일 주소를 입력해 주세요.",
+      );
+      return;
+    }
+
     setLoading(true);
     try {
       if (tab === "login") {
@@ -93,7 +103,12 @@ function AuthForm() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { name } },
+          options: {
+            data: { name },
+            // 이메일 확인이 켜진 경우, 확인 링크가 우리 콜백으로 돌아와 세션을
+            // 교환하고 원래 목적지로 이동하게 한다.
+            emailRedirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirect)}`,
+          },
         });
         if (error) throw error;
         // 이메일 확인이 켜진 경우 session 이 null
@@ -166,7 +181,7 @@ function AuthForm() {
             type="email"
             required
             autoComplete="email"
-            className="rounded-none"
+            className="rounded-none font-numeric"
           />
         </Field>
         <Field label="비밀번호" htmlFor="password">
@@ -176,7 +191,7 @@ function AuthForm() {
             type="password"
             required
             autoComplete={tab === "login" ? "current-password" : "new-password"}
-            className="rounded-none"
+            className="rounded-none font-numeric"
             aria-describedby={tab === "signup" ? "password-hint" : undefined}
           />
           {tab === "signup" && (
@@ -193,18 +208,18 @@ function AuthForm() {
               type="password"
               required
               autoComplete="new-password"
-              className="rounded-none"
+              className="rounded-none font-numeric"
             />
           </Field>
         )}
 
         {error && (
-          <p className="text-xs text-red-700" role="alert">
+          <p className="font-numeric text-xs text-red-700" role="alert">
             {error}
           </p>
         )}
         {notice && (
-          <p className="text-xs text-wabi-fg" role="status">
+          <p className="font-numeric text-xs text-wabi-fg" role="status">
             {notice}
           </p>
         )}
@@ -246,6 +261,22 @@ function AuthForm() {
       </div>
     </div>
   );
+}
+
+// 명백한 플레이스홀더/예약 도메인 — 실사용 이메일이 아니므로 가입·로그인 차단.
+// RFC 2606 예약 도메인/TLD(example.*·.test·.invalid·.localhost) + test.com.
+// (근본적인 유효성 확인은 Supabase '이메일 확인'(+Resend SMTP)이 담당한다.)
+function isPlaceholderEmail(email: string): boolean {
+  const domain = email.split("@")[1]?.toLowerCase() ?? "";
+  if (!domain) return false;
+  const blocked = new Set([
+    "test.com",
+    "example.com",
+    "example.net",
+    "example.org",
+  ]);
+  const blockedTld = [".test", ".invalid", ".example", ".localhost"];
+  return blocked.has(domain) || blockedTld.some((t) => domain.endsWith(t));
 }
 
 // 소셜 브랜드 로고 — 인라인 SVG(self-host, CSP·외부요청 없음). 각 브랜드 가이드라인
