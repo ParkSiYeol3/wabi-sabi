@@ -36,9 +36,21 @@ export default async function InquiryDetailPage({
             )}
             {q.title}
           </h1>
-          <time className="mt-2 block font-numeric text-xs text-wabi-fg-muted">
-            {new Date(q.created_at).toLocaleDateString("ko-KR")}
-          </time>
+          <div className="mt-3 flex items-center gap-3">
+            {/* 답변 상태 배지 — 목록과 동일(답변완료=초록, 대기=회색) */}
+            <span
+              className={
+                q.answer
+                  ? "rounded-full border border-green-600/40 bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700"
+                  : "rounded-full border border-wabi-border bg-wabi-muted px-2.5 py-1 text-xs font-medium text-wabi-fg-muted"
+              }
+            >
+              {q.answer ? "답변완료" : "답변대기"}
+            </span>
+            <time className="font-numeric text-xs text-wabi-fg">
+              {new Date(q.created_at).toLocaleDateString("ko-KR")}
+            </time>
+          </div>
         </header>
 
         <div className="mt-8 whitespace-pre-wrap text-sm leading-7 text-wabi-fg">
