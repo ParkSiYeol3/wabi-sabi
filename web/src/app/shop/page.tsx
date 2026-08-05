@@ -3,7 +3,6 @@ import Link from "next/link";
 import Form from "next/form";
 import { Search, ChevronDown } from "lucide-react";
 import { Container } from "@/components/container";
-import { CtaLink } from "@/components/cta-link";
 import { ProductCard } from "@/components/product-card";
 import { Reveal } from "@/components/reveal";
 import { Input } from "@/components/ui/input";
@@ -82,8 +81,9 @@ export default async function ShopPage({
         </span>
       </div>
 
-      {/* 카테고리 (모바일·태블릿) — 드롭다운(대표님, 칩이 다 펼쳐져 난잡).
-          기본 접힘, 펴면 그룹별 목록. 데스크톱은 좌측 사이드바(#195). JS 없이
+      {/* 카테고리 (모바일·태블릿) — 드롭다운(대표님, 기본 접힘). 펴면 데스크톱
+          사이드바와 "똑같은 방식"의 그룹 목록을 그대로 재사용한다(대표님 — 웹처럼
+          TABLEWARE·OBJECTS 를 크게, 소분류를 그 아래로 나눠 깔끔하게). JS 없이
           details/summary 로 동작(CSP 무관), 요약엔 현재 선택 분류를 보여준다. */}
       <details className="group mt-8 lg:hidden">
         <summary className="flex cursor-pointer list-none items-center justify-between border border-wabi-border px-4 py-3 text-sm [&::-webkit-details-marker]:hidden">
@@ -94,53 +94,8 @@ export default async function ShopPage({
           </span>
           <ChevronDown className="size-4 shrink-0 text-wabi-fg-muted transition-transform group-open:rotate-180" />
         </summary>
-        <div className="mt-2 space-y-3 border border-wabi-border p-4">
-          <nav className="flex flex-wrap gap-2" aria-label="카테고리">
-            <FilterLink
-              href={buildQuery(sp, { category: undefined })}
-              active={!sp.category}
-            >
-              전체
-            </FilterLink>
-            <FilterLink
-              href={buildQuery(sp, { category: MONTHLY_SLUG })}
-              active={sp.category === MONTHLY_SLUG}
-              accent
-            >
-              <span aria-hidden className="mr-1">
-                ✦
-              </span>
-              이 달의 상품
-            </FilterLink>
-          </nav>
-
-          {/* 오늘의 와비사비 — "이 달의 상품" 바로 아래(대표님) */}
-          <CtaLink href="/today" label="오늘의 와비사비" />
-
-          {tree.map((c) => (
-            <nav
-              key={c.slug}
-              className="flex flex-wrap gap-2"
-              aria-label={`${c.ko} 분류`}
-            >
-              {/* 그룹 전체보기 — 대분류를 칩에서 빼는 대신 "[그룹] 전체" 로 유지 */}
-              <FilterLink
-                href={buildQuery(sp, { category: c.slug })}
-                active={sp.category === c.slug}
-              >
-                {c.ko} 전체
-              </FilterLink>
-              {c.children?.map((ch) => (
-                <FilterLink
-                  key={ch.slug}
-                  href={buildQuery(sp, { category: ch.slug })}
-                  active={sp.category === ch.slug}
-                >
-                  {ch.ko}
-                </FilterLink>
-              ))}
-            </nav>
-          ))}
+        <div className="mt-2 border border-wabi-border p-4">
+          <ShopSidebar sp={sp} tree={tree} />
         </div>
       </details>
 
@@ -258,41 +213,5 @@ export default async function ShopPage({
         </div>
       </div>
     </Container>
-  );
-}
-
-function FilterLink({
-  href,
-  active,
-  current = active,
-  accent = false,
-  children,
-}: {
-  href: string;
-  /** 시각적 강조(그룹 활성 포함) */
-  active: boolean;
-  /** 정확히 현재 필터인 링크만 aria-current — 기본은 active 와 동일 */
-  current?: boolean;
-  /** 이 달의 상품처럼 특별 강조 — 액센트 색(대표님). 활성 시 채워진다. */
-  accent?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      aria-current={current ? "true" : undefined}
-      className={cn(
-        "border px-4 py-1.5 text-xs transition-colors",
-        accent
-          ? active
-            ? "border-wabi-accent bg-wabi-accent text-white"
-            : "border-wabi-accent text-wabi-accent hover:bg-wabi-accent hover:text-white"
-          : active
-            ? "border-wabi-fg text-wabi-fg"
-            : "border-wabi-border text-wabi-fg-muted hover:border-wabi-fg hover:text-wabi-fg",
-      )}
-    >
-      {children}
-    </Link>
   );
 }

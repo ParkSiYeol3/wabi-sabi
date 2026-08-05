@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { MONTHLY_SLUG, type CategoryNode } from "@/lib/site";
 import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
-import { CtaLink } from "@/components/cta-link";
 import { cn } from "@/lib/utils";
 
-// Shop 좌측 카테고리 사이드바 (#195, 대표님 피드백 — biomedium.kr 참고).
-// 대분류 토글(details/summary — JS·라이브러리 없이 동작, CSP 무관) 아래 소분류.
-// 현재 선택이 속한 대분류는 열린 상태로 렌더한다(open). 데스크톱(lg+) 전용 —
-// 모바일은 페이지의 칩 2줄이 담당한다.
+// Shop 카테고리 사이드바 (#195). 대분류 헤더 + 그 아래 소분류. 데스크톱은 좌측
+// 고정 열, 모바일은 shop 페이지의 "분류" 드롭다운 안에서 이 컴포넌트를 그대로
+// 재사용한다(대표님 — 웹과 똑같은 그룹 방식으로 통일). 너비는 반응형.
 
 function SideLink({
   href,
@@ -47,7 +45,7 @@ export function ShopSidebar({
   const current = sp.category;
 
   return (
-    <nav aria-label="카테고리" className="w-44 shrink-0">
+    <nav aria-label="카테고리" className="w-full lg:w-44 lg:shrink-0">
       <SideLink href={buildShopQuery(sp, { category: undefined })} active={!current}>
         전체
       </SideLink>
@@ -63,9 +61,18 @@ export function ShopSidebar({
         이 달의 상품
       </SideLink>
 
-      {/* 오늘의 와비사비(자유게시판) — "이 달의 상품" 바로 아래(대표님). 홈 CTA 와
-          같은 채워지는 아웃라인 버튼으로 눈에 띄게. */}
-      <CtaLink href="/today" label="오늘의 와비사비" full className="mt-3" />
+      {/* 오늘의 와비사비(자유게시판) — "이 달의 상품" 바로 아래(대표님). 이 달의
+          상품과 같은 스타일로 통일(대표님) — 버튼이 아니라 같은 액센트 텍스트 링크. */}
+      <SideLink
+        href="/today"
+        active={false}
+        className="text-wabi-accent hover:text-wabi-accent"
+      >
+        <span aria-hidden className="mr-1">
+          ✦
+        </span>
+        오늘의 와비사비
+      </SideLink>
 
       {/* 대분류 그룹 — 두 그룹의 소분류를 항상 펼쳐 보여준다(대표님 — 대분류를
           먼저 고르지 않아도 소분류를 바로 선택). 대분류 헤더는 그 그룹 "전체보기"
