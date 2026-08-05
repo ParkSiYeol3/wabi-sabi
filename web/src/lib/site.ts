@@ -49,15 +49,14 @@ export const legalNav = [
   { label: "교환·환불 안내", href: "/legal/refund" },
 ] as const;
 
-// 내비 — HOME·COLLECTION·SHOWROOM·NOTICE·Q&A (대표님 페이지 분류 확정).
-//  · HOME=나선형 여정(/), COLLECTION=전체 상품(/shop, 라벨은 "SHOP" 대신 자연스러운
-//    큐레이션 톤 유지), SHOWROOM=오시는 길+브랜드 소개(/about),
-//    NOTICE=공지사항(/notice), Q&A=문의(/inquiry).
+// 내비 — HOME·SHOP·SHOWROOM·NOTICE·Q&A (대표님 페이지 분류 확정).
+//  · HOME=나선형 여정(/), SHOP=전체 상품(/shop), SHOWROOM=오시는 길+브랜드 소개
+//    (/about), NOTICE=공지사항(/notice), Q&A=문의(/inquiry).
 //  · GIFT·MAKERS 는 nav 에서 제외(대표님 분류에서 빠짐) — 페이지(/gift·/makers)는
 //    남겨 두어 필요 시 되살린다.
 export const nav = [
   { label: "HOME", href: "/" },
-  { label: "COLLECTION", href: "/shop" },
+  { label: "SHOP", href: "/shop" },
   { label: "SHOWROOM", href: "/about" },
   { label: "NOTICE", href: "/notice" },
   { label: "Q&A", href: "/inquiry" },
