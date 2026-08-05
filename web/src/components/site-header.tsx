@@ -20,15 +20,13 @@ export function SiteHeader() {
   const mounted = useMounted();
   const user = useAuthStore((s) => s.user);
   const isAdmin = useAuthStore((s) => s.isAdmin);
+  // 표시용 아바타는 profiles.avatar_url(고정값) — 세션 메타를 쓰면 같은 계정이라도
+  // 로그인한 소셜(provider)에 따라 아바타가 바뀌어 흔들렸다(#0046). 스토어의
+  // avatarUrl 은 AuthProvider 가 profiles 에서 읽어 채운다.
+  const storedAvatar = useAuthStore((s) => s.avatarUrl);
   const accountHref = mounted && user ? "/mypage" : "/auth";
   const showAdmin = mounted && isAdmin;
-  // 소셜 로그인 프로필 사진 — 로그인 시 마이페이지 아이콘 대신 아바타로(대표님).
-  // Google=avatar_url/picture, Kakao=avatar_url. 없으면 기본 아이콘.
-  const meta = user?.user_metadata as
-    | { avatar_url?: string; picture?: string }
-    | undefined;
-  const avatarUrl =
-    mounted && user ? (meta?.avatar_url ?? meta?.picture ?? null) : null;
+  const avatarUrl = mounted && user ? storedAvatar : null;
 
   // 홈은 곡선만으로 시작하는 무드 페이지(#197 대표님 피드백) — 상단바 자체를 없앤다.
   // 탐색은 여정 끝 CTA(Shop)와 푸터가 담당한다.

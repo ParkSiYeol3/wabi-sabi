@@ -10,6 +10,7 @@ import { loadServerCart, mergeGuestCart } from "@/lib/cart-sync";
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const setUser = useAuthStore((s) => s.setUser);
   const setAdmin = useAuthStore((s) => s.setAdmin);
+  const setAvatarUrl = useAuthStore((s) => s.setAvatarUrl);
   // 장바구니 바인딩 상태 — 중복 병합(수량 두 배) 방지용.
   const boundUserRef = useRef<string | null>(null);
 
@@ -25,18 +26,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const supabase = createClient();
 
-    // 로그인 사용자의 role 조회 → 어드민 플래그(헤더 링크 등 UI용). RLS: 본인 profile 만.
-    const syncAdmin = async (userId: string | undefined) => {
+    // 로그인 사용자의 profiles 조회 → 어드민 플래그 + 표시용 아바타(헤더 등 UI용).
+    // RLS: 본인 profile 만. 아바타는 profiles.avatar_url(고정값)을 써 provider 가
+    // 바뀌어도 헤더 아바타가 흔들리지 않게 한다.
+    const syncProfile = async (userId: string | undefined) => {
       if (!userId) {
         setAdmin(false);
+        setAvatarUrl(null);
         return;
       }
       const { data } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, avatar_url")
         .eq("id", userId)
         .maybeSingle();
       setAdmin(data?.role === "admin");
+      setAvatarUrl((data?.avatar_url as string | null) ?? null);
     };
 
     // 계정 장바구니 동기화. 명시적 로그인(SIGNED_IN)에만 게스트 병합,
@@ -67,19 +72,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user ?? null);
-      void syncAdmin(data.user?.id);
+      void syncProfile(data.user?.id);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
-      void syncAdmin(session?.user?.id);
+      void syncProfile(session?.user?.id);
       void syncCart(event, session?.user?.id);
     });
 
     return () => subscription.unsubscribe();
-  }, [setUser, setAdmin]);
+  }, [setUser, setAdmin, setAvatarUrl]);
 
   return <>{children}</>;
 }
