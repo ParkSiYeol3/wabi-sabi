@@ -26,8 +26,8 @@ export async function createNotice(formData: FormData) {
     targetId: inserted?.id ?? null,
     meta: { title },
   });
-  // 태그 무효화 — unstable_cache(getNotices/getNotice)를 즉시 갱신(상단 공지 바
-  // 포함 전 경로). revalidatePath 는 경로 캐시만 지워 데이터 캐시가 남았다.
+  // 태그 무효화 — unstable_cache(getNotices/getNotice)를 즉시 갱신(/notice 목록·
+  // 상세). revalidatePath 는 경로 캐시만 지워 데이터 캐시가 남았다.
   // updateTag: 서버 액션 전용 즉시 무효화(read-your-own-writes, Next 16).
   updateTag("notices");
   revalidatePath("/admin/notices");

@@ -9,8 +9,6 @@ import { PrepNotice } from "@/components/prep-notice";
 import { getPrepNotice } from "@/lib/queries/content";
 import { AmbientPlayer } from "@/components/ambient-player";
 import { SiteHeader } from "@/components/site-header";
-import { NoticeBar } from "@/components/notice-bar";
-import { getNotices } from "@/lib/queries/notices";
 import { SiteFooter } from "@/components/site-footer";
 import { HideOnAdmin } from "@/components/hide-on-admin";
 import { SITE_URL } from "@/lib/site-url";
@@ -119,9 +117,6 @@ export default async function RootLayout({
   // 정식 오픈 준비중 안내(대표님) — 전역 마운트로 홈뿐 아니라 검색·링크로 상품
   // 페이지에 바로 들어온 손님도 결제 전에 안내를 본다. 캐시된 조회라 TTFB 영향 미미.
   const prepNotice = await getPrepNotice();
-  // 상단 공지 바용 최신 공지(대표님 — 공지 노출 강화). 캐시된 목록의 첫 항목(최신).
-  // 홈·어드민 제외는 NoticeBar 내부에서 pathname 으로 판정한다.
-  const [latestNotice] = await getNotices();
   return (
     <html
       lang="ko"
@@ -146,9 +141,6 @@ export default async function RootLayout({
           >
             본문으로 건너뛰기
           </a>
-          {latestNotice && (
-            <NoticeBar id={latestNotice.id} title={latestNotice.title} />
-          )}
           <SiteHeader />
           <main id="main-content" className="flex-1">
             {children}
