@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Form from "next/form";
-import { Search, ChevronDown } from "lucide-react";
+import { Search } from "lucide-react";
 import { Container } from "@/components/container";
 import { ProductCard } from "@/components/product-card";
 import { Reveal } from "@/components/reveal";
 import { Input } from "@/components/ui/input";
 import { MONTHLY_SLUG } from "@/lib/site";
 import { ShopSidebar } from "@/components/shop-sidebar";
+import { MobileCategoryDropdown } from "@/components/mobile-category-dropdown";
 import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
 import {
   getProducts,
@@ -82,22 +83,12 @@ export default async function ShopPage({
       </div>
 
       {/* 카테고리 (모바일·태블릿) — 드롭다운(대표님, 기본 접힘). 펴면 데스크톱
-          사이드바와 "똑같은 방식"의 그룹 목록을 그대로 재사용한다(대표님 — 웹처럼
-          TABLEWARE·OBJECTS 를 크게, 소분류를 그 아래로 나눠 깔끔하게). JS 없이
-          details/summary 로 동작(CSP 무관), 요약엔 현재 선택 분류를 보여준다. */}
-      <details className="group mt-8 lg:hidden">
-        <summary className="flex cursor-pointer list-none items-center justify-between border border-wabi-border px-4 py-3 text-sm [&::-webkit-details-marker]:hidden">
-          <span>
-            <span className="text-wabi-fg-muted">분류</span>
-            <span className="mx-2 text-wabi-border">·</span>
-            {catLabel}
-          </span>
-          <ChevronDown className="size-4 shrink-0 text-wabi-fg-muted transition-transform group-open:rotate-180" />
-        </summary>
-        <div className="mt-2 border border-wabi-border p-4">
-          <ShopSidebar sp={sp} tree={tree} />
-        </div>
-      </details>
+          사이드바와 "똑같은 방식"의 그룹 목록을 그대로 재사용한다(웹처럼
+          TABLEWARE·OBJECTS 를 크게, 소분류를 그 아래로). 항목을 누르면 자동으로
+          닫혀 고른 분류의 상품이 바로 보인다(MobileCategoryDropdown). */}
+      <MobileCategoryDropdown label={catLabel}>
+        <ShopSidebar sp={sp} tree={tree} />
+      </MobileCategoryDropdown>
 
       <div className="mt-8 flex items-start gap-10">
         {/* 데스크톱 좌측 사이드바 — 소분류 토글 (#195, biomedium 참고) */}
