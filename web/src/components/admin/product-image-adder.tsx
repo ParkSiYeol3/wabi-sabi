@@ -3,6 +3,7 @@
 import { useActionState, useRef } from "react";
 import { addProductImages } from "@/app/admin/products/actions";
 import type { ActionResult } from "@/app/admin/products/types";
+import { adminAction } from "@/components/admin/ui";
 
 // 상품 행 이미지 추가 폼 (클라이언트) — 업로드 결과(성공/실패 사유)를 인라인 표시.
 export function ProductImageAdder({ productId }: { productId: string }) {
@@ -17,27 +18,28 @@ export function ProductImageAdder({ productId }: { productId: string }) {
   );
 
   return (
-    <form action={formAction} className="flex flex-col gap-1">
+    <form action={formAction} className="flex flex-col gap-2">
       <input type="hidden" name="id" value={productId} />
+      {/* 파일 선택 — 네이티브 입력의 "파일 선택" 버튼 부분(file:)을 브랜드 버튼으로 */}
       <input
         ref={fileRef}
         type="file"
         name="images"
         multiple
         accept="image/png,image/jpeg,image/webp"
-        className="w-36 cursor-pointer text-[10px] file:mr-2 file:cursor-pointer file:border file:border-wabi-border file:bg-transparent file:px-2 file:py-1 file:text-[10px] file:text-wabi-fg file:transition-colors hover:file:border-wabi-fg hover:file:bg-wabi-muted"
+        className="w-48 cursor-pointer text-xs text-wabi-fg-muted file:mr-2 file:cursor-pointer file:rounded-md file:border file:border-wabi-border file:bg-transparent file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-wabi-fg file:transition-colors hover:file:border-wabi-fg hover:file:bg-wabi-muted"
       />
       <button
         type="submit"
         disabled={pending}
-        className="cursor-pointer self-start text-xs text-wabi-accent underline transition-opacity hover:opacity-70 disabled:opacity-50"
+        className={adminAction({ tone: "outline", className: "self-start" })}
       >
         {pending ? "업로드 중…" : "이미지 추가"}
       </button>
       {state && (
         <p
           role="status"
-          className={`max-w-40 text-[10px] ${state.ok ? "text-wabi-accent" : "text-red-700"}`}
+          className={`max-w-48 text-xs ${state.ok ? "text-wabi-accent" : "text-red-700"}`}
         >
           {state.message}
         </p>
