@@ -23,9 +23,7 @@ export default async function Home({
     await Promise.all([getHomeData(), searchParams]);
 
   return (
-    <div
-      className="overflow-x-clip bg-[#f3ebdd] text-[#423c30] [--ws-mono:var(--font-cormorant),var(--font-maruburi),var(--font-noto-serif-jp),serif] [--ws-serif:var(--font-cormorant),var(--font-maruburi),var(--font-noto-serif-jp),serif]"
-    >
+    <div className="overflow-x-clip bg-[#f3ebdd] text-[#423c30] [--ws-mono:var(--font-cormorant),var(--font-maruburi),var(--font-noto-serif-jp),serif] [--ws-serif:var(--font-cormorant),var(--font-maruburi),var(--font-noto-serif-jp),serif]">
       {/* 휠 스크롤 이징 — 홈에서만 (#197 6차) */}
       <SmoothScroll />
       {left === "1" && (
@@ -36,11 +34,9 @@ export default async function Home({
 
       {/* ── 진입 즉시 곡선만 (#197 대표님 무드 — 코멘트·로고 일절 없음).
            스크린리더용 페이지 제목만 숨김 제공. ── */}
-      {/* SEO 롱테일 키워드 — 홈은 곡선 무드라 시각적 제목이 없어, 크롤러·스크린리더용
-          H1 에 브랜드+지역 키워드를 담는다(천안·신부동·그릇·편집샵). */}
-      <h1 className="sr-only">
-        와비사비 WABI-SABI — 천안 신부동 그릇·생활소품 편집샵
-      </h1>
+      {/* 홈은 곡선 무드라 시각적 제목이 없어, 크롤러·스크린리더용 H1 에 브랜드명만
+          둔다(지역명은 대표님 요청으로 제외). */}
+      <h1 className="sr-only">와비사비 WABI-SABI</h1>
       <section className="pb-0 pt-6 md:pt-10">
         <HelixJourney pillarLabels={pillarLabels} pillarBodies={pillars} />
       </section>
