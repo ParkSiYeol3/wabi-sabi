@@ -39,7 +39,7 @@ export default async function Home({
       {/* SEO 롱테일 키워드 — 홈은 곡선 무드라 시각적 제목이 없어, 크롤러·스크린리더용
           H1 에 브랜드+지역 키워드를 담는다(천안·신부동·그릇·편집샵). */}
       <h1 className="sr-only">
-        와비사비 WABI-SABI — 천안 신부동 수공예 그릇·생활소품 편집샵
+        와비사비 WABI-SABI — 천안 신부동 그릇·생활소품 편집샵
       </h1>
       <section className="pb-0 pt-6 md:pt-10">
         <HelixJourney pillarLabels={pillarLabels} pillarBodies={pillars} />

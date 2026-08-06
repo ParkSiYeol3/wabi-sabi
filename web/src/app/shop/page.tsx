@@ -20,7 +20,8 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "상품",
-  description: "WABI-SABI 수공예 도자기·생활 오브제 컬렉션",
+  description:
+    "와비사비가 고른 도자기와 생활 오브제. 접시·볼·컵·다기부터 액세서리·생활소품까지, 오래 곁에 두고 싶은 기물을 큐레이션합니다.",
 };
 
 const sorts: { key: ProductSort; label: string }[] = [
