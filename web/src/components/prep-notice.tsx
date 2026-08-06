@@ -79,7 +79,7 @@ export function PrepNotice({
           id="prep-notice-title"
           className="mt-3 text-lg font-medium text-wabi-fg"
         >
-          정식 오픈 준비중입니다
+          정식 오픈 준비중입니다.
         </h2>
         <p className="mt-3 whitespace-pre-line text-sm leading-7 text-wabi-fg-muted">
           {text}

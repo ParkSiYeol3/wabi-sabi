@@ -5,7 +5,7 @@ import { getNotices } from "@/lib/queries/notices";
 
 export const metadata: Metadata = {
   title: "공지사항",
-  description: "WABI-SABI 공지사항",
+  description: "와비사비 공지사항",
 };
 
 // 쿠키·searchParams 를 안 읽어 기본값이면 빌드 타임 정적 프리렌더 대상이 되는데,

@@ -42,7 +42,7 @@ export const HOME_CTA_KEY = "home_cta";
 export const PREP_NOTICE_KEY = "prep_notice"; // 토글: 값 "on" = 표시
 export const PREP_NOTICE_TEXT_KEY = "prep_notice_text"; // 안내 본문(편집 가능)
 export const DEFAULT_PREP_NOTICE_TEXT =
-  "지금은 정식 오픈을 준비하는 기간입니다. 상품과 결제가 곧 열립니다. 둘러보시는 건 자유로우니 편히 구경해 주세요.";
+  "지금은 정식 오픈을 준비하는 기간입니다. 둘러보시는 건 자유로우니 편히 구경해 주세요.";
 
 // 편집 가능한 전체 키 — 액션 enum·타입 안전의 단일 출처.
 export const CONTENT_KEYS = [
@@ -55,17 +55,19 @@ export const CONTENT_KEYS = [
 export type ContentKey = (typeof CONTENT_KEYS)[number];
 
 // 철학 소개 기본 문구 — 문단은 빈 줄로 구분한다(렌더 시 <p> 로 분리).
-export const DEFAULT_PHILOSOPHY = `わび-さび (Wabi-sabi)는 불완전함과 무상함의 아름다움을 받아들이는 일본의 미학입니다.
+export const DEFAULT_PHILOSOPHY = `わび-さび (WABI-SABI)는 불완전함과 무상함의 아름다움을 받아들이는 일본의 미학입니다.
 
-우리는 시간의 흔적이 담긴 수공예 도자기와 생활 오브제를 큐레이션합니다. 각 제품은 장인의 손길이 닿은 유일무이한 작품입니다.
-
-10년 넘게 오가바의 도자기로 만든 라면을 먹어온 우리가, 생각한 도자기를 만들어주었으면 하고 오가바 작가님께 주문을 했습니다. 주문하신 분들만이 가지실 수 있는 특별한 작품들입니다.`;
+저희는 시간의 흔적이 담긴 기물과 오브제를 큐레이션합니다. 각 기물은 장인의 손길이 닿은 유일무이한 작품입니다.`;
 
 // 홈 철학 3주 본문 기본값(한자는 helix-journey 에 고정). 키 순서와 1:1 대응.
-export const DEFAULT_PILLARS: Record<(typeof HOME_PILLAR_KEYS)[number], string> = {
+export const DEFAULT_PILLARS: Record<
+  (typeof HOME_PILLAR_KEYS)[number],
+  string
+> = {
   home_pillar_wabi: "소박함과 절제. 덜어낼수록 선명해지는 본질을 담습니다.",
   home_pillar_sabi: "시간의 흔적. 낡음과 결이 만드는 고요한 깊이를 아낍니다.",
-  home_pillar_select: "오래 곁에 둘 것만을. 만든 이와 쓰는 이의 하루를 잇습니다.",
+  home_pillar_select:
+    "오래 곁에 둘 것만을. 만든 이와 쓰는 이의 하루를 잇습니다.",
 };
 
 // 홈 철학 3주 제목(라벨) 기본값 — 편집 가능(#247). 키 순서와 1:1 대응.
@@ -73,9 +75,9 @@ export const DEFAULT_PILLAR_LABELS: Record<
   (typeof HOME_PILLAR_LABEL_KEYS)[number],
   string
 > = {
-  home_pillar_wabi_label: "01 — 와비 / WABI",
-  home_pillar_sabi_label: "02 — 사비 / SABI",
-  home_pillar_select_label: "03 — 큐레이션 / SELECT",
+  home_pillar_wabi_label: "01 와비 / WABI",
+  home_pillar_sabi_label: "02 사비 / SABI",
+  home_pillar_select_label: "03 큐레이션 / SELECT",
 };
 
 export const DEFAULT_HOME_CTA = "당신의 하루에 놓일 그릇, 천천히 둘러보세요 →";

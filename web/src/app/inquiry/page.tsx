@@ -7,7 +7,7 @@ import { getInquiries } from "@/lib/queries/inquiries";
 
 export const metadata: Metadata = {
   title: "문의",
-  description: "WABI-SABI 1:1 문의",
+  description: "와비사비 1:1 문의입니다. 편하게 남겨주세요.",
 };
 
 export default async function InquiryListPage() {
