@@ -59,6 +59,11 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   // 미사용 브라우저 권한 차단 (결제 위젯은 payment 필요)
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(self)" },
+  // Cross-Origin-Opener-Policy — cross-origin 문서가 window.opener 로 우리 창 핸들을
+  // 잡아 조작(탭내빙)하거나 XS-leak 으로 상태를 훔치는 것을 차단. `same-origin` 은
+  // 우리가 여는 팝업(토스 결제·소셜 OAuth 흐름)까지 격리해 postMessage 가 끊길 수
+  // 있어, 팝업 통신은 살리고 opener 격리는 얻는 `same-origin-allow-popups` 를 쓴다.
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
   // CSP 2단계 — 강제 적용 (위반 시 차단 + /api/csp-report 보고)
   { key: "Content-Security-Policy", value: csp },
   // CSP report-to 대상 엔드포인트 등록 (Reporting API)
