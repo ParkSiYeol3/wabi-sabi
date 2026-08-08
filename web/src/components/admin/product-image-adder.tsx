@@ -5,33 +5,40 @@ import { addProductImages } from "@/app/admin/products/actions";
 import type { ActionResult } from "@/app/admin/products/types";
 import { adminAction } from "@/components/admin/ui";
 
-// 상품 행 이미지 추가 폼 (클라이언트) — 업로드 결과(성공/실패 사유)를 인라인 표시.
+// 상품 행 이미지 추가 — "이미지 추가" 한 번으로 파일 선택창을 열고, 파일을 고르면
+// 곧바로 업로드한다(대표님 — 파일 선택 + 추가 두 단계가 헷갈림). 네이티브 file
+// 입력은 숨기고 버튼이 대신 연다. onChange 에서 폼을 즉시 제출(requestSubmit).
 export function ProductImageAdder({ productId }: { productId: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(
     async (prev, formData) => {
       const result = await addProductImages(prev, formData);
-      if (result.ok && fileRef.current) fileRef.current.value = "";
+      // 같은 파일을 다시 고를 때도 onChange 가 다시 발생하도록 값을 비운다.
+      if (fileRef.current) fileRef.current.value = "";
       return result;
     },
     null,
   );
 
   return (
-    <form action={formAction} className="flex flex-col gap-2">
+    <form ref={formRef} action={formAction} className="flex flex-col gap-1">
       <input type="hidden" name="id" value={productId} />
-      {/* 파일 선택 — 네이티브 입력의 "파일 선택" 버튼 부분(file:)을 브랜드 버튼으로 */}
       <input
         ref={fileRef}
         type="file"
         name="images"
         multiple
         accept="image/png,image/jpeg,image/webp"
-        className="w-48 cursor-pointer text-xs text-wabi-fg-muted file:mr-2 file:cursor-pointer file:rounded-md file:border file:border-wabi-border file:bg-transparent file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-wabi-fg file:transition-colors hover:file:border-wabi-fg hover:file:bg-wabi-muted"
+        className="hidden"
+        onChange={() => {
+          if (fileRef.current?.files?.length) formRef.current?.requestSubmit();
+        }}
       />
       <button
-        type="submit"
+        type="button"
         disabled={pending}
+        onClick={() => fileRef.current?.click()}
         className={adminAction({ tone: "outline", className: "self-start" })}
       >
         {pending ? "업로드 중…" : "이미지 추가"}
