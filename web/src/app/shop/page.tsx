@@ -8,7 +8,7 @@ import { Reveal } from "@/components/reveal";
 import { Input } from "@/components/ui/input";
 import { MONTHLY_SLUG } from "@/lib/site";
 import { ShopSidebar } from "@/components/shop-sidebar";
-import { MobileCategoryDropdown } from "@/components/mobile-category-dropdown";
+import { MobileCategoryTabs } from "@/components/mobile-category-tabs";
 import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
 import {
   getProducts,
@@ -70,21 +70,14 @@ export default async function ShopPage({
           .find((c) => c.slug === sp.category)?.ko ??
         "Shop");
 
-  // 모바일 분류 드롭다운 요약에 쓸 현재 선택 라벨 — 미선택은 "상품".
-  const catLabel = sp.category ? heading : "상품";
-
   return (
     <Container className="py-16">
       {/* 헤더 — 타이틀 ("N개 상품" 표기는 대표님 요청으로 제거) */}
       <h1 className="text-2xl font-semibold tracking-wide">{heading}</h1>
 
-      {/* 카테고리 (모바일·태블릿) — 드롭다운(대표님, 기본 접힘). 펴면 데스크톱
-          사이드바와 "똑같은 방식"의 그룹 목록을 그대로 재사용한다(웹처럼
-          TABLEWARE·OBJECTS 를 크게, 소분류를 그 아래로). 항목을 누르면 자동으로
-          닫혀 고른 분류의 상품이 바로 보인다(MobileCategoryDropdown). */}
-      <MobileCategoryDropdown label={catLabel}>
-        <ShopSidebar sp={sp} tree={tree} />
-      </MobileCategoryDropdown>
+      {/* 카테고리 (모바일·태블릿) — 한눈에 보이는 플랫 탭바(대표님, Have Haus 참고).
+          드롭다운은 직관성이 낮아 걷어냈다. 데스크톱은 좌측 사이드바 그대로. */}
+      <MobileCategoryTabs sp={sp} tree={tree} />
 
       <div className="mt-8 flex items-start gap-10">
         {/* 데스크톱 좌측 사이드바 — 소분류 토글 (#195, biomedium 참고) */}
