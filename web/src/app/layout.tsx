@@ -74,6 +74,18 @@ export const metadata: Metadata = {
   description:
     "와비사비는 순간의 아름다움보다 시간이 만들어내는 가치를 믿습니다. 매일 손이 가는 기물과 공간에 스며드는 오브제, 오래 곁에 두고 싶은 물건을 큐레이션합니다.",
   metadataBase: new URL(SITE_URL),
+  // 아이콘은 관례 경로(public)로 clean URL 제공 — app/icon 규약은 해시 쿼리스트링
+  // (?icon.<hash>)을 붙여 구글 파비콘 크롤러(/favicon.ico 우선)·iOS A2HS 가 종종
+  // 무시하고 옛 캐시·og:image 로 폴백했다. /favicon.ico·/apple-touch-icon.png 를
+  // 실제로 두고 여기서 clean 링크를 emit 한다.
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
+  },
   openGraph: {
     title: "와비사비 WABI-SABI",
     description:
