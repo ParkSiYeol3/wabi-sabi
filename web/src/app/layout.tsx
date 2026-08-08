@@ -58,6 +58,9 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   minimumScale: 1,
+  // 모바일 브라우저 크롬(주소창·상태바)을 브랜드 크림으로 물들인다 — 사이트는
+  // 다크모드 없이 항상 크림(#f3ebdd)이라 단일 색으로 충분(대표님 모바일 우선).
+  themeColor: "#f3ebdd",
 };
 
 export const metadata: Metadata = {
@@ -77,6 +80,20 @@ export const metadata: Metadata = {
       "순간의 아름다움보다 시간이 만들어내는 가치를 믿는 곳. 오래 곁에 두고 싶은 기물과 오브제를 큐레이션합니다.",
     type: "website",
     locale: "ko_KR",
+    siteName: "와비사비 WABI-SABI",
+  },
+  // 트위터/X 카드 — 링크 공유 시 큰 이미지 카드로 노출(og:image 폴백 사용).
+  twitter: {
+    card: "summary_large_image",
+    title: "와비사비 WABI-SABI",
+    description:
+      "순간의 아름다움보다 시간이 만들어내는 가치를 믿는 곳. 오래 곁에 두고 싶은 기물과 오브제를 큐레이션합니다.",
+  },
+  // iOS "홈 화면에 추가" — standalone 실행 시 상단 제목·상태바 스타일.
+  appleWebApp: {
+    capable: true,
+    title: "와비사비",
+    statusBarStyle: "default",
   },
   // 검색엔진 소유확인 (SEO — 서치콘솔/서치어드바이저 등록). 각 콘솔에서 받은
   // content 값. google 은 metadata.verification.google 로 표준 emit, 네이버는
