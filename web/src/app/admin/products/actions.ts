@@ -288,6 +288,48 @@ export async function removeProductImage(formData: FormData) {
   revalidatePath(`/shop/${id}`);
 }
 
+// 상품 이미지 순서 이동 (배열 스왑) — 상세 페이지 스캐터 위치는 images 배열 순서로
+// 결정되므로(첫 장=대표 히어로, 이후가 순서대로 불규칙 슬롯), 대표님이 사진 위치를
+// 의도해 배치할 수 있게 한 칸씩 앞(left)/뒤(right)로 옮긴다. url 이 중복될 수 있어
+// 제거와 달리 인덱스 기반으로 스왑한다.
+export async function moveProductImage(formData: FormData) {
+  const user = await requireAdmin();
+  if (!adminConfigured()) return;
+
+  const id = parseUuid(formData.get("id"));
+  const from = Number(formData.get("from"));
+  const dir = String(formData.get("dir") || ""); // "left" | "right"
+  if (!id || !Number.isInteger(from) || (dir !== "left" && dir !== "right")) return;
+
+  const supabase = createAdminClient();
+  const { data: product } = await supabase
+    .from("products")
+    .select("images")
+    .eq("id", id)
+    .single();
+  const current: string[] = Array.isArray(product?.images)
+    ? (product!.images as string[])
+    : [];
+
+  const to = dir === "left" ? from - 1 : from + 1;
+  // 범위 밖(끝단에서 더 못 감)이면 조용히 무시.
+  if (from < 0 || from >= current.length || to < 0 || to >= current.length) return;
+
+  const next = [...current];
+  [next[from], next[to]] = [next[to], next[from]];
+  await supabase.from("products").update({ images: next }).eq("id", id);
+  await logAdminAction(user, {
+    action: "product.move_image",
+    targetTable: "products",
+    targetId: id,
+    meta: { from, to },
+  });
+  revalidatePath("/admin/products");
+  revalidatePath("/");
+  revalidatePath("/shop");
+  revalidatePath(`/shop/${id}`);
+}
+
 export async function toggleMonthly(formData: FormData) {
   const user = await requireAdmin();
   if (!adminConfigured()) return;
