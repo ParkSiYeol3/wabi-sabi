@@ -3,8 +3,11 @@ import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { MomentForm } from "@/components/moment/moment-form";
 import { MomentGrid } from "@/components/moment/moment-grid";
+import { ShopSidebar } from "@/components/shop/shop-sidebar";
+import { MobileCategoryTabs } from "@/components/shop/mobile-category-tabs";
 import { createClient } from "@/lib/supabase/server";
 import { getMomentsPage, MOMENTS_PAGE_SIZE } from "@/lib/queries/moments";
+import { getCategoryTree } from "@/lib/queries/categories";
 
 export const metadata: Metadata = {
   title: "오늘의 와비사비",
@@ -18,8 +21,12 @@ export default async function TodayPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 첫 페이지(12) — 이후는 그리드의 "더보기"가 이어붙인다.
-  const { moments, hasMore } = await getMomentsPage(0, MOMENTS_PAGE_SIZE);
+  // 첫 페이지(12) — 이후는 그리드의 "더보기"가 이어붙인다. 카테고리 트리는
+  // shop 과 동일한 분류 내비를 /today 에도 보여주기 위함(대표님) — 병렬 조회.
+  const [{ moments, hasMore }, tree] = await Promise.all([
+    getMomentsPage(0, MOMENTS_PAGE_SIZE),
+    getCategoryTree(),
+  ]);
 
   return (
     <Container className="py-16">
@@ -29,31 +36,46 @@ export default async function TodayPage() {
         오늘의 한 컷을 함께 남겨주세요.
       </p>
 
+      {/* shop 과 동일한 분류 내비(대표님) — 분류를 누르면 해당 shop 카테고리로
+          이동한다(buildShopQuery 가 /shop URL 을 만든다). "오늘의 와비사비"는
+          현재 위치로 표시. 데스크톱은 좌측 사이드바, 모바일은 상단 가로 탭. */}
       <div className="mt-8">
-        {user ? (
-          <MomentForm />
-        ) : (
-          <p className="border border-wabi-border bg-wabi-subtle/40 px-4 py-3 text-sm text-wabi-fg-muted">
-            <Link
-              href="/auth?redirect=/today"
-              className="font-medium text-wabi-fg underline underline-offset-2"
-            >
-              로그인
-            </Link>{" "}
-            후 사진과 이야기를 남길 수 있습니다.
-          </p>
-        )}
+        <MobileCategoryTabs sp={{}} tree={tree} todayActive />
       </div>
 
-      {/* key = 최신 글 id — 글 등록·삭제로 서버 첫 페이지가 바뀌면 그리드를 새
-          데이터로 remount 한다. MomentGrid 는 initial 을 useState 초기값으로만
-          쓰므로(더보기 append 유지용) prop 변경이 저절로 반영되지 않기 때문. */}
-      <MomentGrid
-        key={moments[0]?.id ?? "empty"}
-        initial={moments}
-        initialHasMore={hasMore}
-        currentUserId={user?.id}
-      />
+      <div className="mt-8 flex items-start gap-10">
+        <div className="hidden lg:block">
+          <ShopSidebar sp={{}} tree={tree} todayActive />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div>
+            {user ? (
+              <MomentForm />
+            ) : (
+              <p className="border border-wabi-border bg-wabi-subtle/40 px-4 py-3 text-sm text-wabi-fg-muted">
+                <Link
+                  href="/auth?redirect=/today"
+                  className="font-medium text-wabi-fg underline underline-offset-2"
+                >
+                  로그인
+                </Link>{" "}
+                후 사진과 이야기를 남길 수 있습니다.
+              </p>
+            )}
+          </div>
+
+          {/* key = 최신 글 id — 글 등록·삭제로 서버 첫 페이지가 바뀌면 그리드를 새
+              데이터로 remount 한다. MomentGrid 는 initial 을 useState 초기값으로만
+              쓰므로(더보기 append 유지용) prop 변경이 저절로 반영되지 않기 때문. */}
+          <MomentGrid
+            key={moments[0]?.id ?? "empty"}
+            initial={moments}
+            initialHasMore={hasMore}
+            currentUserId={user?.id}
+          />
+        </div>
+      </div>
     </Container>
   );
 }
