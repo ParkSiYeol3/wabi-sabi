@@ -145,7 +145,7 @@ export default async function ProductDetailPage({
 
   return (
     // 모바일 하단 스티키 구매 바가 콘텐츠를 가리지 않게 아래 여백 확보(데스크톱은 무바).
-    <Container className="pt-16 pb-28 md:pb-16">
+    <Container className="pt-16 pb-32 md:pb-16">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: productJsonLd(product, reviewStats) }}

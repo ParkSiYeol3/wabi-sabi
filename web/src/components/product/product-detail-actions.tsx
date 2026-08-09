@@ -169,7 +169,7 @@ export function ProductDetailActions({ product, stock, addonImages }: Props) {
           투명 여백이 스크롤을 막지 않게 pointer-events-none, 카드만 auto. */}
       <div
         className="pointer-events-none fixed inset-x-0 bottom-0 z-30 md:hidden"
-        style={{ paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom))" }}
+        style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
       >
         <div className="pointer-events-auto mx-3 flex items-center gap-2 rounded-2xl border border-wabi-border bg-wabi-bg/95 px-4 py-3 shadow-[0_6px_28px_rgba(0,0,0,0.12)] backdrop-blur">
           <p className="min-w-0 flex-1 text-lg font-semibold text-wabi-fg">
