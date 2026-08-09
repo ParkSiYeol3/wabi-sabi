@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { getCategorySlugs } from "@/lib/queries/categories";
-import type { ProductCardData } from "@/components/product-card";
+import type { ProductCardData } from "@/components/product/product-card";
 
 type ProductRow = {
   id: string;

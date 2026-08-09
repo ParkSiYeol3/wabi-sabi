@@ -13,7 +13,7 @@ import {
   EmptyState,
   adminAction,
 } from "@/components/admin/ui";
-import { SubmitButton } from "@/components/submit-button";
+import { SubmitButton } from "@/components/common/submit-button";
 import {
   updateStock,
   toggleActive,

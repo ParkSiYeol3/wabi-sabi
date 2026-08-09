@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { site, business, legalNav, MONTHLY_SLUG } from "@/lib/site";
 import { getCategoryTree } from "@/lib/queries/categories";
-import { LogoutButton } from "@/components/logout-button";
+import { LogoutButton } from "@/components/account/logout-button";
 
 // 전자상거래법 §10 — 사업자 정보 표시 (#106).
 // 아직 못 받은 값(개인정보보호책임자 등)은 빈 문자열이며, 여기서 걸러 렌더하지

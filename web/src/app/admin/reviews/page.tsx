@@ -1,8 +1,8 @@
-import { Stars } from "@/components/stars";
+import { Stars } from "@/components/product/stars";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { PageHeader, EmptyState } from "@/components/admin/ui";
-import { SubmitButton } from "@/components/submit-button";
+import { SubmitButton } from "@/components/common/submit-button";
 import { adminDeleteReview, adminSetReviewHidden } from "./actions";
 
 type Row = {

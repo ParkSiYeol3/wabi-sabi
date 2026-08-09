@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 import { Input } from "@/components/ui/input";
-import { SubmitButton } from "@/components/submit-button";
+import { SubmitButton } from "@/components/common/submit-button";
 import { createClient } from "@/lib/supabase/server";
 import { createInquiry } from "../actions";
 

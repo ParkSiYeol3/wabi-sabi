@@ -3,12 +3,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ShoppingBag, Minus, Plus, X, ImageIcon } from "lucide-react";
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { useCart, cartTotal } from "@/store/cart";
 import { useMounted } from "@/hooks/use-mounted";
 import { resolveAddons, addonsTotal } from "@/lib/addons";
-import { Price } from "@/components/price";
+import { Price } from "@/components/product/price";
 
 export default function CartPage() {
   const items = useCart((s) => s.items);

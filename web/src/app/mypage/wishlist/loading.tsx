@@ -1,4 +1,4 @@
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 
 // 위시리스트 스켈레톤 (#172) — 상품 그리드 + 담기 버튼 형태.
 export default function WishlistLoading() {

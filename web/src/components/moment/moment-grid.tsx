@@ -6,8 +6,8 @@ import { MessageCircle } from "lucide-react";
 import { useState, useTransition } from "react";
 import type { MomentCard } from "@/lib/queries/moments";
 import { loadMoreMoments, deleteMoment } from "@/app/today/actions";
-import { MomentLikeButton } from "@/components/moment-like-button";
-import { SubmitButton } from "@/components/submit-button";
+import { MomentLikeButton } from "@/components/moment/moment-like-button";
+import { SubmitButton } from "@/components/common/submit-button";
 
 // 게시판 목록 — 더보기 페이지네이션(0039). 첫 페이지는 서버가 넘기고, 이후는
 // loadMoreMoments 로 이어붙인다. 카드 클릭 → 상세(/today/[id]).

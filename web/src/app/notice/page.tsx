@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 import { getNotices } from "@/lib/queries/notices";
 
 export const metadata: Metadata = {

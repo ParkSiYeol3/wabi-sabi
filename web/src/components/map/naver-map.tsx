@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { GoogleMapEmbed } from "@/components/google-map-embed";
+import { GoogleMapEmbed } from "@/components/map/google-map-embed";
 import { site } from "@/lib/site";
 
 // 네이버 지도 상시 표시 (#119) — 지도 칸에 네이버 지도가 항상 떠 있어야 한다.

@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { CheckCircle2, XCircle } from "lucide-react";
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
-import { ClearCart } from "@/components/clear-cart";
+import { ClearCart } from "@/components/common/clear-cart";
 import { confirmPayment } from "@/lib/payments";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
-import { Price } from "@/components/price";
+import { Price } from "@/components/product/price";
 
 type SP = { paymentKey?: string; orderId?: string; amount?: string };
 

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Container } from "@/components/container";
-import { Stars } from "@/components/stars";
-import { ReportReviewButton } from "@/components/report-review-button";
+import { Container } from "@/components/layout/container";
+import { Stars } from "@/components/product/stars";
+import { ReportReviewButton } from "@/components/product/report-review-button";
 import { getRecentReviews } from "@/lib/queries/reviews";
 import { createClient } from "@/lib/supabase/server";
 

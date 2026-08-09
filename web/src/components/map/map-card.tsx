@@ -1,6 +1,6 @@
 import { ExternalLink } from "lucide-react";
-import { NaverMap } from "@/components/naver-map";
-import { GoogleMapEmbed } from "@/components/google-map-embed";
+import { NaverMap } from "@/components/map/naver-map";
+import { GoogleMapEmbed } from "@/components/map/google-map-embed";
 import { site } from "@/lib/site";
 
 // 매장 위치 (#110 → #119 대표님 피드백 반영)

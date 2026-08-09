@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ImageIcon } from "lucide-react";
-import { Price } from "@/components/price";
+import { Price } from "@/components/product/price";
 
 export interface ProductCardData {
   id: string;

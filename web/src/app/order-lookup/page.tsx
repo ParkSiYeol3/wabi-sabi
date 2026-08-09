@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Price } from "@/components/price";
-import { OrderStatusBadge } from "@/components/order-status-badge";
+import { Price } from "@/components/product/price";
+import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { formatDateKST, trackingSearchUrl } from "@/lib/orders";
 import { lookupGuestOrder, type GuestOrder } from "./actions";
 

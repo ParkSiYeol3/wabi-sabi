@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Container } from "@/components/container";
-import { ProductCard, type ProductCardData } from "@/components/product-card";
-import { WishlistButton } from "@/components/wishlist-button";
+import { Container } from "@/components/layout/container";
+import { ProductCard, type ProductCardData } from "@/components/product/product-card";
+import { WishlistButton } from "@/components/product/wishlist-button";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "위시리스트" };

@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { SubmitButton } from "@/components/submit-button";
-import { Stars } from "@/components/stars";
-import { ReportReviewButton } from "@/components/report-review-button";
+import { SubmitButton } from "@/components/common/submit-button";
+import { Stars } from "@/components/product/stars";
+import { ReportReviewButton } from "@/components/product/report-review-button";
 import {
   getProductReviews,
   getReviewStats,
