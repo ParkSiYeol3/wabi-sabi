@@ -61,9 +61,6 @@ export function MobileCategoryTabs({
           active={current === MONTHLY_SLUG}
           className="text-wabi-accent hover:text-wabi-accent"
         >
-          <span aria-hidden className="mr-0.5">
-            ✧
-          </span>
           이 달의 상품
         </Tab>
         <Tab
@@ -71,9 +68,6 @@ export function MobileCategoryTabs({
           active={false}
           className="text-wabi-accent hover:text-wabi-accent"
         >
-          <span aria-hidden className="mr-0.5">
-            ✧
-          </span>
           오늘의 와비사비
         </Tab>
 
