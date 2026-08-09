@@ -57,9 +57,6 @@ export function ShopSidebar({
         active={current === MONTHLY_SLUG}
         className="text-wabi-accent hover:text-wabi-accent"
       >
-        <span aria-hidden className="mr-1">
-          ✧
-        </span>
         이 달의 상품
       </SideLink>
 
@@ -70,9 +67,6 @@ export function ShopSidebar({
         active={false}
         className="text-wabi-accent hover:text-wabi-accent"
       >
-        <span aria-hidden className="mr-1">
-          ✧
-        </span>
         오늘의 와비사비
       </SideLink>
 
