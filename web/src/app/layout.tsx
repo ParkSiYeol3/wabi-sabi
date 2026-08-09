@@ -11,6 +11,7 @@ import { SessionTimeout } from "@/components/account/session-timeout";
 import { NicknameGate } from "@/components/account/nickname-gate";
 import { PrepNotice } from "@/components/layout/prep-notice";
 import { getPrepNotice } from "@/lib/queries/content";
+import { getCategoryTree } from "@/lib/queries/categories";
 import { AmbientPlayer } from "@/components/common/ambient-player";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -149,7 +150,11 @@ export default async function RootLayout({
 }>) {
   // 정식 오픈 준비중 안내(대표님) — 전역 마운트로 홈뿐 아니라 검색·링크로 상품
   // 페이지에 바로 들어온 손님도 결제 전에 안내를 본다. 캐시된 조회라 TTFB 영향 미미.
-  const prepNotice = await getPrepNotice();
+  // 카테고리 트리는 모바일 드로어의 SHOP 분류 드롭다운용(대표님) — 병렬 조회.
+  const [prepNotice, tree] = await Promise.all([
+    getPrepNotice(),
+    getCategoryTree(),
+  ]);
   return (
     <html
       lang="ko"
@@ -174,7 +179,7 @@ export default async function RootLayout({
           >
             본문으로 건너뛰기
           </a>
-          <SiteHeader />
+          <SiteHeader tree={tree} />
           <main id="main-content" className="flex-1">
             {children}
           </main>
