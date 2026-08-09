@@ -31,8 +31,15 @@ export function MomentForm() {
       action={action}
       className="space-y-3 border border-wabi-border bg-wabi-subtle/40 p-5"
     >
-      <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted">
-        사진 (png·jpg·webp, 최대 12MB)
+      <label className="flex flex-col gap-1.5">
+        {/* 라벨 본문은 본문색으로 또렷하게(대표님 — 너무 흐려 안 보임), 포맷 안내만
+            작게 흐리게 부속으로 둔다. */}
+        <span className="text-sm font-medium text-wabi-fg">
+          사진{" "}
+          <span className="text-xs font-normal text-wabi-fg-muted">
+            (png·jpg·webp · 최대 12MB)
+          </span>
+        </span>
         <input
           ref={fileRef}
           type="file"
