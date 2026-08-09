@@ -57,6 +57,8 @@ export const CRITERIA_BODY_KEYS = [
   "criteria_3_body",
 ] as const;
 export const CRITERIA_SUBTITLE_KEY = "criteria_subtitle";
+// 섹션 제목(기본 "고르는 기준") — 대표님이 섹션 이름 자체도 바꿀 수 있게.
+export const CRITERIA_HEADING_KEY = "criteria_heading";
 
 // 편집 가능한 전체 키 — 액션 enum·타입 안전의 단일 출처.
 export const CONTENT_KEYS = [
@@ -68,6 +70,7 @@ export const CONTENT_KEYS = [
   ...CRITERIA_LABEL_KEYS,
   ...CRITERIA_BODY_KEYS,
   CRITERIA_SUBTITLE_KEY,
+  CRITERIA_HEADING_KEY,
 ] as const;
 export type ContentKey = (typeof CONTENT_KEYS)[number];
 
@@ -121,6 +124,7 @@ export const DEFAULT_CRITERIA_BODIES: Record<
 };
 export const DEFAULT_CRITERIA_SUBTITLE =
   "모든 물건은 세 가지 질문을 통과한 뒤에야 매대에 오릅니다.";
+export const DEFAULT_CRITERIA_HEADING = "고르는 기준";
 
 // key 에 해당하는 저장 값. 없거나 오류면 null(호출부에서 기본값 폴백).
 // 사용자 세션 클라이언트 — 어드민 편집 화면 등 캐시 밖 조회에 쓴다.

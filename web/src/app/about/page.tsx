@@ -15,9 +15,11 @@ import {
   CRITERIA_LABEL_KEYS,
   CRITERIA_BODY_KEYS,
   CRITERIA_SUBTITLE_KEY,
+  CRITERIA_HEADING_KEY,
   DEFAULT_CRITERIA_LABELS,
   DEFAULT_CRITERIA_BODIES,
   DEFAULT_CRITERIA_SUBTITLE,
+  DEFAULT_CRITERIA_HEADING,
 } from "@/lib/queries/content";
 
 export const metadata: Metadata = {
@@ -45,6 +47,7 @@ export default async function AboutPage() {
     b1,
     b2,
     b3,
+    critHeading,
   ] = await Promise.all([
     getSiteContent(PHILOSOPHY_KEY),
     getSiteContent(ABOUT_IMAGE_KEY),
@@ -55,8 +58,10 @@ export default async function AboutPage() {
     getSiteContent(CRITERIA_BODY_KEYS[0]),
     getSiteContent(CRITERIA_BODY_KEYS[1]),
     getSiteContent(CRITERIA_BODY_KEYS[2]),
+    getSiteContent(CRITERIA_HEADING_KEY),
   ]);
   const criteriaSubtitle = critSubtitle ?? DEFAULT_CRITERIA_SUBTITLE;
+  const criteriaHeading = critHeading ?? DEFAULT_CRITERIA_HEADING;
   const criteria = [
     {
       ko: l1 ?? DEFAULT_CRITERIA_LABELS.criteria_1_label,
@@ -125,7 +130,7 @@ export default async function AboutPage() {
         <Container className="py-24 md:py-32">
           <Reveal>
             <h2 className="text-center text-2xl font-semibold tracking-tight md:text-3xl">
-              고르는 기준
+              {criteriaHeading}
             </h2>
             <p className="mt-4 text-center text-sm text-wabi-fg-muted">
               {criteriaSubtitle}

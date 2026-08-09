@@ -17,9 +17,11 @@ import {
   CRITERIA_LABEL_KEYS,
   CRITERIA_BODY_KEYS,
   CRITERIA_SUBTITLE_KEY,
+  CRITERIA_HEADING_KEY,
   DEFAULT_CRITERIA_LABELS,
   DEFAULT_CRITERIA_BODIES,
   DEFAULT_CRITERIA_SUBTITLE,
+  DEFAULT_CRITERIA_HEADING,
 } from "@/lib/queries/content";
 import { ADDONS, won } from "@/lib/addons";
 import { PageHeader, SectionHeading } from "@/components/admin/ui";
@@ -83,6 +85,7 @@ export default async function AdminContentPage() {
     critBody1,
     critBody2,
     critBody3,
+    critHeading,
     ...addonImages
   ] = await Promise.all([
     getSiteContent(PHILOSOPHY_KEY),
@@ -103,6 +106,7 @@ export default async function AdminContentPage() {
     getSiteContent(CRITERIA_BODY_KEYS[0]),
     getSiteContent(CRITERIA_BODY_KEYS[1]),
     getSiteContent(CRITERIA_BODY_KEYS[2]),
+    getSiteContent(CRITERIA_HEADING_KEY),
     ...ADDONS.map((a) => getSiteContent(addonImageKey(a.code))),
   ]);
 
@@ -266,13 +270,20 @@ export default async function AdminContentPage() {
           <div className="space-y-4">
             <SectionHeading>고르는 기준</SectionHeading>
             <p className="text-xs text-wabi-fg-muted">
-              About &ldquo;고르는 기준&rdquo; 섹션의 문구입니다. 상단 안내문과 세
-              항목의 제목·본문을 편집합니다.
+              About 이 섹션의 문구입니다. 섹션 제목·상단 안내문과 세 항목의
+              제목·본문을 편집합니다.
             </p>
+            <ContentField
+              contentKey={CRITERIA_HEADING_KEY}
+              label="섹션 제목"
+              hint="섹션 맨 위 큰 제목입니다(기본 '고르는 기준')."
+              value={critHeading ?? DEFAULT_CRITERIA_HEADING}
+              rows={1}
+            />
             <ContentField
               contentKey={CRITERIA_SUBTITLE_KEY}
               label="상단 안내문"
-              hint="제목 '고르는 기준' 아래 한 줄 설명입니다."
+              hint="섹션 제목 아래 한 줄 설명입니다."
               value={critSubtitle ?? DEFAULT_CRITERIA_SUBTITLE}
               rows={2}
             />
