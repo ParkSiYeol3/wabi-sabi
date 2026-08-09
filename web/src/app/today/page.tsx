@@ -31,7 +31,10 @@ export default async function TodayPage() {
   return (
     <Container className="py-16">
       <h1 className="text-2xl font-semibold tracking-tight">오늘의 와비사비</h1>
-      <p className="mt-3 max-w-xl text-sm leading-7 text-wabi-fg-muted">
+      {/* max-w 를 넓혀 데스크톱에서 한 줄로 붙게(대표님 — "남겨주세요."만 다음 줄로
+          넘어가 이상). text-pretty 로 좁은 폭에서 줄바꿈되더라도 마지막 줄에 한
+          단어만 남는(orphan) 것을 막는다. */}
+      <p className="mt-3 max-w-3xl text-pretty text-sm leading-7 text-wabi-fg-muted">
         손님들이 일상 속에서 우리의 그릇을 어떻게 쓰고 있는지 나누는 공간입니다.
         오늘의 한 컷을 함께 남겨주세요.
       </p>
