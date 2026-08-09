@@ -11,7 +11,7 @@ export async function InstagramFeed() {
   return (
     <section className="bg-wabi-subtle">
       <div className="mx-auto max-w-300 px-5 py-20 text-center">
-        <h2 className="text-xl font-semibold">인스타그램</h2>
+        <h2 className="text-xl font-semibold">Instagram</h2>
         <a
           href={site.instagramUrl}
           target="_blank"
@@ -34,7 +34,7 @@ export async function InstagramFeed() {
                   >
                     <Image
                       src={post.mediaUrl}
-                      alt={post.caption?.slice(0, 80) ?? "인스타그램 게시물"}
+                      alt={post.caption?.slice(0, 80) ?? "Instagram post"}
                       fill
                       sizes="(min-width: 768px) 16vw, 33vw"
                       className="object-cover"
@@ -48,7 +48,7 @@ export async function InstagramFeed() {
                     href={site.instagramUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`인스타그램 게시물 ${i + 1}`}
+                    aria-label={`Instagram post ${i + 1}`}
                     className="flex aspect-square items-center justify-center bg-wabi-muted transition-opacity hover:opacity-80"
                   >
                     <ImageIcon
