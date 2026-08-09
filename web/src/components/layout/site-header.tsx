@@ -4,17 +4,33 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, ShoppingBag, User, Heart, Receipt } from "lucide-react";
-import { nav, site } from "@/lib/site";
+import {
+  Menu,
+  X,
+  ShoppingBag,
+  User,
+  Heart,
+  Receipt,
+  ChevronDown,
+} from "lucide-react";
+import { nav, site, MONTHLY_SLUG, type CategoryNode } from "@/lib/site";
+import { buildShopQuery } from "@/lib/shop-url";
 import { cn } from "@/lib/utils";
 import { useCart, cartCount } from "@/store/cart";
 import { useMounted } from "@/hooks/use-mounted";
 import { useAuthStore } from "@/store/auth";
 
-export function SiteHeader() {
+export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
   const [open, setOpen] = useState(false);
+  // 모바일 드로어에서 SHOP 하위 분류 드롭다운 펼침 상태(대표님 — nav 라벨을 토글로).
+  const [shopOpen, setShopOpen] = useState(false);
   // 아바타 로드 실패(호스트·만료 등) 시 기본 아이콘으로 폴백.
   const [avatarError, setAvatarError] = useState(false);
+  // 드로어를 닫을 때는 펼쳐둔 분류도 함께 접어 다음에 열 때 깔끔하게 시작.
+  const closeMenu = () => {
+    setOpen(false);
+    setShopOpen(false);
+  };
   const pathname = usePathname();
   const count = useCart(cartCount);
   const mounted = useMounted();
@@ -134,7 +150,7 @@ export function SiteHeader() {
             type="button"
             aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
             aria-expanded={open}
-            onClick={() => setOpen((v) => !v)}
+            onClick={() => (open ? closeMenu() : setOpen(true))}
             className="rounded-md p-3 text-wabi-fg transition-colors hover:bg-wabi-muted md:hidden"
           >
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -156,7 +172,7 @@ export function SiteHeader() {
       >
         {/* 딤 배경 */}
         <div
-          onClick={() => setOpen(false)}
+          onClick={closeMenu}
           className={cn(
             "absolute inset-0 bg-black/30 transition-opacity duration-200",
             open ? "opacity-100" : "opacity-0",
@@ -176,7 +192,7 @@ export function SiteHeader() {
             </span>
             <button
               type="button"
-              onClick={() => setOpen(false)}
+              onClick={closeMenu}
               aria-label="메뉴 닫기"
               className="rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted"
             >
@@ -184,20 +200,96 @@ export function SiteHeader() {
             </button>
           </div>
           <div className="flex flex-col overflow-y-auto px-5 py-2">
-            {nav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className="py-3 text-sm tracking-wide text-wabi-fg-muted transition-colors hover:text-wabi-fg"
-              >
-                {item.label}
-              </Link>
-            ))}
+            {nav.map((item) => {
+              // SHOP 은 하위 분류(카테고리 트리)를 가진 토글(대표님 — nav 라벨을
+              // 토글로, 클릭 시 하위 페이지가 아래로 펼쳐지는 드롭다운). 나머지
+              // 라벨은 하위가 없어 그대로 링크. 분류를 이 드로어로 옮겨(대표님)
+              // shop 본문에선 상품·정렬만 보이게 했다.
+              const hasChildren = item.href === "/shop" && tree.length > 0;
+              if (!hasChildren) {
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={closeMenu}
+                    className="py-3 text-sm tracking-wide text-wabi-fg-muted transition-colors hover:text-wabi-fg"
+                  >
+                    {item.label}
+                  </Link>
+                );
+              }
+              return (
+                <div key={item.href}>
+                  <button
+                    type="button"
+                    onClick={() => setShopOpen((v) => !v)}
+                    aria-expanded={shopOpen}
+                    className="flex w-full items-center justify-between py-3 text-sm tracking-wide text-wabi-fg-muted transition-colors hover:text-wabi-fg"
+                  >
+                    {item.label}
+                    <ChevronDown
+                      className={cn(
+                        "size-4 shrink-0 transition-transform duration-200",
+                        shopOpen && "rotate-180",
+                      )}
+                      strokeWidth={1.5}
+                    />
+                  </button>
+                  {shopOpen && (
+                    <div className="mb-1 flex flex-col border-l border-wabi-border pb-1 pl-3">
+                      <Link
+                        href="/shop"
+                        onClick={closeMenu}
+                        className="py-1.5 text-sm text-wabi-fg-muted transition-colors hover:text-wabi-fg"
+                      >
+                        전체
+                      </Link>
+                      {/* 이 달의 상품·오늘의 와비사비 = 액센트로 강조(사이드바와 통일) */}
+                      <Link
+                        href={buildShopQuery({}, { category: MONTHLY_SLUG })}
+                        onClick={closeMenu}
+                        className="py-1.5 text-sm text-wabi-accent transition-colors hover:opacity-80"
+                      >
+                        이 달의 상품
+                      </Link>
+                      <Link
+                        href="/today"
+                        onClick={closeMenu}
+                        className="py-1.5 text-sm text-wabi-accent transition-colors hover:opacity-80"
+                      >
+                        오늘의 와비사비
+                      </Link>
+                      {/* 대분류(굵게=그룹 전체보기) + 그 아래 소분류(한 단 더 들여씀) */}
+                      {tree.map((node) => (
+                        <div key={node.slug} className="mt-2">
+                          <Link
+                            href={buildShopQuery({}, { category: node.slug })}
+                            onClick={closeMenu}
+                            className="block py-1.5 text-sm font-medium text-wabi-fg transition-colors"
+                          >
+                            {node.ko}
+                          </Link>
+                          {node.children?.map((c) => (
+                            <Link
+                              key={c.slug}
+                              href={buildShopQuery({}, { category: c.slug })}
+                              onClick={closeMenu}
+                              className="block py-1.5 pl-3 text-sm text-wabi-fg-muted transition-colors hover:text-wabi-fg"
+                            >
+                              {c.ko}
+                            </Link>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             {showAdmin && (
               <Link
                 href="/admin"
-                onClick={() => setOpen(false)}
+                onClick={closeMenu}
                 className="py-3 text-sm font-medium tracking-wide text-wabi-accent"
               >
                 관리자
@@ -209,7 +301,7 @@ export function SiteHeader() {
                 <div className="my-1 border-t border-wabi-border" />
                 <Link
                   href="/mypage/wishlist"
-                  onClick={() => setOpen(false)}
+                  onClick={closeMenu}
                   className="flex items-center gap-2 py-3 text-sm tracking-wide text-wabi-fg-muted transition-colors hover:text-wabi-fg"
                 >
                   <Heart className="size-4" strokeWidth={1.5} />
@@ -217,7 +309,7 @@ export function SiteHeader() {
                 </Link>
                 <Link
                   href="/mypage/orders"
-                  onClick={() => setOpen(false)}
+                  onClick={closeMenu}
                   className="flex items-center gap-2 py-3 text-sm tracking-wide text-wabi-fg-muted transition-colors hover:text-wabi-fg"
                 >
                   <Receipt className="size-4" strokeWidth={1.5} />

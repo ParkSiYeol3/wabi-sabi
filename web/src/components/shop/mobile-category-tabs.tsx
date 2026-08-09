@@ -42,16 +42,25 @@ export function MobileCategoryTabs({
   sp,
   tree,
   todayActive = false,
+  tabletOnly = false,
 }: {
   sp: ShopSP;
   tree: CategoryNode[];
   // /today 재사용 시 "오늘의 와비사비" 현재 위치 표시.
   todayActive?: boolean;
+  // shop 페이지 전용(대표님): 모바일(<md)에선 분류를 우측 드로어로 옮기고 상품·정렬만
+  // 보이게 하되, 드로어가 없는 태블릿(md~lg)에선 이 가로바를 그대로 남긴다.
+  tabletOnly?: boolean;
 }) {
   const current = sp.category;
 
   return (
-    <div className="relative border-b border-wabi-border lg:hidden">
+    <div
+      className={cn(
+        "relative border-b border-wabi-border",
+        tabletOnly ? "hidden md:block lg:hidden" : "lg:hidden",
+      )}
+    >
       <nav
         aria-label="카테고리"
         className="flex items-center gap-4 overflow-x-auto whitespace-nowrap pb-4 pr-9 pt-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
