@@ -48,7 +48,11 @@ export function AmbientPlayer() {
   const [hintOn, setHintOn] = useState(false); // 힌트 마운트 여부
   const [hintShown, setHintShown] = useState(false); // 등장/퇴장 트랜지션
   // 클릭 유도 힌트는 홈 메인에서만(대표님/시열님) — 다른 페이지 리렌더 시 갑툭튀 방지.
-  const isHome = usePathname() === "/";
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  // 상품 상세(모바일)엔 하단에 떠 있는 구매 바가 있어 배경음 토글과 겹친다(대표님).
+  // 그 페이지에서만 토글을 구매 바 위로 올린다(그 외는 기존 위치 bottom-20).
+  const isProduct = pathname.startsWith("/shop/");
 
   function closeHint() {
     setHintShown(false);
@@ -178,7 +182,13 @@ export function AmbientPlayer() {
         onClick={toggle}
         aria-label={playing ? "배경음 끄기" : "배경음 켜기"}
         aria-pressed={playing}
-        className="fixed bottom-20 right-5 z-40 flex size-10 items-center justify-center rounded-full border border-wabi-border bg-wabi-bg/80 text-wabi-fg-muted shadow-sm backdrop-blur transition-colors hover:text-wabi-fg md:bottom-5"
+        className={cn(
+          "fixed right-5 z-40 flex size-10 items-center justify-center rounded-full border border-wabi-border bg-wabi-bg/80 text-wabi-fg-muted shadow-sm backdrop-blur transition-colors hover:text-wabi-fg md:bottom-5",
+          // 상품 상세 모바일: 구매 바(약 80px+safe) 위로. 데스크톱은 md:bottom-5 로 원위치.
+          isProduct
+            ? "bottom-[calc(6.5rem+env(safe-area-inset-bottom))]"
+            : "bottom-20",
+        )}
       >
         {playing ? (
           <Volume2 className="size-4" strokeWidth={1.5} />
