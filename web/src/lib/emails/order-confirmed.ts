@@ -23,6 +23,8 @@ type Row = {
     price: number;
     // 애드온 스냅샷(주문 시점 이름·가격 고정, 0034). 없으면 null.
     addons: { code: string; name: string; price: number }[] | null;
+    // 커스텀 옵션 스냅샷(색상·모양 등, 0048). 대표님이 어떤 걸 보낼지 안다.
+    options: { name: string; value: string }[] | null;
   }[];
 };
 
@@ -31,6 +33,15 @@ const BASE = SITE_URL;
 function html(o: Row): string {
   const items = o.order_items
     .map((i) => {
+      // 커스텀 옵션(색상·모양 등) — 상품 아래 서브라인으로. 대표님이 발송 시 참고.
+      const optionRow =
+        i.options && i.options.length > 0
+          ? `<tr>
+          <td colspan="2" style="padding:2px 0 4px 14px;border-bottom:1px solid #f2f2f2;color:#8a847c;font-size:13px">${escapeHtml(
+            i.options.map((o) => `${o.name}: ${o.value}`).join(" · "),
+          )}</td>
+        </tr>`
+          : "";
       // 애드온(선물 포장·쇼핑백)은 상품 아래 들여쓴 서브라인으로 각각 표기.
       const addonRows = (i.addons ?? [])
         .map(
@@ -44,7 +55,7 @@ function html(o: Row): string {
       return `<tr>
           <td style="padding:8px 0;border-bottom:1px solid #eee">${escapeHtml(i.product_name)} × ${i.quantity}</td>
           <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">${won(i.price * i.quantity)}</td>
-        </tr>${addonRows}`;
+        </tr>${optionRow}${addonRows}`;
     })
     .join("");
 
@@ -99,7 +110,7 @@ export async function sendOrderConfirmedMail(orderId: string): Promise<void> {
   const { data: order } = await admin
     .from("orders")
     .select(
-      "order_number, total_price, recipient, address, ordered_at, user_id, order_items(product_name, quantity, price, addons)",
+      "order_number, total_price, recipient, address, ordered_at, user_id, order_items(product_name, quantity, price, addons, options)",
     )
     .eq("id", orderId)
     .maybeSingle<Row>();

@@ -15,6 +15,13 @@ type Order = {
   ordered_at: string;
   tracking_number: string | null;
   delivered_at: string | null;
+  // 발송 시 무엇을·어떤 옵션(색상 등)으로 보낼지 대표님이 바로 보게(0048).
+  order_items: {
+    product_name: string;
+    quantity: number;
+    options: { name: string; value: string }[] | null;
+    addons: { code: string; name: string; price: number }[] | null;
+  }[];
 };
 
 // 배송완료로 넘길 수 있는 상태 (#124) — 취소·미결제 주문은 대상이 아니다.
@@ -39,7 +46,7 @@ export default async function AdminOrdersPage() {
   const { data: orders } = await db
     .from("orders")
     .select(
-      "id, order_number, status, total_price, recipient, ordered_at, tracking_number, delivered_at",
+      "id, order_number, status, total_price, recipient, ordered_at, tracking_number, delivered_at, order_items(product_name, quantity, options, addons)",
     )
     .order("ordered_at", { ascending: false })
     .returns<Order[]>();
@@ -58,6 +65,7 @@ export default async function AdminOrdersPage() {
             <thead className="border-b border-wabi-border bg-wabi-subtle/50 text-left text-xs text-wabi-fg-muted">
               <tr>
                 <th className="px-4 py-3 font-medium">주문번호</th>
+                <th className="px-4 py-3 font-medium">상품</th>
                 <th className="px-4 py-3 font-medium">받는분</th>
                 <th className="px-4 py-3 font-medium">금액</th>
                 <th className="px-4 py-3 font-medium">상태</th>
@@ -70,6 +78,32 @@ export default async function AdminOrdersPage() {
                 <tr key={o.id} className="transition-colors hover:bg-wabi-muted/40">
                   <td className="px-4 py-3 font-medium tabular-nums">
                     {o.order_number}
+                  </td>
+                  {/* 발송 품목 — 상품명 ×수량 + 고른 옵션(색상 등)·추가옵션. 대표님이
+                      송장 붙이기 전 무엇을 어떤 색으로 보낼지 여기서 바로 확인. */}
+                  <td className="px-4 py-3">
+                    <ul className="space-y-1.5">
+                      {(o.order_items ?? []).map((it, i) => (
+                        <li key={i} className="leading-tight">
+                          <span>
+                            {it.product_name}
+                            <span className="text-wabi-fg-muted"> × {it.quantity}</span>
+                          </span>
+                          {it.options && it.options.length > 0 && (
+                            <span className="block text-xs text-wabi-accent">
+                              {it.options
+                                .map((op) => `${op.name}: ${op.value}`)
+                                .join(" · ")}
+                            </span>
+                          )}
+                          {it.addons && it.addons.length > 0 && (
+                            <span className="block text-xs text-wabi-fg-muted">
+                              + {it.addons.map((a) => a.name).join(", ")}
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
                   </td>
                   <td className="px-4 py-3">{o.recipient}</td>
                   <td className="px-4 py-3 tabular-nums">{won(o.total_price)}</td>

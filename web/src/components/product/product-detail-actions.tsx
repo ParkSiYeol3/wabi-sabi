@@ -7,103 +7,170 @@ import { Minus, Plus, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Price } from "@/components/product/price";
 import { useCart, type CartItem } from "@/store/cart";
-import { ADDONS, won } from "@/lib/addons";
+import { won, type Addon } from "@/lib/addons";
+import type { OptionGroup, SelectedOption } from "@/lib/product-options";
+import { cn } from "@/lib/utils";
 
 type Props = {
-  product: Omit<CartItem, "quantity" | "addons">;
+  product: Omit<CartItem, "quantity" | "addons" | "options">;
   stock: number;
+  // 상품 커스텀 옵션(색상·모양 등, 0048) — 손님이 골라야 담을 수 있다.
+  options: OptionGroup[];
+  // 이 상품 상세에 노출할 추가옵션(0048 enabled_addons 로 필터된 것). 비면 블록 숨김.
+  addons: Addon[];
   /** 애드온 코드별 썸네일 URL(대표님 어드민 업로드). 없으면 사진 자리만 표시. */
   addonImages?: Record<string, string | undefined>;
 };
 
-export function ProductDetailActions({ product, stock, addonImages }: Props) {
+export function ProductDetailActions({
+  product,
+  stock,
+  options,
+  addons,
+  addonImages,
+}: Props) {
   const router = useRouter();
   const add = useCart((s) => s.add);
   const [qty, setQty] = useState(1);
-  const [addons, setAddons] = useState<string[]>([]);
+  const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+  // 커스텀 옵션 선택 — 그룹명 → 고른 값. 그룹이 있으면 전부 골라야 담기 활성.
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(
+    {},
+  );
   // 담기 직후 잠깐 "담겼습니다 ✓" 로 바꿔 클릭이 먹혔음을 알린다(대표님 요청).
   const [added, setAdded] = useState(false);
   const soldOut = stock <= 0;
+
+  const optionsChosen = options.every((g) => !!selectedOptions[g.name]);
+  const canBuy = !soldOut && optionsChosen;
 
   function clamp(n: number) {
     return Math.max(1, Math.min(stock, n));
   }
 
   const toggleAddon = (code: string, checked: boolean) =>
-    setAddons((prev) =>
+    setSelectedAddons((prev) =>
       checked ? [...prev, code] : prev.filter((c) => c !== code),
     );
 
-  // 스티키 바에 보여줄 합계 — 수량 × 단가 + 선택한 애드온.
-  const addonSum = ADDONS.filter((a) => addons.includes(a.code)).reduce(
-    (s, a) => s + a.price,
-    0,
-  );
+  // 선택된 옵션 스냅샷(장바구니·주문에 실린다) — 정의된 그룹 순서로.
+  const optionSnapshot = (): SelectedOption[] =>
+    options
+      .map((g) => ({ name: g.name, value: selectedOptions[g.name] }))
+      .filter((o): o is SelectedOption => !!o.value);
+
+  // 스티키 바에 보여줄 합계 — 수량 × 단가 + 선택한 애드온(옵션은 가격 영향 없음).
+  const addonSum = addons
+    .filter((a) => selectedAddons.includes(a.code))
+    .reduce((s, a) => s + a.price, 0);
   const total = product.price * qty + addonSum;
 
   function addToCart() {
-    add(product, qty, addons);
+    if (!canBuy) return;
+    add(product, qty, selectedAddons, optionSnapshot());
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1500);
   }
   function buyNow() {
-    add(product, qty, addons);
+    if (!canBuy) return;
+    add(product, qty, selectedAddons, optionSnapshot());
     router.push("/cart");
   }
 
   return (
     <div className="mt-8 space-y-4">
-      {/* 추가 옵션 (#253) — 상세에서 선택 후 담는다. 선물 메시지는 결제 화면에서.
-          fieldset/legend 로 스크린리더에 옵션 그룹임을 알린다. */}
-      <fieldset>
-        <legend className="text-sm text-wabi-fg-muted">추가 옵션</legend>
-        <div className="mt-2 space-y-2">
-          {ADDONS.map((a) => {
-            const img = addonImages?.[a.code];
-            return (
-              <label
-                key={a.code}
-                className="flex items-center gap-3 text-sm"
-              >
-                <input
-                  type="checkbox"
-                  checked={addons.includes(a.code)}
-                  onChange={(e) => toggleAddon(a.code, e.target.checked)}
-                  disabled={soldOut}
-                  className="shrink-0"
-                />
-                {/* 옵션 사진 — 대표님 어드민 업로드. 없으면 사진 자리(플레이스홀더). */}
-                <span className="relative size-12 shrink-0 overflow-hidden rounded border border-wabi-border bg-wabi-muted">
-                  {img ? (
-                    <Image
-                      src={img}
-                      alt={a.name}
-                      fill
-                      sizes="48px"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <span className="flex size-full items-center justify-center">
-                      <ImageIcon
-                        className="size-5 text-wabi-fg-muted/40"
-                        strokeWidth={1}
-                        aria-hidden
-                      />
-                    </span>
-                  )}
-                </span>
-                {/* 이름 + 가격 — 가격은 줄바꿈 방지(nowrap)로 "(+4,000원)"이 쪼개지지 않게. */}
-                <span className="min-w-0 flex-1">
-                  {a.name}{" "}
-                  <span className="whitespace-nowrap text-wabi-fg-muted">
-                    (+<span className="font-numeric">{won(a.price)}</span>)
-                  </span>
-                </span>
-              </label>
-            );
-          })}
+      {/* 커스텀 옵션(색상·모양 등, #253 확장) — 손님이 상세에서 선택. 그룹마다 하나씩
+          고른다(선택만 — 가격 영향 없음). 미선택 시 담기/구매 비활성. */}
+      {options.length > 0 && (
+        <div className="space-y-3">
+          {options.map((g) => (
+            <fieldset key={g.name}>
+              <legend className="text-sm text-wabi-fg-muted">{g.name}</legend>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {g.values.map((v) => {
+                  const active = selectedOptions[g.name] === v;
+                  return (
+                    <button
+                      key={v}
+                      type="button"
+                      disabled={soldOut}
+                      aria-pressed={active}
+                      onClick={() =>
+                        setSelectedOptions((s) => ({ ...s, [g.name]: v }))
+                      }
+                      className={cn(
+                        "border px-3 py-1.5 text-sm transition-colors disabled:opacity-40",
+                        active
+                          ? "border-wabi-fg bg-wabi-fg text-white"
+                          : "border-wabi-border text-wabi-fg hover:border-wabi-fg",
+                      )}
+                    >
+                      {v}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          ))}
+          {!optionsChosen && !soldOut && (
+            <p className="text-xs text-wabi-accent">옵션을 선택해 주세요.</p>
+          )}
         </div>
-      </fieldset>
+      )}
+
+      {/* 추가 옵션 (#253) — 상세에서 선택 후 담는다. 상품별 노출 토글(0048)로
+          걸러진 것만. 노출할 게 없으면 블록 전체를 숨긴다. */}
+      {addons.length > 0 && (
+        <fieldset>
+          <legend className="text-sm text-wabi-fg-muted">추가 옵션</legend>
+          <div className="mt-2 space-y-2">
+            {addons.map((a) => {
+              const img = addonImages?.[a.code];
+              return (
+                <label
+                  key={a.code}
+                  className="flex items-center gap-3 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedAddons.includes(a.code)}
+                    onChange={(e) => toggleAddon(a.code, e.target.checked)}
+                    disabled={soldOut}
+                    className="shrink-0"
+                  />
+                  {/* 옵션 사진 — 대표님 어드민 업로드. 없으면 사진 자리(플레이스홀더). */}
+                  <span className="relative size-12 shrink-0 overflow-hidden rounded border border-wabi-border bg-wabi-muted">
+                    {img ? (
+                      <Image
+                        src={img}
+                        alt={a.name}
+                        fill
+                        sizes="48px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <span className="flex size-full items-center justify-center">
+                        <ImageIcon
+                          className="size-5 text-wabi-fg-muted/40"
+                          strokeWidth={1}
+                          aria-hidden
+                        />
+                      </span>
+                    )}
+                  </span>
+                  {/* 이름 + 가격 — 가격은 줄바꿈 방지(nowrap)로 "(+4,000원)"이 쪼개지지 않게. */}
+                  <span className="min-w-0 flex-1">
+                    {a.name}{" "}
+                    <span className="whitespace-nowrap text-wabi-fg-muted">
+                      (+<span className="font-numeric">{won(a.price)}</span>)
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
 
       {/* 수량 */}
       <div className="flex items-center gap-4">
@@ -145,7 +212,7 @@ export function ProductDetailActions({ product, stock, addonImages }: Props) {
         <Button
           type="button"
           variant="outline"
-          disabled={soldOut}
+          disabled={!canBuy}
           onClick={addToCart}
           aria-live="polite"
           className="flex-1 rounded-none border-wabi-fg"
@@ -154,7 +221,7 @@ export function ProductDetailActions({ product, stock, addonImages }: Props) {
         </Button>
         <Button
           type="button"
-          disabled={soldOut}
+          disabled={!canBuy}
           onClick={buyNow}
           className="flex-1 rounded-none bg-wabi-accent hover:bg-wabi-accent/90"
         >
@@ -178,7 +245,7 @@ export function ProductDetailActions({ product, stock, addonImages }: Props) {
           <Button
             type="button"
             variant="outline"
-            disabled={soldOut}
+            disabled={!canBuy}
             onClick={addToCart}
             aria-live="polite"
             className="rounded-none border-wabi-fg px-4"
@@ -187,7 +254,7 @@ export function ProductDetailActions({ product, stock, addonImages }: Props) {
           </Button>
           <Button
             type="button"
-            disabled={soldOut}
+            disabled={!canBuy}
             onClick={buyNow}
             className="rounded-none bg-wabi-accent px-5 hover:bg-wabi-accent/90"
           >

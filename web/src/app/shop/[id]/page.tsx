@@ -17,7 +17,7 @@ import {
   ADDON_IMAGE_KEYS,
   addonImageKey,
 } from "@/lib/queries/content";
-import { ADDONS } from "@/lib/addons";
+import { enabledAddons } from "@/lib/addons";
 import { createClient } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/site-url";
 
@@ -101,10 +101,12 @@ export default async function ProductDetailPage({
   if (!bundle) notFound();
   const { product, related, stats: reviewStats } = bundle;
 
+  // 이 상품 상세에 노출할 추가옵션(0048) — 대표님이 상품별로 켠 것만.
+  const productAddons = enabledAddons(product.enabledAddons);
   // 추가 옵션 썸네일 — 대표님 어드민 업로드(site_content). 코드별 URL 로 정리.
   const addonImageMap = await getPublicContent(ADDON_IMAGE_KEYS);
   const addonImages = Object.fromEntries(
-    ADDONS.map((a) => [a.code, addonImageMap[addonImageKey(a.code)]]),
+    productAddons.map((a) => [a.code, addonImageMap[addonImageKey(a.code)]]),
   );
 
   // 위시리스트 초기 상태 (로그인 시) — 사용자별이라 캐시 밖.
@@ -204,6 +206,8 @@ export default async function ProductDetailPage({
               image: main,
             }}
             stock={product.stock}
+            options={product.options}
+            addons={productAddons}
             addonImages={addonImages}
           />
 

@@ -7,7 +7,9 @@ import { updateProduct } from "@/app/admin/products/actions";
 import type { ActionResult } from "@/app/admin/products/types";
 import { OriginPicker } from "@/components/admin/origin-picker";
 import { AttributePicker } from "@/components/admin/attribute-picker";
+import { ProductOptionsFields } from "@/components/admin/product-options-fields";
 import { MATERIALS, SIZES, CARES } from "@/lib/product-attributes";
+import type { OptionGroup } from "@/lib/product-options";
 
 type Category = { id: string; name_ko: string; name_en: string };
 
@@ -22,6 +24,8 @@ export type ProductEditValues = {
   size: string | null;
   care: string | null;
   origin: string | null;
+  options: OptionGroup[];
+  enabledAddons: string[];
 };
 
 // 기존 상품 본문 수정 폼 (대표님 지시 — 이미 올린 상품 글 수정).
@@ -136,6 +140,11 @@ export function ProductEditForm({
           customPlaceholder="주의사항 직접 입력 (예: 전자레인지 사용 불가)"
         />
       </label>
+      {/* 커스텀 옵션 + 추가옵션 노출 — 상품 저장 값으로 프리필. */}
+      <ProductOptionsFields
+        initialOptions={product.options}
+        initialAddons={product.enabledAddons}
+      />
       <div className="flex items-center gap-3 sm:col-span-2">
         <Button
           type="submit"

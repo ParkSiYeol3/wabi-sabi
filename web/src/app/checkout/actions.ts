@@ -9,6 +9,11 @@ import {
   resolveAddons,
   GIFT_WRAP_CODE,
 } from "@/lib/addons";
+import {
+  parseOptionGroups,
+  validateSelection,
+  type SelectedOption,
+} from "@/lib/product-options";
 
 // 입력 스키마 (보안_체크리스트 P1 입력 검증) — 서버 액션은 공개 엔드포인트,
 // 폼을 거치지 않은 임의 페이로드(음수 수량·초대형 문자열 등)를 여기서 차단.
@@ -17,6 +22,16 @@ const cartLineSchema = z.object({
   quantity: z.number().int().min(1).max(99),
   // 라인 단위 추가 옵션 코드(#253). 가격은 서버 addons.ts 정가로 재계산(불신).
   addons: z.array(z.string().trim().max(40)).max(10).default([]),
+  // 커스텀 옵션 선택(색상·모양 등, 0048). 상품 정의와 대조 검증(validateSelection).
+  options: z
+    .array(
+      z.object({
+        name: z.string().trim().max(40),
+        value: z.string().trim().max(60),
+      }),
+    )
+    .max(8)
+    .default([]),
 });
 // 중복 상품 id 거부 — 같은 상품을 여러 줄로 쪼개면 라인별 재고 체크를
 // 우회해 재고 이상 주문 가능(줄마다 stock ≥ qty 만 검사되므로).
@@ -147,7 +162,7 @@ export async function createPendingOrder(
   const ids = lines.map((l) => l.id);
   const { data: products } = await supabase
     .from("products")
-    .select("id, name, price, stock")
+    .select("id, name, price, stock, options")
     .in("id", ids)
     .eq("is_active", true);
   if (!products || products.length === 0)
@@ -162,12 +177,18 @@ export async function createPendingOrder(
     price: number;
     quantity: number;
     addons: { code: string; name: string; price: number }[];
+    options: SelectedOption[];
   }[] = [];
   for (const line of lines) {
     const p = priceMap.get(line.id);
     if (!p) return { ok: false, error: "유효하지 않은 상품이 있습니다." };
     if (p.stock < line.quantity)
       return { ok: false, error: `'${p.name}' 재고가 부족합니다.` };
+    // 커스텀 옵션(0048) — 상품 정의와 대조. 정의된 그룹은 모두 유효값이 선택돼야
+    // 한다(대표님이 색상 모르는 주문 방지). 서버가 진실 — 클라이언트 값 불신.
+    const optionCheck = validateSelection(parseOptionGroups(p.options), line.options);
+    if (!optionCheck.ok)
+      return { ok: false, error: `'${p.name}'의 ${optionCheck.missing} 옵션을 선택해 주세요.` };
     // 애드온 금액은 서버 정가(addons.ts)로 재계산 — 클라이언트가 준 값 불신.
     // 라인당 1세트라 수량과 무관하게 라인 1회 부과. 스냅샷으로 주문 시점 고정.
     const lineAddons = addonSnapshot(line.addons);
@@ -181,6 +202,7 @@ export async function createPendingOrder(
       price: p.price,
       quantity: line.quantity,
       addons: lineAddons,
+      options: optionCheck.options,
     });
   }
   // 라인별 애드온이 subtotal 에 이미 합산됐다(서버 정가 기준).

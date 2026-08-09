@@ -82,6 +82,13 @@ export default function CartPage() {
               <p className="mt-1 text-xs text-wabi-fg-muted">
                 <Price value={item.price} />
               </p>
+              {/* 커스텀 옵션(색상·모양 등, 0048) — 가격 영향 없음. 배포 전 저장된
+                  게스트 장바구니엔 options 가 없을 수 있어 옵셔널 체이닝으로 가드. */}
+              {item.options?.length ? (
+                <p className="mt-1 text-xs text-wabi-fg-muted">
+                  {item.options.map((o) => `${o.name}: ${o.value}`).join(" · ")}
+                </p>
+              ) : null}
               {item.addons.length > 0 && (
                 <p className="mt-1 text-xs text-wabi-fg-muted">
                   + {resolveAddons(item.addons).map((a) => a.name).join(", ")}

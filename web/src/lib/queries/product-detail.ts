@@ -3,6 +3,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import type { ProductCardData } from "@/components/product/product-card";
 import type { ProductDetail } from "@/lib/queries/products";
 import type { ReviewStats } from "@/lib/queries/reviews";
+import { parseOptionGroups } from "@/lib/product-options";
 
 // 상품 상세의 공개 데이터(상품·관련상품·평점)를 한 번에 캐시한다 (#181).
 // 리뷰/위시/재입고 구독 등 사용자별 데이터는 여기 넣지 않는다(캐시 밖에서 조회).
@@ -36,6 +37,8 @@ type DetailRow = {
   care: string | null;
   origin: string | null;
   images: unknown;
+  options: unknown;
+  enabled_addons: unknown;
   category_id: string | null;
   categories: { slug: string; name_en: string; name_ko: string } | null;
 };
@@ -46,7 +49,7 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
   const { data } = await db
     .from("products")
     .select(
-      "id, name, price, stock, description, material, size, care, origin, images, category_id, categories(slug, name_en, name_ko)",
+      "id, name, price, stock, description, material, size, care, origin, images, options, enabled_addons, category_id, categories(slug, name_en, name_ko)",
     )
     .eq("id", id)
     .eq("is_active", true)
@@ -65,6 +68,12 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
     origin: data.origin,
     images: imageList(data.images),
     category: data.categories,
+    options: parseOptionGroups(data.options),
+    // 코드 배열만 보관 — 상세 페이지가 enabledAddons() 로 Addon[] 변환. 배열 아니면
+    // (구 데이터) 전체 노출을 위해 null 을 넘겨 addons.ts 폴백이 동작하게 한다.
+    enabledAddons: Array.isArray(data.enabled_addons)
+      ? (data.enabled_addons as string[])
+      : [],
   };
 
   // 관련 상품(같은 카테고리) + 평점 통계 병렬.

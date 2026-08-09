@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { getCategorySlugs } from "@/lib/queries/categories";
 import type { ProductCardData } from "@/components/product/product-card";
+import type { OptionGroup } from "@/lib/product-options";
 
 type ProductRow = {
   id: string;
@@ -38,6 +39,10 @@ export interface ProductDetail {
   origin: string | null;
   images: string[];
   category: { slug: string; name_en: string; name_ko: string } | null;
+  // 상품별 커스텀 옵션(색상·모양 등, 0048) — 손님이 상세에서 선택.
+  options: OptionGroup[];
+  // 이 상품 상세에 노출할 추가옵션 코드(0048) — enabledAddons() 로 Addon[] 변환.
+  enabledAddons: string[];
 }
 
 

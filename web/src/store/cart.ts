@@ -6,6 +6,7 @@ import {
   clearServerCart,
   enqueueCartWrite,
 } from "@/lib/cart-sync";
+import type { SelectedOption } from "@/lib/product-options";
 
 export interface CartItem {
   id: string;
@@ -15,6 +16,8 @@ export interface CartItem {
   quantity: number;
   // 라인 단위 추가 옵션 코드(#253). 라인당 1세트 — 같은 상품 재담기 시 최신으로 덮어쓴다.
   addons: string[];
+  // 라인이 고른 커스텀 옵션(색상·모양 등, 0048). 재담기 시 최신으로 덮어쓴다.
+  options: SelectedOption[];
 }
 
 interface CartState {
@@ -22,9 +25,10 @@ interface CartState {
   // 로그인 사용자 id — 있으면 조작을 서버에 write-through(낙관적). 없으면 게스트(로컬).
   userId: string | null;
   add: (
-    item: Omit<CartItem, "quantity" | "addons">,
+    item: Omit<CartItem, "quantity" | "addons" | "options">,
     qty?: number,
     addons?: string[],
+    options?: SelectedOption[],
   ) => void;
   remove: (id: string) => void;
   setQty: (id: string, qty: number) => void;
@@ -41,29 +45,37 @@ export const useCart = create<CartState>()(
     (set, get) => ({
       items: [],
       userId: null,
-      add: (item, qty = 1, addons = []) => {
+      add: (item, qty = 1, addons = [], options = []) => {
         set((s) => {
           const existing = s.items.find((i) => i.id === item.id);
           if (existing) {
-            // 라인당 옵션 1세트 — 재담기 시 수량은 더하고 옵션은 최신으로 덮어쓴다.
+            // 라인당 옵션 1세트 — 재담기 시 수량은 더하고 옵션·추가옵션은 최신으로 덮어쓴다.
             return {
               items: s.items.map((i) =>
                 i.id === item.id
-                  ? { ...i, quantity: Math.min(i.quantity + qty, 99), addons }
+                  ? {
+                      ...i,
+                      quantity: Math.min(i.quantity + qty, 99),
+                      addons,
+                      options,
+                    }
                   : i,
               ),
             };
           }
           // 신규 항목도 상한 99 (서버는 upsert 시 clamp 되므로 로컬과 맞춤).
           return {
-            items: [...s.items, { ...item, quantity: Math.min(qty, 99), addons }],
+            items: [
+              ...s.items,
+              { ...item, quantity: Math.min(qty, 99), addons, options },
+            ],
           };
         });
         const { userId, items } = get();
         if (userId) {
           const next = items.find((i) => i.id === item.id)?.quantity ?? qty;
           void enqueueCartWrite(userId, () =>
-            upsertServerItem(userId, item.id, next, addons),
+            upsertServerItem(userId, item.id, next, addons, options),
           );
         }
       },
@@ -84,9 +96,11 @@ export const useCart = create<CartState>()(
         }));
         const { userId, items } = get();
         if (userId) {
-          const addons = items.find((i) => i.id === id)?.addons ?? [];
+          const line = items.find((i) => i.id === id);
+          const addons = line?.addons ?? [];
+          const options = line?.options ?? [];
           void enqueueCartWrite(userId, () =>
-            upsertServerItem(userId, id, qty, addons),
+            upsertServerItem(userId, id, qty, addons, options),
           );
         }
       },

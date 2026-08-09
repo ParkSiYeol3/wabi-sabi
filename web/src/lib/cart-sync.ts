@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import type { CartItem } from "@/store/cart";
+import { parseSelectedOptions, type SelectedOption } from "@/lib/product-options";
 
 // 계정 장바구니 서버 동기화 (0015). 사용자 클라이언트로 본인 행만 CRUD(RLS).
 // 저장은 product_id+quantity, 표시 정보는 products 조인으로 최신값 사용.
@@ -26,6 +27,7 @@ type CartRow = {
   product_id: string;
   quantity: number;
   addons: string[] | null;
+  options: unknown;
   products: {
     name: string;
     price: number;
@@ -39,7 +41,9 @@ export async function loadServerCart(): Promise<CartItem[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("cart_items")
-    .select("product_id, quantity, addons, products(name, price, images, is_active)")
+    .select(
+      "product_id, quantity, addons, options, products(name, price, images, is_active)",
+    )
     .order("updated_at", { ascending: true })
     .returns<CartRow[]>();
   if (error) throw error;
@@ -53,6 +57,7 @@ export async function loadServerCart(): Promise<CartItem[]> {
       image: r.products!.images?.[0] ?? null,
       quantity: r.quantity,
       addons: Array.isArray(r.addons) ? r.addons : [],
+      options: parseSelectedOptions(r.options),
     }));
 }
 
@@ -62,6 +67,7 @@ export async function upsertServerItem(
   productId: string,
   quantity: number,
   addons: string[] = [],
+  options: SelectedOption[] = [],
 ): Promise<void> {
   const supabase = createClient();
   if (quantity <= 0) {
@@ -79,6 +85,7 @@ export async function upsertServerItem(
       product_id: productId,
       quantity: Math.min(quantity, 99),
       addons,
+      options,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id,product_id" },
@@ -131,8 +138,9 @@ export async function mergeGuestCart(
       user_id: userId,
       product_id: g.id,
       quantity: Math.min((serverQty.get(g.id) ?? 0) + g.quantity, 99),
-      // 라인당 1세트 — 병합 시 게스트가 고른 옵션을 유지한다.
+      // 라인당 1세트 — 병합 시 게스트가 고른 추가옵션·옵션을 유지한다.
       addons: g.addons ?? [],
+      options: g.options ?? [],
       updated_at: new Date().toISOString(),
     }));
     const { error: writeErr } = await supabase

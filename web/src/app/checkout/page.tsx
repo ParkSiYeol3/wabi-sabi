@@ -131,6 +131,7 @@ export default function CheckoutPage() {
           id: i.id,
           quantity: i.quantity,
           addons: i.addons,
+          options: i.options,
         })),
         delivery,
         giftInput,
