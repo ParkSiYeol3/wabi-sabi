@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
 import { Fragment } from "react";
 import Link from "next/link";
-import Form from "next/form";
-import { Search } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { ProductCard } from "@/components/product/product-card";
 import { Reveal } from "@/components/common/reveal";
-import { Input } from "@/components/ui/input";
 import { MONTHLY_SLUG } from "@/lib/site";
 import { ShopSidebar } from "@/components/shop/shop-sidebar";
 import { MobileCategoryTabs } from "@/components/shop/mobile-category-tabs";
@@ -88,38 +85,10 @@ export default async function ShopPage({
         </div>
 
         <div className="min-w-0 flex-1">
-          {/* 툴바 — 검색(좌) + 정렬(우) 한 줄, 하단 구분선 */}
-          <div className="flex flex-col gap-4 border-b border-wabi-border pb-5 sm:flex-row sm:items-center sm:justify-between">
-            {/* 검색 (WSB-008) — next/form 으로 클라이언트 내비게이션(전체 새로고침 방지).
-                모바일은 공간 절약 위해 검색창을 숨긴다(대표님) → sm 이상만 노출. */}
-            <Form
-              action="/shop"
-              role="search"
-              className="hidden w-full gap-2 sm:flex sm:max-w-xs"
-            >
-              {sp.category && (
-                <input type="hidden" name="category" value={sp.category} />
-              )}
-              {sp.sort && sp.sort !== "newest" && (
-                <input type="hidden" name="sort" value={sp.sort} />
-              )}
-              <Input
-                name="q"
-                type="search"
-                defaultValue={sp.q ?? ""}
-                placeholder="상품 검색"
-                aria-label="상품 검색"
-                className="rounded-none"
-              />
-              <button
-                type="submit"
-                aria-label="검색"
-                className="flex items-center justify-center bg-wabi-accent px-4 text-white hover:bg-wabi-accent/90"
-              >
-                <Search className="size-4" />
-              </button>
-            </Form>
-
+          {/* 툴바 — 정렬만 우측 정렬, 하단 구분선. 검색창은 제거(대표님 — 웹·모바일
+              모두 노출 안 함). 카테고리 탐색은 사이드바/드로어가 담당하고, 직접
+              검색이 필요하면 ?q= URL 파라미터는 계속 동작한다(빈 결과 시 추천 노출). */}
+          <div className="flex items-center justify-end border-b border-wabi-border pb-5">
             {/* 정렬 — 눈에 튀지 않게 담백한 텍스트 링크(대표님: 굳이 잘 안 보여도 됨).
                 선택된 정렬만 진하게, 나머지는 흐리게. 가운뎃점으로 구분. */}
             <div className="flex shrink-0 items-center gap-3 text-xs text-wabi-fg-muted">
