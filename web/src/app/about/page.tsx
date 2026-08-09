@@ -181,7 +181,7 @@ export default async function AboutPage() {
               </VisitItem>
               <VisitItem
                 icon={<AtSign className="size-5" strokeWidth={1.5} />}
-                title="인스타그램"
+                title="Instagram"
               >
                 <a href={site.instagramUrl} className="hover:underline">
                   {site.instagram}
