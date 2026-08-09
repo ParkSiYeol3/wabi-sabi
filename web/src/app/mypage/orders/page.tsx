@@ -3,12 +3,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { ImageIcon } from "lucide-react";
-import { Container } from "@/components/container";
-import { CancelOrderButton } from "@/components/cancel-order-button";
-import { OrderStatusBadge } from "@/components/order-status-badge";
+import { Container } from "@/components/layout/container";
+import { CancelOrderButton } from "@/components/account/cancel-order-button";
+import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateKST, withdrawalDeadlineKST } from "@/lib/orders";
-import { Price } from "@/components/price";
+import { Price } from "@/components/product/price";
 
 export const metadata: Metadata = { title: "주문 내역" };
 

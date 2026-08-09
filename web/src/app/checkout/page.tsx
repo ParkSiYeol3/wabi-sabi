@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { loadTossPayments, ANONYMOUS } from "@tosspayments/tosspayments-sdk";
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCart, cartTotal } from "@/store/cart";
@@ -11,7 +11,7 @@ import { useAuthStore } from "@/store/auth";
 import { useMounted } from "@/hooks/use-mounted";
 import { won } from "@/lib/orders";
 import { addonsTotal, GIFT_WRAP_CODE } from "@/lib/addons";
-import { Price } from "@/components/price";
+import { Price } from "@/components/product/price";
 import {
   createPendingOrder,
   getMyAddresses,

@@ -1,4 +1,4 @@
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 
 // 문의 목록 스켈레톤 (#172) — 제목 줄 + 문의하기 버튼 자리.
 export default function InquiryLoading() {

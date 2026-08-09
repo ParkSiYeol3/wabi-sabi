@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Minus, Plus, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Price } from "@/components/price";
+import { Price } from "@/components/product/price";
 import { useCart, type CartItem } from "@/store/cart";
 import { ADDONS, won } from "@/lib/addons";
 

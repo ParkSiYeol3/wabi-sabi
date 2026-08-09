@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { CtaLink } from "@/components/cta-link";
-import { Reveal } from "@/components/reveal";
+import { CtaLink } from "@/components/common/cta-link";
+import { Reveal } from "@/components/common/reveal";
 import { HelixJourney } from "@/components/home/helix-journey";
 import { SmoothScroll } from "@/components/home/smooth-scroll";
 import { HomeAuthLinks } from "@/components/home/auth-links";

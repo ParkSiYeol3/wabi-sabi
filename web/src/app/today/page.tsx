@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Container } from "@/components/container";
-import { MomentForm } from "@/components/moment-form";
-import { MomentGrid } from "@/components/moment-grid";
+import { Container } from "@/components/layout/container";
+import { MomentForm } from "@/components/moment/moment-form";
+import { MomentGrid } from "@/components/moment/moment-grid";
 import { createClient } from "@/lib/supabase/server";
 import { getMomentsPage, MOMENTS_PAGE_SIZE } from "@/lib/queries/moments";
 

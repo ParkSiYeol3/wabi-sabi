@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ImageIcon } from "lucide-react";
-import { Container } from "@/components/container";
-import { ProductCard } from "@/components/product-card";
-import { ProductGallery } from "@/components/product-gallery";
-import { ProductImageZoom } from "@/components/product-image-zoom";
-import { ProductDetailActions } from "@/components/product-detail-actions";
-import { RestockButton } from "@/components/restock-button";
-import { WishlistButton } from "@/components/wishlist-button";
-import { ReviewSection } from "@/components/review-section";
-import { Price } from "@/components/price";
+import { Container } from "@/components/layout/container";
+import { ProductCard } from "@/components/product/product-card";
+import { ProductGallery } from "@/components/product/product-gallery";
+import { ProductImageZoom } from "@/components/product/product-image-zoom";
+import { ProductDetailActions } from "@/components/product/product-detail-actions";
+import { RestockButton } from "@/components/product/restock-button";
+import { WishlistButton } from "@/components/product/wishlist-button";
+import { ReviewSection } from "@/components/product/review-section";
+import { Price } from "@/components/product/price";
 import { getCachedProductDetail } from "@/lib/queries/product-detail";
 import {
   getPublicContent,

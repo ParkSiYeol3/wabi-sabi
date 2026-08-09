@@ -3,13 +3,13 @@ import { Fragment } from "react";
 import Link from "next/link";
 import Form from "next/form";
 import { Search } from "lucide-react";
-import { Container } from "@/components/container";
-import { ProductCard } from "@/components/product-card";
-import { Reveal } from "@/components/reveal";
+import { Container } from "@/components/layout/container";
+import { ProductCard } from "@/components/product/product-card";
+import { Reveal } from "@/components/common/reveal";
 import { Input } from "@/components/ui/input";
 import { MONTHLY_SLUG } from "@/lib/site";
-import { ShopSidebar } from "@/components/shop-sidebar";
-import { MobileCategoryTabs } from "@/components/mobile-category-tabs";
+import { ShopSidebar } from "@/components/shop/shop-sidebar";
+import { MobileCategoryTabs } from "@/components/shop/mobile-category-tabs";
 import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
 import {
   getProducts,

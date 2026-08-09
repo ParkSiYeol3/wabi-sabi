@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { won, formatDateKST } from "@/lib/orders";
-import { OrderStatusBadge } from "@/components/order-status-badge";
+import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { LOW_STOCK_THRESHOLD } from "@/lib/inventory";
 import {
   PageHeader,

@@ -1,4 +1,4 @@
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 
 // 공지사항 목록 스켈레톤 (#172).
 export default function NoticeLoading() {

@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Trash2 } from "lucide-react";
-import { Container } from "@/components/container";
-import { SubmitButton } from "@/components/submit-button";
+import { Container } from "@/components/layout/container";
+import { SubmitButton } from "@/components/common/submit-button";
 import { Input } from "@/components/ui/input";
-import { LogoutButton } from "@/components/logout-button";
-import { DeleteAccountSection } from "@/components/delete-account-section";
-import { NicknameForm } from "@/components/nickname-form";
+import { LogoutButton } from "@/components/account/logout-button";
+import { DeleteAccountSection } from "@/components/account/delete-account-section";
+import { NicknameForm } from "@/components/account/nickname-form";
 import { createClient } from "@/lib/supabase/server";
 import { addAddress, deleteAddress } from "./actions";
 

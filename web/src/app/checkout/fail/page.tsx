@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { XCircle } from "lucide-react";
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 
 type SP = { code?: string; message?: string };

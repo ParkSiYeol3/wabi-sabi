@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Lock } from "lucide-react";
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 import { getInquiry } from "@/lib/queries/inquiries";
 
 export async function generateMetadata({

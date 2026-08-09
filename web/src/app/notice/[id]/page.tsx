@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 import { getNotice } from "@/lib/queries/notices";
 
 export async function generateMetadata({

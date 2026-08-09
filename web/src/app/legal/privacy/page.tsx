@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LegalPage, Article } from "@/components/legal-layout";
+import { LegalPage, Article } from "@/components/layout/legal-layout";
 import { business } from "@/lib/site";
 
 export const metadata: Metadata = { title: "개인정보처리방침" };

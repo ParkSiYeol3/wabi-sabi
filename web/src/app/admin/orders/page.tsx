@@ -1,9 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { won, formatDateKST, trackingSearchUrl } from "@/lib/orders";
-import { OrderStatusBadge } from "@/components/order-status-badge";
+import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { PageHeader, TablePanel, EmptyState } from "@/components/admin/ui";
-import { SubmitButton } from "@/components/submit-button";
+import { SubmitButton } from "@/components/common/submit-button";
 import { setTracking, markDelivered } from "./actions";
 
 type Order = {

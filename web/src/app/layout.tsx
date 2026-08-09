@@ -6,15 +6,15 @@ import {
 } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
-import { AuthProvider } from "@/components/auth-provider";
-import { SessionTimeout } from "@/components/session-timeout";
-import { NicknameGate } from "@/components/nickname-gate";
-import { PrepNotice } from "@/components/prep-notice";
+import { AuthProvider } from "@/components/account/auth-provider";
+import { SessionTimeout } from "@/components/account/session-timeout";
+import { NicknameGate } from "@/components/account/nickname-gate";
+import { PrepNotice } from "@/components/layout/prep-notice";
 import { getPrepNotice } from "@/lib/queries/content";
-import { AmbientPlayer } from "@/components/ambient-player";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
-import { HideOnAdmin } from "@/components/hide-on-admin";
+import { AmbientPlayer } from "@/components/common/ambient-player";
+import { SiteHeader } from "@/components/layout/site-header";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { HideOnAdmin } from "@/components/layout/hide-on-admin";
 import { SITE_URL } from "@/lib/site-url";
 import { business } from "@/lib/site";
 

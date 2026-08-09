@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { saveAddonImage, removeAddonImage } from "@/app/admin/content/actions";
 import type { ActionResult } from "@/app/admin/products/types";
-import { SubmitButton } from "@/components/submit-button";
+import { SubmitButton } from "@/components/common/submit-button";
 
 // 추가 옵션(애드온) 사진 업로드·제거 (대표님). About 사진 필드와 같은 패턴을
 // 옵션 코드별로 재사용한다. 현재 사진 미리보기 + 파일 선택 + 저장 + 제거.

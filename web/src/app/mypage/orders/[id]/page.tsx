@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Container } from "@/components/container";
-import { CancelOrderButton } from "@/components/cancel-order-button";
-import { OrderStatusBadge } from "@/components/order-status-badge";
+import { Container } from "@/components/layout/container";
+import { CancelOrderButton } from "@/components/account/cancel-order-button";
+import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { createClient } from "@/lib/supabase/server";
 import {
   formatDateKST,
   withdrawalDeadlineKST,
   trackingSearchUrl,
 } from "@/lib/orders";
-import { Price } from "@/components/price";
+import { Price } from "@/components/product/price";
 import { parseUuid } from "@/lib/validation";
 
 export const metadata: Metadata = { title: "주문 상세" };

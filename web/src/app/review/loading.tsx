@@ -1,4 +1,4 @@
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 
 // 리뷰 목록 스켈레톤 (#172) — 별점·작성자 줄 + 본문 형태.
 export default function ReviewLoading() {

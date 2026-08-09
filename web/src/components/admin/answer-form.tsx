@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { SubmitButton } from "@/components/submit-button";
+import { SubmitButton } from "@/components/common/submit-button";
 import { adminAction } from "@/components/admin/ui";
 import { answerInquiry, type AnswerResult } from "@/app/admin/inquiries/actions";
 

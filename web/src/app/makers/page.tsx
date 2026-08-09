@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { ImageIcon } from "lucide-react";
-import { Container } from "@/components/container";
-import { Reveal } from "@/components/reveal";
-import { CtaLink } from "@/components/cta-link";
+import { Container } from "@/components/layout/container";
+import { Reveal } from "@/components/common/reveal";
+import { CtaLink } from "@/components/common/cta-link";
 
 export const metadata: Metadata = {
   title: "작가 · 만드는 사람들",

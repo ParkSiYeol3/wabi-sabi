@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Gift, MessageSquareHeart, ShoppingBag } from "lucide-react";
-import { Container } from "@/components/container";
-import { Reveal } from "@/components/reveal";
-import { ProductCard } from "@/components/product-card";
-import { CtaLink } from "@/components/cta-link";
+import { Container } from "@/components/layout/container";
+import { Reveal } from "@/components/common/reveal";
+import { ProductCard } from "@/components/product/product-card";
+import { CtaLink } from "@/components/common/cta-link";
 import { getProducts } from "@/lib/queries/products";
 import { ADDONS, GIFT_WRAP_CODE, won } from "@/lib/addons";
 

@@ -1,4 +1,4 @@
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 
 // 법적고지 3종 공용 골격 (#106) — 제목·시행일·본문 타이포.
 export function LegalPage({

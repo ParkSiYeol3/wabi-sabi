@@ -8,7 +8,7 @@ import {
   removeAboutImage,
 } from "@/app/admin/content/actions";
 import type { ActionResult } from "@/app/admin/products/types";
-import { SubmitButton } from "@/components/submit-button";
+import { SubmitButton } from "@/components/common/submit-button";
 
 // About 매장 사진 업로드·제거 (대표님). 현재 사진 미리보기 + 파일 선택 + 저장.
 export function AboutImageField({ current }: { current: string | null }) {

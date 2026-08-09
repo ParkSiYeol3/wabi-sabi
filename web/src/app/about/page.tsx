@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { Clock, MapPin, AtSign, Mail } from "lucide-react";
-import { Container } from "@/components/container";
-import { Reveal } from "@/components/reveal";
-import { InstagramFeed } from "@/components/instagram-feed";
-import { MapCard } from "@/components/map-card";
+import { Container } from "@/components/layout/container";
+import { Reveal } from "@/components/common/reveal";
+import { InstagramFeed } from "@/components/common/instagram-feed";
+import { MapCard } from "@/components/map/map-card";
 import { site } from "@/lib/site";
 import {
   getSiteContent,

@@ -1,4 +1,4 @@
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 
 // 주문 내역 스켈레톤 (#172) — 카드(썸네일 + 텍스트) 형태에 맞춘다.
 export default function OrdersLoading() {

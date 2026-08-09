@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { Input } from "@/components/ui/input";
-import { SubmitButton } from "@/components/submit-button";
+import { SubmitButton } from "@/components/common/submit-button";
 import { updateName, type UpdateNameResult } from "@/app/mypage/actions";
 
 // 닉네임 저장 폼 — "저장 중…" 후 완료되면 "✓ 저장되었습니다"를 인라인 표시(대표님).

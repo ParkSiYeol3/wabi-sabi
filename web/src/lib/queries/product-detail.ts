@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
-import type { ProductCardData } from "@/components/product-card";
+import type { ProductCardData } from "@/components/product/product-card";
 import type { ProductDetail } from "@/lib/queries/products";
 import type { ReviewStats } from "@/lib/queries/reviews";
 
