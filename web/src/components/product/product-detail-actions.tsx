@@ -162,34 +162,38 @@ export function ProductDetailActions({ product, stock, addonImages }: Props) {
         </Button>
       </div>
 
-      {/* 모바일 스티키 구매 바 — 사진·스펙·리뷰를 스크롤해도 담기/구매가 항상 손닿는
-          곳에 있게(커머스 표준). 합계는 수량·애드온 반영. 데스크톱은 위 인라인 사용.
-          safe-area 로 아이폰 홈 인디케이터를 피한다. */}
+      {/* 모바일 구매 바 — 사진·스펙·리뷰를 스크롤해도 담기/구매가 항상 손닿는 곳에
+          있게(커머스 표준). 합계는 수량·애드온 반영. 데스크톱은 위 인라인 사용.
+          화면 가장자리에 딱 붙으면 답답해(대표님) 좌우·하단을 띄운 라운드 카드로
+          떠 있게 하고, safe-area 로 아이폰 홈 인디케이터를 피한다. 바깥 래퍼는
+          투명 여백이 스크롤을 막지 않게 pointer-events-none, 카드만 auto. */}
       <div
-        className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-2 border-t border-wabi-border bg-wabi-bg/95 px-4 py-3 backdrop-blur md:hidden"
-        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-30 md:hidden"
+        style={{ paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom))" }}
       >
-        <p className="min-w-0 flex-1 text-lg font-semibold text-wabi-fg">
-          <Price value={total} />
-        </p>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={soldOut}
-          onClick={addToCart}
-          aria-live="polite"
-          className="rounded-none border-wabi-fg px-4"
-        >
-          {added ? "담김 ✓" : soldOut ? "품절" : "장바구니"}
-        </Button>
-        <Button
-          type="button"
-          disabled={soldOut}
-          onClick={buyNow}
-          className="rounded-none bg-wabi-accent px-5 hover:bg-wabi-accent/90"
-        >
-          바로 구매
-        </Button>
+        <div className="pointer-events-auto mx-3 flex items-center gap-2 rounded-2xl border border-wabi-border bg-wabi-bg/95 px-4 py-3 shadow-[0_6px_28px_rgba(0,0,0,0.12)] backdrop-blur">
+          <p className="min-w-0 flex-1 text-lg font-semibold text-wabi-fg">
+            <Price value={total} />
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={soldOut}
+            onClick={addToCart}
+            aria-live="polite"
+            className="rounded-none border-wabi-fg px-4"
+          >
+            {added ? "담김 ✓" : soldOut ? "품절" : "장바구니"}
+          </Button>
+          <Button
+            type="button"
+            disabled={soldOut}
+            onClick={buyNow}
+            className="rounded-none bg-wabi-accent px-5 hover:bg-wabi-accent/90"
+          >
+            바로 구매
+          </Button>
+        </div>
       </div>
     </div>
   );
