@@ -40,15 +40,21 @@ function SideLink({
 export function ShopSidebar({
   sp,
   tree,
+  todayActive = false,
 }: {
   sp: ShopSP;
   tree: CategoryNode[];
+  // /today 에서 이 사이드바를 재사용할 때 "오늘의 와비사비"를 현재 위치로 표시.
+  todayActive?: boolean;
 }) {
   const current = sp.category;
 
   return (
     <nav aria-label="카테고리" className="w-full lg:w-44 lg:shrink-0">
-      <SideLink href={buildShopQuery(sp, { category: undefined })} active={!current}>
+      <SideLink
+        href={buildShopQuery(sp, { category: undefined })}
+        active={!current && !todayActive}
+      >
         전체
       </SideLink>
       {/* 이 달의 상품 — 특별 표시(대표님): 액센트 색 + 작은 마크로 큐레이션 강조 */}
@@ -64,7 +70,7 @@ export function ShopSidebar({
           상품과 같은 스타일로 통일(대표님) — 버튼이 아니라 같은 액센트 텍스트 링크. */}
       <SideLink
         href="/today"
-        active={false}
+        active={todayActive}
         className="text-wabi-accent hover:text-wabi-accent"
       >
         오늘의 와비사비

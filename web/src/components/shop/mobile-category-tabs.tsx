@@ -41,9 +41,12 @@ function Tab({
 export function MobileCategoryTabs({
   sp,
   tree,
+  todayActive = false,
 }: {
   sp: ShopSP;
   tree: CategoryNode[];
+  // /today 재사용 시 "오늘의 와비사비" 현재 위치 표시.
+  todayActive?: boolean;
 }) {
   const current = sp.category;
 
@@ -53,7 +56,10 @@ export function MobileCategoryTabs({
         aria-label="카테고리"
         className="flex items-center gap-4 overflow-x-auto whitespace-nowrap pb-4 pr-9 pt-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        <Tab href={buildShopQuery(sp, { category: undefined })} active={!current}>
+        <Tab
+          href={buildShopQuery(sp, { category: undefined })}
+          active={!current && !todayActive}
+        >
           전체
         </Tab>
         <Tab
@@ -65,7 +71,7 @@ export function MobileCategoryTabs({
         </Tab>
         <Tab
           href="/today"
-          active={false}
+          active={todayActive}
           className="text-wabi-accent hover:text-wabi-accent"
         >
           오늘의 와비사비
