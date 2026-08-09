@@ -7,7 +7,15 @@ import {
   ProductEditForm,
   type ProductEditValues,
 } from "@/components/admin/product-edit-form";
+import { parseOptionGroups } from "@/lib/product-options";
+import { ADDON_CODES } from "@/lib/addons";
 import { leafCategoryOptions, type CategoryRow } from "../leaf-options";
+
+// DB 원본 행 — options/enabled_addons 는 jsonb 라 파싱해 ProductEditValues 로 변환.
+type ProductRow = Omit<ProductEditValues, "options" | "enabledAddons"> & {
+  options: unknown;
+  enabled_addons: unknown;
+};
 
 // 상품 본문 수정 (대표님 지시 — 이미 올린 상품 글 수정).
 // 어드민 가드는 admin/layout 의 requireAdmin. 재고·이미지는 목록 화면 담당.
@@ -20,21 +28,30 @@ export default async function AdminProductEditPage({
   // service_role 있으면 전체(비활성 포함), 없으면 공개 읽기
   const db = adminConfigured() ? createAdminClient() : await createClient();
 
-  const [{ data: product }, { data: categoryRows }] = await Promise.all([
+  const [{ data: row }, { data: categoryRows }] = await Promise.all([
     db
       .from("products")
       .select(
-        "id, name, price, category_id, is_monthly, description, material, size, care, origin",
+        "id, name, price, category_id, is_monthly, description, material, size, care, origin, options, enabled_addons",
       )
       .eq("id", id)
-      .maybeSingle<ProductEditValues>(),
+      .maybeSingle<ProductRow>(),
     db
       .from("categories")
       .select("id, name_ko, name_en, parent_id, is_active")
       .order("sort_order")
       .returns<(CategoryRow & { is_active: boolean })[]>(),
   ]);
-  if (!product) notFound();
+  if (!row) notFound();
+
+  // jsonb → 폼 값. enabled_addons 가 배열이 아니면(구 데이터) 전체 노출로 프리필.
+  const product: ProductEditValues = {
+    ...row,
+    options: parseOptionGroups(row.options),
+    enabledAddons: Array.isArray(row.enabled_addons)
+      ? ADDON_CODES.filter((c) => (row.enabled_addons as string[]).includes(c))
+      : ADDON_CODES,
+  };
 
   // 선택지는 노출 중(0036) 잎 분류만. 현재 카테고리가 그 목록에 없으면
   // (하위 있는 대분류 직접 연결·숨김 분류 등) select 가 "카테고리 없음"으로

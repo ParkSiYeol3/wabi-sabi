@@ -7,6 +7,7 @@ import { createProduct } from "@/app/admin/products/actions";
 import type { ActionResult } from "@/app/admin/products/types";
 import { OriginPicker } from "@/components/admin/origin-picker";
 import { AttributePicker } from "@/components/admin/attribute-picker";
+import { ProductOptionsFields } from "@/components/admin/product-options-fields";
 import { MATERIALS, SIZES, CARES } from "@/lib/product-attributes";
 
 type Category = { id: string; name_ko: string; name_en: string };
@@ -127,6 +128,9 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
         />
         이 달의 상품
       </label>
+      {/* 커스텀 옵션(색상·모양 등) + 추가옵션 노출(선물 포장·쇼핑백) — 성공 후
+          pickerKey 로 함께 remount 초기화. */}
+      <ProductOptionsFields key={`options-${pickerKey}`} />
       {/* 상품 설명 — 상세 페이지에 노출된다. 넓게 전체 폭 차지 */}
       <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted sm:col-span-2 lg:col-span-4">
         상품 설명 (상세 페이지에 표시)

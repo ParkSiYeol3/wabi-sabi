@@ -35,6 +35,7 @@ type Detail = {
     quantity: number;
     price: number;
     addons: { code: string; name: string; price: number }[] | null;
+    options: { name: string; value: string }[] | null;
   }[];
   gift_options: { message: string | null }[];
 };
@@ -57,7 +58,7 @@ export default async function OrderDetailPage({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, total_price, recipient, phone, address, delivery_memo, tracking_number, ordered_at, delivered_at, order_items(product_name, quantity, price, addons), gift_options(message)",
+      "id, order_number, status, total_price, recipient, phone, address, delivery_memo, tracking_number, ordered_at, delivered_at, order_items(product_name, quantity, price, addons, options), gift_options(message)",
     )
     .eq("id", orderId)
     .maybeSingle<Detail>();
@@ -93,6 +94,7 @@ export default async function OrderDetailPage({
         <ul className="mt-4 divide-y divide-wabi-border border-y border-wabi-border text-sm">
           {order.order_items.map((it, i) => {
             const lineAddons = it.addons ?? [];
+            const lineOptions = it.options ?? [];
             const addonSum = lineAddons.reduce((s, a) => s + a.price, 0);
             return (
               <li key={i} className="py-3">
@@ -108,6 +110,11 @@ export default async function OrderDetailPage({
                   </span>
                   <Price value={it.price * it.quantity + addonSum} />
                 </div>
+                {lineOptions.length > 0 && (
+                  <p className="mt-1 text-xs text-wabi-fg-muted">
+                    {lineOptions.map((o) => `${o.name}: ${o.value}`).join(" · ")}
+                  </p>
+                )}
                 {lineAddons.length > 0 && (
                   <p className="mt-1 text-xs text-wabi-fg-muted">
                     + {lineAddons.map((a) => a.name).join(", ")}

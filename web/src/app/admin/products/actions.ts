@@ -7,6 +7,8 @@ import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { parseUuid, numField, uuidSchema } from "@/lib/validation";
 import { logAdminAction } from "@/lib/audit";
 import { sendRestockMails } from "@/lib/emails/restock";
+import { parseOptionGroups } from "@/lib/product-options";
+import { ADDON_CODES } from "@/lib/addons";
 import {
   uploadProductImages,
   deleteProductImage,
@@ -46,6 +48,20 @@ function productFields(formData: FormData) {
     care: text("care"),
     origin: text("origin"),
   };
+}
+
+// 커스텀 옵션(0048) — hidden `options`(JSON)를 안전 파싱. 깨진 JSON 은 빈 배열.
+function optionsField(formData: FormData) {
+  try {
+    return parseOptionGroups(JSON.parse(String(formData.get("options") || "[]")));
+  } catch {
+    return [];
+  }
+}
+// 노출 추가옵션(0048) — 체크된 코드만. 유효 코드로 정규화하고 ADDONS 순서를 따른다.
+function enabledAddonsField(formData: FormData): string[] {
+  const picked = new Set(formData.getAll("enabled_addons").map((c) => String(c)));
+  return ADDON_CODES.filter((c) => picked.has(c));
 }
 
 function imageFiles(formData: FormData): File[] {
@@ -103,6 +119,8 @@ export async function createProduct(
       size,
       care,
       origin,
+      options: optionsField(formData),
+      enabled_addons: enabledAddonsField(formData),
     })
     .select("id")
     .single();
@@ -179,6 +197,8 @@ export async function updateProduct(
       size,
       care,
       origin,
+      options: optionsField(formData),
+      enabled_addons: enabledAddonsField(formData),
     })
     .eq("id", id)
     .select("id")

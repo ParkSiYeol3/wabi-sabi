@@ -21,6 +21,17 @@ export const ADDONS: readonly Addon[] = [
 const BY_CODE = new Map(ADDONS.map((a) => [a.code, a]));
 
 export const GIFT_WRAP_CODE = "gift_wrap";
+// 전체 애드온 코드 — 상품 등록 폼의 "추가옵션 노출" 체크박스 기본값(전부 켜짐).
+export const ADDON_CODES = ADDONS.map((a) => a.code);
+
+// 상품별 노출 애드온 (0048 products.enabled_addons) — 코드 배열에 든 것만, ADDONS
+// 순서 유지. 배열이 아니면(구 데이터) 전체 노출로 폴백(현행 동작 보존). 빈 배열이면
+// 대표님이 둘 다 껐다는 뜻 → 아무 애드온도 노출하지 않는다.
+export function enabledAddons(raw: unknown): Addon[] {
+  if (!Array.isArray(raw)) return [...ADDONS];
+  const set = new Set(raw.map((c) => String(c)));
+  return ADDONS.filter((a) => set.has(a.code));
+}
 export const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
 
 // 선택된 코드 목록 → 유효한 애드온만(알 수 없는 코드는 버림), 중복 제거.
