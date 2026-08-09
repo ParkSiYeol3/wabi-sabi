@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { getCategorySlugs } from "@/lib/queries/categories";
@@ -40,7 +41,37 @@ export interface ProductDetail {
 }
 
 
-export type ProductSort = "newest" | "price_asc" | "price_desc";
+export type ProductSort = "newest" | "popular" | "likes";
+
+// 주문/좋아요 정렬 — product_popularity 뷰(집계 숫자)에서 후보 상품의 순위를 받아
+// JS 로 재정렬한다. PostgREST 는 임베드 집계 컬럼으로 order 하기 까다롭고, 카탈로그가
+// 작고 캐시되므로 후처리 정렬이 간단·안전하다. anon/authenticated 모두 뷰 읽기 허용.
+async function rankBy(
+  db: SupabaseClient,
+  ids: string[],
+  col: "order_count" | "like_count",
+): Promise<Map<string, number>> {
+  if (ids.length === 0) return new Map();
+  const { data } = await db
+    .from("product_popularity")
+    .select(`product_id, ${col}`)
+    .in("product_id", ids)
+    .returns<
+      { product_id: string; order_count?: number; like_count?: number }[]
+    >();
+  return new Map(
+    (data ?? []).map((r) => [r.product_id, (r[col] ?? 0) as number]),
+  );
+}
+
+function applyRank<T extends { id: string }>(
+  cards: T[],
+  rank: Map<string, number>,
+): T[] {
+  return [...cards].sort(
+    (a, b) => (rank.get(b.id) ?? 0) - (rank.get(a.id) ?? 0),
+  );
+}
 
 export interface ProductQuery {
   category?: string;
@@ -78,18 +109,15 @@ export async function getProducts({
     query = query.in("categories.slug", await getCategorySlugs(category!));
   if (q && q.trim()) query = query.ilike("name", `%${q.trim()}%`);
 
-  // 정렬
-  if (sort === "price_asc") query = query.order("price", { ascending: true });
-  else if (sort === "price_desc")
-    query = query.order("price", { ascending: false });
-  else query = query.order("created_at", { ascending: false });
+  // 기본 정렬은 최신순. 주문/좋아요순은 집계 뷰로 후처리 재정렬한다.
+  query = query.order("created_at", { ascending: false });
 
   if (limit) query = query.limit(limit);
 
   const { data, error } = await query.returns<ProductRow[]>();
   if (error || !data) return [];
 
-  return data.map((p) => ({
+  const cards = data.map((p) => ({
     id: p.id,
     name: p.name,
     price: p.price,
@@ -98,6 +126,15 @@ export async function getProducts({
     category: p.categories?.name_en,
     isMonthly: p.is_monthly,
   }));
+  if (sort === "popular" || sort === "likes") {
+    const rank = await rankBy(
+      supabase,
+      cards.map((c) => c.id),
+      sort === "popular" ? "order_count" : "like_count",
+    );
+    return applyRank(cards, rank);
+  }
+  return cards;
 }
 
 // /shop 탐색(검색어 없음) 전용 캐시 경로. 카테고리(약 10종)×정렬(3종)로 조합이 유한해
@@ -132,15 +169,12 @@ async function loadShopBrowse(
   else if (filterByCategory)
     query = query.in("categories.slug", await getCategorySlugs(category));
 
-  if (sort === "price_asc") query = query.order("price", { ascending: true });
-  else if (sort === "price_desc")
-    query = query.order("price", { ascending: false });
-  else query = query.order("created_at", { ascending: false });
+  query = query.order("created_at", { ascending: false });
 
   const { data, error } = await query.returns<ProductRow[]>();
   if (error || !data) return [];
 
-  return data.map((p) => ({
+  const cards = data.map((p) => ({
     id: p.id,
     name: p.name,
     price: p.price,
@@ -149,6 +183,15 @@ async function loadShopBrowse(
     category: p.categories?.name_en,
     isMonthly: p.is_monthly,
   }));
+  if (sort === "popular" || sort === "likes") {
+    const rank = await rankBy(
+      db,
+      cards.map((c) => c.id),
+      sort === "popular" ? "order_count" : "like_count",
+    );
+    return applyRank(cards, rank);
+  }
+  return cards;
 }
 
 const getCachedShopBrowse = unstable_cache(
