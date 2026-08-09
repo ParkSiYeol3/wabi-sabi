@@ -34,6 +34,7 @@ export function SiteHeader() {
   if (pathname === "/" || pathname.startsWith("/admin")) return null;
 
   return (
+    <>
     <header className="sticky top-0 z-40 w-full border-b border-wabi-border bg-wabi-bg/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-300 items-center justify-between px-5">
         {/* 로고 */}
@@ -140,8 +141,11 @@ export function SiteHeader() {
           </button>
         </div>
       </div>
+    </header>
 
       {/* 모바일 메뉴 — 오른쪽에서 밀려 나오는 드로어(대표님). 배경 딤 클릭 시 닫힘.
+          헤더의 backdrop-blur 는 fixed 자식의 컨테이닝 블록이 돼 드로어를 헤더
+          높이에 가둔다 → 드로어는 반드시 <header> 밖(형제)에 둔다.
           닫힘 상태는 화면 밖(translate-x-full)+pointer-events-none 로 아무것도 안 가린다. */}
       <div
         className={cn(
@@ -224,6 +228,6 @@ export function SiteHeader() {
           </div>
         </nav>
       </div>
-    </header>
+    </>
   );
 }
