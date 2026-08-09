@@ -13,6 +13,12 @@ import {
   PREP_NOTICE_KEY,
   PREP_NOTICE_TEXT_KEY,
   DEFAULT_PREP_NOTICE_TEXT,
+  CRITERIA_LABEL_KEYS,
+  CRITERIA_BODY_KEYS,
+  CRITERIA_SUBTITLE_KEY,
+  DEFAULT_CRITERIA_LABELS,
+  DEFAULT_CRITERIA_BODIES,
+  DEFAULT_CRITERIA_SUBTITLE,
 } from "@/lib/queries/content";
 import { ADDONS, won } from "@/lib/addons";
 import { PageHeader, SectionHeading } from "@/components/admin/ui";
@@ -35,6 +41,13 @@ export default async function AdminContentPage() {
     aboutImage,
     prepNotice,
     prepNoticeText,
+    critSubtitle,
+    critLabel1,
+    critLabel2,
+    critLabel3,
+    critBody1,
+    critBody2,
+    critBody3,
     ...addonImages
   ] = await Promise.all([
     getSiteContent(PHILOSOPHY_KEY),
@@ -48,6 +61,13 @@ export default async function AdminContentPage() {
     getSiteContent(ABOUT_IMAGE_KEY),
     getSiteContent(PREP_NOTICE_KEY),
     getSiteContent(PREP_NOTICE_TEXT_KEY),
+    getSiteContent(CRITERIA_SUBTITLE_KEY),
+    getSiteContent(CRITERIA_LABEL_KEYS[0]),
+    getSiteContent(CRITERIA_LABEL_KEYS[1]),
+    getSiteContent(CRITERIA_LABEL_KEYS[2]),
+    getSiteContent(CRITERIA_BODY_KEYS[0]),
+    getSiteContent(CRITERIA_BODY_KEYS[1]),
+    getSiteContent(CRITERIA_BODY_KEYS[2]),
     ...ADDONS.map((a) => getSiteContent(addonImageKey(a.code))),
   ]);
 
@@ -96,6 +116,70 @@ export default async function AdminContentPage() {
             가운데 오도록 올려주세요. 없으면 기본 로고가 표시됩니다.
           </p>
           <AboutImageField current={aboutImage} />
+        </section>
+
+        {/* About "고르는 기준" — 3항목(제목+본문)+안내문. About 하단 셀렉션 기준 */}
+        <section className="space-y-4">
+          <SectionHeading>About 고르는 기준</SectionHeading>
+          <p className="text-xs text-wabi-fg-muted">
+            About 페이지 &ldquo;고르는 기준&rdquo; 섹션의 문구입니다. 세 항목의
+            제목·본문과 상단 안내문을 편집합니다.
+          </p>
+          <ContentField
+            contentKey={CRITERIA_SUBTITLE_KEY}
+            label="상단 안내문"
+            hint="제목 '고르는 기준' 아래 한 줄 설명입니다."
+            value={critSubtitle ?? DEFAULT_CRITERIA_SUBTITLE}
+            rows={2}
+          />
+          {[
+            {
+              n: "01",
+              label: CRITERIA_LABEL_KEYS[0],
+              body: CRITERIA_BODY_KEYS[0],
+              lv: critLabel1,
+              bv: critBody1,
+              dl: DEFAULT_CRITERIA_LABELS.criteria_1_label,
+              db: DEFAULT_CRITERIA_BODIES.criteria_1_body,
+            },
+            {
+              n: "02",
+              label: CRITERIA_LABEL_KEYS[1],
+              body: CRITERIA_BODY_KEYS[1],
+              lv: critLabel2,
+              bv: critBody2,
+              dl: DEFAULT_CRITERIA_LABELS.criteria_2_label,
+              db: DEFAULT_CRITERIA_BODIES.criteria_2_body,
+            },
+            {
+              n: "03",
+              label: CRITERIA_LABEL_KEYS[2],
+              body: CRITERIA_BODY_KEYS[2],
+              lv: critLabel3,
+              bv: critBody3,
+              dl: DEFAULT_CRITERIA_LABELS.criteria_3_label,
+              db: DEFAULT_CRITERIA_BODIES.criteria_3_body,
+            },
+          ].map((c) => (
+            <div
+              key={c.label}
+              className="space-y-3 rounded-lg border border-wabi-border p-4"
+            >
+              <p className="text-xs font-medium text-wabi-fg">{c.n}</p>
+              <ContentField
+                contentKey={c.label}
+                label="제목"
+                value={c.lv ?? c.dl}
+                rows={1}
+              />
+              <ContentField
+                contentKey={c.body}
+                label="본문"
+                value={c.bv ?? c.db}
+                rows={2}
+              />
+            </div>
+          ))}
         </section>
 
         {/* 추가 옵션 사진 — 상품 상세의 선물 포장·쇼핑백 옵션 옆에 표시 */}

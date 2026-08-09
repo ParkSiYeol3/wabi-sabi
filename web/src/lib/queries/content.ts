@@ -44,6 +44,20 @@ export const PREP_NOTICE_TEXT_KEY = "prep_notice_text"; // 안내 본문(편집 
 export const DEFAULT_PREP_NOTICE_TEXT =
   "지금은 정식 오픈을 준비하는 기간입니다. 둘러보시는 건 자유로우니 편히 구경해 주세요.";
 
+// About "고르는 기준" — 3항목(제목+본문) + 안내문. 편집 가능(#). 홈 철학 3주와
+// 같은 배열 패턴. 키 순서 = 화면 표시 순서(01·02·03).
+export const CRITERIA_LABEL_KEYS = [
+  "criteria_1_label",
+  "criteria_2_label",
+  "criteria_3_label",
+] as const;
+export const CRITERIA_BODY_KEYS = [
+  "criteria_1_body",
+  "criteria_2_body",
+  "criteria_3_body",
+] as const;
+export const CRITERIA_SUBTITLE_KEY = "criteria_subtitle";
+
 // 편집 가능한 전체 키 — 액션 enum·타입 안전의 단일 출처.
 export const CONTENT_KEYS = [
   PHILOSOPHY_KEY,
@@ -51,6 +65,9 @@ export const CONTENT_KEYS = [
   ...HOME_PILLAR_KEYS,
   HOME_CTA_KEY,
   PREP_NOTICE_TEXT_KEY,
+  ...CRITERIA_LABEL_KEYS,
+  ...CRITERIA_BODY_KEYS,
+  CRITERIA_SUBTITLE_KEY,
 ] as const;
 export type ContentKey = (typeof CONTENT_KEYS)[number];
 
@@ -81,6 +98,29 @@ export const DEFAULT_PILLAR_LABELS: Record<
 };
 
 export const DEFAULT_HOME_CTA = "당신의 하루에 놓일 그릇, 천천히 둘러보세요 →";
+
+// About "고르는 기준" 기본값 — 키 순서와 1:1 대응.
+export const DEFAULT_CRITERIA_LABELS: Record<
+  (typeof CRITERIA_LABEL_KEYS)[number],
+  string
+> = {
+  criteria_1_label: "손의 흔적",
+  criteria_2_label: "쓰임",
+  criteria_3_label: "시간",
+};
+export const DEFAULT_CRITERIA_BODIES: Record<
+  (typeof CRITERIA_BODY_KEYS)[number],
+  string
+> = {
+  criteria_1_body:
+    "물레 자국, 유약의 흐름, 어긋난 좌우. 같은 형태가 둘 없는 물건만 들입니다.",
+  criteria_2_body:
+    "장식장이 아니라 식탁 위에서 매일 손에 닿는, 쓰임이 분명한 물건을 고릅니다.",
+  criteria_3_body:
+    "쓸수록 길이 들고, 낡음이 결이 되는. 오래 곁에 둘수록 좋아지는 것만 남깁니다.",
+};
+export const DEFAULT_CRITERIA_SUBTITLE =
+  "모든 물건은 세 가지 질문을 통과한 뒤에야 매대에 오릅니다.";
 
 // key 에 해당하는 저장 값. 없거나 오류면 null(호출부에서 기본값 폴백).
 // 사용자 세션 클라이언트 — 어드민 편집 화면 등 캐시 밖 조회에 쓴다.

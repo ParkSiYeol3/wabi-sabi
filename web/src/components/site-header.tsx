@@ -141,60 +141,87 @@ export function SiteHeader() {
         </div>
       </div>
 
-      {/* 모바일 메뉴 */}
+      {/* 모바일 메뉴 — 오른쪽에서 밀려 나오는 드로어(대표님). 배경 딤 클릭 시 닫힘.
+          닫힘 상태는 화면 밖(translate-x-full)+pointer-events-none 로 아무것도 안 가린다. */}
       <div
         className={cn(
-          "overflow-hidden border-t border-wabi-border md:hidden",
-          open ? "max-h-96" : "max-h-0 border-t-0",
-          "transition-all duration-200",
+          "fixed inset-0 z-50 md:hidden",
+          open ? "pointer-events-auto" : "pointer-events-none",
         )}
+        aria-hidden={!open}
       >
+        {/* 딤 배경 */}
+        <div
+          onClick={() => setOpen(false)}
+          className={cn(
+            "absolute inset-0 bg-black/30 transition-opacity duration-200",
+            open ? "opacity-100" : "opacity-0",
+          )}
+        />
+        {/* 패널 */}
         <nav
-          className="flex flex-col px-5 py-2 [font-family:var(--font-pretendard)]"
           aria-label="모바일 메뉴"
+          className={cn(
+            "absolute right-0 top-0 flex h-full w-72 max-w-[82%] flex-col bg-wabi-bg shadow-xl transition-transform duration-200 [font-family:var(--font-pretendard)]",
+            open ? "translate-x-0" : "translate-x-full",
+          )}
         >
-          {nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-wabi-border px-5">
+            <span className="text-sm font-bold tracking-[0.2em] [font-family:var(--font-cormorant)]">
+              {site.name}
+            </span>
+            <button
+              type="button"
               onClick={() => setOpen(false)}
-              className="py-3 text-sm tracking-wide text-wabi-fg-muted transition-colors hover:text-wabi-fg"
+              aria-label="메뉴 닫기"
+              className="rounded-md p-2 text-wabi-fg transition-colors hover:bg-wabi-muted"
             >
-              {item.label}
-            </Link>
-          ))}
-          {showAdmin && (
-            <Link
-              href="/admin"
-              onClick={() => setOpen(false)}
-              className="py-3 text-sm font-medium tracking-wide text-wabi-accent"
-            >
-              관리자
-            </Link>
-          )}
-          {/* 로그인 시 위시리스트·주문내역 — 모바일은 상단 아이콘 대신 메뉴 안에(대표님,
-              참고 시안 GUIDE 섹션). 구분선으로 메뉴와 나눈다. */}
-          {mounted && user && (
-            <>
-              <div className="my-1 border-t border-wabi-border" />
+              <X className="size-5" />
+            </button>
+          </div>
+          <div className="flex flex-col overflow-y-auto px-5 py-2">
+            {nav.map((item) => (
               <Link
-                href="/mypage/wishlist"
+                key={item.href}
+                href={item.href}
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 py-3 text-sm tracking-wide text-wabi-fg-muted transition-colors hover:text-wabi-fg"
+                className="py-3 text-sm tracking-wide text-wabi-fg-muted transition-colors hover:text-wabi-fg"
               >
-                <Heart className="size-4" strokeWidth={1.5} />
-                위시리스트
+                {item.label}
               </Link>
+            ))}
+            {showAdmin && (
               <Link
-                href="/mypage/orders"
+                href="/admin"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 py-3 text-sm tracking-wide text-wabi-fg-muted transition-colors hover:text-wabi-fg"
+                className="py-3 text-sm font-medium tracking-wide text-wabi-accent"
               >
-                <Receipt className="size-4" strokeWidth={1.5} />
-                주문 내역
+                관리자
               </Link>
-            </>
-          )}
+            )}
+            {/* 로그인 시 위시리스트·주문내역 — 모바일은 상단 아이콘 대신 메뉴 안에(대표님). */}
+            {mounted && user && (
+              <>
+                <div className="my-1 border-t border-wabi-border" />
+                <Link
+                  href="/mypage/wishlist"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 py-3 text-sm tracking-wide text-wabi-fg-muted transition-colors hover:text-wabi-fg"
+                >
+                  <Heart className="size-4" strokeWidth={1.5} />
+                  위시리스트
+                </Link>
+                <Link
+                  href="/mypage/orders"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 py-3 text-sm tracking-wide text-wabi-fg-muted transition-colors hover:text-wabi-fg"
+                >
+                  <Receipt className="size-4" strokeWidth={1.5} />
+                  주문 내역
+                </Link>
+              </>
+            )}
+          </div>
         </nav>
       </div>
     </header>
