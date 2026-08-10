@@ -109,13 +109,17 @@ export function AdminSidebar() {
             />
             <div className="absolute inset-y-0 left-0 w-64 max-w-[80%] overflow-y-auto bg-wabi-bg p-4 shadow-xl">
               <div className="mb-6 flex items-center justify-between">
+                {/* 데스크톱과 동일하게 shop 으로 돌아가기(대표님 — 모바일은 홈으로 가던 버그) */}
                 <Link
-                  href="/"
+                  href="/shop"
                   onClick={() => setOpen(false)}
-                  className="text-sm font-semibold text-wabi-fg"
+                  className="flex items-center gap-2 text-sm font-semibold text-wabi-fg"
                 >
-                  WABI-SABI{" "}
-                  <span className="font-normal text-wabi-fg-muted">Admin</span>
+                  <ChevronLeft className="size-4" />
+                  <span>
+                    WABI-SABI{" "}
+                    <span className="font-normal text-wabi-fg-muted">Admin</span>
+                  </span>
                 </Link>
                 <button
                   type="button"
