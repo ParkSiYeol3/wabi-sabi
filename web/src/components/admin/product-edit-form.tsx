@@ -9,7 +9,7 @@ import { OriginPicker } from "@/components/admin/origin-picker";
 import { AttributePicker } from "@/components/admin/attribute-picker";
 import { CareMultiPicker } from "@/components/admin/care-multi-picker";
 import { ProductOptionsFields } from "@/components/admin/product-options-fields";
-import { MATERIALS, SIZES, CARES } from "@/lib/product-attributes";
+import { MATERIALS, CARES } from "@/lib/product-attributes";
 import type { OptionGroup } from "@/lib/product-options";
 
 type Category = { id: string; name_ko: string; name_en: string };
@@ -119,15 +119,15 @@ export function ProductEditForm({
         원산지
         <OriginPicker initial={product.origin ?? ""} />
       </label>
+      {/* 사이즈 — 프리셋 없이 직접 입력만(대표님 — 규격이 제각각). */}
       <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted">
         사이즈
-        <AttributePicker
+        <Input
           name="size"
-          label="사이즈"
-          options={SIZES}
-          initial={product.size ?? ""}
-          emptyLabel="사이즈 선택 안 함"
-          customPlaceholder="사이즈 직접 입력 (예: 지름 12cm)"
+          maxLength={500}
+          defaultValue={product.size ?? ""}
+          placeholder="사이즈 (예: 지름 12cm · Ø20x12 h2.5)"
+          className="rounded-none"
         />
       </label>
       {/* 주의사항 — 복수 선택 + 직접 입력 여러 개(대표님). 칩·입력을 감싸므로
