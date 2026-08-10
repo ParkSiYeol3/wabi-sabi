@@ -24,6 +24,8 @@ import {
   DEFAULT_CRITERIA_HEADING,
   SHIPPING_INFO_KEY,
   DEFAULT_SHIPPING_INFO,
+  SHIPPING_FEE_KEY,
+  DEFAULT_SHIPPING_FEE,
 } from "@/lib/queries/content";
 import { ADDONS, won } from "@/lib/addons";
 import { PageHeader, SectionHeading } from "@/components/admin/ui";
@@ -89,6 +91,7 @@ export default async function AdminContentPage() {
     critBody3,
     critHeading,
     shippingInfo,
+    shippingFee,
     ...addonImages
   ] = await Promise.all([
     getSiteContent(PHILOSOPHY_KEY),
@@ -111,6 +114,7 @@ export default async function AdminContentPage() {
     getSiteContent(CRITERIA_BODY_KEYS[2]),
     getSiteContent(CRITERIA_HEADING_KEY),
     getSiteContent(SHIPPING_INFO_KEY),
+    getSiteContent(SHIPPING_FEE_KEY),
     ...ADDONS.map((a) => getSiteContent(addonImageKey(a.code))),
   ]);
 
@@ -333,6 +337,13 @@ export default async function AdminContentPage() {
               hint="예: 결제 확인 후 2~5영업일 이내 발송, 주말·공휴일 제외."
               value={shippingInfo ?? DEFAULT_SHIPPING_INFO}
               rows={3}
+            />
+            <ContentField
+              contentKey={SHIPPING_FEE_KEY}
+              label="배송비 안내"
+              hint="현재 결제는 배송비가 부과되지 않습니다(무료). 유료로 바꾸려면 총액 반영 기능이 별도로 필요하니 문구만 바꾸지 마시고 알려주세요."
+              value={shippingFee ?? DEFAULT_SHIPPING_FEE}
+              rows={2}
             />
           </div>
 

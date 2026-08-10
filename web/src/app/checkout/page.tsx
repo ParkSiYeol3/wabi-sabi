@@ -241,6 +241,12 @@ export default function CheckoutPage() {
                 <dd><Price value={addonSum} /></dd>
               </div>
             )}
+            {/* 배송비 — 현재 결제는 배송비를 부과하지 않는다(total = 상품+옵션).
+                실제 청구액을 그대로 반영해 "무료"로 표기(토스 심사·구매 전 고지). */}
+            <div className="flex justify-between">
+              <dt className="text-wabi-fg-muted">배송비</dt>
+              <dd className="text-wabi-fg-muted">무료</dd>
+            </div>
             <div className="flex justify-between pt-2 text-base font-semibold">
               <dt>총 결제금액</dt>
               <dd><Price value={total} /></dd>

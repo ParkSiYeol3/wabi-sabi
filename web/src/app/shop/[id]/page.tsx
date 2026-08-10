@@ -18,6 +18,8 @@ import {
   addonImageKey,
   SHIPPING_INFO_KEY,
   DEFAULT_SHIPPING_INFO,
+  SHIPPING_FEE_KEY,
+  DEFAULT_SHIPPING_FEE,
 } from "@/lib/queries/content";
 import { enabledAddons } from "@/lib/addons";
 import { createClient } from "@/lib/supabase/server";
@@ -110,11 +112,13 @@ export default async function ProductDetailPage({
   const contentMap = await getPublicContent([
     ...ADDON_IMAGE_KEYS,
     SHIPPING_INFO_KEY,
+    SHIPPING_FEE_KEY,
   ]);
   const addonImages = Object.fromEntries(
     productAddons.map((a) => [a.code, contentMap[addonImageKey(a.code)]]),
   );
   const shippingInfo = contentMap[SHIPPING_INFO_KEY] || DEFAULT_SHIPPING_INFO;
+  const shippingFee = contentMap[SHIPPING_FEE_KEY] || DEFAULT_SHIPPING_FEE;
 
   // 위시리스트 초기 상태 (로그인 시) — 사용자별이라 캐시 밖.
   const supabase = await createClient();
@@ -269,8 +273,9 @@ export default async function ProductDetailPage({
                 </span>
               </span>
             </summary>
-            <div className="mt-4 whitespace-pre-line font-numeric text-wabi-fg-muted">
-              {shippingInfo}
+            <div className="mt-4 space-y-2 font-numeric text-wabi-fg-muted">
+              <p className="whitespace-pre-line">{shippingInfo}</p>
+              <p className="whitespace-pre-line">{shippingFee}</p>
             </div>
           </details>
 

@@ -66,6 +66,12 @@ export const SHIPPING_INFO_KEY = "shipping_info";
 export const DEFAULT_SHIPPING_INFO =
   "결제가 확인되면 평균 2~5영업일 이내에 상품을 발송합니다. 주말·공휴일은 발송이 제외되며, 택배사 사정에 따라 수령까지 시간이 더 걸릴 수 있습니다.";
 
+// 배송비 안내 문구 — 배송기간과 짝(토스 심사: 배송비 표시). 현재 결제는 배송비
+// 0원(상품가에 포함) → 기본값 "무료". 유료 정책 도입 시 실제 총액 반영 기능이 별도
+// 필요(이 문구는 안내 텍스트일 뿐 총액을 바꾸지 않는다).
+export const SHIPPING_FEE_KEY = "shipping_fee";
+export const DEFAULT_SHIPPING_FEE = "배송비는 무료입니다.";
+
 // 편집 가능한 전체 키 — 액션 enum·타입 안전의 단일 출처.
 export const CONTENT_KEYS = [
   PHILOSOPHY_KEY,
@@ -78,6 +84,7 @@ export const CONTENT_KEYS = [
   CRITERIA_SUBTITLE_KEY,
   CRITERIA_HEADING_KEY,
   SHIPPING_INFO_KEY,
+  SHIPPING_FEE_KEY,
 ] as const;
 export type ContentKey = (typeof CONTENT_KEYS)[number];
 
