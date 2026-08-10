@@ -24,12 +24,16 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
   const [open, setOpen] = useState(false);
   // 모바일 드로어에서 SHOP 하위 분류 드롭다운 펼침 상태(대표님 — nav 라벨을 토글로).
   const [shopOpen, setShopOpen] = useState(false);
+  // 어느 대분류를 펼쳤는지(아코디언 — 대표님: 대분류 누르면 그 소분류만 밑에 뜨게).
+  // 한 번에 하나만 펼쳐 미니멀하게. null 이면 대분류 헤더만 보인다.
+  const [openCat, setOpenCat] = useState<string | null>(null);
   // 아바타 로드 실패(호스트·만료 등) 시 기본 아이콘으로 폴백.
   const [avatarError, setAvatarError] = useState(false);
   // 드로어를 닫을 때는 펼쳐둔 분류도 함께 접어 다음에 열 때 깔끔하게 시작.
   const closeMenu = () => {
     setOpen(false);
     setShopOpen(false);
+    setOpenCat(null);
   };
   const pathname = usePathname();
   const count = useCart(cartCount);
@@ -236,7 +240,7 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
                     />
                   </button>
                   {shopOpen && (
-                    <div className="mb-1 flex flex-col border-l border-wabi-border pb-1 pl-3">
+                    <div className="mb-1 flex flex-col pb-1 pl-3">
                       <Link
                         href="/shop"
                         onClick={closeMenu}
@@ -259,28 +263,71 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
                       >
                         오늘의 와비사비
                       </Link>
-                      {/* 대분류(굵게=그룹 전체보기) + 그 아래 소분류(한 단 더 들여씀) */}
-                      {tree.map((node) => (
-                        <div key={node.slug} className="mt-2">
-                          <Link
-                            href={buildShopQuery({}, { category: node.slug })}
-                            onClick={closeMenu}
-                            className="block py-1.5 text-sm font-medium text-wabi-fg transition-colors"
-                          >
-                            {node.ko}
-                          </Link>
-                          {node.children?.map((c) => (
+                      {/* 대분류 아코디언(대표님) — 대분류를 누르면 그 소분류만 밑에
+                          작은 글씨로 펼쳐진다. 자식 없는 대분류는 그냥 링크. 펼친 뒤
+                          '전체'로 그 대분류 전체보기 가능. */}
+                      {tree.map((node) => {
+                        const kids = node.children ?? [];
+                        const catOpen = openCat === node.slug;
+                        if (kids.length === 0) {
+                          return (
                             <Link
-                              key={c.slug}
-                              href={buildShopQuery({}, { category: c.slug })}
+                              key={node.slug}
+                              href={buildShopQuery({}, { category: node.slug })}
                               onClick={closeMenu}
-                              className="block py-1.5 pl-3 text-sm text-wabi-fg-muted transition-colors hover:text-wabi-fg"
+                              className="mt-2 block py-1.5 text-sm font-medium text-wabi-fg transition-colors"
                             >
-                              {c.ko}
+                              {node.ko}
                             </Link>
-                          ))}
-                        </div>
-                      ))}
+                          );
+                        }
+                        return (
+                          <div key={node.slug} className="mt-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setOpenCat(catOpen ? null : node.slug)
+                              }
+                              aria-expanded={catOpen}
+                              className="flex w-full items-center justify-between py-1.5 text-sm font-medium text-wabi-fg"
+                            >
+                              {node.ko}
+                              <ChevronDown
+                                className={cn(
+                                  "size-3.5 shrink-0 text-wabi-fg-muted transition-transform duration-200",
+                                  catOpen && "rotate-180",
+                                )}
+                                strokeWidth={1.5}
+                              />
+                            </button>
+                            {catOpen && (
+                              <div className="flex flex-col pl-3">
+                                <Link
+                                  href={buildShopQuery({}, {
+                                    category: node.slug,
+                                  })}
+                                  onClick={closeMenu}
+                                  className="py-1 text-xs text-wabi-fg-muted transition-colors hover:text-wabi-fg"
+                                >
+                                  전체
+                                </Link>
+                                {kids.map((c) => (
+                                  <Link
+                                    key={c.slug}
+                                    href={buildShopQuery({}, {
+                                      category: c.slug,
+                                    })}
+                                    onClick={closeMenu}
+                                    className="py-1 text-xs text-wabi-fg-muted transition-colors hover:text-wabi-fg"
+                                  >
+                                    {c.ko}
+                                  </Link>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
