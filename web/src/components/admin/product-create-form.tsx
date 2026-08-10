@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createProduct } from "@/app/admin/products/actions";
 import type { ActionResult } from "@/app/admin/products/types";
+import { resizeFormImages } from "@/lib/resize-image";
 import { OriginPicker } from "@/components/admin/origin-picker";
 import { AttributePicker } from "@/components/admin/attribute-picker";
 import { CareMultiPicker } from "@/components/admin/care-multi-picker";
@@ -30,6 +31,8 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
   // 성공 시에만 폼 초기화 (실패 시 입력값 유지). 액션 래퍼에서 처리 — effect 내 setState 회피.
   const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(
     async (prev, formData) => {
+      // 업로드 전 이미지 리사이즈 — 모바일 사진 여러 장이 바디 한도를 넘기지 않게(대표님).
+      await resizeFormImages(formData);
       const result = await createProduct(prev, formData);
       if (result.ok) {
         setName("");
@@ -149,13 +152,13 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
         />
       </label>
       <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted sm:col-span-2 lg:col-span-3">
-        상품 이미지 (여러 장 가능, png/jpg/webp, 장당 최대 12MB)
+        상품 이미지 (여러 장 가능 · 업로드 시 자동 최적화)
         <input
           ref={fileRef}
           type="file"
           name="images"
           multiple
-          accept="image/png,image/jpeg,image/webp"
+          accept="image/*"
           className="cursor-pointer text-sm file:mr-3 file:cursor-pointer file:border file:border-wabi-border file:bg-transparent file:px-3 file:py-1.5 file:text-xs file:text-wabi-fg file:transition-colors hover:file:border-wabi-fg hover:file:bg-wabi-muted"
         />
       </label>

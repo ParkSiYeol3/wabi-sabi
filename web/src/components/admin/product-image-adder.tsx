@@ -4,6 +4,7 @@ import { useActionState, useRef } from "react";
 import { addProductImages } from "@/app/admin/products/actions";
 import type { ActionResult } from "@/app/admin/products/types";
 import { adminAction } from "@/components/admin/ui";
+import { resizeFormImages } from "@/lib/resize-image";
 
 // 상품 행 이미지 추가 — "이미지 추가" 한 번으로 파일 선택창을 열고, 파일을 고르면
 // 곧바로 업로드한다(대표님 — 파일 선택 + 추가 두 단계가 헷갈림). 네이티브 file
@@ -13,6 +14,8 @@ export function ProductImageAdder({ productId }: { productId: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(
     async (prev, formData) => {
+      // 업로드 전 리사이즈 — 모바일 사진 여러 장이 바디 한도를 넘기지 않게(대표님).
+      await resizeFormImages(formData);
       const result = await addProductImages(prev, formData);
       // 같은 파일을 다시 고를 때도 onChange 가 다시 발생하도록 값을 비운다.
       if (fileRef.current) fileRef.current.value = "";
@@ -29,7 +32,7 @@ export function ProductImageAdder({ productId }: { productId: string }) {
         type="file"
         name="images"
         multiple
-        accept="image/png,image/jpeg,image/webp"
+        accept="image/*"
         className="hidden"
         onChange={() => {
           if (fileRef.current?.files?.length) formRef.current?.requestSubmit();
