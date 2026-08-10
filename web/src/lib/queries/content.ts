@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { ADDONS } from "@/lib/addons";
+import { SHIPPING_NOTICE } from "@/lib/shipping";
 
 // 편집 가능한 사이트 콘텐츠 (#160·#245) — 대표님이 어드민에서 고칠 수 있는 텍스트.
 // 값이 없으면(미저장) 기본 문구로 폴백한다. site_content(key,value) 단일 테이블.
@@ -66,11 +67,12 @@ export const SHIPPING_INFO_KEY = "shipping_info";
 export const DEFAULT_SHIPPING_INFO =
   "결제가 확인되면 평균 2~5영업일 이내에 상품을 발송합니다. 주말·공휴일은 발송이 제외되며, 택배사 사정에 따라 수령까지 시간이 더 걸릴 수 있습니다.";
 
-// 배송비 안내 문구 — 배송기간과 짝(토스 심사: 배송비 표시). 현재 결제는 배송비
-// 0원(상품가에 포함) → 기본값 "무료". 유료 정책 도입 시 실제 총액 반영 기능이 별도
-// 필요(이 문구는 안내 텍스트일 뿐 총액을 바꾸지 않는다).
+// 배송비 안내 문구 — 배송기간과 짝(토스 심사: 배송비 표시). 실제 청구는 정책 상수
+// (lib/shipping: 7만원 이상 무료·미만 3,500원)로 서버가 계산한다. 기본 문구는 그
+// 상수에서 파생(SHIPPING_NOTICE)해 안내와 청구액이 어긋나지 않게 한다. 금액·기준을
+// 바꾸려면 lib/shipping 상수를 고쳐야 하며, 이 편집 필드는 "문구(표현)"만 바꾼다.
 export const SHIPPING_FEE_KEY = "shipping_fee";
-export const DEFAULT_SHIPPING_FEE = "배송비는 무료입니다.";
+export const DEFAULT_SHIPPING_FEE = SHIPPING_NOTICE;
 
 // 편집 가능한 전체 키 — 액션 enum·타입 안전의 단일 출처.
 export const CONTENT_KEYS = [

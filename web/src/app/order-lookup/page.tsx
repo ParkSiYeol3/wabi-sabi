@@ -116,7 +116,15 @@ export default function OrderLookupPage() {
             ))}
           </ul>
 
-          <div className="mt-6 flex items-center justify-between border-t border-wabi-border pt-4">
+          <div className="mt-6 flex items-center justify-between border-t border-wabi-border pt-4 text-sm text-wabi-fg-muted">
+            <span>배송비</span>
+            {order.shipping_fee > 0 ? (
+              <Price value={order.shipping_fee} />
+            ) : (
+              <span>무료</span>
+            )}
+          </div>
+          <div className="mt-2 flex items-center justify-between">
             <span className="text-sm font-medium">결제금액</span>
             <Price value={order.total_price} className="text-base font-semibold" />
           </div>

@@ -9,6 +9,7 @@ import {
   resolveAddons,
   GIFT_WRAP_CODE,
 } from "@/lib/addons";
+import { shippingFeeFor } from "@/lib/shipping";
 import {
   parseOptionGroups,
   validateSelection,
@@ -206,7 +207,10 @@ export async function createPendingOrder(
     });
   }
   // 라인별 애드온이 subtotal 에 이미 합산됐다(서버 정가 기준).
-  const amount = subtotal;
+  // 배송비 — 서버가 정책(lib/shipping)으로 재계산해 합산. 클라이언트가 준 값 불신.
+  // total_price 에 포함되므로 confirm_order_paid·토스 승인이 전액을 검증한다.
+  const shippingFee = shippingFeeFor(subtotal);
+  const amount = subtotal + shippingFee;
 
   const orderNumber = `WSB${Date.now().toString(36).toUpperCase()}`;
   const fullAddress = [delivery.postcode, delivery.address, delivery.detail]
@@ -222,6 +226,7 @@ export async function createPendingOrder(
       order_number: orderNumber,
       status: "pending",
       total_price: amount,
+      shipping_fee: shippingFee,
       recipient: delivery.recipient,
       phone: delivery.phone,
       address: fullAddress,
