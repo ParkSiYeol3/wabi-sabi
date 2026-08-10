@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { CtaLink } from "@/components/common/cta-link";
 import { Reveal } from "@/components/common/reveal";
@@ -5,6 +6,14 @@ import { HelixJourney } from "@/components/home/helix-journey";
 import { SmoothScroll } from "@/components/home/smooth-scroll";
 import { HomeAuthLinks } from "@/components/home/auth-links";
 import { getHomeData } from "@/lib/queries/home";
+
+// 홈이 브랜드 대표 페이지임을 명확히 — 자기 캐노니컬(/). "와비사비" 검색에서 /about 이
+// 먼저 뜨던 문제(홈·about 설명이 거의 같고 about 이 본문 텍스트가 많아서) 완화.
+// 제목·설명은 레이아웃 기본(브랜드 멘트)을 상속 — 홈이 브랜드 멘트를 소유하고,
+// /about 은 "소개" 특화 설명으로 분리해 브랜드 쿼리 경쟁을 줄인다.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 // 홈도 전 사이트와 같은 단일 명조로 통일(대표님) — 기존 무드 폰트(마루부리·
 // Cormorant·Space Mono)를 걷어내고 Noto Serif(KR+JP 폴백)만 쓴다.
