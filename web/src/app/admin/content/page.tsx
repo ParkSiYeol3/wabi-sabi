@@ -22,6 +22,8 @@ import {
   DEFAULT_CRITERIA_BODIES,
   DEFAULT_CRITERIA_SUBTITLE,
   DEFAULT_CRITERIA_HEADING,
+  SHIPPING_INFO_KEY,
+  DEFAULT_SHIPPING_INFO,
 } from "@/lib/queries/content";
 import { ADDONS, won } from "@/lib/addons";
 import { PageHeader, SectionHeading } from "@/components/admin/ui";
@@ -86,6 +88,7 @@ export default async function AdminContentPage() {
     critBody2,
     critBody3,
     critHeading,
+    shippingInfo,
     ...addonImages
   ] = await Promise.all([
     getSiteContent(PHILOSOPHY_KEY),
@@ -107,6 +110,7 @@ export default async function AdminContentPage() {
     getSiteContent(CRITERIA_BODY_KEYS[1]),
     getSiteContent(CRITERIA_BODY_KEYS[2]),
     getSiteContent(CRITERIA_HEADING_KEY),
+    getSiteContent(SHIPPING_INFO_KEY),
     ...ADDONS.map((a) => getSiteContent(addonImageKey(a.code))),
   ]);
 
@@ -314,8 +318,24 @@ export default async function AdminContentPage() {
         <PageBlock
           id="g-product"
           label="상품 상세"
-          note="상품 페이지의 추가 옵션(선물 포장·쇼핑백) 사진."
+          note="상품 페이지의 배송 안내·추가 옵션(선물 포장·쇼핑백) 사진."
         >
+          <div className="space-y-3">
+            <SectionHeading>배송 안내</SectionHeading>
+            <p className="text-xs text-wabi-fg-muted">
+              모든 상품 상세와 교환·환불 안내 페이지에 표시됩니다. 결제 후 실제
+              발송까지 걸리는 기간(영업일)을 정확히 적어주세요. 결제 서비스(토스)
+              심사에서 확인하는 항목이니 실제 운영에 맞게 꼭 채워주세요.
+            </p>
+            <ContentField
+              contentKey={SHIPPING_INFO_KEY}
+              label="배송 소요 안내"
+              hint="예: 결제 확인 후 2~5영업일 이내 발송, 주말·공휴일 제외."
+              value={shippingInfo ?? DEFAULT_SHIPPING_INFO}
+              rows={3}
+            />
+          </div>
+
           <div className="space-y-3">
             <SectionHeading>추가 옵션 사진</SectionHeading>
             <p className="text-xs text-wabi-fg-muted">
