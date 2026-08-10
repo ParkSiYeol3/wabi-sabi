@@ -5,6 +5,8 @@ import {
   getSiteContent,
   SHIPPING_INFO_KEY,
   DEFAULT_SHIPPING_INFO,
+  SHIPPING_FEE_KEY,
+  DEFAULT_SHIPPING_FEE,
 } from "@/lib/queries/content";
 
 export const metadata: Metadata = { title: "교환·환불 안내" };
@@ -15,12 +17,19 @@ export const metadata: Metadata = { title: "교환·환불 안내" };
 // 반품 배송비·회수 방법은 대표님 확정 필요(현재 문구는 법정 원칙만 기술).
 // 배송 안내 문구는 어드민 편집값(미저장 시 기본) — 상품 상세와 같은 출처.
 export default async function RefundPage() {
-  const shippingInfo =
-    (await getSiteContent(SHIPPING_INFO_KEY)) || DEFAULT_SHIPPING_INFO;
+  const [shippingInfo, shippingFee] = await Promise.all([
+    getSiteContent(SHIPPING_INFO_KEY),
+    getSiteContent(SHIPPING_FEE_KEY),
+  ]);
   return (
     <LegalPage title="교환·환불 안내" effectiveDate="2026년 7월 13일">
       <Article heading="1. 배송 안내">
-        <p className="whitespace-pre-line">{shippingInfo}</p>
+        <p className="whitespace-pre-line">
+          {shippingInfo || DEFAULT_SHIPPING_INFO}
+        </p>
+        <p className="whitespace-pre-line">
+          {shippingFee || DEFAULT_SHIPPING_FEE}
+        </p>
       </Article>
 
       <Article heading="2. 청약철회 기간">
