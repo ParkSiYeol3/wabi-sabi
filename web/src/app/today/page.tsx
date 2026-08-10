@@ -41,9 +41,12 @@ export default async function TodayPage() {
 
       {/* shop 과 동일한 분류 내비(대표님) — 분류를 누르면 해당 shop 카테고리로
           이동한다(buildShopQuery 가 /shop URL 을 만든다). "오늘의 와비사비"는
-          현재 위치로 표시. 데스크톱은 좌측 사이드바, 모바일은 상단 가로 탭. */}
-      <div className="mt-8">
-        <MobileCategoryTabs sp={{}} tree={tree} todayActive />
+          현재 위치로 표시. 데스크톱은 좌측 사이드바(ShopSidebar), 태블릿은 가로 탭.
+          모바일(<md)에선 분류를 우측 드로어(헤더 SHOP)로 옮겨(#421 shop 과 동일)
+          이 가로바를 숨긴다(대표님 — 사이드바/드로어 있어 중복). 래퍼도 함께 숨겨
+          빈 여백이 남지 않게 한다. */}
+      <div className="mt-8 hidden md:block lg:hidden">
+        <MobileCategoryTabs sp={{}} tree={tree} todayActive tabletOnly />
       </div>
 
       <div className="mt-8 flex items-start gap-10">
