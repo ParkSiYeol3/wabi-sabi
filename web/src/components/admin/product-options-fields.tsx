@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { ADDONS, ADDON_CODES, won } from "@/lib/addons";
 import type { OptionGroup } from "@/lib/product-options";
+import { cn } from "@/lib/utils";
 
 // 상품 등록·수정 폼의 "옵션 + 추가옵션" 입력 묶음 (0048, 대표님).
 //  ① 커스텀 옵션(색상·모양 등) — 그룹마다 [옵션 이름 + 선택지들(쉼표 구분)]. 손님이
@@ -15,7 +16,7 @@ import type { OptionGroup } from "@/lib/product-options";
 //    보이게 하고, 선택지 없는 줄은 저장 전에 경고로 알린다. 등록 폼은 성공 후 부모가
 //    key 로 remount 해 초기화한다(내부 state 라).
 
-type Row = { name: string; values: string };
+type Row = { name: string; values: string; soldOut: string[] };
 
 const splitValues = (s: string) =>
   s
@@ -33,14 +34,25 @@ export function ProductOptionsFields({
 }) {
   // 값은 편집 편의상 쉼표 구분 문자열로 다룬다(저장 시 배열로 파싱).
   const [rows, setRows] = useState<Row[]>(
-    initialOptions.map((g) => ({ name: g.name, values: g.values.join(", ") })),
+    initialOptions.map((g) => ({
+      name: g.name,
+      values: g.values.join(", "),
+      soldOut: g.soldOut ?? [],
+    })),
   );
   const [addons, setAddons] = useState<string[]>(initialAddons);
 
-  // 직렬화 — 이름·값 트림, 빈 값·빈 그룹 제거. 서버(parseOptionGroups)가 재검증한다.
+  // 직렬화 — 이름·값 트림, 빈 값·빈 그룹 제거. soldOut 은 존재하는 값만.
+  // 서버(parseOptionGroups)가 재검증한다.
   const serialized = JSON.stringify(
     rows
-      .map((r) => ({ name: r.name.trim(), values: splitValues(r.values) }))
+      .map((r) => {
+        const values = splitValues(r.values);
+        const soldOut = r.soldOut.filter((s) => values.includes(s));
+        return soldOut.length
+          ? { name: r.name.trim(), values, soldOut }
+          : { name: r.name.trim(), values };
+      })
       .filter((g) => g.name && g.values.length),
   );
 
@@ -51,7 +63,22 @@ export function ProductOptionsFields({
 
   const setRow = (i: number, patch: Partial<Row>) =>
     setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
-  const addRow = () => setRows((rs) => [...rs, { name: "", values: "" }]);
+  const addRow = () =>
+    setRows((rs) => [...rs, { name: "", values: "", soldOut: [] }]);
+  // 선택지 하나의 품절 표시 토글.
+  const toggleSold = (i: number, v: string) =>
+    setRows((rs) =>
+      rs.map((r, j) =>
+        j === i
+          ? {
+              ...r,
+              soldOut: r.soldOut.includes(v)
+                ? r.soldOut.filter((x) => x !== v)
+                : [...r.soldOut, v],
+            }
+          : r,
+      ),
+    );
   const removeRow = (i: number) => setRows((rs) => rs.filter((_, j) => j !== i));
   const toggleAddon = (code: string, on: boolean) =>
     setAddons((a) => (on ? [...new Set([...a, code])] : a.filter((c) => c !== code)));
@@ -106,6 +133,34 @@ export function ProductOptionsFields({
                 onChange={(e) => setRow(i, { values: e.target.value })}
                 className="w-full border border-wabi-border bg-transparent px-3 py-2 text-sm outline-none focus:border-wabi-fg"
               />
+              {/* 3줄: 선택지별 품절 토글 — 누르면 상세에서 (품절)·비활성 처리(대표님). */}
+              {splitValues(r.values).length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] text-wabi-fg-muted">
+                    품절 표시:
+                  </span>
+                  {splitValues(r.values).map((v) => {
+                    const sold = r.soldOut.includes(v);
+                    return (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => toggleSold(i, v)}
+                        aria-pressed={sold}
+                        className={cn(
+                          "rounded border px-2 py-0.5 text-xs transition-colors",
+                          sold
+                            ? "border-red-400 bg-red-50 text-red-600 line-through"
+                            : "border-wabi-border text-wabi-fg-muted hover:border-wabi-fg hover:text-wabi-fg",
+                        )}
+                      >
+                        {v}
+                        {sold ? " 품절" : ""}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ))}
         </div>

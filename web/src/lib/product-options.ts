@@ -5,7 +5,8 @@
 //   products.options    = OptionGroup[]     대표님이 정의한 옵션 그룹
 //   cart/order.options  = SelectedOption[]  손님이 고른 선택(라인/주문 스냅샷)
 
-export type OptionGroup = { name: string; values: string[] };
+// soldOut = 품절로 표시할 선택지(수동 토글, 대표님). values 의 부분집합. 손님은 못 고름.
+export type OptionGroup = { name: string; values: string[]; soldOut?: string[] };
 export type SelectedOption = { name: string; value: string };
 
 const MAX_GROUPS = 8;
@@ -38,7 +39,18 @@ export function parseOptionGroups(raw: unknown): OptionGroup[] {
       if (values.length >= MAX_VALUES) break;
     }
     if (values.length === 0) continue;
-    out.push({ name, values });
+    // 품절 표시된 선택지 — 실제 존재하는 값만, 중복 제거. 비면 필드 생략.
+    const soldRaw = (g as Record<string, unknown> | null)?.["soldOut"];
+    const soldOut = Array.isArray(soldRaw)
+      ? [
+          ...new Set(
+            soldRaw
+              .map((s) => String(s ?? "").trim())
+              .filter((s) => values.includes(s)),
+          ),
+        ]
+      : [];
+    out.push(soldOut.length ? { name, values, soldOut } : { name, values });
     if (out.length >= MAX_GROUPS) break;
   }
   return out;
@@ -68,7 +80,12 @@ export function validateSelection(
   const options: SelectedOption[] = [];
   for (const g of groups) {
     const chosen = pick.get(g.name);
-    if (!chosen || !g.values.includes(chosen))
+    // 정의된 값이어야 하고, 품절 표시된 선택지는 거부(UI 에서도 비활성이지만 서버가 최종 판정).
+    if (
+      !chosen ||
+      !g.values.includes(chosen) ||
+      (g.soldOut ?? []).includes(chosen)
+    )
       return { ok: false, missing: g.name };
     options.push({ name: g.name, value: chosen });
   }
