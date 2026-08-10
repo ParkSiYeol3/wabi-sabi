@@ -32,7 +32,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { href: "/admin", label: "대시보드", icon: LayoutDashboard },
       { href: "/admin/products", label: "상품 관리", icon: Package },
-      { href: "/admin/orders", label: "주문", icon: ShoppingBag },
+      { href: "/admin/orders", label: "주문 관리", icon: ShoppingBag },
       { href: "/admin/categories", label: "카테고리", icon: Tags },
     ],
   },

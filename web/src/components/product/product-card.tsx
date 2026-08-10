@@ -41,8 +41,9 @@ export function ProductCard({
         )}
         {soldOut && (
           // 이미지 위 오버레이 — 목록에서 품절을 못 보고 클릭하는 일이 없도록.
+          // 라벨은 영문 "Out of Stock"(대표님) — 카드 영문 부제(Bowl·Plate)와 톤 통일.
           <span className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 text-sm tracking-wide text-wabi-fg">
-            품절
+            Out of Stock
           </span>
         )}
         {product.image ? (
