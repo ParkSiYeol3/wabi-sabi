@@ -76,41 +76,49 @@ export function ShopSidebar({
         오늘의 와비사비
       </SideLink>
 
-      {/* 대분류 그룹 — 두 그룹의 소분류를 항상 펼쳐 보여준다(대표님 — 대분류를
-          먼저 고르지 않아도 소분류를 바로 선택). 대분류 헤더는 그 그룹 "전체보기"
-          링크 역할(예: TABLEWARE 헤더 = 그릇류 전체). */}
-      <div className="mt-4 space-y-3 border-t border-wabi-border pt-4">
-        {tree.map((node) => (
-          <div key={node.slug}>
-            <SideLink
-              href={buildShopQuery(sp, { category: node.slug })}
-              active={current === node.slug}
-              className="font-medium"
-            >
-              {node.ko}
-              {/* 영문 부제는 값이 있을 때만 — 대분류 name_en 이 "-"(대표님이 비운
-                  값)이면 "TABLEWARE -" 처럼 작대기만 남아 이를 숨긴다. */}
-              {node.en && node.en.trim() && node.en.trim() !== "-" && (
-                <span className="ml-1 text-xs text-wabi-fg-muted">
-                  {node.en}
-                </span>
+      {/* 대분류 그룹 — 아코디언(대표님): 대분류를 누르면 그 아래에 소분류가 펼쳐진다.
+          지금 보고 있는 대분류(또는 그 소분류)만 펼치고 나머지는 헤더만 둔다(미니멀).
+          대분류 헤더는 그 그룹 "전체보기" 링크이자 펼침 트리거. 소분류는 원형(알약)
+          없이 작은 글씨로 밑에 나열만 한다(대표님 — 그냥 글자만, 좀 작게). */}
+      <div className="mt-4 space-y-2 border-t border-wabi-border pt-4">
+        {tree.map((node) => {
+          const children = node.children ?? [];
+          // 현재 이 대분류이거나 그 소분류를 보는 중이면 펼친다(네비게이션이 곧 펼침).
+          const open =
+            current === node.slug || children.some((c) => c.slug === current);
+          return (
+            <div key={node.slug}>
+              <SideLink
+                href={buildShopQuery(sp, { category: node.slug })}
+                active={current === node.slug}
+                className="font-medium"
+              >
+                {node.ko}
+                {/* 영문 부제는 값이 있을 때만 — 대분류 name_en 이 "-"(대표님이 비운
+                    값)이면 "TABLEWARE -" 처럼 작대기만 남아 이를 숨긴다. */}
+                {node.en && node.en.trim() && node.en.trim() !== "-" && (
+                  <span className="ml-1 text-xs text-wabi-fg-muted">
+                    {node.en}
+                  </span>
+                )}
+              </SideLink>
+              {open && children.length > 0 && (
+                <div className="mb-1 pl-3">
+                  {children.map((c) => (
+                    <SideLink
+                      key={c.slug}
+                      href={buildShopQuery(sp, { category: c.slug })}
+                      active={current === c.slug}
+                      className="py-1 text-xs"
+                    >
+                      {c.ko}
+                    </SideLink>
+                  ))}
+                </div>
               )}
-            </SideLink>
-            {node.children && node.children.length > 0 && (
-              <div className="mb-1 border-l border-wabi-border pl-3">
-                {node.children.map((c) => (
-                  <SideLink
-                    key={c.slug}
-                    href={buildShopQuery(sp, { category: c.slug })}
-                    active={current === c.slug}
-                  >
-                    {c.ko}
-                  </SideLink>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
     </nav>
   );
