@@ -159,7 +159,11 @@ export default async function RootLayout({
       lang="ko"
       className={`${cormorant.variable} ${maruburi.variable} ${notoSerifJp.variable} ${menuSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      {/* 스티키 푸터 — 뷰포트 기준 min-h-dvh 로 본문이 짧거나 로딩 중이어도 항상
+          화면을 채워, 긴 푸터가 헤더 밑으로 올라와 화면을 덮는 버그를 막는다.
+          (기존 html.h-full→body.min-h-full 높이 체인은 로딩·CSS 적용 타이밍에
+          접혀 main.flex-1 이 안 채워지는 순간이 있었다. #shop 모바일 첫 진입 버그) */}
+      <body className="flex min-h-dvh flex-col">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: siteJsonLd }}
