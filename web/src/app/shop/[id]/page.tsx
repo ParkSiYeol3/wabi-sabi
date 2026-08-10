@@ -289,9 +289,10 @@ export default async function ProductDetailPage({
             </summary>
             <div className="mt-4 space-y-3 font-numeric text-wabi-fg-muted">
               <p>
-                수공예 도자기·공예품은 하나씩 손으로 만들어 색상·질감·크기·굽의
-                형태에 <strong className="font-medium text-wabi-fg">개체별 미세한
-                차이</strong>가 있습니다. 이는 하자가 아닌 고유한 특성입니다.
+                도자기·유리 등 일부 기물은 소재와 제작 과정의 특성상 색상·질감·크기·
+                굽의 형태에 <strong className="font-medium text-wabi-fg">개체별
+                미세한 차이</strong>가 있을 수 있습니다. 이는 하자가 아닌 고유한
+                특성입니다.
               </p>
               <p>
                 단순 변심에 의한 청약철회는 상품 수령 후{" "}

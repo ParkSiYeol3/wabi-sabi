@@ -96,7 +96,7 @@ function html(o: Row): string {
     </p>
 
     <p style="margin-top:28px;font-size:12px;color:#8a847c;line-height:1.8">
-      수공예품 특성상 색상·질감·크기에 개체별 미세한 차이가 있을 수 있습니다(하자 아님).<br>
+      도자기·유리 등 일부 기물은 소재 특성상 색상·질감·크기에 개체별 미세한 차이가 있을 수 있습니다(하자 아님).<br>
       교환·환불은 <a href="${BASE}/legal/refund" style="color:#8a847c">교환·환불 안내</a>를 참고해 주세요.<br>
       문의: ${escapeHtml(business.email)}
     </p>
