@@ -29,7 +29,8 @@ const productFieldsSchema = z.object({
   // 상세 스펙(소재·사이즈·주의·원산지 0035) — 비우면 null(표시 생략).
   material: z.string().trim().max(500).nullable(),
   size: z.string().trim().max(500).nullable(),
-  care: z.string().trim().max(500).nullable(),
+  // 주의사항은 복수 선택 " · " 조인이라 여유롭게(대표님).
+  care: z.string().trim().max(1000).nullable(),
   origin: z.string().trim().max(120).nullable(),
 });
 const productSchema = productFieldsSchema.extend({ stock: stockSchema });

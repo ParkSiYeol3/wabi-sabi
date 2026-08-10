@@ -7,6 +7,7 @@ import { updateProduct } from "@/app/admin/products/actions";
 import type { ActionResult } from "@/app/admin/products/types";
 import { OriginPicker } from "@/components/admin/origin-picker";
 import { AttributePicker } from "@/components/admin/attribute-picker";
+import { CareMultiPicker } from "@/components/admin/care-multi-picker";
 import { ProductOptionsFields } from "@/components/admin/product-options-fields";
 import { MATERIALS, SIZES, CARES } from "@/lib/product-attributes";
 import type { OptionGroup } from "@/lib/product-options";
@@ -129,17 +130,17 @@ export function ProductEditForm({
           customPlaceholder="사이즈 직접 입력 (예: 지름 12cm)"
         />
       </label>
-      <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted">
-        주의사항
-        <AttributePicker
+      {/* 주의사항 — 복수 선택 + 직접 입력 여러 개(대표님). 칩·입력을 감싸므로
+          중첩 label 대신 div. */}
+      <div className="flex flex-col gap-1 text-xs text-wabi-fg-muted">
+        주의사항 (여러 개 선택 가능)
+        <CareMultiPicker
           name="care"
-          label="주의사항"
           options={CARES}
           initial={product.care ?? ""}
-          emptyLabel="주의사항 선택 안 함"
           customPlaceholder="주의사항 직접 입력 (예: 전자레인지 사용 불가)"
         />
-      </label>
+      </div>
       {/* 커스텀 옵션 + 추가옵션 노출 — 상품 저장 값으로 프리필. */}
       <ProductOptionsFields
         initialOptions={product.options}

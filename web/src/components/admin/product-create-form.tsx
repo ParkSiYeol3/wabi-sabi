@@ -7,6 +7,7 @@ import { createProduct } from "@/app/admin/products/actions";
 import type { ActionResult } from "@/app/admin/products/types";
 import { OriginPicker } from "@/components/admin/origin-picker";
 import { AttributePicker } from "@/components/admin/attribute-picker";
+import { CareMultiPicker } from "@/components/admin/care-multi-picker";
 import { ProductOptionsFields } from "@/components/admin/product-options-fields";
 import { MATERIALS, SIZES, CARES } from "@/lib/product-attributes";
 
@@ -110,14 +111,16 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
         emptyLabel="사이즈 선택 안 함"
         customPlaceholder="사이즈 직접 입력 (예: 지름 12cm)"
       />
-      <AttributePicker
-        key={`care-${pickerKey}`}
-        name="care"
-        label="주의사항"
-        options={CARES}
-        emptyLabel="주의사항 선택 안 함"
-        customPlaceholder="주의사항 직접 입력 (예: 전자레인지 사용 불가)"
-      />
+      {/* 주의사항 — 복수 선택 + 직접 입력 여러 개(대표님). 폭이 필요해 한 줄 차지. */}
+      <div className="flex flex-col gap-1 text-xs text-wabi-fg-muted sm:col-span-2 lg:col-span-4">
+        주의사항 (여러 개 선택 가능)
+        <CareMultiPicker
+          key={`care-${pickerKey}`}
+          name="care"
+          options={CARES}
+          customPlaceholder="주의사항 직접 입력 (예: 전자레인지 사용 불가)"
+        />
+      </div>
       <label className="flex items-center gap-2 text-sm text-wabi-fg-muted">
         <input
           type="checkbox"
