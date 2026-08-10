@@ -11,6 +11,7 @@ import { useAuthStore } from "@/store/auth";
 import { useMounted } from "@/hooks/use-mounted";
 import { won } from "@/lib/orders";
 import { addonsTotal, GIFT_WRAP_CODE } from "@/lib/addons";
+import { shippingFeeFor, amountToFreeShipping } from "@/lib/shipping";
 import { Price } from "@/components/product/price";
 import {
   createPendingOrder,
@@ -107,7 +108,11 @@ export default function CheckoutPage() {
   }
 
   const addonSum = items.reduce((n, i) => n + addonsTotal(i.addons), 0);
-  const total = subtotal + addonSum;
+  // 배송비 — 서버(actions)와 동일 정책으로 미리보기. 확정 금액은 서버가 재계산.
+  const merchandise = subtotal + addonSum;
+  const shipping = shippingFeeFor(merchandise);
+  const freeGap = amountToFreeShipping(merchandise);
+  const total = merchandise + shipping;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -241,12 +246,18 @@ export default function CheckoutPage() {
                 <dd><Price value={addonSum} /></dd>
               </div>
             )}
-            {/* 배송비 — 현재 결제는 배송비를 부과하지 않는다(total = 상품+옵션).
-                실제 청구액을 그대로 반영해 "무료"로 표기(토스 심사·구매 전 고지). */}
+            {/* 배송비 — 서버와 동일 정책(lib/shipping)으로 미리보기. 무료면 "무료". */}
             <div className="flex justify-between">
               <dt className="text-wabi-fg-muted">배송비</dt>
-              <dd className="text-wabi-fg-muted">무료</dd>
+              <dd className={shipping === 0 ? "text-wabi-fg-muted" : undefined}>
+                {shipping === 0 ? "무료" : <Price value={shipping} />}
+              </dd>
             </div>
+            {freeGap > 0 && (
+              <p className="pt-1 text-xs text-wabi-accent">
+                {won(freeGap)} 더 담으면 무료배송!
+              </p>
+            )}
             <div className="flex justify-between pt-2 text-base font-semibold">
               <dt>총 결제금액</dt>
               <dd><Price value={total} /></dd>

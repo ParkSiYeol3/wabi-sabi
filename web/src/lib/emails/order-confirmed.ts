@@ -13,6 +13,7 @@ import { SITE_URL } from "@/lib/site-url";
 type Row = {
   order_number: string;
   total_price: number;
+  shipping_fee: number;
   recipient: string;
   address: string;
   ordered_at: string;
@@ -86,8 +87,12 @@ function html(o: Row): string {
     <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:24px;border-top:1px solid #2b2926">
       ${items}
       <tr>
-        <td style="padding:12px 0;font-weight:600">결제 금액</td>
-        <td style="padding:12px 0;text-align:right;font-weight:600">${won(o.total_price)}</td>
+        <td style="padding:8px 0;color:#6f6a63">배송비</td>
+        <td style="padding:8px 0;text-align:right;color:#6f6a63">${o.shipping_fee > 0 ? won(o.shipping_fee) : "무료"}</td>
+      </tr>
+      <tr>
+        <td style="padding:12px 0;font-weight:600;border-top:1px solid #eee">결제 금액</td>
+        <td style="padding:12px 0;text-align:right;font-weight:600;border-top:1px solid #eee">${won(o.total_price)}</td>
       </tr>
     </table>
 
@@ -110,7 +115,7 @@ export async function sendOrderConfirmedMail(orderId: string): Promise<void> {
   const { data: order } = await admin
     .from("orders")
     .select(
-      "order_number, total_price, recipient, address, ordered_at, user_id, order_items(product_name, quantity, price, addons, options)",
+      "order_number, total_price, shipping_fee, recipient, address, ordered_at, user_id, order_items(product_name, quantity, price, addons, options)",
     )
     .eq("id", orderId)
     .maybeSingle<Row>();

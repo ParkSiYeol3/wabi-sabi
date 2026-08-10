@@ -23,6 +23,7 @@ type Detail = {
   order_number: string;
   status: string;
   total_price: number;
+  shipping_fee: number;
   recipient: string;
   phone: string;
   address: string;
@@ -58,7 +59,7 @@ export default async function OrderDetailPage({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, total_price, recipient, phone, address, delivery_memo, tracking_number, ordered_at, delivered_at, order_items(product_name, quantity, price, addons, options), gift_options(message)",
+      "id, order_number, status, total_price, shipping_fee, recipient, phone, address, delivery_memo, tracking_number, ordered_at, delivered_at, order_items(product_name, quantity, price, addons, options), gift_options(message)",
     )
     .eq("id", orderId)
     .maybeSingle<Detail>();
@@ -124,7 +125,15 @@ export default async function OrderDetailPage({
             );
           })}
         </ul>
-        <p className="mt-4 flex items-center justify-between text-sm font-medium">
+        <p className="mt-4 flex items-center justify-between text-sm text-wabi-fg-muted">
+          <span>배송비</span>
+          {order.shipping_fee > 0 ? (
+            <Price value={order.shipping_fee} />
+          ) : (
+            <span>무료</span>
+          )}
+        </p>
+        <p className="mt-2 flex items-center justify-between text-sm font-medium">
           <span>결제 금액</span>
           <Price value={order.total_price} />
         </p>

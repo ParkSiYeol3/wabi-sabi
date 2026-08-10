@@ -24,6 +24,7 @@ export type GuestOrder = {
   order_number: string;
   status: string;
   total_price: number;
+  shipping_fee: number;
   recipient: string;
   address: string;
   ordered_at: string;
@@ -71,7 +72,7 @@ export async function lookupGuestOrder(input: {
   const { data: order } = await admin
     .from("orders")
     .select(
-      "order_number, status, total_price, recipient, address, ordered_at, delivered_at, delivery_memo, tracking_number, order_items(product_name, quantity, price, addons)",
+      "order_number, status, total_price, shipping_fee, recipient, address, ordered_at, delivered_at, delivery_memo, tracking_number, order_items(product_name, quantity, price, addons)",
     )
     .eq("order_number", orderNumber)
     .eq("phone", phone)
