@@ -201,9 +201,9 @@ export function ProductDetailActions({
             <Plus className="size-3.5" />
           </button>
         </div>
-        {/* 재고 수량은 숨긴다(대표님) — 품절 여부만 표시. */}
+        {/* 재고 수량은 숨긴다(대표님) — 품절 여부만 표시(영문 라벨로 통일). */}
         {soldOut && (
-          <span className="text-xs text-wabi-fg-muted">품절</span>
+          <span className="text-xs text-wabi-fg-muted">Out of Stock</span>
         )}
       </div>
 
