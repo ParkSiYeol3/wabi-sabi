@@ -12,7 +12,6 @@ import { NicknameGate } from "@/components/account/nickname-gate";
 import { PrepNotice } from "@/components/layout/prep-notice";
 import { getPrepNotice } from "@/lib/queries/content";
 import { getCategoryTree } from "@/lib/queries/categories";
-import { AmbientPlayer } from "@/components/common/ambient-player";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { HideOnAdmin } from "@/components/layout/hide-on-admin";
@@ -185,10 +184,6 @@ export default async function RootLayout({
           </main>
           <HideOnAdmin>
             <SiteFooter />
-          </HideOnAdmin>
-          {/* 잔잔한 배경음(첫 조작 시 은은히 시작·토글) — 어드민 제외 */}
-          <HideOnAdmin>
-            <AmbientPlayer />
           </HideOnAdmin>
         </AuthProvider>
       </body>
