@@ -89,23 +89,29 @@ export function ProductDetailActions({
               <div className="mt-2 flex flex-wrap gap-2">
                 {g.values.map((v) => {
                   const active = selectedOptions[g.name] === v;
+                  // 이 선택지가 품절 표시됐는지(수동 토글, 0048) — 비활성 + (품절).
+                  const valueSoldOut = (g.soldOut ?? []).includes(v);
                   return (
                     <button
                       key={v}
                       type="button"
-                      disabled={soldOut}
+                      disabled={soldOut || valueSoldOut}
                       aria-pressed={active}
                       onClick={() =>
+                        !valueSoldOut &&
                         setSelectedOptions((s) => ({ ...s, [g.name]: v }))
                       }
                       className={cn(
                         "border px-3 py-1.5 text-sm transition-colors disabled:opacity-40",
-                        active
-                          ? "border-wabi-fg bg-wabi-fg text-white"
-                          : "border-wabi-border text-wabi-fg hover:border-wabi-fg",
+                        valueSoldOut
+                          ? "border-wabi-border text-wabi-fg-muted line-through"
+                          : active
+                            ? "border-wabi-fg bg-wabi-fg text-white"
+                            : "border-wabi-border text-wabi-fg hover:border-wabi-fg",
                       )}
                     >
                       {v}
+                      {valueSoldOut && " (품절)"}
                     </button>
                   );
                 })}
