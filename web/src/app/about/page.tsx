@@ -162,13 +162,17 @@ export default async function AboutPage() {
           정보(영업시간·위치·인스타·문의) + 지도. */}
       <section id="visit">
         <Container className="py-24 md:py-32">
-          <Reveal>
-            <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-              오시는 길
-            </h2>
-          </Reveal>
-          <div className="mt-12 grid gap-12 md:grid-cols-2 md:items-start">
-            <ul className="space-y-8">
+          {/* 지도가 목록 높이가 아니라 '오시는 길' 제목 높이에서 시작하도록 제목을
+              좌측 열 안으로 넣는다(대표님 — 지도가 너무 낮아 균형이 안 맞음).
+              md:items-start 로 지도 상단이 제목과 정렬돼 위로 올라온다. */}
+          <div className="grid gap-12 md:grid-cols-2 md:items-start">
+            <div>
+              <Reveal>
+                <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
+                  오시는 길
+                </h2>
+              </Reveal>
+              <ul className="mt-12 space-y-8">
               <VisitItem
                 icon={<Clock className="size-5" strokeWidth={1.5} />}
                 title="영업 시간"
@@ -202,7 +206,8 @@ export default async function AboutPage() {
                   {site.email}
                 </a>
               </VisitItem>
-            </ul>
+              </ul>
+            </div>
             <MapCard />
           </div>
         </Container>
