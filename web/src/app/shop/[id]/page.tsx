@@ -16,6 +16,8 @@ import {
   getPublicContent,
   ADDON_IMAGE_KEYS,
   addonImageKey,
+  SHIPPING_INFO_KEY,
+  DEFAULT_SHIPPING_INFO,
 } from "@/lib/queries/content";
 import { enabledAddons } from "@/lib/addons";
 import { createClient } from "@/lib/supabase/server";
@@ -103,11 +105,16 @@ export default async function ProductDetailPage({
 
   // 이 상품 상세에 노출할 추가옵션(0048) — 대표님이 상품별로 켠 것만.
   const productAddons = enabledAddons(product.enabledAddons);
-  // 추가 옵션 썸네일 — 대표님 어드민 업로드(site_content). 코드별 URL 로 정리.
-  const addonImageMap = await getPublicContent(ADDON_IMAGE_KEYS);
+  // 추가 옵션 썸네일 + 배송 안내 문구를 한 번에(site_content). 배송 안내는 미저장 시
+  // 기본 문구로 폴백(토스 심사 배송기간 명시 — 대표님이 어드민에서 확정).
+  const contentMap = await getPublicContent([
+    ...ADDON_IMAGE_KEYS,
+    SHIPPING_INFO_KEY,
+  ]);
   const addonImages = Object.fromEntries(
-    productAddons.map((a) => [a.code, addonImageMap[addonImageKey(a.code)]]),
+    productAddons.map((a) => [a.code, contentMap[addonImageKey(a.code)]]),
   );
+  const shippingInfo = contentMap[SHIPPING_INFO_KEY] || DEFAULT_SHIPPING_INFO;
 
   // 위시리스트 초기 상태 (로그인 시) — 사용자별이라 캐시 밖.
   const supabase = await createClient();
@@ -250,11 +257,28 @@ export default async function ProductDetailPage({
             </dl>
           )}
 
+          {/* 배송 안내 (토스 심사 보완요청 ① — 배송기간 명시). 문구는 대표님이
+              어드민에서 편집(SHIPPING_INFO_KEY), 미저장 시 기본값 폴백.
+              줄바꿈 보존(whitespace-pre-line). 교환·반품과 같은 접이식 패턴. */}
+          <details className="mt-8 border-t border-wabi-border pt-4 text-sm">
+            <summary className="cursor-pointer list-none font-medium marker:content-none">
+              <span className="inline-flex w-full items-center justify-between">
+                배송 안내
+                <span aria-hidden className="text-wabi-fg-muted">
+                  ＋
+                </span>
+              </span>
+            </summary>
+            <div className="mt-4 whitespace-pre-line font-numeric text-wabi-fg-muted">
+              {shippingInfo}
+            </div>
+          </details>
+
           {/* 교환·반품 안내 (#241, 갭 분석 3) — 구매 결정 순간에 정보가 없어
               /legal 까지 가야 했다. 확정된 것만 요약(배송비 금액은 미정이라 제외,
-              허위표시 방지). 수공예 개체차 고지는 도자기 클레임 예방에 특히 중요.
+              허위표시 방지). 도자기 개체차 고지는 클레임 예방에 특히 중요.
               details/summary 무JS 접이식(홈·shop 사이드바와 동일 패턴). */}
-          <details className="mt-8 border-t border-wabi-border pt-4 text-sm">
+          <details className="border-t border-wabi-border pt-4 text-sm">
             <summary className="cursor-pointer list-none font-medium marker:content-none">
               <span className="inline-flex w-full items-center justify-between">
                 교환·반품 안내

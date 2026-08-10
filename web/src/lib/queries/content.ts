@@ -60,6 +60,12 @@ export const CRITERIA_SUBTITLE_KEY = "criteria_subtitle";
 // 섹션 제목(기본 "고르는 기준") — 대표님이 섹션 이름 자체도 바꿀 수 있게.
 export const CRITERIA_HEADING_KEY = "criteria_heading";
 
+// 배송 안내 문구 — 상품 상세·환불정책에 노출(토스 심사 보완요청 ①: 배송기간 명시).
+// 실제 발송 소요 영업일은 대표님이 어드민에서 확정·수정한다(기본값은 안전한 예시).
+export const SHIPPING_INFO_KEY = "shipping_info";
+export const DEFAULT_SHIPPING_INFO =
+  "결제가 확인되면 평균 2~5영업일 이내에 상품을 발송합니다. 주말·공휴일은 발송이 제외되며, 택배사 사정에 따라 수령까지 시간이 더 걸릴 수 있습니다.";
+
 // 편집 가능한 전체 키 — 액션 enum·타입 안전의 단일 출처.
 export const CONTENT_KEYS = [
   PHILOSOPHY_KEY,
@@ -71,6 +77,7 @@ export const CONTENT_KEYS = [
   ...CRITERIA_BODY_KEYS,
   CRITERIA_SUBTITLE_KEY,
   CRITERIA_HEADING_KEY,
+  SHIPPING_INFO_KEY,
 ] as const;
 export type ContentKey = (typeof CONTENT_KEYS)[number];
 
