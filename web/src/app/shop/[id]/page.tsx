@@ -172,6 +172,13 @@ export default async function ProductDetailPage({
               />
             </div>
           )}
+          {/* 품절을 상세에서도 한눈에(대표님) — 히어로 사진 위 오버레이. 목록 카드와
+              동일 톤. pointer-events-none 로 아래 확대 클릭은 그대로 통과. */}
+          {product.stock <= 0 && (
+            <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-white/65 text-lg tracking-wide text-wabi-fg backdrop-blur-[1px]">
+              Out of Stock
+            </span>
+          )}
         </div>
 
         {/* 정보 — 히어로에만. sticky 아님(첫 사진과 함께 스크롤). */}
