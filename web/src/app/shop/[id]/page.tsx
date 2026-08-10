@@ -210,8 +210,11 @@ export default async function ProductDetailPage({
             <Price value={product.price} />
           </p>
 
+          {/* 관리자가 입력한 줄바꿈(엔터)을 그대로 보존 — 기본 <p>는 개행을 공백으로
+              합쳐 문단 구분이 사라진다. whitespace-pre-line 로 엔터=줄바꿈,
+              빈 줄=문단 간격이 그대로 반영된다(대표님). */}
           {product.description && (
-            <p className="mt-6 text-sm leading-7 text-wabi-fg-muted">
+            <p className="mt-6 whitespace-pre-line text-sm leading-7 text-wabi-fg-muted">
               {product.description}
             </p>
           )}
