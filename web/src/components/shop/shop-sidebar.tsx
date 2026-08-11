@@ -58,42 +58,19 @@ export function ShopSidebar({
   return (
     <nav aria-label="카테고리" className="w-full lg:w-44 lg:shrink-0">
       {activeParent ? (
-        // 컨텍스트: 그 대분류 + 그 소분류만. '전체'로 돌아갈 길만 남긴다.
-        <>
-          <SideLink
-            href={buildShopQuery(sp, { category: undefined })}
-            active={false}
-            className="text-xs text-wabi-fg-muted"
-          >
-            ‹ 전체
-          </SideLink>
-          <SideLink
-            href={buildShopQuery(sp, { category: activeParent.slug })}
-            active={current === activeParent.slug}
-            className="mt-3 font-medium"
-          >
-            {activeParent.ko}
-            {activeParent.en &&
-              activeParent.en.trim() &&
-              activeParent.en.trim() !== "-" && (
-                <span className="ml-1 text-xs text-wabi-fg-muted">
-                  {activeParent.en}
-                </span>
-              )}
-          </SideLink>
-          <div className="mb-1 pl-3">
-            {(activeParent.children ?? []).map((c) => (
-              <SideLink
-                key={c.slug}
-                href={buildShopQuery(sp, { category: c.slug })}
-                active={current === c.slug}
-                className="py-1 text-xs"
-              >
-                {c.ko}
-              </SideLink>
-            ))}
-          </div>
-        </>
+        // 대표님 — 그 대분류의 소분류만(전체·대분류 헤더 없이). 전체로 돌아가려면
+        // 상단 SHOP 내비. 소분류만 세로로 나열한다.
+        <div className="mb-1">
+          {(activeParent.children ?? []).map((c) => (
+            <SideLink
+              key={c.slug}
+              href={buildShopQuery(sp, { category: c.slug })}
+              active={current === c.slug}
+            >
+              {c.ko}
+            </SideLink>
+          ))}
+        </div>
       ) : (
         // 기본(전체·이 달·오늘의): 특수 + 대분류 목록. 소분류는 그 대분류에 들어가야 뜬다.
         <>
