@@ -54,19 +54,22 @@ export default async function ShopPage({
       ? (await getShopBrowse({ sort: "newest" })).slice(0, 4)
       : [];
 
-  // 페이지 타이틀 = 선택 카테고리명(대표님 — TABLEWARE 누르면 TABLEWARE 로).
-  // 대분류 이름(name_ko)이 이미 TABLEWARE·OBJECTS 라 그대로 쓴다. 소분류는 그
-  // 소분류명, 이 달의 상품·전체는 각각. 전체는 "상품"(한글=명조 폰트로 사이트와
-  // 통일 — 영문 "Shop"은 라틴 Cormorant 라 홀로 튀었다, 대표님).
+  // 페이지 타이틀 = 선택 카테고리명(영어 — shop 분류 영어화, 대표님). name_en 우선,
+  // 대분류("-")·미매칭이면 name_ko(대분류는 TABLEWARE·OBJECTS 라 그대로 영문). 전체는
+  // "Shop", 이 달의 상품만 한글 유지(대표님 — 이 달·오늘의는 영어화 제외).
+  const activeNode =
+    tree.find((n) => n.slug === sp.category) ??
+    tree.flatMap((n) => n.children ?? []).find((c) => c.slug === sp.category);
+  const catHeading = activeNode
+    ? activeNode.en?.trim() && activeNode.en !== "-"
+      ? activeNode.en
+      : activeNode.ko
+    : undefined;
   const heading = !sp.category
-    ? "상품"
+    ? "Shop"
     : sp.category === MONTHLY_SLUG
       ? "이 달의 상품"
-      : (tree.find((n) => n.slug === sp.category)?.ko ??
-        tree
-          .flatMap((n) => n.children ?? [])
-          .find((c) => c.slug === sp.category)?.ko ??
-        "Shop");
+      : (catHeading ?? "Shop");
 
   return (
     <Container className="pb-16 pt-24">

@@ -49,7 +49,7 @@ export default async function WishlistPage() {
 
   return (
     <Container className="py-16">
-      <h1 className="text-2xl font-semibold tracking-wide">위시리스트</h1>
+      <h1 className="text-2xl font-semibold tracking-wide">Wishlist</h1>
 
       {items.length === 0 ? (
         <p className="mt-16 text-center text-sm text-wabi-fg-muted">
