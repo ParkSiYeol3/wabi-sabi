@@ -76,12 +76,15 @@ export function ShopSidebar({
         오늘의 와비사비
       </SideLink>
 
-      {/* 대분류 + 그 아래 소분류를 항상 모두 펼쳐 보여준다(대표님 — 분류를 전부
-          한눈에, 대분류를 먼저 고르지 않아도 소분류 바로 선택). 대분류 헤더는 그
-          그룹 "전체보기" 링크. 소분류는 원형(알약) 없이 작은 글씨로 나열만 한다. */}
+      {/* 대분류(TABLEWARE·OBJECTS) + 지금 보고 있는 대분류의 소분류만 그 아래 펼친다
+          (대표님 — 그 분류에 들어가면 상단에 대분류 + 그 소분류). 나머지 대분류는
+          헤더만. 대분류 헤더는 그 그룹 "전체보기" 링크. 소분류는 알약 없이 작은 글씨. */}
       <div className="mt-4 space-y-2 border-t border-wabi-border pt-4">
         {tree.map((node) => {
           const children = node.children ?? [];
+          // 현재 이 대분류이거나 그 소분류를 보는 중일 때만 소분류를 펼친다.
+          const open =
+            current === node.slug || children.some((c) => c.slug === current);
           return (
             <div key={node.slug}>
               <SideLink
@@ -98,7 +101,7 @@ export function ShopSidebar({
                   </span>
                 )}
               </SideLink>
-              {children.length > 0 && (
+              {open && children.length > 0 && (
                 <div className="mb-1 pl-3">
                   {children.map((c) => (
                     <SideLink

@@ -83,30 +83,38 @@ export function MobileCategoryTabs({
           </Tab>
         </div>
 
-        {/* 대분류별 그룹 — 대분류(굵게=그룹 전체보기) + 그 소분류를 줄바꿈 나열 */}
-        {tree.map((node) => (
-          <div
-            key={node.slug}
-            className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1.5"
-          >
-            <Tab
-              href={buildShopQuery(sp, { category: node.slug })}
-              active={current === node.slug}
-              className="font-semibold"
+        {/* 대분류(굵게=그룹 전체보기) — 지금 보고 있는 대분류의 소분류만 그 옆에
+            줄바꿈 나열한다(대표님 — 그 대분류에 들어가면 상단에 대분류 + 그 소분류).
+            나머지 대분류는 이름만. */}
+        {tree.map((node) => {
+          const children = node.children ?? [];
+          const open =
+            current === node.slug || children.some((c) => c.slug === current);
+          return (
+            <div
+              key={node.slug}
+              className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1.5"
             >
-              {node.ko}
-            </Tab>
-            {(node.children ?? []).map((c) => (
               <Tab
-                key={c.slug}
-                href={buildShopQuery(sp, { category: c.slug })}
-                active={current === c.slug}
+                href={buildShopQuery(sp, { category: node.slug })}
+                active={current === node.slug}
+                className="font-semibold"
               >
-                {c.ko}
+                {node.ko}
               </Tab>
-            ))}
-          </div>
-        ))}
+              {open &&
+                children.map((c) => (
+                  <Tab
+                    key={c.slug}
+                    href={buildShopQuery(sp, { category: c.slug })}
+                    active={current === c.slug}
+                  >
+                    {c.ko}
+                  </Tab>
+                ))}
+            </div>
+          );
+        })}
       </nav>
     </div>
   );
