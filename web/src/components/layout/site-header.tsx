@@ -99,7 +99,7 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
               href="/admin"
               className="text-sm font-medium tracking-wide text-wabi-accent transition-colors hover:opacity-80"
             >
-              관리자
+              Admin
             </Link>
           )}
         </nav>
@@ -359,7 +359,7 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
                   className="flex items-center gap-2 py-3 text-sm tracking-wide text-wabi-fg-muted transition-colors hover:text-wabi-fg"
                 >
                   <Heart className="size-4" strokeWidth={1.5} />
-                  위시리스트
+                  Wishlist
                 </Link>
                 <Link
                   href="/mypage/orders"
@@ -367,7 +367,7 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
                   className="flex items-center gap-2 py-3 text-sm tracking-wide text-wabi-fg-muted transition-colors hover:text-wabi-fg"
                 >
                   <Receipt className="size-4" strokeWidth={1.5} />
-                  주문 내역
+                  Orders
                 </Link>
               </>
             )}
