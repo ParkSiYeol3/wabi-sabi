@@ -3,6 +3,13 @@ import { MONTHLY_SLUG, type CategoryNode } from "@/lib/site";
 import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
 import { cn } from "@/lib/utils";
 
+// 분류 라벨 — 영어 이름(name_en) 우선(대표님: shop 분류는 영어로). 비었거나 "-"
+// (대표님이 비운 값 — 대분류 TABLEWARE·OBJECTS)면 name_ko 로 폴백한다.
+function catLabel(n: CategoryNode) {
+  const en = n.en?.trim();
+  return en && en !== "-" ? en : n.ko;
+}
+
 // Shop 카테고리 사이드바 (#195). 대분류 헤더 + 그 아래 소분류. 데스크톱은 좌측
 // 고정 열, 모바일은 shop 페이지의 "분류" 드롭다운 안에서 이 컴포넌트를 그대로
 // 재사용한다(대표님 — 웹과 똑같은 그룹 방식으로 통일). 너비는 반응형.
@@ -57,63 +64,65 @@ export function ShopSidebar({
 
   return (
     <nav aria-label="카테고리" className="w-full lg:w-44 lg:shrink-0">
+      {/* 카테고리 드릴다운(대표님) — 기본: All + 대분류(TABLEWARE·OBJECTS).
+          대분류에 들어가면: All + 그 대분류의 소분류만. */}
       {activeParent ? (
-        // 대표님 — 그 대분류의 소분류만(전체·대분류 헤더 없이). 전체로 돌아가려면
-        // 상단 SHOP 내비. 소분류만 세로로 나열한다.
-        <div className="mb-1">
+        <div>
+          <SideLink
+            href={buildShopQuery(sp, { category: undefined })}
+            active={false}
+          >
+            All
+          </SideLink>
           {(activeParent.children ?? []).map((c) => (
             <SideLink
               key={c.slug}
               href={buildShopQuery(sp, { category: c.slug })}
               active={current === c.slug}
             >
-              {c.ko}
+              {catLabel(c)}
             </SideLink>
           ))}
         </div>
       ) : (
-        // 기본(전체·이 달·오늘의): 특수 + 대분류 목록. 소분류는 그 대분류에 들어가야 뜬다.
-        <>
+        <div>
           <SideLink
             href={buildShopQuery(sp, { category: undefined })}
             active={!current && !todayActive}
           >
-            전체
+            All
           </SideLink>
-          {/* 이 달의 상품·오늘의 와비사비 — 액센트 텍스트 링크(대표님) */}
-          <SideLink
-            href={buildShopQuery(sp, { category: MONTHLY_SLUG })}
-            active={current === MONTHLY_SLUG}
-            className="text-wabi-accent hover:text-wabi-accent"
-          >
-            이 달의 상품
-          </SideLink>
-          <SideLink
-            href="/today"
-            active={todayActive}
-            className="text-wabi-accent hover:text-wabi-accent"
-          >
-            오늘의 와비사비
-          </SideLink>
-          <div className="mt-4 space-y-2 border-t border-wabi-border pt-4">
-            {tree.map((node) => (
-              <SideLink
-                key={node.slug}
-                href={buildShopQuery(sp, { category: node.slug })}
-                active={false}
-                className="font-medium"
-              >
-                {node.ko}
-                {node.en && node.en.trim() && node.en.trim() !== "-" && (
-                  <span className="ml-1 text-xs text-wabi-fg-muted">
-                    {node.en}
-                  </span>
-                )}
-              </SideLink>
-            ))}
-          </div>
-        </>
+          {tree.map((node) => (
+            <SideLink
+              key={node.slug}
+              href={buildShopQuery(sp, { category: node.slug })}
+              active={false}
+              className="font-medium"
+            >
+              {catLabel(node)}
+            </SideLink>
+          ))}
+        </div>
       )}
+
+      {/* 이 달의 상품·오늘의 와비사비 — 카테고리가 아니라 특별 컬렉션. 데스크톱엔
+          드로어가 없어 사이드바 하단에 항상 둔다(모바일은 드로어로 뺐다 — 대표님). */}
+      <div className="mt-5 space-y-1 border-t border-wabi-border pt-4">
+        <SideLink
+          href={buildShopQuery(sp, { category: MONTHLY_SLUG })}
+          active={current === MONTHLY_SLUG}
+          className="text-wabi-accent hover:text-wabi-accent"
+        >
+          이 달의 상품
+        </SideLink>
+        <SideLink
+          href="/today"
+          active={todayActive}
+          className="text-wabi-accent hover:text-wabi-accent"
+        >
+          오늘의 와비사비
+        </SideLink>
+      </div>
     </nav>
   );
 }
