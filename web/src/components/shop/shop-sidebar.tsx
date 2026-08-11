@@ -48,77 +48,95 @@ export function ShopSidebar({
   todayActive?: boolean;
 }) {
   const current = sp.category;
+  // 지금 보고 있는 대분류(그 대분류이거나 그 소분류를 볼 때). 있으면 대표님 지시대로
+  // 그 대분류의 소분류만 보여준다 — 특수(전체·이 달·오늘의)와 다른 대분류는 감춘다.
+  const activeParent = tree.find(
+    (n) =>
+      n.slug === current || (n.children ?? []).some((c) => c.slug === current),
+  );
 
   return (
     <nav aria-label="카테고리" className="w-full lg:w-44 lg:shrink-0">
-      <SideLink
-        href={buildShopQuery(sp, { category: undefined })}
-        active={!current && !todayActive}
-      >
-        전체
-      </SideLink>
-      {/* 이 달의 상품 — 특별 표시(대표님): 액센트 색 + 작은 마크로 큐레이션 강조 */}
-      <SideLink
-        href={buildShopQuery(sp, { category: MONTHLY_SLUG })}
-        active={current === MONTHLY_SLUG}
-        className="text-wabi-accent hover:text-wabi-accent"
-      >
-        이 달의 상품
-      </SideLink>
-
-      {/* 오늘의 와비사비(자유게시판) — "이 달의 상품" 바로 아래(대표님). 이 달의
-          상품과 같은 스타일로 통일(대표님) — 버튼이 아니라 같은 액센트 텍스트 링크. */}
-      <SideLink
-        href="/today"
-        active={todayActive}
-        className="text-wabi-accent hover:text-wabi-accent"
-      >
-        오늘의 와비사비
-      </SideLink>
-
-      {/* 대분류(TABLEWARE·OBJECTS) + 지금 보고 있는 대분류의 소분류만 그 아래 펼친다
-          (대표님 — 그 분류에 들어가면 상단에 대분류 + 그 소분류). 나머지 대분류는
-          헤더만. 대분류 헤더는 그 그룹 "전체보기" 링크. 소분류는 알약 없이 작은 글씨. */}
-      <div className="mt-4 space-y-2 border-t border-wabi-border pt-4">
-        {tree.map((node) => {
-          const children = node.children ?? [];
-          // 현재 이 대분류이거나 그 소분류를 보는 중일 때만 소분류를 펼친다.
-          const open =
-            current === node.slug || children.some((c) => c.slug === current);
-          return (
-            <div key={node.slug}>
+      {activeParent ? (
+        // 컨텍스트: 그 대분류 + 그 소분류만. '전체'로 돌아갈 길만 남긴다.
+        <>
+          <SideLink
+            href={buildShopQuery(sp, { category: undefined })}
+            active={false}
+            className="text-xs text-wabi-fg-muted"
+          >
+            ‹ 전체
+          </SideLink>
+          <SideLink
+            href={buildShopQuery(sp, { category: activeParent.slug })}
+            active={current === activeParent.slug}
+            className="mt-3 font-medium"
+          >
+            {activeParent.ko}
+            {activeParent.en &&
+              activeParent.en.trim() &&
+              activeParent.en.trim() !== "-" && (
+                <span className="ml-1 text-xs text-wabi-fg-muted">
+                  {activeParent.en}
+                </span>
+              )}
+          </SideLink>
+          <div className="mb-1 pl-3">
+            {(activeParent.children ?? []).map((c) => (
               <SideLink
+                key={c.slug}
+                href={buildShopQuery(sp, { category: c.slug })}
+                active={current === c.slug}
+                className="py-1 text-xs"
+              >
+                {c.ko}
+              </SideLink>
+            ))}
+          </div>
+        </>
+      ) : (
+        // 기본(전체·이 달·오늘의): 특수 + 대분류 목록. 소분류는 그 대분류에 들어가야 뜬다.
+        <>
+          <SideLink
+            href={buildShopQuery(sp, { category: undefined })}
+            active={!current && !todayActive}
+          >
+            전체
+          </SideLink>
+          {/* 이 달의 상품·오늘의 와비사비 — 액센트 텍스트 링크(대표님) */}
+          <SideLink
+            href={buildShopQuery(sp, { category: MONTHLY_SLUG })}
+            active={current === MONTHLY_SLUG}
+            className="text-wabi-accent hover:text-wabi-accent"
+          >
+            이 달의 상품
+          </SideLink>
+          <SideLink
+            href="/today"
+            active={todayActive}
+            className="text-wabi-accent hover:text-wabi-accent"
+          >
+            오늘의 와비사비
+          </SideLink>
+          <div className="mt-4 space-y-2 border-t border-wabi-border pt-4">
+            {tree.map((node) => (
+              <SideLink
+                key={node.slug}
                 href={buildShopQuery(sp, { category: node.slug })}
-                active={current === node.slug}
+                active={false}
                 className="font-medium"
               >
                 {node.ko}
-                {/* 영문 부제는 값이 있을 때만 — 대분류 name_en 이 "-"(대표님이 비운
-                    값)이면 "TABLEWARE -" 처럼 작대기만 남아 이를 숨긴다. */}
                 {node.en && node.en.trim() && node.en.trim() !== "-" && (
                   <span className="ml-1 text-xs text-wabi-fg-muted">
                     {node.en}
                   </span>
                 )}
               </SideLink>
-              {open && children.length > 0 && (
-                <div className="mb-1 pl-3">
-                  {children.map((c) => (
-                    <SideLink
-                      key={c.slug}
-                      href={buildShopQuery(sp, { category: c.slug })}
-                      active={current === c.slug}
-                      className="py-1 text-xs"
-                    >
-                      {c.ko}
-                    </SideLink>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            ))}
+          </div>
+        </>
+      )}
     </nav>
   );
 }
