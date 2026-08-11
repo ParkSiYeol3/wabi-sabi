@@ -1,13 +1,11 @@
-import { Fragment } from "react";
 import Link from "next/link";
 import { MONTHLY_SLUG, type CategoryNode } from "@/lib/site";
 import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
 import { cn } from "@/lib/utils";
 
-// 모바일/태블릿 카테고리 — 한 줄 가로 스크롤 바(대표님: 좁은 화면에서 세로로 길면
-// 상품이 첫 화면에 안 보임 → 상품을 곧바로 보이게 압축). 특수(전체·이 달·오늘의)
-// 뒤에 대분류(굵게)+소분류를 순서대로 이어 붙이고, 그룹 사이는 세로선으로 나눈다.
-// 좌우로 스와이프해 나머지 분류를 본다(오른쪽 페이드로 더 있음을 암시).
+// 모바일/태블릿 카테고리 — 분류를 전부 한눈에(대표님: 웹·모바일 모두 전 분류가
+// 보이게, 알약 없이 텍스트만). 특수(전체·이 달·오늘의) 한 줄 + 대분류별로 그
+// 소분류를 아래에 줄바꿈(wrap)해 나열한다. 누르면 그 분류 상품만 필터된다.
 // 데스크톱은 좌측 사이드바(ShopSidebar) → 이 컴포넌트는 lg 미만만.
 
 function Tab({
@@ -48,8 +46,7 @@ export function MobileCategoryTabs({
   tree: CategoryNode[];
   // /today 재사용 시 "오늘의 와비사비" 현재 위치 표시.
   todayActive?: boolean;
-  // shop 페이지 전용(대표님): 모바일(<md)에선 분류를 우측 드로어로 옮기고 상품·정렬만
-  // 보이게 하되, 드로어가 없는 태블릿(md~lg)에선 이 가로바를 그대로 남긴다.
+  // true 면 태블릿(md~lg)에서만 노출. 기본은 lg 미만 전부(모바일+태블릿).
   tabletOnly?: boolean;
 }) {
   const current = sp.category;
@@ -57,46 +54,45 @@ export function MobileCategoryTabs({
   return (
     <div
       className={cn(
-        "relative border-b border-wabi-border",
+        "border-b border-wabi-border pb-4",
         tabletOnly ? "hidden md:block lg:hidden" : "lg:hidden",
       )}
     >
-      <nav
-        aria-label="카테고리"
-        className="flex items-center gap-4 overflow-x-auto whitespace-nowrap pb-4 pr-9 pt-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        <Tab
-          href={buildShopQuery(sp, { category: undefined })}
-          active={!current && !todayActive}
-        >
-          전체
-        </Tab>
-        <Tab
-          href={buildShopQuery(sp, { category: MONTHLY_SLUG })}
-          active={current === MONTHLY_SLUG}
-          className="text-wabi-accent hover:text-wabi-accent"
-        >
-          이 달의 상품
-        </Tab>
-        <Tab
-          href="/today"
-          active={todayActive}
-          className="text-wabi-accent hover:text-wabi-accent"
-        >
-          오늘의 와비사비
-        </Tab>
+      <nav aria-label="카테고리" className="pt-1">
+        {/* 특수 분류 — 전체·이 달의 상품·오늘의 와비사비 */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          <Tab
+            href={buildShopQuery(sp, { category: undefined })}
+            active={!current && !todayActive}
+          >
+            전체
+          </Tab>
+          <Tab
+            href={buildShopQuery(sp, { category: MONTHLY_SLUG })}
+            active={current === MONTHLY_SLUG}
+            className="text-wabi-accent hover:text-wabi-accent"
+          >
+            이 달의 상품
+          </Tab>
+          <Tab
+            href="/today"
+            active={todayActive}
+            className="text-wabi-accent hover:text-wabi-accent"
+          >
+            오늘의 와비사비
+          </Tab>
+        </div>
 
+        {/* 대분류별 그룹 — 대분류(굵게=그룹 전체보기) + 그 소분류를 줄바꿈 나열 */}
         {tree.map((node) => (
-          <Fragment key={node.slug}>
-            <span
-              aria-hidden
-              className="h-3 w-px shrink-0 bg-wabi-border"
-            />
-            {/* 대분류(굵게) = 그룹 전체보기 */}
+          <div
+            key={node.slug}
+            className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1.5"
+          >
             <Tab
               href={buildShopQuery(sp, { category: node.slug })}
               active={current === node.slug}
-              className="font-medium"
+              className="font-semibold"
             >
               {node.ko}
             </Tab>
@@ -109,14 +105,9 @@ export function MobileCategoryTabs({
                 {c.ko}
               </Tab>
             ))}
-          </Fragment>
+          </div>
         ))}
       </nav>
-      {/* 오른쪽 스크롤 힌트 페이드 — 더 있는 분류를 암시 */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute bottom-0 right-0 top-0 w-9 bg-gradient-to-l from-wabi-bg to-transparent"
-      />
     </div>
   );
 }
