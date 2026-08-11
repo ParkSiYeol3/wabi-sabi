@@ -52,7 +52,7 @@ export default async function OrdersPage() {
 
   return (
     <Container className="py-16">
-      <h1 className="text-2xl font-semibold tracking-wide">주문 내역</h1>
+      <h1 className="text-2xl font-semibold tracking-wide">Orders</h1>
 
       {!orders || orders.length === 0 ? (
         <p className="mt-16 text-center text-sm text-wabi-fg-muted">
