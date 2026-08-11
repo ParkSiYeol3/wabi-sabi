@@ -50,6 +50,12 @@ export function MobileCategoryTabs({
   tabletOnly?: boolean;
 }) {
   const current = sp.category;
+  // 지금 보고 있는 대분류(그 대분류이거나 그 소분류를 볼 때). 있으면 대표님 지시대로
+  // 그 대분류의 소분류만 보여준다 — 특수·다른 대분류는 감추고 '전체'로 돌아갈 길만 둔다.
+  const activeParent = tree.find(
+    (n) =>
+      n.slug === current || (n.children ?? []).some((c) => c.slug === current),
+  );
 
   return (
     <div
@@ -59,62 +65,72 @@ export function MobileCategoryTabs({
       )}
     >
       <nav aria-label="카테고리" className="pt-1">
-        {/* 특수 분류 — 전체·이 달의 상품·오늘의 와비사비 */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-          <Tab
-            href={buildShopQuery(sp, { category: undefined })}
-            active={!current && !todayActive}
-          >
-            전체
-          </Tab>
-          <Tab
-            href={buildShopQuery(sp, { category: MONTHLY_SLUG })}
-            active={current === MONTHLY_SLUG}
-            className="text-wabi-accent hover:text-wabi-accent"
-          >
-            이 달의 상품
-          </Tab>
-          <Tab
-            href="/today"
-            active={todayActive}
-            className="text-wabi-accent hover:text-wabi-accent"
-          >
-            오늘의 와비사비
-          </Tab>
-        </div>
-
-        {/* 대분류(굵게=그룹 전체보기) — 지금 보고 있는 대분류의 소분류만 그 옆에
-            줄바꿈 나열한다(대표님 — 그 대분류에 들어가면 상단에 대분류 + 그 소분류).
-            나머지 대분류는 이름만. */}
-        {tree.map((node) => {
-          const children = node.children ?? [];
-          const open =
-            current === node.slug || children.some((c) => c.slug === current);
-          return (
-            <div
-              key={node.slug}
-              className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1.5"
+        {activeParent ? (
+          // 컨텍스트: 그 대분류 + 그 소분류만. '‹ 전체'로 돌아갈 길만 남긴다.
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1.5">
+            <Tab
+              href={buildShopQuery(sp, { category: undefined })}
+              active={false}
+              className="text-wabi-fg-muted"
             >
+              ‹ 전체
+            </Tab>
+            <Tab
+              href={buildShopQuery(sp, { category: activeParent.slug })}
+              active={current === activeParent.slug}
+              className="font-semibold"
+            >
+              {activeParent.ko}
+            </Tab>
+            {(activeParent.children ?? []).map((c) => (
               <Tab
-                href={buildShopQuery(sp, { category: node.slug })}
-                active={current === node.slug}
-                className="font-semibold"
+                key={c.slug}
+                href={buildShopQuery(sp, { category: c.slug })}
+                active={current === c.slug}
               >
-                {node.ko}
+                {c.ko}
               </Tab>
-              {open &&
-                children.map((c) => (
-                  <Tab
-                    key={c.slug}
-                    href={buildShopQuery(sp, { category: c.slug })}
-                    active={current === c.slug}
-                  >
-                    {c.ko}
-                  </Tab>
-                ))}
+            ))}
+          </div>
+        ) : (
+          // 기본(전체·이 달·오늘의): 특수 + 대분류 이름만. 소분류는 그 대분류에 들어가야 뜬다.
+          <>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+              <Tab
+                href={buildShopQuery(sp, { category: undefined })}
+                active={!current && !todayActive}
+              >
+                전체
+              </Tab>
+              <Tab
+                href={buildShopQuery(sp, { category: MONTHLY_SLUG })}
+                active={current === MONTHLY_SLUG}
+                className="text-wabi-accent hover:text-wabi-accent"
+              >
+                이 달의 상품
+              </Tab>
+              <Tab
+                href="/today"
+                active={todayActive}
+                className="text-wabi-accent hover:text-wabi-accent"
+              >
+                오늘의 와비사비
+              </Tab>
             </div>
-          );
-        })}
+            <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1.5">
+              {tree.map((node) => (
+                <Tab
+                  key={node.slug}
+                  href={buildShopQuery(sp, { category: node.slug })}
+                  active={false}
+                  className="font-semibold"
+                >
+                  {node.ko}
+                </Tab>
+              ))}
+            </div>
+          </>
+        )}
       </nav>
     </div>
   );
