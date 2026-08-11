@@ -67,7 +67,7 @@ export function MobileCategoryTabs({
   return (
     <div
       className={cn(
-        "pb-4",
+        "mt-6 pb-4",
         tabletOnly ? "hidden md:block lg:hidden" : "lg:hidden",
       )}
     >
