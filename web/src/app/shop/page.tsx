@@ -69,7 +69,7 @@ export default async function ShopPage({
         "Shop");
 
   return (
-    <Container className="py-16">
+    <Container className="pb-16 pt-24">
       {/* 헤더 — 타이틀 ("N개 상품" 표기는 대표님 요청으로 제거) */}
       <h1 className="text-2xl font-semibold tracking-wide">{heading}</h1>
 
@@ -84,10 +84,10 @@ export default async function ShopPage({
         </div>
 
         <div className="min-w-0 flex-1">
-          {/* 툴바 — 정렬만 우측 정렬, 하단 구분선. 검색창은 제거(대표님 — 웹·모바일
-              모두 노출 안 함). 카테고리 탐색은 사이드바/드로어가 담당하고, 직접
-              검색이 필요하면 ?q= URL 파라미터는 계속 동작한다(빈 결과 시 추천 노출). */}
-          <div className="flex items-center justify-end border-b border-wabi-border pb-5">
+          {/* 툴바 — 정렬만 우측 정렬. 구분선 제거(대표님 — 선 없는 게 담백). 검색창도
+              제거(웹·모바일 모두 노출 안 함). 카테고리 탐색은 사이드바/드로어가 담당하고,
+              직접 검색이 필요하면 ?q= URL 파라미터는 계속 동작한다(빈 결과 시 추천 노출). */}
+          <div className="flex items-center justify-end pb-5">
             {/* 정렬 — 눈에 튀지 않게 담백한 텍스트 링크(대표님: 굳이 잘 안 보여도 됨).
                 선택된 정렬만 진하게, 나머지는 흐리게. 가운뎃점으로 구분. */}
             <div className="flex shrink-0 items-center gap-3 text-xs text-wabi-fg-muted">
