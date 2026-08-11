@@ -20,6 +20,13 @@ import { useCart, cartCount } from "@/store/cart";
 import { useMounted } from "@/hooks/use-mounted";
 import { useAuthStore } from "@/store/auth";
 
+// 분류 라벨 — name_en 우선(대표님: shop 분류 영어), 비었거나 "-"(대분류
+// TABLEWARE·OBJECTS)면 name_ko 폴백. shop-sidebar·mobile-category-tabs 와 동일 규칙.
+function catLabel(n: { ko: string; en: string }) {
+  const en = n.en?.trim();
+  return en && en !== "-" ? en : n.ko;
+}
+
 export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
   const [open, setOpen] = useState(false);
   // 모바일 드로어에서 SHOP 하위 분류 드롭다운 펼침 상태(대표님 — nav 라벨을 토글로).
@@ -246,7 +253,7 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
                         onClick={closeMenu}
                         className="py-1.5 text-sm text-wabi-fg-muted transition-colors hover:text-wabi-fg"
                       >
-                        전체
+                        All
                       </Link>
                       {/* 이 달의 상품·오늘의 와비사비 = 액센트로 강조(사이드바와 통일) */}
                       <Link
@@ -277,7 +284,7 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
                               onClick={closeMenu}
                               className="mt-2 block py-1.5 text-sm font-medium text-wabi-fg transition-colors"
                             >
-                              {node.ko}
+                              {catLabel(node)}
                             </Link>
                           );
                         }
@@ -291,7 +298,7 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
                               aria-expanded={catOpen}
                               className="flex w-full items-center justify-between py-1.5 text-sm font-medium text-wabi-fg"
                             >
-                              {node.ko}
+                              {catLabel(node)}
                               <ChevronDown
                                 className={cn(
                                   "size-3.5 shrink-0 text-wabi-fg-muted transition-transform duration-200",
@@ -309,7 +316,7 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
                                   onClick={closeMenu}
                                   className="py-1 text-xs text-wabi-fg-muted transition-colors hover:text-wabi-fg"
                                 >
-                                  전체
+                                  All
                                 </Link>
                                 {kids.map((c) => (
                                   <Link
@@ -320,7 +327,7 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
                                     onClick={closeMenu}
                                     className="py-1 text-xs text-wabi-fg-muted transition-colors hover:text-wabi-fg"
                                   >
-                                    {c.ko}
+                                    {catLabel(c)}
                                   </Link>
                                 ))}
                               </div>
