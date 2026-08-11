@@ -1,7 +1,14 @@
 import Link from "next/link";
-import { MONTHLY_SLUG, type CategoryNode } from "@/lib/site";
+import { type CategoryNode } from "@/lib/site";
 import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
 import { cn } from "@/lib/utils";
+
+// 분류 라벨 — 영어 이름(name_en) 우선(대표님: shop 분류 영어). 비었거나 "-"(대분류
+// TABLEWARE·OBJECTS)면 name_ko 로 폴백.
+function catLabel(n: CategoryNode) {
+  const en = n.en?.trim();
+  return en && en !== "-" ? en : n.ko;
+}
 
 // 모바일/태블릿 카테고리 — 분류를 전부 한눈에(대표님: 웹·모바일 모두 전 분류가
 // 보이게, 알약 없이 텍스트만). 특수(전체·이 달·오늘의) 한 줄 + 대분류별로 그
@@ -64,58 +71,49 @@ export function MobileCategoryTabs({
         tabletOnly ? "hidden md:block lg:hidden" : "lg:hidden",
       )}
     >
-      <nav aria-label="카테고리" className="pt-1">
+      <nav
+        aria-label="카테고리"
+        className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-1"
+      >
         {activeParent ? (
-          // 대표님 — 그 대분류의 소분류만(전체·대분류 헤더 없이). 전체로 돌아가려면
-          // 상단 SHOP 내비. 소분류만 줄바꿈 나열한다.
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          // 컨텍스트: All(전체 복귀) + 그 대분류의 소분류(영어). 대분류 헤더 없음.
+          <>
+            <Tab
+              href={buildShopQuery(sp, { category: undefined })}
+              active={false}
+            >
+              All
+            </Tab>
             {(activeParent.children ?? []).map((c) => (
               <Tab
                 key={c.slug}
                 href={buildShopQuery(sp, { category: c.slug })}
                 active={current === c.slug}
               >
-                {c.ko}
+                {catLabel(c)}
               </Tab>
             ))}
-          </div>
+          </>
         ) : (
-          // 기본(전체·이 달·오늘의): 특수 + 대분류 이름만. 소분류는 그 대분류에 들어가야 뜬다.
+          // 기본: All + 대분류(TABLEWARE·OBJECTS). 이 달의 상품·오늘의 와비사비는
+          // 모바일에선 우측 드로어(사이드바)로 뺐다(대표님).
           <>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+            <Tab
+              href={buildShopQuery(sp, { category: undefined })}
+              active={!current && !todayActive}
+            >
+              All
+            </Tab>
+            {tree.map((node) => (
               <Tab
-                href={buildShopQuery(sp, { category: undefined })}
-                active={!current && !todayActive}
+                key={node.slug}
+                href={buildShopQuery(sp, { category: node.slug })}
+                active={false}
+                className="font-semibold"
               >
-                전체
+                {catLabel(node)}
               </Tab>
-              <Tab
-                href={buildShopQuery(sp, { category: MONTHLY_SLUG })}
-                active={current === MONTHLY_SLUG}
-                className="text-wabi-accent hover:text-wabi-accent"
-              >
-                이 달의 상품
-              </Tab>
-              <Tab
-                href="/today"
-                active={todayActive}
-                className="text-wabi-accent hover:text-wabi-accent"
-              >
-                오늘의 와비사비
-              </Tab>
-            </div>
-            <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1.5">
-              {tree.map((node) => (
-                <Tab
-                  key={node.slug}
-                  href={buildShopQuery(sp, { category: node.slug })}
-                  active={false}
-                  className="font-semibold"
-                >
-                  {node.ko}
-                </Tab>
-              ))}
-            </div>
+            ))}
           </>
         )}
       </nav>
