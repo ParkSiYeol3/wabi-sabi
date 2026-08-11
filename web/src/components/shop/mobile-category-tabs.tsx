@@ -66,22 +66,9 @@ export function MobileCategoryTabs({
     >
       <nav aria-label="카테고리" className="pt-1">
         {activeParent ? (
-          // 컨텍스트: 그 대분류 + 그 소분류만. '‹ 전체'로 돌아갈 길만 남긴다.
-          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1.5">
-            <Tab
-              href={buildShopQuery(sp, { category: undefined })}
-              active={false}
-              className="text-wabi-fg-muted"
-            >
-              ‹ 전체
-            </Tab>
-            <Tab
-              href={buildShopQuery(sp, { category: activeParent.slug })}
-              active={current === activeParent.slug}
-              className="font-semibold"
-            >
-              {activeParent.ko}
-            </Tab>
+          // 대표님 — 그 대분류의 소분류만(전체·대분류 헤더 없이). 전체로 돌아가려면
+          // 상단 SHOP 내비. 소분류만 줄바꿈 나열한다.
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
             {(activeParent.children ?? []).map((c) => (
               <Tab
                 key={c.slug}
