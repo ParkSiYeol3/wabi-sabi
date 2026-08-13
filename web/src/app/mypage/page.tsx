@@ -3,10 +3,10 @@ import { redirect } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { SubmitButton } from "@/components/common/submit-button";
-import { Input } from "@/components/ui/input";
 import { LogoutButton } from "@/components/account/logout-button";
 import { DeleteAccountSection } from "@/components/account/delete-account-section";
 import { NicknameForm } from "@/components/account/nickname-form";
+import { AddressAddForm } from "@/components/account/address-add-form";
 import { createClient } from "@/lib/supabase/server";
 import { addAddress, deleteAddress } from "./actions";
 
@@ -95,53 +95,8 @@ export default async function MyPage() {
           </p>
         )}
 
-        {/* 배송지 추가 */}
-        <form
-          action={addAddress}
-          className="mt-6 grid max-w-xl gap-3 sm:grid-cols-2"
-        >
-          {/* placeholder 는 접근 가능한 이름이 아니다(입력하면 사라진다) → aria-label 병기 */}
-          <Input
-            name="recipient"
-            required
-            aria-label="받는 분"
-            placeholder="받는 분"
-            className="rounded-none"
-          />
-          <Input
-            name="phone"
-            required
-            aria-label="연락처"
-            placeholder="연락처"
-            className="rounded-none"
-          />
-          <Input
-            name="postcode"
-            aria-label="우편번호"
-            placeholder="우편번호"
-            className="rounded-none"
-          />
-          <Input
-            name="address"
-            required
-            aria-label="주소"
-            placeholder="주소"
-            className="rounded-none"
-          />
-          <Input
-            name="detail"
-            aria-label="상세주소"
-            placeholder="상세주소"
-            className="rounded-none sm:col-span-2"
-          />
-          <SubmitButton
-            styled
-            pendingText="추가 중…"
-            className="rounded-none bg-wabi-accent hover:bg-wabi-accent/90 sm:col-span-2"
-          >
-            배송지 추가
-          </SubmitButton>
-        </form>
+        {/* 배송지 추가 — 우편번호 검색 위해 client 폼으로 분리 */}
+        <AddressAddForm action={addAddress} />
       </section>
 
       <DeleteAccountSection />
