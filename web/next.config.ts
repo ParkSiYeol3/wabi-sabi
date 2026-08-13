@@ -10,7 +10,7 @@ const SUPABASE_HOST = process.env.NEXT_PUBLIC_SUPABASE_URL
 // + 실도메인 미연결(정식 배포 전)이라 전환 리스크 최소 시점에 전환.
 // report-uri 는 유지 — 강제 후에도 위반이 /api/csp-report 로 계속 수집됨(안전망).
 // 허용 근거: 토스 결제위젯(*.tosspayments.com — script/iframe/API/이미지),
-// Supabase(REST·Storage·Realtime). 우편번호는 수동 입력이라 외부 스크립트 없음.
+// Supabase(REST·Storage·Realtime), 다음 우편번호(아래 POSTCODE_* 참고).
 // script-src 'unsafe-inline' 은 Next.js 인라인 스크립트 필요 — nonce 전환 후속 검토.
 //
 // 지도 (#119) — 네이버 Maps JS SDK 가 CSP 관점에서 요구하는 것(전부 실측 확인):
@@ -29,14 +29,28 @@ const MAP_ASSETS =
 const MAP_TELEMETRY = "https://kr-col-ext.nelo.navercorp.com";
 const MAP_FRAMES = "https://maps.google.com https://www.google.com";
 
+// 다음(카카오) 우편번호 서비스 (#… 배송지 주소 검색). CSP 관점 요구(로컬 실측 확인):
+//  ① 위젯 로더 스크립트: t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js
+//  ② 검색 UI 는 embed 시 iframe 으로 삽입되는데, 카카오 리브랜딩으로 실제 프레임 도메인이
+//     postcode.map.kakao.com 이다(옛 postcode.map.daum.net 도 폴백으로 함께 허용) → frame-src.
+//  ③ 로더가 코드 조립에 eval 을 써서 script-src 에 'unsafe-eval' 이 없으면 위젯이 뜨지 않는다.
+//     전역 완화가 부담이나 다음 우편번호의 요구라 불가피 — 대신 도메인은 최소로 좁힌다.
+//  ④ 위젯 내부 리소스(주소검색 API·이미지)는 그 iframe(카카오 origin) 안에서 도므로 부모
+//     CSP 무관. 로더가 부모에서 버전 체크 등 fetch 할 수 있어 connect 도 열어둔다.
+const POSTCODE_SCRIPT = "https://t1.daumcdn.net";
+const POSTCODE_FRAME =
+  "https://postcode.map.kakao.com https://postcode.map.daum.net";
+
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' https://*.tosspayments.com ${MAP_SCRIPT}`,
+  // 'unsafe-eval' 은 다음 우편번호 로더(postcode.v2.js)가 코드 조립에 eval 을 써서
+  // 불가피(없으면 위젯이 아예 안 뜬다). 도메인 화이트리스트는 최소로 유지.
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.tosspayments.com ${MAP_SCRIPT} ${POSTCODE_SCRIPT}`,
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: https://${SUPABASE_HOST} https://*.tosspayments.com ${MAP_ASSETS}`,
   "font-src 'self' data:",
-  `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST} https://*.tosspayments.com ${MAP_SCRIPT} ${MAP_ASSETS} ${MAP_TELEMETRY}`,
-  `frame-src https://*.tosspayments.com ${MAP_FRAMES}`,
+  `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST} https://*.tosspayments.com ${MAP_SCRIPT} ${MAP_ASSETS} ${MAP_TELEMETRY} ${POSTCODE_SCRIPT}`,
+  `frame-src https://*.tosspayments.com ${MAP_FRAMES} ${POSTCODE_FRAME}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
