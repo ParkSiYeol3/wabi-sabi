@@ -32,14 +32,14 @@ export function AddressAddForm({
         required
         aria-label="연락처"
         placeholder="연락처"
-        className="rounded-none"
+        className="rounded-none font-numeric"
       />
       <div className="flex gap-2">
         <Input
           name="postcode"
           aria-label="우편번호"
           placeholder="우편번호"
-          className="rounded-none"
+          className="rounded-none font-numeric"
           value={postcode}
           onChange={(e) => setPostcode(e.target.value)}
         />
@@ -55,7 +55,7 @@ export function AddressAddForm({
         required
         aria-label="주소"
         placeholder="주소"
-        className="rounded-none"
+        className="rounded-none font-numeric"
         value={address}
         onChange={(e) => setAddress(e.target.value)}
       />
@@ -63,7 +63,7 @@ export function AddressAddForm({
         name="detail"
         aria-label="상세주소"
         placeholder="상세주소"
-        className="rounded-none sm:col-span-2"
+        className="rounded-none font-numeric sm:col-span-2"
       />
       <SubmitButton
         styled
