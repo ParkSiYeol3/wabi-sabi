@@ -200,17 +200,17 @@ export default function CheckoutPage() {
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <Input name="recipient" required aria-label="받는 분" placeholder="받는 분" className="rounded-none" value={delivery.recipient} onChange={setField("recipient")} />
-              <Input name="phone" required aria-label="연락처" placeholder="연락처" className="rounded-none" value={delivery.phone} onChange={setField("phone")} />
+              <Input name="phone" required aria-label="연락처" placeholder="연락처" className="rounded-none font-numeric" value={delivery.phone} onChange={setField("phone")} />
               <div className="flex gap-2">
-                <Input name="postcode" aria-label="우편번호" placeholder="우편번호" className="rounded-none" value={delivery.postcode} onChange={setField("postcode")} />
+                <Input name="postcode" aria-label="우편번호" placeholder="우편번호" className="rounded-none font-numeric" value={delivery.postcode} onChange={setField("postcode")} />
                 <PostcodeButton
                   onComplete={(r) =>
                     setDelivery((d) => ({ ...d, postcode: r.zonecode, address: r.address }))
                   }
                 />
               </div>
-              <Input name="address" required aria-label="주소" placeholder="주소" className="rounded-none" value={delivery.address} onChange={setField("address")} />
-              <Input name="detail" aria-label="상세주소" placeholder="상세주소" className="rounded-none sm:col-span-2" value={delivery.detail} onChange={setField("detail")} />
+              <Input name="address" required aria-label="주소" placeholder="주소" className="rounded-none font-numeric" value={delivery.address} onChange={setField("address")} />
+              <Input name="detail" aria-label="상세주소" placeholder="상세주소" className="rounded-none font-numeric sm:col-span-2" value={delivery.detail} onChange={setField("detail")} />
               <Input name="memo" aria-label="배송 메모" placeholder="배송 메모 (선택)" className="rounded-none sm:col-span-2" value={delivery.memo} onChange={setField("memo")} />
             </div>
           </section>
