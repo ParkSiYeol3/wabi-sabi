@@ -99,7 +99,10 @@ export default function CheckoutPage() {
     if (a) fillFrom(a);
   }
 
-  if (!mounted || authLoading || !user || items.length === 0) {
+  // 비회원도 결제 가능(대표님 — 게스트 구매 허용). 렌더 가드에서 !user 를 뺀다.
+  // (이전엔 게스트가 이 가드에 걸려 결제 폼을 못 보고 로딩만 떴다 — 미완성 버그.
+  //  아래 user 참조는 전부 user?. 또는 !user 가드로 null 안전.) 빈 장바구니만 되돌린다.
+  if (!mounted || authLoading || items.length === 0) {
     return (
       <Container className="py-16">
         <span className="sr-only">로딩 중</span>
