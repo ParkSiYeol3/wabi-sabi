@@ -105,7 +105,7 @@ export function ShopSidebar({
         </div>
       )}
 
-      {/* 이 달의 상품·오늘의 와비사비 — 카테고리가 아니라 특별 컬렉션. 데스크톱엔
+      {/* 월간 그릇·오늘의 와비사비 — 카테고리가 아니라 특별 컬렉션. 데스크톱엔
           드로어가 없어 사이드바 하단에 항상 둔다(모바일은 드로어로 뺐다 — 대표님). */}
       <div className="mt-5 space-y-1 border-t border-wabi-border pt-4">
         <SideLink
@@ -113,7 +113,7 @@ export function ShopSidebar({
           active={current === MONTHLY_SLUG}
           className="text-wabi-accent hover:text-wabi-accent"
         >
-          이 달의 상품
+          월간 그릇
         </SideLink>
         <SideLink
           href="/today"

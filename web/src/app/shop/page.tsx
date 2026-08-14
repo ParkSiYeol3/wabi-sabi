@@ -68,7 +68,7 @@ export default async function ShopPage({
   const heading = !sp.category
     ? "Shop"
     : sp.category === MONTHLY_SLUG
-      ? "이 달의 상품"
+      ? "월간 그릇"
       : (catHeading ?? "Shop");
 
   return (

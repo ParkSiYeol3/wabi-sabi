@@ -33,10 +33,10 @@ export function ProductCard({
     <Link href={href} className="group block">
       <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-wabi-muted">
         {product.isMonthly && (
-          // 이 달의 상품 씰 — 좌상단, 절제된 강조(espresso 배경·크림 글씨). 품절
-          // 오버레이 위(z-20)에 둬 품절이어도 "이 달" 표식은 보이게.
+          // 월간 그릇 씰 — 좌상단, 절제된 강조(espresso 배경·크림 글씨). 품절
+          // 오버레이 위(z-20)에 둬 품절이어도 "월간" 표식은 보이게.
           <span className="absolute left-2 top-2 z-20 rounded-full bg-wabi-fg/90 px-2 py-0.5 text-[10px] font-medium tracking-wide text-wabi-bg">
-            이 달
+            월간
           </span>
         )}
         {soldOut && (
