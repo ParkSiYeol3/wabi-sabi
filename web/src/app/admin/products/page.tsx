@@ -90,7 +90,7 @@ export default async function AdminProductsPage() {
                       <th className="px-4 py-3 font-medium">상품명</th>
                       <th className="px-4 py-3 font-medium">가격</th>
                       <th className="px-4 py-3 font-medium">재고</th>
-                      <th className="px-4 py-3 font-medium">이 달의 상품</th>
+                      <th className="px-4 py-3 font-medium">월간 그릇</th>
                       <th className="px-4 py-3 font-medium">노출</th>
                       <th className="px-4 py-3 font-medium">수정</th>
                       <th className="px-4 py-3 font-medium">삭제</th>

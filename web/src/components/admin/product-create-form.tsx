@@ -133,7 +133,7 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
           onChange={(e) => setIsMonthly(e.target.checked)}
           className="size-4"
         />
-        이 달의 상품
+        월간 그릇
       </label>
       {/* 커스텀 옵션(색상·모양 등) + 추가옵션 노출(선물 포장·쇼핑백) — 성공 후
           pickerKey 로 함께 remount 초기화. */}

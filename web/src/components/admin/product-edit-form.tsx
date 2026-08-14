@@ -90,7 +90,7 @@ export function ProductEditForm({
           defaultChecked={product.is_monthly}
           className="size-4"
         />
-        이 달의 상품
+        월간 그릇
       </label>
       <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted sm:col-span-2">
         상품 설명 (상세 페이지에 표시)

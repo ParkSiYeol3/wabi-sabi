@@ -255,13 +255,13 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
                       >
                         All
                       </Link>
-                      {/* 이 달의 상품·오늘의 와비사비 = 액센트로 강조(사이드바와 통일) */}
+                      {/* 월간 그릇·오늘의 와비사비 = 액센트로 강조(사이드바와 통일) */}
                       <Link
                         href={buildShopQuery({}, { category: MONTHLY_SLUG })}
                         onClick={closeMenu}
                         className="py-1.5 text-sm text-wabi-accent transition-colors hover:opacity-80"
                       >
-                        이 달의 상품
+                        월간 그릇
                       </Link>
                       <Link
                         href="/today"
