@@ -24,6 +24,7 @@ import {
 import { enabledAddons } from "@/lib/addons";
 import { createClient } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/site-url";
+import { BASE_SHIPPING_FEE } from "@/lib/shipping";
 
 export async function generateMetadata({
   params,
@@ -74,10 +75,39 @@ function productJsonLd(
       url: `${SITE_URL}/shop/${product.id}`,
       priceCurrency: "KRW",
       price: product.price,
+      itemCondition: "https://schema.org/NewCondition",
+      // 가격 유효기간 — 구글이 없으면 상품 리치결과 경고를 낸다. 연 단위로 넉넉히.
+      priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10),
       availability:
         product.stock > 0
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
+      // 배송 정보 — 구글 상품 리치결과/무료 리스팅에 "배송비" 노출. 기본 배송비 기준
+      // (7만원 이상 무료는 조건부라 schema 로 표현 어려워 기본요금만 명시).
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: {
+          "@type": "MonetaryAmount",
+          value: BASE_SHIPPING_FEE,
+          currency: "KRW",
+        },
+        shippingDestination: {
+          "@type": "DefinedRegion",
+          addressCountry: "KR",
+        },
+      },
+      // 반품 정책 — 전자상거래법 청약철회(수령 후 7일, 반품비 구매자 부담).
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "KR",
+        returnPolicyCategory:
+          "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: 7,
+        returnMethod: "https://schema.org/ReturnByMail",
+        returnFees: "https://schema.org/ReturnShippingFees",
+      },
     },
     // 별점은 리뷰가 있을 때만 — reviewCount 0 이면 구글이 리치결과를 거부한다.
     // (undefined 키는 JSON.stringify 가 제거한다.)
@@ -91,6 +121,39 @@ function productJsonLd(
             worstRating: 1,
           }
         : undefined,
+  }).replace(/</g, "\\u003c");
+}
+
+// 빵부스러기 구조화 데이터 — 검색결과에 SHOP › 카테고리 › 상품 경로 노출(클릭률↑).
+// 카테고리 라벨은 name_en 우선(대분류 "-"·빈값이면 name_ko) — shop 라벨 규칙과 통일.
+function breadcrumbJsonLd(product: {
+  id: string;
+  name: string;
+  category: { slug: string; name_en: string; name_ko: string } | null;
+}) {
+  const items: object[] = [
+    { "@type": "ListItem", position: 1, name: "SHOP", item: `${SITE_URL}/shop` },
+  ];
+  if (product.category) {
+    const c = product.category;
+    const label = c.name_en?.trim() && c.name_en !== "-" ? c.name_en : c.name_ko;
+    items.push({
+      "@type": "ListItem",
+      position: 2,
+      name: label,
+      item: `${SITE_URL}/shop?category=${c.slug}`,
+    });
+  }
+  items.push({
+    "@type": "ListItem",
+    position: items.length + 1,
+    name: product.name,
+    item: `${SITE_URL}/shop/${product.id}`,
+  });
+  return JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items,
   }).replace(/</g, "\\u003c");
 }
 
@@ -162,6 +225,10 @@ export default async function ProductDetailPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: productJsonLd(product, reviewStats) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd(product) }}
       />
       {/* 히어로 — 첫(메인) 사진 + 정보. 스크롤을 내리면 정보와 함께 위로 사라지고
           아래 스캐터 사진만 이어진다(대표님 시안 — 정보를 우측에 고정하지 않음). */}
