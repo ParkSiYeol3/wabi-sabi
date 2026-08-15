@@ -29,6 +29,9 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const redirect = searchParams.get("redirect") || "/";
 
+  // 소셜 계정 연결(linkIdentity) 흐름 표시 — 실패 시 로그인 실패와 다르게 안내한다.
+  const isLink = searchParams.get("flow") === "link";
+
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
@@ -39,7 +42,14 @@ export async function GET(request: Request) {
       if (user) await recordSocialConsentOnce(user.id);
       return NextResponse.redirect(`${origin}${redirect}`);
     }
+    // 연결 흐름에서 실패(대개 그 소셜이 이미 다른 계정에 연결됨) → 마이페이지에 안내.
+    if (isLink) {
+      return NextResponse.redirect(`${origin}/mypage?link_error=1`);
+    }
   }
 
+  if (isLink) {
+    return NextResponse.redirect(`${origin}/mypage?link_error=1`);
+  }
   return NextResponse.redirect(`${origin}/auth?error=oauth`);
 }
