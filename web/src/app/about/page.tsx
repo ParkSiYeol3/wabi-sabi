@@ -60,6 +60,20 @@ function storeJsonLd() {
       addressCountry: "KR",
     },
     priceRange: "₩₩",
+    // 영업시간 — 매주 수요일 정기휴무, 그 외 12:00–19:00(대표님 확정).
+    openingHoursSpecification: {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: [
+        "Monday",
+        "Tuesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ],
+      opens: "12:00",
+      closes: "19:00",
+    },
   }).replace(/</g, "\\u003c");
 }
 
