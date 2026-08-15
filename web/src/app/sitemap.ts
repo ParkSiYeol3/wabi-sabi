@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getProducts } from "@/lib/queries/products";
+import { createPublicClient } from "@/lib/supabase/public";
 import { SITE_URL } from "@/lib/site-url";
 
 const BASE = SITE_URL;
@@ -25,13 +25,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let productRoutes: MetadataRoute.Sitemap = [];
   try {
-    const products = await getProducts();
-    productRoutes = products.map((p) => ({
-      url: `${BASE}/shop/${p.id}`,
-      lastModified: now,
-      changeFrequency: "weekly" as const,
-      priority: 0.7,
-    }));
+    // 경량 직접 조회 — lastModified 는 실제 등록일(created_at), image 는 대표 사진.
+    // (getProducts 반환엔 created_at 이 없어 sitemap 전용으로 최소 컬럼만 읽는다.)
+    const db = createPublicClient();
+    const { data } = await db
+      .from("products")
+      .select("id, created_at, images")
+      .eq("is_active", true)
+      .returns<{ id: string; created_at: string | null; images: unknown }[]>();
+    productRoutes = (data ?? []).map((p) => {
+      const imgs = Array.isArray(p.images)
+        ? p.images.filter((x): x is string => typeof x === "string")
+        : [];
+      return {
+        url: `${BASE}/shop/${p.id}`,
+        lastModified: p.created_at ? new Date(p.created_at) : now,
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+        // 구글 이미지 검색 유입 — 상품 대표 사진을 사이트맵에 노출.
+        ...(imgs.length ? { images: [imgs[0]] } : {}),
+      };
+    });
   } catch {
     // Supabase 미가용 시 정적 경로만
   }

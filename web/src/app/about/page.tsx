@@ -5,7 +5,8 @@ import { Container } from "@/components/layout/container";
 import { Reveal } from "@/components/common/reveal";
 import { InstagramFeed } from "@/components/common/instagram-feed";
 import { MapCard } from "@/components/map/map-card";
-import { site } from "@/lib/site";
+import { site, business } from "@/lib/site";
+import { SITE_URL } from "@/lib/site-url";
 import {
   getSiteContent,
   PHILOSOPHY_KEY,
@@ -37,6 +38,30 @@ export const metadata: Metadata = {
 // About 은 그 철학이 실제 셀렉션에서 어떻게 작동하는지를 설명한다.
 // 문구는 관리자 콘텐츠 탭에서 편집(미저장 시 기본값 폴백).
 const stagger = [0, 100, 200] as const;
+
+// 매장(오프라인) 구조화 데이터 — 로컬 검색·구글 지도 노출용(천안 대면/택배 거래처).
+// 홈의 OnlineStore(레이아웃)와 별개로, 물리 매장을 Store 로 명시한다. 좌표는 미보유라
+// 주소로 지오코딩되게 두고, 영업요일은 미확정이라 openingHours 는 대표님 확인 후 추가.
+function storeJsonLd() {
+  return JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Store",
+    "@id": `${SITE_URL}/#store`,
+    name: site.name,
+    image: `${SITE_URL}/brand/logo-stacked.png`,
+    url: SITE_URL,
+    telephone: business.phone,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "대흥로 338 1층 2호",
+      addressLocality: "천안시 동남구",
+      addressRegion: "충청남도",
+      postalCode: "31122",
+      addressCountry: "KR",
+    },
+    priceRange: "₩₩",
+  }).replace(/</g, "\\u003c");
+}
 
 export default async function AboutPage() {
   const [
@@ -81,6 +106,10 @@ export default async function AboutPage() {
   const philosophy = toParagraphs(philosophyRaw ?? DEFAULT_PHILOSOPHY);
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: storeJsonLd() }}
+      />
       {/* 철학 — 히어로 없이 바로 본문(대표님 피드백, 히어로 제거) */}
       <Container className="py-24 md:py-32">
         <div className="grid gap-16 md:grid-cols-2 md:items-center">
