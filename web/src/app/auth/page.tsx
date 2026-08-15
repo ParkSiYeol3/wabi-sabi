@@ -9,7 +9,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store/auth";
 import { CONSENT_VERSIONS } from "@/lib/consent";
-import { loginAction } from "./actions";
+import { loginGate } from "./actions";
 import { cn } from "@/lib/utils";
 
 type Tab = "login" | "signup";
@@ -84,10 +84,22 @@ function AuthForm() {
     setLoading(true);
     try {
       if (tab === "login") {
-        // 서버 액션으로 프록시 — 연속 실패 제한(무차별 대입 방어)을 서버에서 강제.
-        const res = await loginAction(email, password);
-        if (!res.ok) {
-          setError(res.error);
+        // 서버 게이트로 연속 실패 제한(무차별 대입 방어)만 강제하고, 실제 로그인은
+        // 클라에서 한다 — 클라 supabase 의 onAuthStateChange 가 세션을 즉시 반영해야
+        // 로그인 직후 헤더 등 UI 가 갱신된다(서버 프록시로 옮기면 전체 새로고침 전까지
+        // 비로그인으로 보였다).
+        const gate = await loginGate(email);
+        if (!gate.ok) {
+          setError(gate.error);
+          return;
+        }
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) {
+          // 계정 존재 여부를 드러내지 않는 통합 메시지(열거 방지).
+          setError("이메일 또는 비밀번호가 올바르지 않습니다.");
           return;
         }
         router.push(redirect);
