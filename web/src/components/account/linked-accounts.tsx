@@ -19,12 +19,19 @@ type Provider = (typeof SOCIALS)[number]["key"];
 
 export function LinkedAccounts({
   initialIdentities,
+  linkError = false,
 }: {
   initialIdentities: UserIdentity[];
+  // OAuth 연결이 콜백에서 실패(대개 그 소셜이 이미 다른 계정에 연결됨)해 돌아온 경우.
+  linkError?: boolean;
 }) {
   const [identities, setIdentities] = useState<UserIdentity[]>(initialIdentities);
   const [busy, setBusy] = useState<Provider | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    linkError
+      ? "이미 다른 계정에 연결된 소셜이거나 연결에 실패했습니다. 다른 소셜 계정으로 시도해 주세요."
+      : null,
+  );
 
   const identityCount = identities.length;
   const hasEmail = identities.some((i) => i.provider === "email");
@@ -36,7 +43,8 @@ export function LinkedAccounts({
     const { error } = await supabase.auth.linkIdentity({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?redirect=/mypage`,
+        // flow=link 로 표시 — 콜백이 연결 실패(충돌 등)를 로그인 실패와 구분해 안내한다.
+        redirectTo: `${window.location.origin}/auth/callback?redirect=/mypage&flow=link`,
       },
     });
     if (error) {

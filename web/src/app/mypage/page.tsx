@@ -23,7 +23,13 @@ type Address = {
   detail: string | null;
 };
 
-export default async function MyPage() {
+export default async function MyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ link_error?: string }>;
+}) {
+  // 소셜 연결이 콜백에서 실패해 돌아온 경우(?link_error=1) 안내를 띄운다.
+  const linkError = (await searchParams).link_error === "1";
   const supabase = await createClient();
   const {
     data: { user },
@@ -109,7 +115,7 @@ export default async function MyPage() {
       </section>
 
       {/* 소셜 계정 연결/해제 — identity 목록은 서버에서 조회해 초기값으로 전달 */}
-      <LinkedAccounts initialIdentities={identities_ ?? []} />
+      <LinkedAccounts initialIdentities={identities_ ?? []} linkError={linkError} />
 
       <DeleteAccountSection />
     </Container>
