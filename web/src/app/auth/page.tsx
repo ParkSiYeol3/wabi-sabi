@@ -5,8 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store/auth";
+import { CONSENT_VERSIONS } from "@/lib/consent";
 import { cn } from "@/lib/utils";
 
 type Tab = "login" | "signup";
@@ -40,6 +42,11 @@ function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // 회원가입 약관 동의 — 이용약관·개인정보(필수), 마케팅(선택). 동의 항목·버전은
+  // signUp 메타데이터로 넘겨 트리거가 user_consents 에 이력으로 남긴다(개인정보보호법).
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreePrivacy, setAgreePrivacy] = useState(false);
+  const [agreeMarketing, setAgreeMarketing] = useState(false);
 
   async function onOAuth(provider: "kakao" | "google") {
     setError(null);
@@ -100,11 +107,22 @@ function AuthForm() {
           setError("비밀번호는 영문과 숫자를 모두 포함해야 합니다.");
           return;
         }
+        // 필수 동의(이용약관·개인정보) 미체크면 가입 차단.
+        if (!agreeTerms || !agreePrivacy) {
+          setError("이용약관과 개인정보 수집·이용에 동의해 주세요.");
+          return;
+        }
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { name },
+            data: {
+              name,
+              // 동의 이력 — 트리거(handle_new_user)가 user_consents 에 항목별 기록.
+              consent_terms_version: CONSENT_VERSIONS.terms,
+              consent_privacy_version: CONSENT_VERSIONS.privacy,
+              consent_marketing: agreeMarketing,
+            },
             // 이메일 확인이 켜진 경우, 확인 링크가 우리 콜백으로 돌아와 세션을
             // 교환하고 원래 목적지로 이동하게 한다.
             emailRedirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirect)}`,
@@ -213,6 +231,35 @@ function AuthForm() {
           </Field>
         )}
 
+        {tab === "signup" && (
+          <div className="space-y-2 pt-1">
+            <ConsentCheck checked={agreeTerms} onChange={setAgreeTerms}>
+              <Link
+                href="/legal/terms"
+                target="_blank"
+                className="underline underline-offset-2 hover:text-wabi-fg"
+              >
+                이용약관
+              </Link>
+              에 동의합니다 <span className="text-red-700">(필수)</span>
+            </ConsentCheck>
+            <ConsentCheck checked={agreePrivacy} onChange={setAgreePrivacy}>
+              <Link
+                href="/legal/privacy"
+                target="_blank"
+                className="underline underline-offset-2 hover:text-wabi-fg"
+              >
+                개인정보 수집·이용
+              </Link>
+              에 동의합니다 <span className="text-red-700">(필수)</span>
+            </ConsentCheck>
+            <ConsentCheck checked={agreeMarketing} onChange={setAgreeMarketing}>
+              마케팅 정보 수신에 동의합니다{" "}
+              <span className="text-wabi-fg-muted">(선택)</span>
+            </ConsentCheck>
+          </div>
+        )}
+
         {error && (
           <p className="font-numeric text-xs text-red-700" role="alert">
             {error}
@@ -258,6 +305,27 @@ function AuthForm() {
             Google로 계속하기
           </button>
         </div>
+        {/* 소셜 로그인은 별도 체크박스 대신 고지 — 계속 진행 시 필수 약관에 동의한 것으로
+            보고, 첫 가입이면 콜백에서 동의 이력을 남긴다(개인정보보호법). */}
+        <p className="mt-4 text-center text-xs leading-5 text-wabi-fg-muted">
+          소셜 계정으로 계속하면{" "}
+          <Link
+            href="/legal/terms"
+            target="_blank"
+            className="underline underline-offset-2 hover:text-wabi-fg"
+          >
+            이용약관
+          </Link>
+          과{" "}
+          <Link
+            href="/legal/privacy"
+            target="_blank"
+            className="underline underline-offset-2 hover:text-wabi-fg"
+          >
+            개인정보 수집·이용
+          </Link>
+          에 동의하는 것으로 간주됩니다.
+        </p>
       </div>
     </div>
   );
@@ -312,6 +380,29 @@ function GoogleLogo() {
         d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
       />
     </svg>
+  );
+}
+
+// 약관 동의 체크박스 한 줄 — 라벨 안에 약관 링크를 넣기 위해 label 로 감싼다.
+function ConsentCheck({
+  checked,
+  onChange,
+  children,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="flex cursor-pointer items-start gap-2 text-xs leading-5 text-wabi-fg-muted">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="mt-0.5 size-4 shrink-0 accent-wabi-accent"
+      />
+      <span>{children}</span>
+    </label>
   );
 }
 
