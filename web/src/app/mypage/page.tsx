@@ -9,6 +9,7 @@ import { NicknameForm } from "@/components/account/nickname-form";
 import { AddressAddForm } from "@/components/account/address-add-form";
 import { LinkedAccounts } from "@/components/account/linked-accounts";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { addAddress, deleteAddress } from "./actions";
 
 export const metadata: Metadata = { title: "마이페이지" };
@@ -41,10 +42,12 @@ export default async function MyPage() {
     .order("created_at", { ascending: false })
     .returns<Address[]>();
 
-  // 소셜 연결 상태 — 현재 세션의 identity 목록(email·google·kakao)을 서버에서 조회해
-  // LinkedAccounts 초기값으로 넘긴다(클라 effect 없이 SSR 초기 렌더).
-  const { data: identityData } = await supabase.auth.getUserIdentities();
-  const identities_ = identityData?.identities ?? [];
+  // 소셜 연결 상태 — identity 목록(email·google·kakao)을 서버에서 조회해 LinkedAccounts
+  // 초기값으로 넘긴다(클라 effect 없이 SSR 초기 렌더). 세션 기반 getUserIdentities 는
+  // 서버(@supabase/ssr)에서 identities 를 비워 돌려줘 이미 연결된 소셜이 "연결 안 됨"으로
+  // 보였다 → service_role admin.getUserById 로 확실히 채운 identity 목록을 쓴다.
+  const { data: full } = await createAdminClient().auth.admin.getUserById(user.id);
+  const identities_ = full.user?.identities ?? [];
 
   return (
     <Container className="py-16">
