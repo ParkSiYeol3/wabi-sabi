@@ -34,7 +34,8 @@ export async function loginGate(email: string): Promise<GateResult> {
   if (!ipGate.ok || !idGate.ok) {
     return {
       ok: false,
-      error: "로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+      error:
+        "로그인 시도가 너무 많습니다. 약 10분 후 다시 시도해 주세요.",
     };
   }
   return { ok: true };
