@@ -7,6 +7,7 @@ import { LogoutButton } from "@/components/account/logout-button";
 import { DeleteAccountSection } from "@/components/account/delete-account-section";
 import { NicknameForm } from "@/components/account/nickname-form";
 import { AddressAddForm } from "@/components/account/address-add-form";
+import { LinkedAccounts } from "@/components/account/linked-accounts";
 import { createClient } from "@/lib/supabase/server";
 import { addAddress, deleteAddress } from "./actions";
 
@@ -39,6 +40,11 @@ export default async function MyPage() {
     .select("id, recipient, phone, postcode, address, detail")
     .order("created_at", { ascending: false })
     .returns<Address[]>();
+
+  // 소셜 연결 상태 — 현재 세션의 identity 목록(email·google·kakao)을 서버에서 조회해
+  // LinkedAccounts 초기값으로 넘긴다(클라 effect 없이 SSR 초기 렌더).
+  const { data: identityData } = await supabase.auth.getUserIdentities();
+  const identities_ = identityData?.identities ?? [];
 
   return (
     <Container className="py-16">
@@ -98,6 +104,9 @@ export default async function MyPage() {
         {/* 배송지 추가 — 우편번호 검색 위해 client 폼으로 분리 */}
         <AddressAddForm action={addAddress} />
       </section>
+
+      {/* 소셜 계정 연결/해제 — identity 목록은 서버에서 조회해 초기값으로 전달 */}
+      <LinkedAccounts initialIdentities={identities_ ?? []} />
 
       <DeleteAccountSection />
     </Container>
