@@ -8,7 +8,7 @@ export const site = {
   tagline: "Living Select Shop",
   categoriesLine: "Tableware · Objects · Craft · Gifts",
   // 2026-07-05 대표님 확정 (DESIGN_SYSTEM.md §7)
-  hours: "12:00 – 19:00",
+  hours: "12:00 – 19:00 · 매주 수요일 휴무",
   closed: "수요일 휴무",
   place: "와비사비",
   address: "충남 천안시 동남구 대흥로 338 1층 2호 와비사비 (31122)",
