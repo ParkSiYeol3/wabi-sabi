@@ -9,6 +9,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store/auth";
 import { CONSENT_VERSIONS } from "@/lib/consent";
+import { loginAction } from "./actions";
 import { cn } from "@/lib/utils";
 
 type Tab = "login" | "signup";
@@ -83,11 +84,12 @@ function AuthForm() {
     setLoading(true);
     try {
       if (tab === "login") {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
+        // 서버 액션으로 프록시 — 연속 실패 제한(무차별 대입 방어)을 서버에서 강제.
+        const res = await loginAction(email, password);
+        if (!res.ok) {
+          setError(res.error);
+          return;
+        }
         router.push(redirect);
         router.refresh();
       } else {
