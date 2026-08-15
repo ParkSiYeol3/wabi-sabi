@@ -99,6 +99,12 @@
   --font-serif: var(--font-cormorant), var(--font-maruburi),
     var(--font-noto-serif-jp), ui-serif, serif;
   --font-sans: var(--font-serif);
+  /* 메뉴(내비) 산세리프 — Noto Sans KR(next/font/google)이 gstatic 404 로 CI 빌드를
+     깨뜨려(Google 이 subset woff2 를 갱신·삭제) 외부 폰트 의존을 걷어내고 시스템
+     산세리프 스택으로 대체. 메뉴는 대부분 라틴이라 시각차가 작고, 한글은 Apple SD
+     Gothic Neo·맑은 고딕으로 폴백. 외부 요청 0(CSP·성능에도 이점). */
+  --font-pretendard: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo",
+    "Malgun Gothic", "맑은 고딕", sans-serif;
   --font-serif-jp: var(--font-serif);
 }
 

@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
-import {
-  Cormorant_Garamond,
-  Noto_Serif_JP,
-  Noto_Sans_KR,
-} from "next/font/google";
+import { Cormorant_Garamond, Noto_Serif_JP } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/components/account/auth-provider";
@@ -42,15 +38,9 @@ const notoSerifJp = Noto_Serif_JP({
   weight: ["400", "600"],
   display: "swap",
 });
-// 메뉴(내비) 전용 산세리프(대표님 — 메뉴는 Pretendard). Pretendard 는 Google
-// Fonts 에 없고 self-host 는 메뉴 하나에 ~610KB 라 과하다 → 사실상 동일한 깔끔한
-// 산세리프 Noto Sans KR 로 대체(next/font 가 쓰는 글자 청크만 self-host).
-const menuSans = Noto_Sans_KR({
-  variable: "--font-pretendard",
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  display: "swap",
-});
+// 메뉴(내비) 산세리프는 globals.css 의 --font-pretendard(시스템 산세리프 스택)로 둔다.
+// 과거 Noto Sans KR(next/font/google)을 썼으나 Google 이 subset woff2 를 갱신·삭제해
+// gstatic 404 로 CI 빌드가 깨졌다 → 외부 폰트 의존 제거(메뉴는 대부분 라틴).
 
 // 핀치 줌아웃(축소) 방지(#223 시열님) — 화면이 좁은 컬럼으로 줄어드는 현상 차단.
 // 확대(zoom-in)는 그대로 허용해 저시력 접근성(WCAG 1.4.4)을 지킨다.
@@ -157,7 +147,7 @@ export default async function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${cormorant.variable} ${maruburi.variable} ${notoSerifJp.variable} ${menuSans.variable} h-full antialiased`}
+      className={`${cormorant.variable} ${maruburi.variable} ${notoSerifJp.variable} h-full antialiased`}
     >
       {/* 스티키 푸터 — 뷰포트 기준 min-h-dvh 로 본문이 짧거나 로딩 중이어도 항상
           화면을 채워, 긴 푸터가 헤더 밑으로 올라와 화면을 덮는 버그를 막는다.
