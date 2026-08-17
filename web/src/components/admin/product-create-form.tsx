@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createProduct } from "@/app/admin/products/actions";
@@ -10,6 +10,7 @@ import { OriginPicker } from "@/components/admin/origin-picker";
 import { AttributePicker } from "@/components/admin/attribute-picker";
 import { CareMultiPicker } from "@/components/admin/care-multi-picker";
 import { ProductOptionsFields } from "@/components/admin/product-options-fields";
+import { ProductImagePicker } from "@/components/admin/product-image-picker";
 import { MATERIALS, CARES } from "@/lib/product-attributes";
 
 type Category = { id: string; name_ko: string; name_en: string };
@@ -23,10 +24,9 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
   const [categoryId, setCategoryId] = useState("");
   const [isMonthly, setIsMonthly] = useState(false);
   const [description, setDescription] = useState("");
-  // 스펙 피커(원산지·소재·사이즈·주의)는 내부 상태라 성공 후 초기화하려면
-  // remount(key 증가)한다 — 하나의 카운터로 넷을 함께 리셋.
+  // 스펙 피커(원산지·소재·사이즈·주의)·이미지 피커는 내부 상태라 성공 후 초기화하려면
+  // remount(key 증가)한다 — 하나의 카운터로 함께 리셋.
   const [pickerKey, setPickerKey] = useState(0);
-  const fileRef = useRef<HTMLInputElement>(null);
 
   // 성공 시에만 폼 초기화 (실패 시 입력값 유지). 액션 래퍼에서 처리 — effect 내 setState 회피.
   const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(
@@ -42,7 +42,6 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
         setIsMonthly(false);
         setDescription("");
         setPickerKey((k) => k + 1);
-        if (fileRef.current) fileRef.current.value = "";
       }
       return result;
     },
@@ -152,17 +151,10 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
           className="resize-y border border-wabi-border bg-transparent px-3 py-2 text-sm text-wabi-fg outline-none transition-colors focus:border-wabi-fg"
         />
       </label>
-      <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted sm:col-span-2 lg:col-span-3">
-        상품 이미지 (여러 장 가능 · 업로드 시 자동 최적화)
-        <input
-          ref={fileRef}
-          type="file"
-          name="images"
-          multiple
-          accept="image/*"
-          className="cursor-pointer text-sm file:mr-3 file:cursor-pointer file:border file:border-wabi-border file:bg-transparent file:px-3 file:py-1.5 file:text-xs file:text-wabi-fg file:transition-colors hover:file:border-wabi-fg hover:file:bg-wabi-muted"
-        />
-      </label>
+      <div className="flex flex-col gap-1 text-xs text-wabi-fg-muted sm:col-span-2 lg:col-span-3">
+        상품 이미지 (여러 장 가능 · 비율·회전·필터 편집 후 자동 최적화)
+        <ProductImagePicker key={`images-${pickerKey}`} name="images" />
+      </div>
       <Button
         type="submit"
         disabled={pending}
