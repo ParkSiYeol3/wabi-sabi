@@ -11,7 +11,8 @@ export const MOMENTS_PAGE_SIZE = 12;
 export interface MomentCard {
   id: string;
   author_name: string;
-  image_url: string;
+  image_url: string; // 커버(첫 장) — 그리드 썸네일·OG 호환용
+  image_urls: string[] | null; // 전체 사진(다중, 0051). 구 데이터는 null → [image_url] 폴백
   body: string | null;
   created_at: string;
   user_id: string;
@@ -79,7 +80,7 @@ export async function getMomentsPage(
 
   const { data } = await supabase
     .from("wabi_moments")
-    .select("id, author_name, image_url, body, created_at, user_id")
+    .select("id, author_name, image_url, image_urls, body, created_at, user_id")
     .order("created_at", { ascending: false })
     .range(offset, offset + limit) // limit+1 개
     .returns<MomentRow[]>();
@@ -99,7 +100,7 @@ export async function getMoment(id: string): Promise<MomentCard | null> {
 
   const { data } = await supabase
     .from("wabi_moments")
-    .select("id, author_name, image_url, body, created_at, user_id")
+    .select("id, author_name, image_url, image_urls, body, created_at, user_id")
     .eq("id", id)
     .maybeSingle<MomentRow>();
   if (!data) return null;

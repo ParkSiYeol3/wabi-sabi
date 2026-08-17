@@ -31,14 +31,20 @@ export async function createMoment(
   if (!adminConfigured())
     return { ok: false, message: "서버 설정 오류로 업로드할 수 없습니다." };
 
-  const file = formData
+  // 다중 사진(인스타 피드식, 대표님) — 최대 10장. 클라에서 리사이즈해 올린다.
+  const MAX_IMAGES = 10;
+  const files = formData
     .getAll("image")
-    .find((f): f is File => f instanceof File && f.size > 0);
-  if (!file) return { ok: false, message: "사진을 선택하세요." };
-  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type))
-    return { ok: false, message: "png·jpg·webp 사진만 올릴 수 있습니다." };
-  if (file.size > 12 * 1024 * 1024)
-    return { ok: false, message: "사진은 12MB 이하여야 합니다." };
+    .filter((f): f is File => f instanceof File && f.size > 0);
+  if (files.length === 0) return { ok: false, message: "사진을 선택하세요." };
+  if (files.length > MAX_IMAGES)
+    return { ok: false, message: `사진은 최대 ${MAX_IMAGES}장까지 올릴 수 있습니다.` };
+  for (const f of files) {
+    if (!["image/png", "image/jpeg", "image/webp"].includes(f.type))
+      return { ok: false, message: "png·jpg·webp 사진만 올릴 수 있습니다." };
+    if (f.size > 12 * 1024 * 1024)
+      return { ok: false, message: "사진은 장당 12MB 이하여야 합니다." };
+  }
 
   const parsedBody = bodySchema.safeParse(String(formData.get("body") || ""));
   if (!parsedBody.success)
@@ -50,9 +56,16 @@ export async function createMoment(
   if (!ok)
     return { ok: false, message: "너무 자주 올렸습니다. 잠시 후 다시 시도하세요." };
 
-  const { url, error } = await uploadSiteImage(file, `moment-${user.id}`);
-  if (!url)
-    return { ok: false, message: `업로드 실패: ${error ?? "알 수 없는 오류"}` };
+  // 순서대로 업로드 — 한 장이라도 실패하면 앞서 올린 것을 회수한다.
+  const urls: string[] = [];
+  for (const f of files) {
+    const { url, error } = await uploadSiteImage(f, `moment-${user.id}`);
+    if (!url) {
+      await Promise.all(urls.map((u) => deleteProductImage(u)));
+      return { ok: false, message: `업로드 실패: ${error ?? "알 수 없는 오류"}` };
+    }
+    urls.push(url);
+  }
 
   // 표시 이름 — 프로필 이름, 없으면 이메일 앞부분.
   const { data: profile } = await supabase
@@ -66,11 +79,12 @@ export async function createMoment(
   const { error: insErr } = await supabase.from("wabi_moments").insert({
     user_id: user.id,
     author_name: authorName,
-    image_url: url,
+    image_url: urls[0], // 커버(첫 장) — 그리드·OG 호환
+    image_urls: urls,
     body,
   });
   if (insErr) {
-    await deleteProductImage(url); // 저장 실패 시 올린 사진 회수
+    await Promise.all(urls.map((u) => deleteProductImage(u))); // 저장 실패 시 회수
     console.error("[moment] insert 실패", insErr);
     return { ok: false, message: "등록에 실패했습니다. 잠시 후 다시 시도하세요." };
   }
@@ -92,9 +106,13 @@ export async function deleteMoment(formData: FormData) {
 
   const { data: row } = await supabase
     .from("wabi_moments")
-    .select("image_url, user_id")
+    .select("image_url, image_urls, user_id")
     .eq("id", id)
-    .maybeSingle<{ image_url: string; user_id: string }>();
+    .maybeSingle<{
+      image_url: string;
+      image_urls: string[] | null;
+      user_id: string;
+    }>();
   if (!row || row.user_id !== user.id) return;
 
   const { error } = await supabase.from("wabi_moments").delete().eq("id", id);
@@ -102,7 +120,9 @@ export async function deleteMoment(formData: FormData) {
     console.error("[moment] delete 실패", id, error);
     return;
   }
-  await deleteProductImage(row.image_url);
+  // 올린 사진 전부 회수(다중, 0051). 구 데이터는 image_url 만.
+  const urls = row.image_urls?.length ? row.image_urls : [row.image_url];
+  await Promise.all(urls.map((u) => deleteProductImage(u)));
   revalidatePath("/today");
   revalidatePath(`/today/${id}`);
 

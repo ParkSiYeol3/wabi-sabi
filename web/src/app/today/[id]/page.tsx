@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { MomentLikeButton } from "@/components/moment/moment-like-button";
+import { MomentCarousel } from "@/components/moment/moment-carousel";
 import { MomentCommentForm } from "@/components/moment/moment-comment-form";
 import { SubmitButton } from "@/components/common/submit-button";
 import { createClient } from "@/lib/supabase/server";
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title,
     description: m.body ?? "오늘의 와비사비 — 손님들의 일상 속 그릇 이야기.",
-    openGraph: { images: [m.image_url] },
+    openGraph: { images: m.image_urls?.length ? m.image_urls : [m.image_url] },
   };
 }
 
@@ -57,18 +57,14 @@ export default async function MomentDetailPage({ params }: Params) {
       </Link>
 
       <article className="mt-6 grid gap-8 md:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden bg-wabi-muted">
-          <Image
-            src={moment.image_url}
-            alt={
-              moment.body ? moment.body.slice(0, 60) : `${moment.author_name}의 순간`
-            }
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover"
-            preload
-          />
-        </div>
+        <MomentCarousel
+          images={
+            moment.image_urls?.length ? moment.image_urls : [moment.image_url]
+          }
+          alt={
+            moment.body ? moment.body.slice(0, 60) : `${moment.author_name}의 순간`
+          }
+        />
 
         <div className="flex flex-col">
           <div className="flex items-center justify-between text-sm text-wabi-fg-muted">
