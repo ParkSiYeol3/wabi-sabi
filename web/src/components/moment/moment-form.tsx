@@ -1,22 +1,29 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createMoment, type MomentResult } from "@/app/today/actions";
+import { resizeFormImages } from "@/lib/resize-image";
 
-// "오늘의 와비사비" 작성 폼 — 사진 필수 + 짧은 글(선택). 로그인 사용자 전용
-// (page 에서 게이트). 성공 시 입력 초기화.
+const MAX_IMAGES = 10;
+
+// "오늘의 와비사비" 작성 폼 — 사진 필수(여러 장, 인스타 피드식) + 짧은 글(선택).
+// 로그인 사용자 전용(page 에서 게이트). 성공 시 입력 초기화.
 export function MomentForm() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const [count, setCount] = useState(0);
   const [state, action, pending] = useActionState<MomentResult | null, FormData>(
     async (prev, formData) => {
+      // 업로드 전 리사이즈 — 여러 장·모바일 원본이 서버액션 바디 한도를 넘지 않게.
+      await resizeFormImages(formData, "image");
       const result = await createMoment(prev, formData);
       if (result.ok) {
         if (fileRef.current) fileRef.current.value = "";
         if (bodyRef.current) bodyRef.current.value = "";
+        setCount(0);
         // 서버 데이터(첫 페이지) 재요청 → 방금 올린 글이 그리드에 바로 뜬다
         // (그리드는 최신 글 id 로 keying 돼 새 데이터로 remount 된다).
         router.refresh();
@@ -37,7 +44,7 @@ export function MomentForm() {
         <span className="text-sm font-medium text-wabi-fg">
           사진{" "}
           <span className="text-xs font-normal text-wabi-fg-muted">
-            (png·jpg·webp · 최대 12MB)
+            (png·jpg·webp · 장당 최대 12MB · 최대 {MAX_IMAGES}장)
           </span>
         </span>
         <input
@@ -45,9 +52,19 @@ export function MomentForm() {
           type="file"
           name="image"
           required
+          multiple
           accept="image/png,image/jpeg,image/webp"
+          onChange={(e) =>
+            setCount(Math.min(e.currentTarget.files?.length ?? 0, MAX_IMAGES))
+          }
           className="cursor-pointer text-sm file:mr-3 file:cursor-pointer file:border file:border-wabi-border file:bg-transparent file:px-3 file:py-1.5 file:text-xs file:text-wabi-fg file:transition-colors hover:file:border-wabi-fg hover:file:bg-wabi-muted"
         />
+        {count > 0 && (
+          <span className="font-numeric text-xs text-wabi-fg-muted">
+            {count}장 선택됨
+            {count > MAX_IMAGES ? ` — ${MAX_IMAGES}장까지만 올라갑니다` : ""}
+          </span>
+        )}
       </label>
       <textarea
         ref={bodyRef}

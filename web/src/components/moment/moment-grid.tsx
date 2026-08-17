@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Images } from "lucide-react";
 import { useState, useTransition } from "react";
 import type { MomentCard } from "@/lib/queries/moments";
 import { loadMoreMoments, deleteMoment } from "@/app/today/actions";
@@ -64,6 +64,15 @@ export function MomentGrid({
                 loading={i < 2 ? "eager" : "lazy"}
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
               />
+              {/* 여러 장이면 스택 아이콘 표시(인스타식) */}
+              {(m.image_urls?.length ?? 0) > 1 && (
+                <span
+                  className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-black/45 text-white"
+                  aria-label={`사진 ${m.image_urls?.length}장`}
+                >
+                  <Images className="size-3.5" strokeWidth={2} />
+                </span>
+              )}
             </Link>
             <div className="flex flex-1 flex-col gap-2 p-3">
               {m.body && (
