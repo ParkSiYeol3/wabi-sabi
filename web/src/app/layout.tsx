@@ -5,6 +5,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/account/auth-provider";
 import { SessionTimeout } from "@/components/account/session-timeout";
 import { NicknameGate } from "@/components/account/nickname-gate";
+import { LinkResultCatcher } from "@/components/account/link-result-catcher";
 import { PrepNotice } from "@/components/layout/prep-notice";
 import { getPrepNotice } from "@/lib/queries/content";
 import { getCategoryTree } from "@/lib/queries/categories";
@@ -163,6 +164,8 @@ export default async function RootLayout({
           <SessionTimeout />
           {/* 가입 후 닉네임 설정 모달(실명 노출 방지) */}
           <NicknameGate />
+          {/* 소셜 연결 실패(홈 폴백)를 감지해 마이페이지 안내로 유도 */}
+          <LinkResultCatcher />
           {/* 정식 오픈 준비중 안내(대표님 어드민 on/off) — 어드민 경로 제외는 내부 판정 */}
           <PrepNotice enabled={prepNotice.enabled} text={prepNotice.text} />
           {/* 키보드 사용자용 본문 바로가기 (a11y) */}
