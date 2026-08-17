@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { UserIdentity } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { Toast } from "@/components/ui/toast";
 import { LINK_FLAG } from "./link-result-catcher";
 
 // 소셜 계정 연결/해제 (WSB — 계정 관리). identity 목록으로 구글·카카오 연결 상태를
@@ -33,6 +34,15 @@ export function LinkedAccounts({
       ? "이미 다른 계정에 연결된 소셜이거나 연결에 실패했습니다. 다른 소셜 계정으로 시도해 주세요."
       : null,
   );
+
+  // 연결 실패로 되돌아온 경우 URL 의 ?link_error=1 과 #error=... 해시를 지운다 —
+  // 안내는 토스트로 이미 띄웠으니 주소창을 깔끔히 하고, 새로고침 시 재노출을 막는다.
+  useEffect(() => {
+    if (!linkError) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("link_error");
+    window.history.replaceState({}, "", url.pathname + url.search);
+  }, [linkError]);
 
   const identityCount = identities.length;
   const hasEmail = identities.some((i) => i.provider === "email");
@@ -88,11 +98,7 @@ export function LinkedAccounts({
         {hasEmail && " 이메일·비밀번호 로그인은 기본으로 유지됩니다."}
       </p>
 
-      {error && (
-        <p className="mt-3 text-xs text-red-700" role="alert">
-          {error}
-        </p>
-      )}
+      {error && <Toast message={error} onClose={() => setError(null)} />}
 
       <ul className="mt-4 divide-y divide-wabi-border border-y border-wabi-border">
         {SOCIALS.map(({ key, label }) => {
