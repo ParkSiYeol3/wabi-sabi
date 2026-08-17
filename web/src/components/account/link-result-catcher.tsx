@@ -25,10 +25,17 @@ export function LinkResultCatcher() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!sessionStorage.getItem(LINK_FLAG)) return;
+
+    // GoTrue 는 연결 충돌을 쿼리뿐 아니라 URL 해시(#error=...&error_code=...)로도
+    // 되돌린다. 해시는 서버(proxy)가 못 읽으므로 여기서 직접 감지한다(플래그 유실 대비).
+    const conflict =
+      window.location.search.includes("identity_already_exists") ||
+      window.location.hash.includes("identity_already_exists");
+    const hadFlag = sessionStorage.getItem(LINK_FLAG) !== null;
     // 플래그는 이번 착지에서 소비한다(성공·실패 무관).
     sessionStorage.removeItem(LINK_FLAG);
 
+    if (!conflict && !hadFlag) return;
     // 콜백이 정상 반영되면 /mypage 로 돌아온다(성공 또는 이미 link_error 배너).
     // 그 밖(홈 등)에 착지 = redirectTo 미반영 = 연결 실패.
     if (window.location.pathname.startsWith("/mypage")) return;
