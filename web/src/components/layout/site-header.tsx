@@ -345,8 +345,9 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
                 href="/admin"
                 onClick={closeMenu}
                 className="py-3 text-sm font-medium tracking-wide text-wabi-accent"
+                aria-label="관리자"
               >
-                관리자
+                Admin
               </Link>
             )}
             {/* 로그인 시 위시리스트·주문내역 — 모바일은 상단 아이콘 대신 메뉴 안에(대표님). */}
