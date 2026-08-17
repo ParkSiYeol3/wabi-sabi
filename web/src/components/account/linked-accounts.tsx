@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { UserIdentity } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { LINK_FLAG } from "./link-result-catcher";
 
 // 소셜 계정 연결/해제 (WSB — 계정 관리). identity 목록으로 구글·카카오 연결 상태를
 // 보여주고, 연결(linkIdentity)·해제(unlinkIdentity)한다. 초기 목록은 서버(마이페이지)가
@@ -39,6 +40,9 @@ export function LinkedAccounts({
   async function onLink(provider: Provider) {
     setError(null);
     setBusy(provider);
+    // 연결 흐름 시작 표시 — OAuth 왕복 후 홈으로 폴백해도(연결 거부 시) 전역
+    // LinkResultCatcher 가 이 플래그로 실패를 감지해 안내한다.
+    sessionStorage.setItem(LINK_FLAG, "1");
     const supabase = createClient();
     const { error } = await supabase.auth.linkIdentity({
       provider,
@@ -48,6 +52,8 @@ export function LinkedAccounts({
       },
     });
     if (error) {
+      // OAuth 로 넘어가지 못함 — 플래그를 즉시 정리(엉뚱한 페이지 발동 방지).
+      sessionStorage.removeItem(LINK_FLAG);
       setError("계정 연결에 실패했습니다. 잠시 후 다시 시도해 주세요.");
       setBusy(null);
     }
