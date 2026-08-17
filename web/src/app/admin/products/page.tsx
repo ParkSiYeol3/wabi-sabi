@@ -6,6 +6,9 @@ import { won } from "@/lib/orders";
 import { isLowStock } from "@/lib/inventory";
 import { ProductCreateForm } from "@/components/admin/product-create-form";
 import { ProductImageAdder } from "@/components/admin/product-image-adder";
+import { AddonImageField } from "@/components/admin/addon-image-field";
+import { ADDONS } from "@/lib/addons";
+import { getSiteContent, addonImageKey } from "@/lib/queries/content";
 import {
   PageHeader,
   SectionHeading,
@@ -56,6 +59,11 @@ export default async function AdminProductsPage() {
   // 잎 카테고리 선택지 — 수정 페이지와 공용(leaf-options.ts)
   const categories = leafCategoryOptions(categoryRows ?? []);
 
+  // 추가 옵션(애드온) 사진 — 전역 공통. 상품 관리 화면에서 바로 넣게(대표님).
+  const addonImages = await Promise.all(
+    ADDONS.map((a) => getSiteContent(addonImageKey(a.code))),
+  );
+
   return (
     <>
       <PageHeader title="상품 관리" description="상품 등록·재고·노출·삭제." />
@@ -65,6 +73,27 @@ export default async function AdminProductsPage() {
         <section>
           <SectionHeading>새 상품 등록</SectionHeading>
           <ProductCreateForm categories={categories ?? []} />
+        </section>
+
+        {/* 추가 옵션(애드온) 사진 — 상품 상세 "추가 옵션" 옆 썸네일. 전역 공통이라
+            한 번 올리면 모든 상품에 함께 적용된다(대표님). */}
+        <section>
+          <SectionHeading>추가 옵션 사진</SectionHeading>
+          <p className="mt-1 text-xs leading-relaxed text-wabi-fg-muted">
+            상품 상세의 “추가 옵션”(선물 포장·쇼핑백) 옆에 작은 사진으로
+            표시됩니다. <b>모든 상품 공통</b>이며, 정사각형으로 잘려 보이니 가운데
+            오도록 올려주세요.
+          </p>
+          <div className="mt-3 max-w-xl space-y-3">
+            {ADDONS.map((a, i) => (
+              <AddonImageField
+                key={a.code}
+                code={a.code}
+                label={`${a.name} (+${won(a.price)})`}
+                current={addonImages[i] ?? null}
+              />
+            ))}
+          </div>
         </section>
 
         {/* 목록 */}
