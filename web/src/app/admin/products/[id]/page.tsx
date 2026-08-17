@@ -8,9 +8,7 @@ import {
   type ProductEditValues,
 } from "@/components/admin/product-edit-form";
 import { parseOptionGroups } from "@/lib/product-options";
-import { ADDONS, ADDON_CODES, won } from "@/lib/addons";
-import { getSiteContent, addonImageKey } from "@/lib/queries/content";
-import { AddonImageField } from "@/components/admin/addon-image-field";
+import { ADDON_CODES } from "@/lib/addons";
 import { leafCategoryOptions, type CategoryRow } from "../leaf-options";
 
 // DB 원본 행 — options/enabled_addons 는 jsonb 라 파싱해 ProductEditValues 로 변환.
@@ -30,25 +28,20 @@ export default async function AdminProductEditPage({
   // service_role 있으면 전체(비활성 포함), 없으면 공개 읽기
   const db = adminConfigured() ? createAdminClient() : await createClient();
 
-  const [[{ data: row }, { data: categoryRows }], addonImages] =
-    await Promise.all([
-      Promise.all([
-        db
-          .from("products")
-          .select(
-            "id, name, price, category_id, is_monthly, description, material, size, care, origin, options, enabled_addons",
-          )
-          .eq("id", id)
-          .maybeSingle<ProductRow>(),
-        db
-          .from("categories")
-          .select("id, name_ko, name_en, parent_id, is_active")
-          .order("sort_order")
-          .returns<(CategoryRow & { is_active: boolean })[]>(),
-      ]),
-      // 추가 옵션(애드온) 사진 — 전역 공통. 상품 편집 화면에서도 바로 넣게 노출(대표님).
-      Promise.all(ADDONS.map((a) => getSiteContent(addonImageKey(a.code)))),
-    ]);
+  const [{ data: row }, { data: categoryRows }] = await Promise.all([
+    db
+      .from("products")
+      .select(
+        "id, name, price, category_id, is_monthly, description, material, size, care, origin, options, enabled_addons",
+      )
+      .eq("id", id)
+      .maybeSingle<ProductRow>(),
+    db
+      .from("categories")
+      .select("id, name_ko, name_en, parent_id, is_active")
+      .order("sort_order")
+      .returns<(CategoryRow & { is_active: boolean })[]>(),
+  ]);
   if (!row) notFound();
 
   // jsonb → 폼 값. enabled_addons 가 배열이 아니면(구 데이터) 전체 노출로 프리필.
@@ -92,32 +85,6 @@ export default async function AdminProductEditPage({
       </div>
       <Panel className="p-6">
         <ProductEditForm product={product} categories={categories} />
-      </Panel>
-
-      {/* 추가 옵션(애드온) 사진 — 상품 상세 "추가 옵션" 옆 썸네일. 값은 전역 공통이라
-          여기서 바꾸면 모든 상품에 함께 적용된다(대표님 — 상품 화면에서 바로 넣게). */}
-      <Panel className="mt-6 p-6">
-        <h2 className="text-sm font-medium text-wabi-fg">
-          추가 옵션 사진{" "}
-          <span className="font-normal text-wabi-fg-muted">
-            (선물 포장·쇼핑백 · 모든 상품 공통)
-          </span>
-        </h2>
-        <p className="mt-1 text-xs text-wabi-fg-muted">
-          상품 상세의 “추가 옵션” 옆에 작은 사진으로 표시됩니다. 정사각형으로 잘려
-          보이니 가운데 오도록 올려주세요. 여기서 바꾸면 모든 상품에 함께
-          적용됩니다.
-        </p>
-        <div className="mt-4 space-y-3">
-          {ADDONS.map((a, i) => (
-            <AddonImageField
-              key={a.code}
-              code={a.code}
-              label={`${a.name} (+${won(a.price)})`}
-              current={addonImages[i] ?? null}
-            />
-          ))}
-        </div>
       </Panel>
     </>
   );
