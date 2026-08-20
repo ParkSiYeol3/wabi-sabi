@@ -54,9 +54,7 @@ export function MomentForm() {
           required
           multiple
           accept="image/png,image/jpeg,image/webp"
-          onChange={(e) =>
-            setCount(Math.min(e.currentTarget.files?.length ?? 0, MAX_IMAGES))
-          }
+          onChange={(e) => setCount(e.currentTarget.files?.length ?? 0)}
           className="cursor-pointer text-sm file:mr-3 file:cursor-pointer file:border file:border-wabi-border file:bg-transparent file:px-3 file:py-1.5 file:text-xs file:text-wabi-fg file:transition-colors hover:file:border-wabi-fg hover:file:bg-wabi-muted"
         />
         {count > 0 && (
