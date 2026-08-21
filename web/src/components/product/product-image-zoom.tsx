@@ -17,12 +17,16 @@ export function ProductImageZoom({
   sizes,
   preload = false,
   imgClassName = "object-cover",
+  natural = false,
 }: {
   src: string;
   alt: string;
   sizes: string;
   preload?: boolean;
   imgClassName?: string;
+  // natural: 고정 비율 박스(fill·object-cover)가 아니라 원본 비율 그대로 렌더(대표님 —
+  // 상세 갤러리 사진을 자르지 않음). 컨테이너에 aspect 가 없어도 이미지가 높이를 만든다.
+  natural?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   // 오버레이는 body 로 포털 — 히어로 컨테이너(변형/overflow 조상)에 fixed 가 갇혀
@@ -50,16 +54,33 @@ export function ProductImageZoom({
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`${alt} 확대해서 보기`}
-        className="group absolute inset-0 cursor-zoom-in"
+        className={
+          natural
+            ? "group relative block w-full cursor-zoom-in"
+            : "group absolute inset-0 cursor-zoom-in"
+        }
       >
-        <Image
-          src={src}
-          alt={alt}
-          fill
-          sizes={sizes}
-          preload={preload}
-          className={imgClassName}
-        />
+        {natural ? (
+          // 원본 비율 — width/height 0 + h-auto 로 이미지의 자연 비율을 그대로 따른다.
+          <Image
+            src={src}
+            alt={alt}
+            width={0}
+            height={0}
+            sizes={sizes}
+            preload={preload}
+            className="h-auto w-full"
+          />
+        ) : (
+          <Image
+            src={src}
+            alt={alt}
+            fill
+            sizes={sizes}
+            preload={preload}
+            className={imgClassName}
+          />
+        )}
         {/* 확대 가능 힌트 — 모바일은 은은히 항상, 데스크톱은 hover 시. */}
         <span className="pointer-events-none absolute bottom-2 right-2 flex size-8 items-center justify-center rounded-full bg-black/35 text-white opacity-70 transition-opacity group-hover:opacity-100 md:opacity-0">
           <ZoomIn className="size-4" strokeWidth={1.75} />
