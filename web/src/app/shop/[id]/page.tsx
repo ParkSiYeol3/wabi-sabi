@@ -85,7 +85,7 @@ function productJsonLd(
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
       // 배송 정보 — 구글 상품 리치결과/무료 리스팅에 "배송비" 노출. 기본 배송비 기준
-      // (7만원 이상 무료는 조건부라 schema 로 표현 어려워 기본요금만 명시).
+      // (8만원 이상 무료는 조건부라 schema 로 표현 어려워 기본요금만 명시).
       shippingDetails: {
         "@type": "OfferShippingDetails",
         shippingRate: {
@@ -332,22 +332,15 @@ export default async function ProductDetailPage({
           )}
 
           {/* 배송 안내 (토스 심사 보완요청 ① — 배송기간 명시). 문구는 대표님이
-              어드민에서 편집(SHIPPING_INFO_KEY), 미저장 시 기본값 폴백.
-              줄바꿈 보존(whitespace-pre-line). 교환·반품과 같은 접이식 패턴. */}
-          <details className="mt-8 border-t border-wabi-border pt-4 text-sm">
-            <summary className="cursor-pointer list-none font-medium marker:content-none">
-              <span className="inline-flex w-full items-center justify-between">
-                배송 안내
-                <span aria-hidden className="text-wabi-fg-muted">
-                  ＋
-                </span>
-              </span>
-            </summary>
-            <div className="mt-4 space-y-2 font-numeric text-wabi-fg-muted">
+              어드민에서 편집(SHIPPING_INFO_KEY), 미저장 시 기본값 폴백. 줄바꿈 보존.
+              대표님 요청(2026-08-20): 접이식 대신 항상 펼쳐 글자가 바로 보이게. */}
+          <div className="mt-8 border-t border-wabi-border pt-4 text-sm">
+            <p className="font-medium text-wabi-fg">배송 안내</p>
+            <div className="mt-3 space-y-2 font-numeric text-wabi-fg">
               <p className="whitespace-pre-line">{shippingInfo}</p>
               <p className="whitespace-pre-line">{shippingFee}</p>
             </div>
-          </details>
+          </div>
 
           {/* 교환·반품 안내 (#241, 갭 분석 3) — 구매 결정 순간에 정보가 없어
               /legal 까지 가야 했다. 확정된 것만 요약(배송비 금액은 미정이라 제외,
