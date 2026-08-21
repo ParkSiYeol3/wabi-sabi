@@ -341,7 +341,7 @@ export default async function AdminContentPage() {
             <ContentField
               contentKey={SHIPPING_FEE_KEY}
               label="배송비 안내"
-              hint="실제 배송비는 7만원 이상 무료·미만 3,500원으로 자동 계산됩니다. 이 칸은 안내 문구(표현)만 바꿉니다 — 금액·기준선을 바꾸려면 개발(시열님)에게 알려주세요."
+              hint="실제 배송비는 8만원 이상 무료·미만 3,500원으로 자동 계산됩니다. 이 칸은 안내 문구(표현)만 바꿉니다 — 금액·기준선을 바꾸려면 개발(시열님)에게 알려주세요."
               value={shippingFee ?? DEFAULT_SHIPPING_FEE}
               rows={2}
             />
