@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ImageIcon } from "lucide-react";
+import { CardImage } from "@/components/product/card-image";
 import { Price } from "@/components/product/price";
 
 export interface ProductCardData {
@@ -47,14 +47,7 @@ export function ProductCard({
           </span>
         )}
         {product.image ? (
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            sizes="(max-width: 768px) 50vw, 25vw"
-            loading={eager ? "eager" : "lazy"}
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-          />
+          <CardImage src={product.image} alt={product.name} eager={eager} />
         ) : (
           <ImageIcon
             className="size-8 text-wabi-fg-muted/40"
