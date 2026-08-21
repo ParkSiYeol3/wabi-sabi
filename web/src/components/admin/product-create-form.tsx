@@ -11,7 +11,7 @@ import { AttributePicker } from "@/components/admin/attribute-picker";
 import { CareMultiPicker } from "@/components/admin/care-multi-picker";
 import { ProductOptionsFields } from "@/components/admin/product-options-fields";
 import { ProductImagePicker } from "@/components/admin/product-image-picker";
-import { MATERIALS, CARES } from "@/lib/product-attributes";
+import { MATERIALS, SIZES, CARES } from "@/lib/product-attributes";
 
 type Category = { id: string; name_ko: string; name_en: string };
 
@@ -105,14 +105,16 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
       />
       {/* 원산지 — 한·일·중 드롭다운 + 직접 입력(대표님). 저장값은 완성형 문자열 */}
       <OriginPicker key={`origin-${pickerKey}`} />
-      {/* 사이즈 — 프리셋 없이 직접 입력만(대표님 — 규격이 제각각). key 로 성공 후 리셋. */}
-      <Input
+      {/* 사이즈 — 치수 형식 프리셋(Ø× 등) 드롭다운. 고르면 편집칸에 채워져 숫자만
+          이어 적는다(presetAsTemplate). 규격이 제각각이라 값이 아닌 형식 프리셋. */}
+      <AttributePicker
         key={`size-${pickerKey}`}
         name="size"
-        maxLength={500}
-        aria-label="사이즈"
-        placeholder="사이즈 (예: 지름 12cm · Ø20x12 h2.5)"
-        className="rounded-none"
+        label="사이즈"
+        options={SIZES}
+        presetAsTemplate
+        emptyLabel="사이즈 선택 안 함"
+        customPlaceholder="사이즈 (예: Ø20×12 h2.5 · 지름 12cm)"
       />
       {/* 주의사항 — 복수 선택 + 직접 입력 여러 개(대표님). 폭이 필요해 한 줄 차지. */}
       <div className="flex flex-col gap-1 text-xs text-wabi-fg-muted sm:col-span-2 lg:col-span-4">

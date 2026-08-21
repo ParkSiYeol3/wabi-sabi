@@ -15,6 +15,7 @@ export function AttributePicker({
   initial = "",
   emptyLabel = "선택 안 함",
   customPlaceholder = "직접 입력",
+  presetAsTemplate = false,
 }: {
   name: string;
   label: string;
@@ -22,6 +23,9 @@ export function AttributePicker({
   initial?: string;
   emptyLabel?: string;
   customPlaceholder?: string;
+  // 프리셋을 "고정 값"이 아니라 "편집 가능한 시작값(템플릿)"으로 쓴다(사이즈 치수용).
+  // 예: "Ø×" 를 고르면 입력칸에 "Ø×" 가 채워지고 대표님이 숫자를 이어 적는다.
+  presetAsTemplate?: boolean;
 }) {
   // 기존 값이 프리셋에 없으면(구 자유입력 등) 직접 입력 모드로 시작해 값 보존.
   const [custom, setCustom] = useState(
@@ -74,12 +78,18 @@ export function AttributePicker({
       aria-label={label}
       value={value}
       onChange={(e) => {
-        if (e.target.value === CUSTOM) {
+        const v = e.target.value;
+        if (v === CUSTOM) {
           userSwitched.current = true;
           setCustom(true);
           setValue("");
+        } else if (presetAsTemplate && v !== "") {
+          // 프리셋을 편집 가능한 시작값으로 — 입력 모드로 전환해 값(치수 형식)을 채운다.
+          userSwitched.current = true;
+          setCustom(true);
+          setValue(v);
         } else {
-          setValue(e.target.value);
+          setValue(v);
         }
       }}
       className="h-9 w-full border border-wabi-border bg-transparent px-3 text-sm"

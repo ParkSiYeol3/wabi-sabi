@@ -69,11 +69,24 @@ export default async function AdminProductsPage() {
       <PageHeader title="상품 관리" description="상품 등록·재고·노출·삭제." />
 
       <div className="space-y-10">
-        {/* 새 상품 — 클라이언트 폼: 실패 시 입력값 유지 + 결과 메시지 */}
-        <section>
-          <SectionHeading>새 상품 등록</SectionHeading>
-          <ProductCreateForm categories={categories ?? []} />
-        </section>
+        {/* 새 상품 — 접이식(대표님): 페이지 진입 시 등록 폼이 바로 뜨지 않고 상품
+            목록이 먼저 보이게. '새 상품 등록'을 눌러야 폼이 펼쳐진다. 폼은 클라이언트
+            컴포넌트라 접힌 상태에서도 마운트를 유지(입력값 보존). */}
+        <details className="group rounded-lg border border-wabi-border">
+          <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 font-medium text-wabi-fg marker:content-none">
+            <span aria-hidden className="text-lg leading-none text-wabi-accent">
+              ＋
+            </span>
+            새 상품 등록
+            <span className="ml-auto text-xs font-normal text-wabi-fg-muted">
+              <span className="group-open:hidden">눌러서 펼치기</span>
+              <span className="hidden group-open:inline">접기</span>
+            </span>
+          </summary>
+          <div className="border-t border-wabi-border px-4 pt-2 pb-5">
+            <ProductCreateForm categories={categories ?? []} />
+          </div>
+        </details>
 
         {/* 추가 옵션(애드온) 사진 — 상품 상세 "추가 옵션" 옆 썸네일. 전역 공통이라
             한 번 올리면 모든 상품에 함께 적용된다(대표님). */}

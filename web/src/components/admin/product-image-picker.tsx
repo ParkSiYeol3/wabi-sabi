@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Pencil, X, ImagePlus } from "lucide-react";
+import { Pencil, X, ImagePlus, ChevronLeft, ChevronRight } from "lucide-react";
 import { ImageEditor } from "@/components/admin/image-editor";
 
 // 상품 이미지 선택 + 간단 편집(비율 크롭·회전·필터) 묶음.
@@ -79,6 +79,16 @@ export function ProductImagePicker({
   const removeAt = (i: number) =>
     setFiles((f) => f.filter((_, j) => j !== i));
 
+  // 순서 변경(대표님) — 업로드 시점부터 재배치. 첫 장이 상세 대표 이미지가 된다.
+  const moveAt = (i: number, dir: -1 | 1) =>
+    setFiles((f) => {
+      const j = i + dir;
+      if (j < 0 || j >= f.length) return f;
+      const next = [...f];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+
   return (
     <div className="flex flex-col gap-2">
       {/* 제출용 — 실제 file input(숨김). files 를 DataTransfer 로 동기화. */}
@@ -100,6 +110,12 @@ export function ProductImagePicker({
       >
         <ImagePlus className="size-4" /> 이미지 선택 · 편집
       </button>
+
+      {files.length > 1 && (
+        <p className="text-[11px] text-wabi-fg-muted">
+          ‹ › 로 순서 변경 · 첫 장이 상세 대표 이미지
+        </p>
+      )}
 
       {files.length > 0 && (
         <ul className="flex flex-wrap gap-2">
@@ -129,6 +145,29 @@ export function ProductImagePicker({
                 <span className="absolute left-1 top-1 rounded bg-wabi-fg px-1 text-[9px] leading-tight text-white">
                   대표
                 </span>
+              )}
+              {/* 순서 변경(대표님) — 좌우로 이동. 첫 장이 상세 대표 이미지. */}
+              {files.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => moveAt(i, -1)}
+                    disabled={i === 0}
+                    aria-label={`${i + 1}번째 사진 앞으로`}
+                    className="absolute left-0.5 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white transition hover:bg-black/70 disabled:pointer-events-none disabled:opacity-0"
+                  >
+                    <ChevronLeft className="size-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => moveAt(i, 1)}
+                    disabled={i === files.length - 1}
+                    aria-label={`${i + 1}번째 사진 뒤로`}
+                    className="absolute right-0.5 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white transition hover:bg-black/70 disabled:pointer-events-none disabled:opacity-0"
+                  >
+                    <ChevronRight className="size-3.5" />
+                  </button>
+                </>
               )}
             </li>
           ))}
