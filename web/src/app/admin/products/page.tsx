@@ -51,9 +51,32 @@ export default async function AdminProductsPage() {
       <PageHeader title="상품 관리" description="상품 등록·재고·노출·삭제." />
 
       <div className="space-y-10">
-        {/* 새 상품 — 접이식(대표님): 페이지 진입 시 등록 폼이 바로 뜨지 않고 상품
-            목록이 먼저 보이게. '새 상품 등록'을 눌러야 폼이 펼쳐진다. 폼은 클라이언트
-            컴포넌트라 접힌 상태에서도 마운트를 유지(입력값 보존). */}
+        {/* 목록 — 대표님: 페이지 진입 시 수정할 상품 목록이 맨 위에 먼저 보이게.
+            등록 폼·애드온 사진은 목록 아래로 내린다. */}
+        <section>
+          <SectionHeading>상품 목록 ({products?.length ?? 0})</SectionHeading>
+          {/* 이미지 순서 안내(대표님) — 상세 페이지 사진 배치가 이 순서로 결정됨 */}
+          <p className="mt-1 text-xs leading-relaxed text-wabi-fg-muted">
+            사진 순서가 상세 페이지 배치를 정합니다. <b>대표</b>(첫 장)는 상단 큰
+            사진, <b>상세1·2·3…</b>은 아래로 내려가며 정해진 불규칙 위치에 순서대로
+            놓입니다. ◀▶ 로 순서를 바꿔 원하는 자리에 배치하세요.
+          </p>
+          {!products?.length ? (
+            <div className="mt-3">
+              <EmptyState>등록된 상품이 없습니다.</EmptyState>
+            </div>
+          ) : (
+            <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {products.map((p) => (
+                <ProductAdminCard key={p.id} product={p} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* 새 상품 — 접이식·목록 아래(대표님): 수정 목록이 먼저 보이고, '새 상품
+            등록'을 눌러야 폼이 펼쳐진다. 폼은 클라이언트 컴포넌트라 접힌 상태에서도
+            마운트를 유지(입력값 보존). */}
         <details className="group rounded-lg border border-wabi-border">
           <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 font-medium text-wabi-fg marker:content-none">
             <span aria-hidden className="text-lg leading-none text-wabi-accent">
@@ -89,28 +112,6 @@ export default async function AdminProductsPage() {
               />
             ))}
           </div>
-        </section>
-
-        {/* 목록 */}
-        <section>
-          <SectionHeading>상품 목록 ({products?.length ?? 0})</SectionHeading>
-          {/* 이미지 순서 안내(대표님) — 상세 페이지 사진 배치가 이 순서로 결정됨 */}
-          <p className="mt-1 text-xs leading-relaxed text-wabi-fg-muted">
-            사진 순서가 상세 페이지 배치를 정합니다. <b>대표</b>(첫 장)는 상단 큰
-            사진, <b>상세1·2·3…</b>은 아래로 내려가며 정해진 불규칙 위치에 순서대로
-            놓입니다. ◀▶ 로 순서를 바꿔 원하는 자리에 배치하세요.
-          </p>
-          {!products?.length ? (
-            <div className="mt-3">
-              <EmptyState>등록된 상품이 없습니다.</EmptyState>
-            </div>
-          ) : (
-            <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {products.map((p) => (
-                <ProductAdminCard key={p.id} product={p} />
-              ))}
-            </div>
-          )}
         </section>
       </div>
     </>
