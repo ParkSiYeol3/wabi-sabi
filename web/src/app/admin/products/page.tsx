@@ -105,7 +105,7 @@ export default async function AdminProductsPage() {
               <EmptyState>등록된 상품이 없습니다.</EmptyState>
             </div>
           ) : (
-            <div className="mt-3 space-y-3">
+            <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
               {products.map((p) => (
                 <ProductAdminCard key={p.id} product={p} />
               ))}
