@@ -10,7 +10,6 @@ import {
   HOME_CTA_KEY,
   DEFAULT_HOME_CTA,
   ABOUT_IMAGE_KEY,
-  addonImageKey,
   PREP_NOTICE_KEY,
   PREP_NOTICE_TEXT_KEY,
   DEFAULT_PREP_NOTICE_TEXT,
@@ -31,11 +30,9 @@ import {
   CARE_MAINTAIN_KEY,
   DEFAULT_CARE_MAINTAIN,
 } from "@/lib/queries/content";
-import { ADDONS, won } from "@/lib/addons";
 import { PageHeader, SectionHeading } from "@/components/admin/ui";
 import { ContentField } from "@/components/admin/content-field";
 import { AboutImageField } from "@/components/admin/about-image-field";
-import { AddonImageField } from "@/components/admin/addon-image-field";
 import { PrepNoticeField } from "@/components/admin/prep-notice-field";
 
 // 페이지별 그룹 블록 — 어느 화면의 문구인지 한눈에(대표님). 큰 페이지 라벨 +
@@ -98,7 +95,6 @@ export default async function AdminContentPage() {
     shippingFee,
     careUsage,
     careMaintain,
-    ...addonImages
   ] = await Promise.all([
     getSiteContent(PHILOSOPHY_KEY),
     getSiteContent(HOME_PILLAR_LABEL_KEYS[0]),
@@ -123,7 +119,6 @@ export default async function AdminContentPage() {
     getSiteContent(SHIPPING_FEE_KEY),
     getSiteContent(CARE_USAGE_KEY),
     getSiteContent(CARE_MAINTAIN_KEY),
-    ...ADDONS.map((a) => getSiteContent(addonImageKey(a.code))),
   ]);
 
   const criteria = [
@@ -330,7 +325,7 @@ export default async function AdminContentPage() {
         <PageBlock
           id="g-product"
           label="상품 상세"
-          note="상품 페이지의 배송 안내·추가 옵션(선물 포장·쇼핑백) 사진."
+          note="상품 페이지의 배송 안내·사용 및 관리 문구."
         >
           <div className="space-y-3">
             <SectionHeading>배송 안내</SectionHeading>
@@ -378,24 +373,6 @@ export default async function AdminContentPage() {
             />
           </div>
 
-          <div className="space-y-3">
-            <SectionHeading>추가 옵션 사진</SectionHeading>
-            <p className="text-xs text-wabi-fg-muted">
-              상품 상세의 &ldquo;추가 옵션&rdquo;(선물 포장·쇼핑백) 옆에 작은
-              사진으로 표시됩니다. 정사각형으로 잘려 보이니 가운데 오도록
-              올려주세요. 없으면 사진 자리만 표시됩니다.
-            </p>
-            <div className="space-y-3">
-              {ADDONS.map((a, i) => (
-                <AddonImageField
-                  key={a.code}
-                  code={a.code}
-                  label={`${a.name} (+${won(a.price)})`}
-                  current={addonImages[i] ?? null}
-                />
-              ))}
-            </div>
-          </div>
         </PageBlock>
 
         {/* ── 전역 설정 ── */}
