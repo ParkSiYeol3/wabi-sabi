@@ -23,13 +23,23 @@ type BestSeller = {
   qty: number;
   revenue: number;
 };
+type OrderItem = { product_name: string | null; quantity: number };
 type OrderRow = {
   order_number: string;
   ordered_at: string;
   recipient: string;
   total_price: number;
   status: string;
+  order_items: OrderItem[] | null;
 };
+
+// 주문 항목 → 상품명 요약. 여러 건이면 "첫상품 외 N건"(대표님: 주문번호 대신 상품명).
+function itemsLabel(items: OrderItem[] | null): string {
+  const names = (items ?? []).map((i) => i.product_name).filter(Boolean) as string[];
+  if (names.length === 0) return "—";
+  if (names.length === 1) return names[0];
+  return `${names[0]} 외 ${names.length - 1}건`;
+}
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "미결제",
@@ -149,7 +159,9 @@ export default async function AdminSalesPage({
 
   let settleQ = db
     .from("orders")
-    .select("order_number, ordered_at, recipient, total_price, status")
+    .select(
+      "order_number, ordered_at, recipient, total_price, status, order_items(product_name, quantity)",
+    )
     .gte("ordered_at", fromISO)
     .lte("ordered_at", toISO)
     .order("ordered_at", { ascending: false })
@@ -288,7 +300,7 @@ export default async function AdminSalesPage({
               <table className="w-full min-w-120 text-sm">
                 <thead className="border-b border-wabi-border bg-wabi-subtle/50 text-left text-xs text-wabi-fg-muted">
                   <tr>
-                    <th className="px-4 py-3 font-medium">주문번호</th>
+                    <th className="px-4 py-3 font-medium">상품</th>
                     <th className="px-4 py-3 font-medium">일시</th>
                     <th className="px-4 py-3 font-medium">수령인</th>
                     <th className="px-4 py-3 font-medium">상태</th>
@@ -298,8 +310,8 @@ export default async function AdminSalesPage({
                 <tbody className="divide-y divide-wabi-border">
                   {settleRows.map((o) => (
                     <tr key={o.order_number}>
-                      <td className="px-4 py-3 font-numeric">
-                        {o.order_number}
+                      <td className="px-4 py-3 text-wabi-fg">
+                        {itemsLabel(o.order_items)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-wabi-fg-muted">
                         {formatDateKST(o.ordered_at)}
