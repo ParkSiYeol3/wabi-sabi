@@ -374,10 +374,7 @@ export default async function ProductDetailPage({
               <p>
                 단순 변심에 의한 청약철회는 상품 수령 후{" "}
                 <strong className="font-medium text-wabi-fg">7일 이내</strong>에
-                요청할 수 있으며, 반품 배송비는 고객이 부담합니다. 파손·오배송 등
-                판매자 귀책 사유는 수령 후{" "}
-                <strong className="font-medium text-wabi-fg">3개월 이내</strong>에
-                무료로 교환·환불해 드립니다.
+                요청할 수 있으며, 반품 배송비는 고객이 부담합니다.
               </p>
               <Link
                 href="/legal/refund"
@@ -399,20 +396,30 @@ export default async function ProductDetailPage({
         <section className="mt-14 max-w-2xl border-t border-wabi-border pt-8 text-sm">
           <h2 className="text-base font-medium text-wabi-fg">사용 및 관리</h2>
           <div className="mt-4 space-y-6 text-wabi-fg-muted">
-            {careUsage && (
+            {careUsage.trim() && (
               <div>
-                <p className="mb-1.5 font-medium text-wabi-fg">사용</p>
-                <p className="whitespace-pre-line leading-relaxed">
-                  {careUsage}
-                </p>
+                <p className="mb-2 font-medium text-wabi-fg">사용</p>
+                <ul className="list-disc space-y-1.5 pl-5 leading-relaxed marker:text-wabi-fg-muted">
+                  {careUsage
+                    .split("\n")
+                    .filter((l) => l.trim())
+                    .map((line, i) => (
+                      <li key={i}>{line.trim()}</li>
+                    ))}
+                </ul>
               </div>
             )}
-            {careMaintain && (
+            {careMaintain.trim() && (
               <div>
-                <p className="mb-1.5 font-medium text-wabi-fg">세척과 관리</p>
-                <p className="whitespace-pre-line leading-relaxed">
-                  {careMaintain}
-                </p>
+                <p className="mb-2 font-medium text-wabi-fg">세척과 관리</p>
+                <ul className="list-disc space-y-1.5 pl-5 leading-relaxed marker:text-wabi-fg-muted">
+                  {careMaintain
+                    .split("\n")
+                    .filter((l) => l.trim())
+                    .map((line, i) => (
+                      <li key={i}>{line.trim()}</li>
+                    ))}
+                </ul>
               </div>
             )}
           </div>
