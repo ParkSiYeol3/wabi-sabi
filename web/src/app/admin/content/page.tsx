@@ -26,6 +26,10 @@ import {
   DEFAULT_SHIPPING_INFO,
   SHIPPING_FEE_KEY,
   DEFAULT_SHIPPING_FEE,
+  CARE_USAGE_KEY,
+  DEFAULT_CARE_USAGE,
+  CARE_MAINTAIN_KEY,
+  DEFAULT_CARE_MAINTAIN,
 } from "@/lib/queries/content";
 import { ADDONS, won } from "@/lib/addons";
 import { PageHeader, SectionHeading } from "@/components/admin/ui";
@@ -92,6 +96,8 @@ export default async function AdminContentPage() {
     critHeading,
     shippingInfo,
     shippingFee,
+    careUsage,
+    careMaintain,
     ...addonImages
   ] = await Promise.all([
     getSiteContent(PHILOSOPHY_KEY),
@@ -115,6 +121,8 @@ export default async function AdminContentPage() {
     getSiteContent(CRITERIA_HEADING_KEY),
     getSiteContent(SHIPPING_INFO_KEY),
     getSiteContent(SHIPPING_FEE_KEY),
+    getSiteContent(CARE_USAGE_KEY),
+    getSiteContent(CARE_MAINTAIN_KEY),
     ...ADDONS.map((a) => getSiteContent(addonImageKey(a.code))),
   ]);
 
@@ -344,6 +352,29 @@ export default async function AdminContentPage() {
               hint="실제 배송비는 8만원 이상 무료·미만 3,500원으로 자동 계산됩니다. 이 칸은 안내 문구(표현)만 바꿉니다 — 금액·기준선을 바꾸려면 개발(시열님)에게 알려주세요."
               value={shippingFee ?? DEFAULT_SHIPPING_FEE}
               rows={2}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <SectionHeading>사용 및 관리</SectionHeading>
+            <p className="text-xs text-wabi-fg-muted">
+              모든 상품 상세의 사진과 리뷰 사이에 표시됩니다. 사용법·세척 관리
+              안내를 자유롭게 적어주세요(들여쓰기 없이 문장으로 이어 쓰면 자연스럽게
+              줄바꿈됩니다).
+            </p>
+            <ContentField
+              contentKey={CARE_USAGE_KEY}
+              label="사용"
+              hint="예: 식기세척기·전자레인지 사용 가능, 직화 사용 금지 등."
+              value={careUsage ?? DEFAULT_CARE_USAGE}
+              rows={6}
+            />
+            <ContentField
+              contentKey={CARE_MAINTAIN_KEY}
+              label="세척과 관리"
+              hint="예: 사용 후 바로 세척 권장, 색 배임·자연스러운 흔적 안내 등."
+              value={careMaintain ?? DEFAULT_CARE_MAINTAIN}
+              rows={5}
             />
           </div>
 

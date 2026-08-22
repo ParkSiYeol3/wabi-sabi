@@ -16,4 +16,5 @@ export function amountToFreeShipping(subtotal: number): number {
 
 // 안내 문구 기본값 — 대표님 표기(2줄). whitespace-pre-line 로 렌더되어 개행 유지.
 // ⚠ 위 상수(BASE_SHIPPING_FEE·FREE_SHIPPING_THRESHOLD)와 값이 일치해야 한다.
-export const SHIPPING_NOTICE = `기본배송 3,500원\n8만원 이상 무료배송`;
+// 대표님 — 한 줄로(들여쓰기 없이). 가운뎃점으로 두 문구를 잇는다.
+export const SHIPPING_NOTICE = `기본배송 3,500원 · 8만원 이상 무료배송`;
