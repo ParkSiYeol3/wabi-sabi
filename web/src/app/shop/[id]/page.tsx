@@ -20,6 +20,10 @@ import {
   DEFAULT_SHIPPING_INFO,
   SHIPPING_FEE_KEY,
   DEFAULT_SHIPPING_FEE,
+  CARE_USAGE_KEY,
+  DEFAULT_CARE_USAGE,
+  CARE_MAINTAIN_KEY,
+  DEFAULT_CARE_MAINTAIN,
 } from "@/lib/queries/content";
 import { enabledAddons } from "@/lib/addons";
 import { createClient } from "@/lib/supabase/server";
@@ -176,12 +180,17 @@ export default async function ProductDetailPage({
     ...ADDON_IMAGE_KEYS,
     SHIPPING_INFO_KEY,
     SHIPPING_FEE_KEY,
+    CARE_USAGE_KEY,
+    CARE_MAINTAIN_KEY,
   ]);
   const addonImages = Object.fromEntries(
     productAddons.map((a) => [a.code, contentMap[addonImageKey(a.code)]]),
   );
   const shippingInfo = contentMap[SHIPPING_INFO_KEY] || DEFAULT_SHIPPING_INFO;
   const shippingFee = contentMap[SHIPPING_FEE_KEY] || DEFAULT_SHIPPING_FEE;
+  // 사용·관리 안내(대표님) — 미저장 시 기본 문안. 빈 값이면 해당 소제목 미표시.
+  const careUsage = contentMap[CARE_USAGE_KEY] ?? DEFAULT_CARE_USAGE;
+  const careMaintain = contentMap[CARE_MAINTAIN_KEY] ?? DEFAULT_CARE_MAINTAIN;
 
   // 위시리스트 초기 상태 (로그인 시) — 사용자별이라 캐시 밖.
   const supabase = await createClient();
@@ -383,6 +392,32 @@ export default async function ProductDetailPage({
 
       {/* 나머지 사진 — 전체 폭에 불규칙 흩뿌림(중앙 정렬 없음). 스크롤 시 이어짐. */}
       <ProductGallery images={product.images.slice(1)} name={product.name} />
+
+      {/* 사용 및 관리 (대표님 — 사진과 리뷰 사이). 문구는 어드민 편집(site_content).
+          들여쓰기 없이 흐르는 문단(기본값은 한 문단, 편집 시 개행 반영 pre-line). */}
+      {(careUsage || careMaintain) && (
+        <section className="mt-14 max-w-2xl border-t border-wabi-border pt-8 text-sm">
+          <h2 className="text-base font-medium text-wabi-fg">사용 및 관리</h2>
+          <div className="mt-4 space-y-6 text-wabi-fg-muted">
+            {careUsage && (
+              <div>
+                <p className="mb-1.5 font-medium text-wabi-fg">사용</p>
+                <p className="whitespace-pre-line leading-relaxed">
+                  {careUsage}
+                </p>
+              </div>
+            )}
+            {careMaintain && (
+              <div>
+                <p className="mb-1.5 font-medium text-wabi-fg">세척과 관리</p>
+                <p className="whitespace-pre-line leading-relaxed">
+                  {careMaintain}
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* 리뷰 (대표님 피드백 — 게시판 3종) */}
       <ReviewSection productId={product.id} currentUserId={user?.id ?? null} />

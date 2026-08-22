@@ -74,6 +74,17 @@ export const DEFAULT_SHIPPING_INFO =
 export const SHIPPING_FEE_KEY = "shipping_fee";
 export const DEFAULT_SHIPPING_FEE = SHIPPING_NOTICE;
 
+// 사용·관리 안내(대표님) — 상품 상세 사진과 리뷰 사이에 노출. 도자기 기물 사용법·
+// 세척 관리 문구. 대표님이 어드민에서 편집한다(비우면 해당 소제목 미표시). 기본값은
+// 대표님이 준 문안(문장 흐름형 — 들여쓰기 없이 자연스럽게 줄바꿈). 편집 시 개행을
+// 넣으면 whitespace-pre-line 으로 그대로 반영된다.
+export const CARE_USAGE_KEY = "care_usage";
+export const DEFAULT_CARE_USAGE =
+  "식기세척기와 전자레인지 사용이 가능합니다. 다만 전자레인지를 장시간 사용하는 것은 제품에 무리가 될 수 있으니 짧은 시간으로 나누어 사용해 주세요. 오븐 및 가스레인지와 같은 직화 사용은 피해주시기 바랍니다. 급격한 온도 변화로 크랙이나 파손이 생길 수 있습니다. 뜨거운 음식이나 음료를 담기 전 미지근한 물로 기물을 먼저 데워주시면 급격한 온도 차이로 인한 균열을 줄이는 데 도움이 됩니다. 무광 제품은 사용하면서 커트러리와의 마찰로 자연스러운 흔적이나 스크래치가 생길 수 있습니다. 부드러운 우드 커트러리와 함께 사용하시는 것을 권해드립니다.";
+export const CARE_MAINTAIN_KEY = "care_maintain";
+export const DEFAULT_CARE_MAINTAIN =
+  "음식물에 따라 세라믹 표면에 색이 배거나 일시적으로 변색될 수 있습니다. 사용 후 오래 두지 않고 바로 세척해 주시면 깨끗한 상태를 오래 유지하는 데 도움이 됩니다. 작은 흔적과 미세한 차이는 기물이 가진 자연스러운 모습일 수 있습니다. 각기 다른 표정까지 천천히 오래 사용해 주세요.";
+
 // 편집 가능한 전체 키 — 액션 enum·타입 안전의 단일 출처.
 export const CONTENT_KEYS = [
   PHILOSOPHY_KEY,
@@ -87,6 +98,8 @@ export const CONTENT_KEYS = [
   CRITERIA_HEADING_KEY,
   SHIPPING_INFO_KEY,
   SHIPPING_FEE_KEY,
+  CARE_USAGE_KEY,
+  CARE_MAINTAIN_KEY,
 ] as const;
 export type ContentKey = (typeof CONTENT_KEYS)[number];
 
