@@ -7,6 +7,8 @@ import {
   TriangleAlert,
   ShoppingBag,
   Banknote,
+  Users,
+  Eye,
 } from "lucide-react";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { won, formatDateKST } from "@/lib/orders";
@@ -33,6 +35,22 @@ type Summary = {
 };
 
 type TrendDay = { day: string; orders: number; revenue: number };
+type VisitSummary = {
+  today_views: number;
+  today_visitors: number;
+  d7_views: number;
+  d7_visitors: number;
+  d30_views: number;
+  d30_visitors: number;
+};
+const EMPTY_VISITS: VisitSummary = {
+  today_views: 0,
+  today_visitors: 0,
+  d7_views: 0,
+  d7_visitors: 0,
+  d30_views: 0,
+  d30_visitors: 0,
+};
 type LowStockRow = { id: string; name: string; stock: number };
 type RecentOrder = {
   id: string;
@@ -49,6 +67,11 @@ type RecentOrder = {
 // 재고 목록·최근 주문은 행 수가 작아(≤8·5) 직접 조회로 충분하다.
 async function loadDashboard() {
   const db = createAdminClient();
+  // 방문 요약(0054)은 마이그 push 전이면 함수가 없어 에러가 난다. 대시보드 전체를
+  // 죽이지 않도록 throwOnError 없이 조회하고, 실패하면 0 으로 둔다(배너 대신 조용히).
+  const visitsRes = await db.rpc("admin_visit_summary");
+  const visits = (visitsRes.data as VisitSummary[] | null)?.[0] ?? EMPTY_VISITS;
+
   const [summaryRes, trendRes, lowStockRes, recentRes] = await Promise.all([
     db
       .rpc("admin_dashboard_summary", {
@@ -81,6 +104,7 @@ async function loadDashboard() {
     trend: (trendRes.data as TrendDay[] | null) ?? [],
     lowStock: lowStockRes.data ?? [],
     recent: recentRes.data ?? [],
+    visits,
   };
 }
 
@@ -100,7 +124,7 @@ export default async function AdminHome() {
     );
   }
 
-  const { summary: s, trend, lowStock, recent } = await loadDashboard();
+  const { summary: s, trend, lowStock, recent, visits } = await loadDashboard();
 
   return (
     <div className="space-y-10">
@@ -171,6 +195,38 @@ export default async function AdminHome() {
             tone="accent"
           />
           <StatTile label="배송 중" value={s.shipping} unit="건" icon={Truck} />
+        </div>
+      </section>
+
+      {/* 방문자 현황 (KST) — 자체 카운터(0054). 순방문자=visitor_id distinct,
+          페이지뷰=경로 이동 수. 유입경로·기기 등 상세는 Vercel Analytics 대시보드. */}
+      <section>
+        <SectionHeading>
+          방문자 현황
+          <span className="ml-2 text-xs font-normal text-wabi-fg-muted">
+            매장(어드민 제외)
+          </span>
+        </SectionHeading>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <StatTile
+            label="오늘 방문자"
+            value={visits.today_visitors}
+            unit="명"
+            icon={Users}
+            tone="accent"
+          />
+          <StatTile
+            label="오늘 페이지뷰"
+            value={visits.today_views}
+            unit="회"
+            icon={Eye}
+          />
+          <StatTile
+            label="최근 7일 방문자"
+            value={visits.d7_visitors}
+            unit="명"
+            icon={Users}
+          />
         </div>
       </section>
 

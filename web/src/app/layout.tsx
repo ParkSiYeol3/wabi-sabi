@@ -13,6 +13,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { HideOnAdmin } from "@/components/layout/hide-on-admin";
 import { Analytics } from "@vercel/analytics/next";
+import { VisitBeacon } from "@/components/common/visit-beacon";
 import { SITE_URL } from "@/lib/site-url";
 import { business } from "@/lib/site";
 
@@ -188,6 +189,9 @@ export default async function RootLayout({
             beacon 은 same-origin(/_vercel/insights/*)이라 CSP 변경 불필요. 개인정보
             비수집(쿠키 없음). 조회는 Vercel 대시보드 Analytics 탭. */}
         <Analytics />
+        {/* 자체 방문 카운터(0054) — admin 대시보드에 방문자 수를 직접 띄우려면
+            Vercel 수치를 못 끌어와서 별도 집계가 필요하다. /api/track 으로 적재. */}
+        <VisitBeacon />
       </body>
     </html>
   );
