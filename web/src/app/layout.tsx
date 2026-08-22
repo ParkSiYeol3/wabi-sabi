@@ -12,6 +12,7 @@ import { getCategoryTree } from "@/lib/queries/categories";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { HideOnAdmin } from "@/components/layout/hide-on-admin";
+import { Analytics } from "@vercel/analytics/next";
 import { SITE_URL } from "@/lib/site-url";
 import { business } from "@/lib/site";
 
@@ -183,6 +184,10 @@ export default async function RootLayout({
             <SiteFooter />
           </HideOnAdmin>
         </AuthProvider>
+        {/* Vercel Web Analytics(대표님 — 방문자 수) — Pro 포함 할당량 내 실질 무료.
+            beacon 은 same-origin(/_vercel/insights/*)이라 CSP 변경 불필요. 개인정보
+            비수집(쿠키 없음). 조회는 Vercel 대시보드 Analytics 탭. */}
+        <Analytics />
       </body>
     </html>
   );
