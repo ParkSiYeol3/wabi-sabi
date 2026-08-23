@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { UserIdentity } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { Toast } from "@/components/ui/toast";
+import { GoogleLogo, KakaoLogo } from "@/components/common/social-logos";
 import { LINK_FLAG } from "./link-result-catcher";
 
 // 소셜 계정 연결/해제 (WSB — 계정 관리). identity 목록으로 구글·카카오 연결 상태를
@@ -13,8 +14,8 @@ import { LINK_FLAG } from "./link-result-catcher";
 // linkIdentity 는 Supabase 대시보드의 Manual Linking 이 켜져 있어야 동작한다(👤 설정).
 
 const SOCIALS = [
-  { key: "google", label: "Google" },
-  { key: "kakao", label: "카카오" },
+  { key: "google", label: "Google", Logo: GoogleLogo },
+  { key: "kakao", label: "카카오", Logo: KakaoLogo },
 ] as const;
 
 type Provider = (typeof SOCIALS)[number]["key"];
@@ -101,7 +102,7 @@ export function LinkedAccounts({
       {error && <Toast message={error} onClose={() => setError(null)} />}
 
       <ul className="mt-4 divide-y divide-wabi-border border-y border-wabi-border">
-        {SOCIALS.map(({ key, label }) => {
+        {SOCIALS.map(({ key, label, Logo }) => {
           const linked = identities.some((i) => i.provider === key);
           const isBusy = busy === key;
           // 이 소셜이 유일한 로그인 수단이면 해제 불가.
@@ -111,9 +112,10 @@ export function LinkedAccounts({
               key={key}
               className="flex items-center justify-between py-4 text-sm"
             >
-              <span className="font-medium">
+              <span className="flex items-center gap-2.5 font-medium">
+                <Logo size={20} />
                 {label}
-                <span className="ml-2 font-normal text-wabi-fg-muted">
+                <span className="font-normal text-wabi-fg-muted">
                   {linked ? "연결됨" : "연결 안 됨"}
                 </span>
               </span>
