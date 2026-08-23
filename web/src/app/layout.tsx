@@ -12,7 +12,6 @@ import { getCategoryTree } from "@/lib/queries/categories";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { HideOnAdmin } from "@/components/layout/hide-on-admin";
-import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { Analytics } from "@vercel/analytics/next";
 import { VisitBeacon } from "@/components/common/visit-beacon";
 import { SITE_URL } from "@/lib/site-url";
@@ -185,9 +184,6 @@ export default async function RootLayout({
           <HideOnAdmin>
             <SiteFooter />
           </HideOnAdmin>
-          {/* 모바일 하단 내비가 콘텐츠 끝을 가리지 않도록 여백(모바일만) */}
-          <div aria-hidden className="h-14 md:hidden" />
-          <MobileBottomNav />
         </AuthProvider>
         {/* Vercel Web Analytics(대표님 — 방문자 수) — Pro 포함 할당량 내 실질 무료.
             beacon 은 same-origin(/_vercel/insights/*)이라 CSP 변경 불필요. 개인정보
