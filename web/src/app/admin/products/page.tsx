@@ -3,7 +3,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { won } from "@/lib/orders";
 import { ProductCreateForm } from "@/components/admin/product-create-form";
 import { AddonImageField } from "@/components/admin/addon-image-field";
-import { ProductAdminCard } from "@/components/admin/product-admin-card";
+import { ProductGridCard } from "@/components/admin/product-grid-card";
 import { ADDONS } from "@/lib/addons";
 import { getSiteContent, addonImageKey } from "@/lib/queries/content";
 import { PageHeader, SectionHeading, EmptyState } from "@/components/admin/ui";
@@ -55,20 +55,20 @@ export default async function AdminProductsPage() {
             등록 폼·애드온 사진은 목록 아래로 내린다. */}
         <section>
           <SectionHeading>상품 목록 ({products?.length ?? 0})</SectionHeading>
-          {/* 이미지 순서 안내(대표님) — 상세 페이지 사진 배치가 이 순서로 결정됨 */}
+          {/* 카드를 누르면 수정 페이지로(대표님) — 재고·사진·삭제 등 관리는 거기서.
+              모바일에서 한 화면에 여러 개 보이도록 2열(→3·4열). */}
           <p className="mt-1 text-xs leading-relaxed text-wabi-fg-muted">
-            사진 순서가 상세 페이지 배치를 정합니다. <b>대표</b>(첫 장)는 상단 큰
-            사진, <b>상세1·2·3…</b>은 아래로 내려가며 정해진 불규칙 위치에 순서대로
-            놓입니다. ◀▶ 로 순서를 바꿔 원하는 자리에 배치하세요.
+            상품 카드를 누르면 수정 페이지가 열립니다. 재고·사진 순서·삭제 등 모든
+            관리는 수정 페이지에서 합니다.
           </p>
           {!products?.length ? (
             <div className="mt-3">
               <EmptyState>등록된 상품이 없습니다.</EmptyState>
             </div>
           ) : (
-            <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {products.map((p) => (
-                <ProductAdminCard key={p.id} product={p} />
+                <ProductGridCard key={p.id} product={p} />
               ))}
             </div>
           )}

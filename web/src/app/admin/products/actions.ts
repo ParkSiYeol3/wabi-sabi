@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { parseUuid, numField, uuidSchema } from "@/lib/validation";
@@ -520,4 +521,6 @@ export async function deleteProduct(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/shop"); // 상품 목록 탐색 캐시(#185) 무효화
   revalidatePath(`/shop/${id}`); // 상세 캐시(#181) 무효화 — 삭제 즉시 404
+  // 수정 페이지에서 삭제하면 현재 상품 경로는 사라지므로 목록으로 돌려보낸다.
+  redirect("/admin/products");
 }
