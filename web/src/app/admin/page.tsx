@@ -22,6 +22,7 @@ import {
   EmptyState,
 } from "@/components/admin/ui";
 import { RevenueChart } from "@/components/admin/revenue-chart";
+import { VisitorChart, type VisitDay } from "@/components/admin/visitor-chart";
 
 type Summary = {
   awaiting_ship: number;
@@ -67,10 +68,14 @@ type RecentOrder = {
 // 재고 목록·최근 주문은 행 수가 작아(≤8·5) 직접 조회로 충분하다.
 async function loadDashboard() {
   const db = createAdminClient();
-  // 방문 요약(0054)은 마이그 push 전이면 함수가 없어 에러가 난다. 대시보드 전체를
-  // 죽이지 않도록 throwOnError 없이 조회하고, 실패하면 0 으로 둔다(배너 대신 조용히).
-  const visitsRes = await db.rpc("admin_visit_summary");
+  // 방문 요약(0054)·추이(0056)는 마이그 push 전이면 함수가 없어 에러가 난다. 대시보드
+  // 전체를 죽이지 않도록 throwOnError 없이 조회하고, 실패하면 0/빈 배열로 둔다.
+  const [visitsRes, visitTrendRes] = await Promise.all([
+    db.rpc("admin_visit_summary"),
+    db.rpc("admin_visit_trend", { p_days: 14 }),
+  ]);
   const visits = (visitsRes.data as VisitSummary[] | null)?.[0] ?? EMPTY_VISITS;
+  const visitTrend = (visitTrendRes.data as VisitDay[] | null) ?? [];
 
   const [summaryRes, trendRes, lowStockRes, recentRes] = await Promise.all([
     db
@@ -105,6 +110,7 @@ async function loadDashboard() {
     lowStock: lowStockRes.data ?? [],
     recent: recentRes.data ?? [],
     visits,
+    visitTrend,
   };
 }
 
@@ -124,7 +130,8 @@ export default async function AdminHome() {
     );
   }
 
-  const { summary: s, trend, lowStock, recent, visits } = await loadDashboard();
+  const { summary: s, trend, lowStock, recent, visits, visitTrend } =
+    await loadDashboard();
 
   return (
     <div className="space-y-10">
@@ -228,6 +235,16 @@ export default async function AdminHome() {
             icon={Users}
           />
         </div>
+
+        {/* 일별 방문자 추이(최근 14일) — 마이그(0056) 적용 전이면 빈 배열이라 미표시. */}
+        {visitTrend.length > 0 && (
+          <Panel className="mt-3 p-5">
+            <p className="mb-2 text-xs text-wabi-fg-muted">
+              최근 14일 방문자 추이
+            </p>
+            <VisitorChart trend={visitTrend} />
+          </Panel>
+        )}
       </section>
 
       {/* 최근 7일 매출 추이 (KST) — recharts AreaChart(#239, 진입 애니메이션).
