@@ -24,6 +24,10 @@ import {
   DEFAULT_CARE_USAGE,
   CARE_MAINTAIN_KEY,
   DEFAULT_CARE_MAINTAIN,
+  CARE_USAGE_LABEL_KEY,
+  DEFAULT_CARE_USAGE_LABEL,
+  CARE_MAINTAIN_LABEL_KEY,
+  DEFAULT_CARE_MAINTAIN_LABEL,
 } from "@/lib/queries/content";
 import { enabledAddons } from "@/lib/addons";
 import { createClient } from "@/lib/supabase/server";
@@ -180,7 +184,9 @@ export default async function ProductDetailPage({
     ...ADDON_IMAGE_KEYS,
     SHIPPING_INFO_KEY,
     SHIPPING_FEE_KEY,
+    CARE_USAGE_LABEL_KEY,
     CARE_USAGE_KEY,
+    CARE_MAINTAIN_LABEL_KEY,
     CARE_MAINTAIN_KEY,
   ]);
   const addonImages = Object.fromEntries(
@@ -189,8 +195,13 @@ export default async function ProductDetailPage({
   const shippingInfo = contentMap[SHIPPING_INFO_KEY] || DEFAULT_SHIPPING_INFO;
   const shippingFee = contentMap[SHIPPING_FEE_KEY] || DEFAULT_SHIPPING_FEE;
   // 사용·관리 안내(대표님) — 미저장 시 기본 문안. 빈 값이면 해당 소제목 미표시.
+  // 소제목도 편집 가능(대표님) — 재질별로 이름을 바꿔 쓸 수 있게.
   const careUsage = contentMap[CARE_USAGE_KEY] ?? DEFAULT_CARE_USAGE;
   const careMaintain = contentMap[CARE_MAINTAIN_KEY] ?? DEFAULT_CARE_MAINTAIN;
+  const careUsageLabel =
+    contentMap[CARE_USAGE_LABEL_KEY] || DEFAULT_CARE_USAGE_LABEL;
+  const careMaintainLabel =
+    contentMap[CARE_MAINTAIN_LABEL_KEY] || DEFAULT_CARE_MAINTAIN_LABEL;
 
   // 위시리스트 초기 상태 (로그인 시) — 사용자별이라 캐시 밖.
   const supabase = await createClient();
@@ -398,7 +409,7 @@ export default async function ProductDetailPage({
           <div className="mt-4 space-y-6 text-wabi-fg-muted">
             {careUsage.trim() && (
               <div>
-                <p className="mb-2 font-medium text-wabi-fg">사용</p>
+                <p className="mb-2 font-medium text-wabi-fg">{careUsageLabel}</p>
                 <ul className="list-disc space-y-1.5 pl-5 leading-relaxed marker:text-wabi-fg-muted">
                   {careUsage
                     .split("\n")
@@ -411,7 +422,9 @@ export default async function ProductDetailPage({
             )}
             {careMaintain.trim() && (
               <div>
-                <p className="mb-2 font-medium text-wabi-fg">세척과 관리</p>
+                <p className="mb-2 font-medium text-wabi-fg">
+                  {careMaintainLabel}
+                </p>
                 <ul className="list-disc space-y-1.5 pl-5 leading-relaxed marker:text-wabi-fg-muted">
                   {careMaintain
                     .split("\n")
