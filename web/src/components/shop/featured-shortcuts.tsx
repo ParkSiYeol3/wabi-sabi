@@ -11,17 +11,22 @@ const ITEMS = [
   { href: "/today", label: "오늘의 와비사비" },
 ] as const;
 
+// 완벽한 원형 대신 불완전한 비정형 테두리(대표님 — 와비사비 미감). 손으로 빚은
+// 듯 모서리 반경이 제각각인 유기적 형태. 두 버튼에 서로 다른 값을 줘 균질하지 않게.
+const SHAPES = [
+  "42% 58% 62% 38% / 55% 45% 55% 45%",
+  "58% 42% 45% 55% / 45% 60% 40% 55%",
+] as const;
+
 export function FeaturedShortcuts({ className }: { className?: string }) {
   return (
-    <nav
-      aria-label="특색 메뉴"
-      className={cn("flex gap-2.5 sm:gap-3", className)}
-    >
-      {ITEMS.map((it) => (
+    <nav aria-label="특색 메뉴" className={cn("flex gap-2.5 sm:gap-3", className)}>
+      {ITEMS.map((it, i) => (
         <Link
           key={it.href}
           href={it.href}
-          className="flex flex-1 items-center justify-center rounded-full border border-wabi-fg/25 bg-wabi-bg px-4 py-2.5 text-center text-sm font-medium tracking-wide text-wabi-fg transition-colors hover:border-wabi-fg hover:bg-wabi-fg hover:text-wabi-bg sm:flex-none sm:px-6"
+          style={{ borderRadius: SHAPES[i % SHAPES.length] }}
+          className="flex flex-1 items-center justify-center border border-wabi-fg/30 bg-wabi-bg px-4 py-2.5 text-center text-sm font-medium tracking-wide text-wabi-fg transition-colors hover:border-wabi-fg hover:bg-wabi-fg hover:text-wabi-bg sm:flex-none sm:px-7"
         >
           {it.label}
         </Link>
