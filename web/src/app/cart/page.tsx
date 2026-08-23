@@ -56,11 +56,11 @@ export default function CartPage() {
     <Container className="py-16">
       <h1 className="text-2xl font-semibold tracking-wide">장바구니</h1>
 
+      {/* 모바일(375px)에선 [이미지+정보]가 첫 줄, 수량·금액·삭제가 아래 줄로
+          내려간다(flex-wrap + 컨트롤 묶음 w-full). 고정폭 요소가 한 줄에 다
+          들어가지 못해 이름·가격이 세로로 깨지던 문제 해결. sm+ 은 한 줄 유지. */}
       <ul className="mt-10 divide-y divide-wabi-border border-y border-wabi-border">
         {items.map((item) => (
-          {/* 모바일(375px)에선 [이미지+정보]가 첫 줄, 수량·금액·삭제가 아래 줄로
-              내려간다(flex-wrap + 컨트롤 묶음 w-full). 고정폭 요소가 한 줄에 다
-              들어가지 못해 이름·가격이 세로로 깨지던 문제 해결. sm+ 은 한 줄 유지. */}
           <li
             key={item.id}
             className="flex flex-wrap items-center gap-4 py-5 sm:flex-nowrap"
