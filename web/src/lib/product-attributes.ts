@@ -16,10 +16,10 @@ export const MATERIALS: readonly string[] = [
 ] as const;
 
 // 사이즈 — 치수 표기 템플릿(대표님). 드롭다운에서 고르면 편집 가능한 입력에 그
-// 형식이 채워지고(presetAsTemplate), 대표님은 숫자만 채운다. 예: "Ø×" → "Ø20×12".
+// 형식이 채워지고(presetAsTemplate), 대표님은 숫자만 채운다. 예: "Ø ×" → "Ø20 ×12".
 // "Ø" 는 지름 기호. 규격이 제각각인 도자기 특성상 값 자체가 아니라 형식 프리셋이다.
 export const SIZES: readonly string[] = [
-  "Ø×",
+  "Ø ×",
   "가로×세로×높이",
   "지름 cm",
 ] as const;
