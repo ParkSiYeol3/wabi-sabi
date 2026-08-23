@@ -121,21 +121,29 @@ export function StatTile({
 
   const body = (
     <>
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-wabi-fg-muted">{label}</p>
+      <div className="flex items-start justify-between gap-1">
+        <p className="text-xs text-wabi-fg-muted sm:text-sm">{label}</p>
         {Icon && (
-          <Icon className="size-4 text-wabi-fg-muted/60" strokeWidth={1.8} />
+          <Icon
+            className="size-4 shrink-0 text-wabi-fg-muted/60"
+            strokeWidth={1.8}
+          />
         )}
       </div>
-      <p className={cn("mt-2 text-2xl font-semibold tabular-nums", valueColor)}>
+      <p
+        className={cn(
+          "mt-1.5 text-xl font-semibold tabular-nums sm:mt-2 sm:text-2xl",
+          valueColor,
+        )}
+      >
         {typeof value === "number" ? value.toLocaleString("ko-KR") : value}
-        {unit && <span className="ml-1 text-sm font-normal">{unit}</span>}
+        {unit && <span className="ml-1 text-xs font-normal sm:text-sm">{unit}</span>}
       </p>
     </>
   );
 
   const base = cn(
-    "block rounded-xl border bg-wabi-bg/40 p-5 shadow-sm",
+    "block rounded-xl border bg-wabi-bg/40 p-4 shadow-sm sm:p-5",
     ring,
     href && "transition-colors hover:bg-wabi-muted/50",
   );

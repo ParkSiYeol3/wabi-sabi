@@ -140,10 +140,10 @@ export default async function AdminHome() {
         description="처리 대기 항목과 오늘 현황을 한눈에."
       />
 
-      {/* 처리 대기 */}
+      {/* 처리 대기 — 모바일도 한눈에(2열 컴팩트, 대표님) */}
       <section>
         <SectionHeading>처리 대기</SectionHeading>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
           <StatTile
             href="/admin/orders"
             label="발송 대기"
@@ -185,10 +185,10 @@ export default async function AdminHome() {
         </div>
       </section>
 
-      {/* 오늘 현황 (KST) */}
+      {/* 오늘 현황 (KST) — 모바일 2열 컴팩트 */}
       <section>
         <SectionHeading>오늘 현황</SectionHeading>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
           <StatTile
             label="오늘 주문"
             value={s.today_orders}
@@ -214,7 +214,7 @@ export default async function AdminHome() {
             매장(어드민 제외)
           </span>
         </SectionHeading>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div className="mt-3 grid grid-cols-3 gap-2.5 sm:gap-3">
           <StatTile
             label="오늘 방문자"
             value={visits.today_visitors}
