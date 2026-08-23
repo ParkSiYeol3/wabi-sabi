@@ -59,8 +59,15 @@ export default async function WishlistPage() {
         <ul className="mt-10 grid grid-cols-2 gap-6 md:grid-cols-4">
           {items.map((p) => (
             <li key={p.id} className="relative">
-              <div className="absolute right-2 top-2 z-10 bg-wabi-bg/80">
-                <WishlistButton productId={p.id} initial refreshOnToggle />
+              {/* 하트 배경 축소(대표님) — 큰 흰 네모가 사진을 가려 작은 원형으로.
+                  버튼 패딩도 줄여(p-1.5) 사진 노출을 최대화. */}
+              <div className="absolute right-2 top-2 z-10 rounded-full bg-wabi-bg/70 shadow-sm backdrop-blur-sm">
+                <WishlistButton
+                  productId={p.id}
+                  initial
+                  refreshOnToggle
+                  className="rounded-full p-1.5"
+                />
               </div>
               {/* 담기 버튼 제거(#252 연장, 대표님) — 옵션 선택 위해 상세로 유도.
                   카드 클릭이 상세로 간다. */}
