@@ -57,11 +57,13 @@ export function ProductCard({
         )}
       </div>
       {product.category && (
-        <p className="mt-3 text-xs text-wabi-fg-muted">{product.category}</p>
+        <p className="mt-2.5 text-[11px] text-wabi-fg-muted">
+          {product.category}
+        </p>
       )}
-      <p className="mt-1 text-sm">{product.name}</p>
-      {/* 가격 강조(대표님) — 숫자 Cormorant 크게, "원" 작고 흐린 접미(Price) */}
-      <p className="mt-1 text-xl font-semibold text-wabi-fg">
+      <p className="mt-1 text-[13px]">{product.name}</p>
+      {/* 가격(대표님 — 카드 글씨 전체적으로 작게). 숫자 Cormorant, "원" 작고 흐린 접미(Price) */}
+      <p className="mt-0.5 text-base font-semibold text-wabi-fg">
         <Price value={product.price} />
       </p>
     </Link>

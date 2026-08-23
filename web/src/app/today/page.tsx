@@ -5,6 +5,7 @@ import { MomentForm } from "@/components/moment/moment-form";
 import { MomentGrid } from "@/components/moment/moment-grid";
 import { ShopSidebar } from "@/components/shop/shop-sidebar";
 import { MobileCategoryTabs } from "@/components/shop/mobile-category-tabs";
+import { FeaturedShortcuts } from "@/components/shop/featured-shortcuts";
 import { createClient } from "@/lib/supabase/server";
 import { getMomentsPage, MOMENTS_PAGE_SIZE } from "@/lib/queries/moments";
 import { getCategoryTree } from "@/lib/queries/categories";
@@ -29,7 +30,9 @@ export default async function TodayPage() {
   ]);
 
   return (
-    <Container className="py-16">
+    <Container className="pb-16 pt-10 sm:pt-16">
+      {/* 특색 대분류(대표님) — 여러 페이지 상단에 월간 그릇·오늘의 와비사비 */}
+      <FeaturedShortcuts className="mb-7 max-w-md" />
       <h1 className="text-2xl font-semibold tracking-tight">오늘의 와비사비</h1>
       {/* max-w 를 넓혀 데스크톱에서 한 줄로 붙게(대표님 — "남겨주세요."만 다음 줄로
           넘어가 이상). text-pretty 로 좁은 폭에서 줄바꿈되더라도 마지막 줄에 한
