@@ -63,8 +63,11 @@ export async function SiteFooter() {
     { label: "월간 그릇", href: `/shop?category=${MONTHLY_SLUG}` },
     ...tree.map((c) => ({ label: c.ko, href: `/shop?category=${c.slug}` })),
   ];
-  // 안내 열: SHOWROOM(소개=오시는 길 합침) + 고객 게시판.
+  // 안내 열: SHOWROOM(소개=오시는 길 합침) + 고객 게시판. 마이페이지(대표님 —
+  // 하단바=푸터에 마이페이지)는 항상 노출하되, 비회원이 눌러도 /mypage 가 로그인으로
+  // 자동 유도(리다이렉트)하므로 별도 판정 없이 링크만 둔다.
   const guideLinks: FooterLink[] = [
+    { label: "마이페이지", href: "/mypage" },
     { label: "SHOWROOM", href: "/about" },
     { label: "오늘의 와비사비", href: "/today" },
     { label: "공지사항", href: "/notice" },

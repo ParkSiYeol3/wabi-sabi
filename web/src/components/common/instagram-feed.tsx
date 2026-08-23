@@ -11,7 +11,7 @@ export async function InstagramFeed() {
   const posts = await fetchInstagramPosts(12);
 
   return (
-    <section className="overflow-hidden bg-wabi-subtle py-20">
+    <section className="overflow-hidden bg-wabi-subtle pb-10 pt-16">
       <div className="mx-auto max-w-300 px-5 text-center">
         <h2 className="text-xl font-semibold">Instagram</h2>
         <a
