@@ -351,6 +351,65 @@ export async function moveProductImage(formData: FormData) {
   revalidatePath(`/shop/${id}`);
 }
 
+// 기존 상품 이미지 1장 교체 (편집본으로) — 대표님: 이미 올린 상품 사진도 편집 가능하게.
+// 클라(ImageEditor)가 크롭·회전·필터한 파일을 배열 index 위치에 덮어쓰고(순서 유지),
+// 기존 스토리지 객체는 삭제한다. index 만 믿지 않고 url 을 함께 받아, 그 사이 재정렬로
+// 다른 장을 덮어쓰는 사고를 막는다(현재 index 의 url 이 일치할 때만 진행).
+export async function replaceProductImage(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const user = await requireAdmin();
+  if (!adminConfigured())
+    return { ok: false, message: "SUPABASE_SERVICE_ROLE_KEY 미설정" };
+
+  const id = parseUuid(formData.get("id"));
+  const index = Number(formData.get("index"));
+  const oldUrl = String(formData.get("url") || "");
+  const file = formData
+    .getAll("image")
+    .find((f): f is File => f instanceof File && f.size > 0);
+  if (!id || !Number.isInteger(index) || index < 0 || !oldUrl)
+    return { ok: false, message: "잘못된 요청" };
+  if (!file) return { ok: false, message: "편집된 이미지가 없습니다." };
+
+  const supabase = createAdminClient();
+  const { data: product } = await supabase
+    .from("products")
+    .select("images")
+    .eq("id", id)
+    .single();
+  const current: string[] = Array.isArray(product?.images)
+    ? (product!.images as string[])
+    : [];
+  if (index >= current.length || current[index] !== oldUrl)
+    return {
+      ok: false,
+      message: "목록이 변경되었습니다. 새로고침 후 다시 시도하세요.",
+    };
+
+  const { urls, failures } = await uploadProductImages(id, [file]);
+  if (!urls.length)
+    return { ok: false, message: `교체 실패: ${failureText(failures)}` };
+
+  const next = [...current];
+  next[index] = urls[0];
+  await supabase.from("products").update({ images: next }).eq("id", id);
+  // 교체가 저장된 뒤에 옛 객체 삭제(먼저 지웠다가 저장 실패 시 원본 유실 방지).
+  await deleteProductImage(oldUrl);
+  await logAdminAction(user, {
+    action: "product.replace_image",
+    targetTable: "products",
+    targetId: id,
+    meta: { index },
+  });
+  revalidatePath("/admin/products");
+  revalidatePath("/");
+  revalidatePath("/shop");
+  revalidatePath(`/shop/${id}`);
+  return { ok: true, message: "사진을 교체했습니다." };
+}
+
 export async function toggleMonthly(formData: FormData) {
   const user = await requireAdmin();
   if (!adminConfigured()) return;
