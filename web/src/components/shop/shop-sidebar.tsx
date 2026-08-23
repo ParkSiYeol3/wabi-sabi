@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MONTHLY_SLUG, type CategoryNode } from "@/lib/site";
+import { type CategoryNode } from "@/lib/site";
 import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
 import { cn } from "@/lib/utils";
 
@@ -104,25 +104,8 @@ export function ShopSidebar({
           ))}
         </div>
       )}
-
-      {/* 월간 그릇·오늘의 와비사비 — 카테고리가 아니라 특별 컬렉션. 데스크톱엔
-          드로어가 없어 사이드바 하단에 항상 둔다(모바일은 드로어로 뺐다 — 대표님). */}
-      <div className="mt-5 space-y-1 border-t border-wabi-border pt-4">
-        <SideLink
-          href={buildShopQuery(sp, { category: MONTHLY_SLUG })}
-          active={current === MONTHLY_SLUG}
-          className="text-wabi-accent hover:text-wabi-accent"
-        >
-          월간 그릇
-        </SideLink>
-        <SideLink
-          href="/today"
-          active={todayActive}
-          className="text-wabi-accent hover:text-wabi-accent"
-        >
-          오늘의 와비사비
-        </SideLink>
-      </div>
+      {/* 월간 그릇·오늘의 와비사비는 상단 특색 필(FeaturedShortcuts)로 승격돼
+          중복이라 사이드바에서 제거(대표님). */}
     </nav>
   );
 }
