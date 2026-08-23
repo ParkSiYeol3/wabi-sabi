@@ -7,6 +7,7 @@ import { Reveal } from "@/components/common/reveal";
 import { MONTHLY_SLUG } from "@/lib/site";
 import { ShopSidebar } from "@/components/shop/shop-sidebar";
 import { MobileCategoryTabs } from "@/components/shop/mobile-category-tabs";
+import { FeaturedShortcuts } from "@/components/shop/featured-shortcuts";
 import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
 import {
   getProducts,
@@ -72,7 +73,10 @@ export default async function ShopPage({
       : (catHeading ?? "Shop");
 
   return (
-    <Container className="pb-16 pt-24">
+    <Container className="pb-16 pt-10 sm:pt-24">
+      {/* 특색 대분류(대표님) — 월간 그릇·오늘의 와비사비를 상단에 크게 */}
+      <FeaturedShortcuts className="mb-7" />
+
       {/* 헤더 — 타이틀 ("N개 상품" 표기는 대표님 요청으로 제거) */}
       <h1 className="text-2xl font-semibold tracking-wide">{heading}</h1>
 

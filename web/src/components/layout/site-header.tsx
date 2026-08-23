@@ -13,7 +13,7 @@ import {
   Receipt,
   ChevronDown,
 } from "lucide-react";
-import { nav, site, MONTHLY_SLUG, type CategoryNode } from "@/lib/site";
+import { nav, site, type CategoryNode } from "@/lib/site";
 import { buildShopQuery } from "@/lib/shop-url";
 import { cn } from "@/lib/utils";
 import { useCart, cartCount } from "@/store/cart";
@@ -255,21 +255,8 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
                       >
                         All
                       </Link>
-                      {/* 월간 그릇·오늘의 와비사비 = 액센트로 강조(사이드바와 통일) */}
-                      <Link
-                        href={buildShopQuery({}, { category: MONTHLY_SLUG })}
-                        onClick={closeMenu}
-                        className="py-1.5 text-sm text-wabi-accent transition-colors hover:opacity-80"
-                      >
-                        월간 그릇
-                      </Link>
-                      <Link
-                        href="/today"
-                        onClick={closeMenu}
-                        className="py-1.5 text-sm text-wabi-accent transition-colors hover:opacity-80"
-                      >
-                        오늘의 와비사비
-                      </Link>
+                      {/* 월간 그릇·오늘의 와비사비는 대분류로 승격해 각 페이지 상단
+                          FeaturedShortcuts 로 노출한다(대표님) → 드로어 하위에선 제거. */}
                       {/* 대분류 아코디언(대표님) — 대분류를 누르면 그 소분류만 밑에
                           작은 글씨로 펼쳐진다. 자식 없는 대분류는 그냥 링크. 펼친 뒤
                           '전체'로 그 대분류 전체보기 가능. */}

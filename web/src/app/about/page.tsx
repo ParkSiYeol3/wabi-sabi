@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { Clock, MapPin, AtSign, Mail } from "lucide-react";
 import { Container } from "@/components/layout/container";
+import { FeaturedShortcuts } from "@/components/shop/featured-shortcuts";
 import { Reveal } from "@/components/common/reveal";
 import { InstagramFeed } from "@/components/common/instagram-feed";
 import { MapCard } from "@/components/map/map-card";
@@ -125,7 +126,9 @@ export default async function AboutPage() {
         dangerouslySetInnerHTML={{ __html: storeJsonLd() }}
       />
       {/* 철학 — 히어로 없이 바로 본문(대표님 피드백, 히어로 제거) */}
-      <Container className="py-24 md:py-32">
+      <Container className="pb-24 pt-10 sm:pt-24 md:py-32">
+        {/* 특색 대분류(대표님) — 여러 페이지 상단에 월간 그릇·오늘의 와비사비 */}
+        <FeaturedShortcuts className="mb-10 max-w-md" />
         <div className="grid gap-16 md:grid-cols-2 md:items-center">
           <Reveal>
             {/* 히어로 제거로 이 헤딩이 페이지 h1 (SEO·접근성) */}
