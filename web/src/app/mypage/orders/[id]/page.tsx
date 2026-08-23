@@ -10,10 +10,14 @@ import {
   withdrawalDeadlineKST,
   trackingSearchUrl,
 } from "@/lib/orders";
+import { PenLine } from "lucide-react";
 import { Price } from "@/components/product/price";
 import { parseUuid } from "@/lib/validation";
 
 export const metadata: Metadata = { title: "주문 상세" };
+
+// 결제 완료로 간주해 리뷰를 허용하는 상태(reviews.hasPurchased 와 동일 기준).
+const REVIEWABLE_STATUSES = ["paid", "shipping", "delivered"];
 
 // 주문 상세 (#137) — 어드민이 송장번호를 저장하는데 고객이 그것을 볼 화면이 없었다.
 // 배송지·주문 항목 전체·선물포장 여부도 주문 후엔 확인할 수 없었다.
@@ -32,6 +36,8 @@ type Detail = {
   ordered_at: string;
   delivered_at: string | null;
   order_items: {
+    // 리뷰 링크용 상품 id. 상품 삭제 시 null(0001) → 리뷰 버튼 생략.
+    product_id: string | null;
     product_name: string;
     quantity: number;
     price: number;
@@ -59,7 +65,7 @@ export default async function OrderDetailPage({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, total_price, shipping_fee, recipient, phone, address, delivery_memo, tracking_number, ordered_at, delivered_at, order_items(product_name, quantity, price, addons, options), gift_options(message)",
+      "id, order_number, status, total_price, shipping_fee, recipient, phone, address, delivery_memo, tracking_number, ordered_at, delivered_at, order_items(product_id, product_name, quantity, price, addons, options), gift_options(message)",
     )
     .eq("id", orderId)
     .maybeSingle<Detail>();
@@ -68,6 +74,18 @@ export default async function OrderDetailPage({
   if (!order) notFound();
 
   const gift = order.gift_options?.[0];
+
+  // 리뷰 작성 유도(대표님) — 결제된 주문이면 상품별로 리뷰 링크. 이미 쓴 상품은
+  // 라벨을 "리뷰 확인"으로. 본인 리뷰만 RLS 로 조회.
+  const canReview = REVIEWABLE_STATUSES.includes(order.status);
+  const { data: myReviews } = canReview
+    ? await supabase
+        .from("reviews")
+        .select("product_id")
+        .eq("user_id", user.id)
+        .returns<{ product_id: string }[]>()
+    : { data: null };
+  const reviewed = new Set((myReviews ?? []).map((r) => r.product_id));
 
   return (
     <Container className="py-16">
@@ -120,6 +138,16 @@ export default async function OrderDetailPage({
                   <p className="mt-1 text-xs text-wabi-fg-muted">
                     + {lineAddons.map((a) => a.name).join(", ")}
                   </p>
+                )}
+                {/* 리뷰 작성(대표님) — 결제된 주문의 살아있는 상품만. */}
+                {canReview && it.product_id && (
+                  <Link
+                    href={`/shop/${it.product_id}#reviews`}
+                    className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg border border-wabi-border px-3 py-1.5 text-xs font-medium text-wabi-fg transition-colors hover:border-wabi-fg hover:bg-wabi-muted"
+                  >
+                    <PenLine className="size-3.5" strokeWidth={1.8} aria-hidden />
+                    {reviewed.has(it.product_id) ? "리뷰 확인" : "리뷰 쓰기"}
+                  </Link>
                 )}
               </li>
             );

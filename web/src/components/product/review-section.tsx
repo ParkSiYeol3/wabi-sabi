@@ -28,7 +28,9 @@ export async function ReviewSection({
     : false;
 
   return (
-    <section className="mt-20">
+    // id — 주문 내역의 "리뷰 쓰기" 버튼이 이 섹션으로 바로 점프(대표님). 헤더 높이만큼
+    // scroll-mt 로 여백.
+    <section id="reviews" className="mt-20 scroll-mt-24">
       <div className="flex items-center gap-3">
         <h2 className="text-lg font-medium">리뷰</h2>
         {stats.count > 0 && (
