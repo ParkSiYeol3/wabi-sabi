@@ -85,8 +85,8 @@ export default async function ShopPage({
   return (
     <Container className="pb-16 pt-2 sm:pt-3">
       {/* 특색 대분류(대표님) — 월간 그릇·오늘의 와비사비. 헤더 구분선에 거의 붙게
-          상단 여백 최소화. */}
-      <FeaturedShortcuts className="mb-7" />
+          상단 여백 최소화. 아래 여백은 모바일에서 특히 축소(대표님). */}
+      <FeaturedShortcuts className="mb-3.5 sm:mb-7" />
 
       {/* 헤더 — 타이틀 ("N개 상품" 표기는 대표님 요청으로 제거). 글씨 축소(대표님) */}
       <h1 className="text-lg font-semibold tracking-wide sm:text-xl">{heading}</h1>
@@ -100,7 +100,7 @@ export default async function ShopPage({
           이 그룹 나열(대분류+소분류 텍스트, 누르면 필터), 데스크톱은 좌측 사이드바. */}
       <MobileCategoryTabs sp={sp} tree={tree} />
 
-      <div className="mt-8 flex items-start gap-10">
+      <div className="mt-4 flex items-start gap-10 sm:mt-8">
         {/* 데스크톱 좌측 사이드바 — 소분류 토글 (#195, biomedium 참고) */}
         <div className="hidden lg:block">
           <ShopSidebar sp={sp} tree={tree} />

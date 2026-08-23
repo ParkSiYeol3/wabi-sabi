@@ -67,7 +67,8 @@ export function MobileCategoryTabs({
   return (
     <div
       className={cn(
-        "mt-6 pb-4",
+        // 여백 축소(대표님) — 모바일은 타이틀·상품과 바짝, sm+는 기존 유지.
+        "mt-3 pb-2 sm:mt-6 sm:pb-4",
         tabletOnly ? "hidden md:block lg:hidden" : "lg:hidden",
       )}
     >
