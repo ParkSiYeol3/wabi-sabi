@@ -6,6 +6,7 @@ import { Container } from "@/components/layout/container";
 import { MomentLikeButton } from "@/components/moment/moment-like-button";
 import { MomentCarousel } from "@/components/moment/moment-carousel";
 import { MomentCommentForm } from "@/components/moment/moment-comment-form";
+import { MomentShareButton } from "@/components/moment/moment-share-button";
 import { SubmitButton } from "@/components/common/submit-button";
 import { createClient } from "@/lib/supabase/server";
 import { getMoment, getMomentComments } from "@/lib/queries/moments";
@@ -84,6 +85,13 @@ export default async function MomentDetailPage({ params }: Params) {
               initialLiked={moment.liked}
               initialCount={moment.like_count}
               size="lg"
+            />
+            <MomentShareButton
+              title={
+                moment.body
+                  ? moment.body.slice(0, 40)
+                  : `${moment.author_name}의 오늘의 와비사비`
+              }
             />
           </div>
 
