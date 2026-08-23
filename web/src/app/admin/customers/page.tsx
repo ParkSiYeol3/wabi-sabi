@@ -90,55 +90,101 @@ export default async function AdminCustomersPage() {
           </div>
         ) : (
           <div className="mt-3">
-            <TablePanel>
-              <table className="w-full min-w-120 text-sm">
-                <thead className="border-b border-wabi-border bg-wabi-subtle/50 text-left text-xs text-wabi-fg-muted">
-                  <tr>
-                    <th className="px-4 py-3 font-medium">구매자</th>
-                    <th className="px-4 py-3 font-medium">구분</th>
-                    <th className="px-4 py-3 text-right font-medium">구매 횟수</th>
-                    <th className="px-4 py-3 text-right font-medium">구매액</th>
-                    <th className="px-4 py-3 font-medium">최근 구매</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-wabi-border">
-                  {rows.map((r, i) => (
-                    <tr key={`${r.label}-${r.contact ?? i}`}>
-                      <td className="px-4 py-3">
-                        <span className="block truncate font-medium text-wabi-fg">
-                          {r.label}
-                        </span>
-                        {r.contact && (
-                          <span className="block truncate text-xs text-wabi-fg-muted">
-                            {r.contact}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={
-                            r.is_member
-                              ? "rounded-full bg-wabi-fg px-2 py-0.5 text-[10px] text-wabi-bg"
-                              : "rounded-full border border-wabi-border px-2 py-0.5 text-[10px] text-wabi-fg-muted"
-                          }
-                        >
-                          {r.is_member ? "회원" : "비회원"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right font-numeric">
-                        {r.orders}
-                      </td>
-                      <td className="px-4 py-3 text-right font-numeric font-medium text-wabi-fg">
-                        {won(r.amount)}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-wabi-fg-muted">
-                        {formatDateKST(r.last_ordered)}
-                      </td>
+            {/* 모바일 — 스택 카드(가로 스크롤·글자 밀림 없이 한눈에) */}
+            <ul className="space-y-2 sm:hidden">
+              {rows.map((r, i) => (
+                <li
+                  key={`${r.label}-${r.contact ?? i}`}
+                  className="rounded-xl border border-wabi-border bg-wabi-bg/40 p-4"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-wabi-fg">
+                        {r.label}
+                      </p>
+                      {r.contact && (
+                        <p className="truncate text-xs text-wabi-fg-muted">
+                          {r.contact}
+                        </p>
+                      )}
+                    </div>
+                    <span
+                      className={
+                        r.is_member
+                          ? "shrink-0 rounded-full bg-wabi-fg px-2 py-0.5 text-[10px] text-wabi-bg"
+                          : "shrink-0 rounded-full border border-wabi-border px-2 py-0.5 text-[10px] text-wabi-fg-muted"
+                      }
+                    >
+                      {r.is_member ? "회원" : "비회원"}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex items-baseline justify-between gap-2 text-sm">
+                    <span className="font-numeric text-wabi-fg-muted">
+                      {r.orders}회 구매
+                    </span>
+                    <span className="font-numeric font-medium text-wabi-fg">
+                      {won(r.amount)}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-wabi-fg-muted">
+                    최근 {formatDateKST(r.last_ordered)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+
+            {/* 데스크톱 — 테이블 */}
+            <div className="hidden sm:block">
+              <TablePanel>
+                <table className="w-full min-w-120 text-sm">
+                  <thead className="border-b border-wabi-border bg-wabi-subtle/50 text-left text-xs text-wabi-fg-muted">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">구매자</th>
+                      <th className="px-4 py-3 font-medium">구분</th>
+                      <th className="px-4 py-3 text-right font-medium">구매 횟수</th>
+                      <th className="px-4 py-3 text-right font-medium">구매액</th>
+                      <th className="px-4 py-3 font-medium">최근 구매</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </TablePanel>
+                  </thead>
+                  <tbody className="divide-y divide-wabi-border">
+                    {rows.map((r, i) => (
+                      <tr key={`${r.label}-${r.contact ?? i}`}>
+                        <td className="px-4 py-3">
+                          <span className="block truncate font-medium text-wabi-fg">
+                            {r.label}
+                          </span>
+                          {r.contact && (
+                            <span className="block truncate text-xs text-wabi-fg-muted">
+                              {r.contact}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={
+                              r.is_member
+                                ? "rounded-full bg-wabi-fg px-2 py-0.5 text-[10px] text-wabi-bg"
+                                : "rounded-full border border-wabi-border px-2 py-0.5 text-[10px] text-wabi-fg-muted"
+                            }
+                          >
+                            {r.is_member ? "회원" : "비회원"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right font-numeric">
+                          {r.orders}
+                        </td>
+                        <td className="px-4 py-3 text-right font-numeric font-medium text-wabi-fg">
+                          {won(r.amount)}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-wabi-fg-muted">
+                          {formatDateKST(r.last_ordered)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TablePanel>
+            </div>
           </div>
         )}
       </section>

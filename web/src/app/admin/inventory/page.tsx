@@ -23,6 +23,14 @@ type Row = {
   revenue: number;
 };
 
+// 현재고 표시 — 품절/부족(색 강조)/정상. 모바일 카드·데스크톱 테이블 공용.
+function StockValue({ stock }: { stock: number }) {
+  if (stock <= 0) return <span className="font-medium text-red-700">품절</span>;
+  if (isLowStock(stock))
+    return <span className="font-medium text-amber-800">{stock}</span>;
+  return <>{stock}</>;
+}
+
 export default async function AdminInventoryPage() {
   if (!adminConfigured()) {
     return (
@@ -94,51 +102,85 @@ export default async function AdminInventoryPage() {
           </div>
         ) : (
           <div className="mt-3">
-            <TablePanel>
-              <table className="w-full min-w-120 text-sm">
-                <thead className="border-b border-wabi-border bg-wabi-subtle/50 text-left text-xs text-wabi-fg-muted">
-                  <tr>
-                    <th className="px-4 py-3 font-medium">상품</th>
-                    <th className="px-4 py-3 text-right font-medium">현재고</th>
-                    <th className="px-4 py-3 text-right font-medium">누적 판매</th>
-                    <th className="px-4 py-3 text-right font-medium">판매액</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-wabi-border">
-                  {rows.map((r) => (
-                    <tr key={r.product_id}>
-                      <td className="px-4 py-3">
-                        <span className="flex items-center gap-2">
-                          <span className="truncate">{r.name}</span>
-                          {!r.is_active && (
-                            <span className="shrink-0 rounded border border-wabi-border px-1.5 py-0.5 text-[10px] text-wabi-fg-muted">
-                              숨김
-                            </span>
-                          )}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right font-numeric">
-                        {r.stock <= 0 ? (
-                          <span className="font-medium text-red-700">품절</span>
-                        ) : isLowStock(r.stock) ? (
-                          <span className="font-medium text-amber-800">
-                            {r.stock}
-                          </span>
-                        ) : (
-                          r.stock
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-right font-numeric">
-                        {r.sold}
-                      </td>
-                      <td className="px-4 py-3 text-right font-numeric text-wabi-fg-muted">
+            {/* 모바일 — 스택 카드(가로 스크롤·글자 밀림 없이 한눈에) */}
+            <ul className="space-y-2 sm:hidden">
+              {rows.map((r) => (
+                <li
+                  key={r.product_id}
+                  className="rounded-xl border border-wabi-border bg-wabi-bg/40 p-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-wabi-fg">
+                      {r.name}
+                    </span>
+                    {!r.is_active && (
+                      <span className="shrink-0 rounded border border-wabi-border px-1.5 py-0.5 text-[10px] text-wabi-fg-muted">
+                        숨김
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <p className="text-[11px] text-wabi-fg-muted">현재고</p>
+                      <p className="mt-0.5 font-numeric text-sm">
+                        <StockValue stock={r.stock} />
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-wabi-fg-muted">누적 판매</p>
+                      <p className="mt-0.5 font-numeric text-sm">{r.sold}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-wabi-fg-muted">판매액</p>
+                      <p className="mt-0.5 font-numeric text-sm text-wabi-fg-muted">
                         {won(r.revenue)}
-                      </td>
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            {/* 데스크톱 — 테이블 */}
+            <div className="hidden sm:block">
+              <TablePanel>
+                <table className="w-full min-w-120 text-sm">
+                  <thead className="border-b border-wabi-border bg-wabi-subtle/50 text-left text-xs text-wabi-fg-muted">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">상품</th>
+                      <th className="px-4 py-3 text-right font-medium">현재고</th>
+                      <th className="px-4 py-3 text-right font-medium">누적 판매</th>
+                      <th className="px-4 py-3 text-right font-medium">판매액</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </TablePanel>
+                  </thead>
+                  <tbody className="divide-y divide-wabi-border">
+                    {rows.map((r) => (
+                      <tr key={r.product_id}>
+                        <td className="px-4 py-3">
+                          <span className="flex items-center gap-2">
+                            <span className="truncate">{r.name}</span>
+                            {!r.is_active && (
+                              <span className="shrink-0 rounded border border-wabi-border px-1.5 py-0.5 text-[10px] text-wabi-fg-muted">
+                                숨김
+                              </span>
+                            )}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right font-numeric">
+                          <StockValue stock={r.stock} />
+                        </td>
+                        <td className="px-4 py-3 text-right font-numeric">
+                          {r.sold}
+                        </td>
+                        <td className="px-4 py-3 text-right font-numeric text-wabi-fg-muted">
+                          {won(r.revenue)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TablePanel>
+            </div>
           </div>
         )}
       </section>
