@@ -13,16 +13,19 @@ export function BackToShop({
   className?: string;
 }) {
   if (variant === "button") {
+    // 텍스트는 "Shop"만, 완벽한 원형 대신 불완전한 비정형 테두리(대표님 — 특색 버튼과
+    // 같은 와비사비 미감).
     return (
       <Link
         href="/shop"
+        style={{ borderRadius: "42% 58% 62% 38% / 55% 45% 55% 45%" }}
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full border border-wabi-border px-4 py-2 text-xs font-medium text-wabi-fg-muted transition-colors hover:border-wabi-fg hover:text-wabi-fg",
+          "inline-flex items-center gap-1.5 border border-wabi-border px-4 py-2 text-xs font-medium text-wabi-fg-muted transition-colors hover:border-wabi-fg hover:text-wabi-fg",
           className,
         )}
       >
         <ArrowLeft className="size-3.5" strokeWidth={1.6} aria-hidden />
-        Shop 전체 보기
+        Shop
       </Link>
     );
   }
