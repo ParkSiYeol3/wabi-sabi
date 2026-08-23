@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           # 런타임 정렬: Vercel(package.json engines)·@types/node 와 동일한 24.x.
           # 타입이 런타임보다 앞서면 없는 API 가 타입검사를 통과할 수 있다(#230 교훈).
