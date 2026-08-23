@@ -6,6 +6,7 @@ import { Container } from "@/components/layout/container";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductGallery } from "@/components/product/product-gallery";
 import { ProductImageZoom } from "@/components/product/product-image-zoom";
+import { BackToShop } from "@/components/shop/back-to-shop";
 import { ProductDetailActions } from "@/components/product/product-detail-actions";
 import { RestockButton } from "@/components/product/restock-button";
 import { WishlistButton } from "@/components/product/wishlist-button";
@@ -250,6 +251,8 @@ export default async function ProductDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd(product) }}
       />
+      {/* Shop 으로 — 상단에 보일 듯 안 보일 듯 흐리게(대표님) */}
+      <BackToShop variant="subtle" className="mb-5" />
       {/* 히어로 — 첫(메인) 사진 + 정보. 스크롤을 내리면 정보와 함께 위로 사라지고
           아래 스캐터 사진만 이어진다(대표님 시안 — 정보를 우측에 고정하지 않음). */}
       <div className="grid items-start gap-12 md:grid-cols-2">
