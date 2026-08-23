@@ -36,6 +36,7 @@ import {
 } from "@/lib/queries/content";
 import { PageHeader, SectionHeading } from "@/components/admin/ui";
 import { ContentField } from "@/components/admin/content-field";
+import { CareEditor } from "@/components/admin/care-editor";
 import { AboutImageField } from "@/components/admin/about-image-field";
 import { PrepNoticeField } from "@/components/admin/prep-notice-field";
 
@@ -362,42 +363,19 @@ export default async function AdminContentPage() {
             <SectionHeading>사용 및 관리</SectionHeading>
             <p className="text-xs text-wabi-fg-muted">
               모든 상품 상세의 사진과 리뷰 사이에 표시됩니다. 두 묶음으로 나뉘며,
-              각 묶음의 <b>소제목</b>과 <b>본문</b>을 모두 바꿀 수 있습니다(소제목은
-              재질별 이름 등으로 자유롭게, 본문은 한 줄에 한 항목씩). 항목마다 개별
-              저장하세요.
+              각 묶음의 <b>소제목</b>과 <b>본문</b>을 모두 바꿀 수 있습니다. 재질
+              프리셋(세라믹·스테인리스·글라스)으로 본문을 채운 뒤 다듬어 저장하세요.
             </p>
-            <div className="space-y-3 rounded-lg border border-wabi-border p-4">
-              <ContentField
-                contentKey={CARE_USAGE_LABEL_KEY}
-                label="첫 번째 소제목"
-                hint="상세에 그대로 노출됩니다(기본 '사용'). 예: 'Check (도자기)'."
-                value={careUsageLabel ?? DEFAULT_CARE_USAGE_LABEL}
-                rows={1}
-              />
-              <ContentField
-                contentKey={CARE_USAGE_KEY}
-                label="첫 번째 본문"
-                hint="한 줄에 한 항목. 예: 식기세척기·전자레인지 사용 가능, 직화 금지 등."
-                value={careUsage ?? DEFAULT_CARE_USAGE}
-                rows={6}
-              />
-            </div>
-            <div className="space-y-3 rounded-lg border border-wabi-border p-4">
-              <ContentField
-                contentKey={CARE_MAINTAIN_LABEL_KEY}
-                label="두 번째 소제목"
-                hint="상세에 그대로 노출됩니다(기본 '세척과 관리')."
-                value={careMaintainLabel ?? DEFAULT_CARE_MAINTAIN_LABEL}
-                rows={1}
-              />
-              <ContentField
-                contentKey={CARE_MAINTAIN_KEY}
-                label="두 번째 본문"
-                hint="한 줄에 한 항목. 예: 사용 후 바로 세척, 색 배임·자연스러운 흔적 등."
-                value={careMaintain ?? DEFAULT_CARE_MAINTAIN}
-                rows={5}
-              />
-            </div>
+            <CareEditor
+              usageLabelKey={CARE_USAGE_LABEL_KEY}
+              usageLabelValue={careUsageLabel ?? DEFAULT_CARE_USAGE_LABEL}
+              usageKey={CARE_USAGE_KEY}
+              usageValue={careUsage ?? DEFAULT_CARE_USAGE}
+              maintainLabelKey={CARE_MAINTAIN_LABEL_KEY}
+              maintainLabelValue={careMaintainLabel ?? DEFAULT_CARE_MAINTAIN_LABEL}
+              maintainKey={CARE_MAINTAIN_KEY}
+              maintainValue={careMaintain ?? DEFAULT_CARE_MAINTAIN}
+            />
           </div>
 
         </PageBlock>
