@@ -8,6 +8,7 @@ import { ShopSidebar } from "@/components/shop/shop-sidebar";
 import { MobileCategoryTabs } from "@/components/shop/mobile-category-tabs";
 import { FeaturedShortcuts } from "@/components/shop/featured-shortcuts";
 import { SortSelect } from "@/components/shop/sort-select";
+import { ShopPagination } from "@/components/shop/shop-pagination";
 import { BackToShop } from "@/components/shop/back-to-shop";
 import { type ShopSP } from "@/lib/shop-url";
 import {
@@ -31,6 +32,9 @@ const sorts: { key: ProductSort; label: string }[] = [
 
 type SP = ShopSP;
 
+// 한 페이지 상품 수(대표님 — 페이지 구분). 4열 그리드 기준 3행.
+const PAGE_SIZE = 12;
+
 export default async function ShopPage({
   searchParams,
 }: {
@@ -53,6 +57,13 @@ export default async function ShopPage({
     products.length === 0 && query
       ? (await getShopBrowse({ sort: "newest" })).slice(0, 4)
       : [];
+
+  // 페이지네이션(대표님) — 목록은 캐시된 전체를 여기서 슬라이스한다. 범위를 벗어난
+  // page 는 마지막 페이지로 클램프. 필터/정렬을 바꾸면 buildShopQuery 가 page 를
+  // 떨궈 1페이지로 리셋된다.
+  const totalPages = Math.max(1, Math.ceil(products.length / PAGE_SIZE));
+  const pageNum = Math.min(Math.max(1, Number(sp.page) || 1), totalPages);
+  const paged = products.slice((pageNum - 1) * PAGE_SIZE, pageNum * PAGE_SIZE);
 
   // 페이지 타이틀 = 선택 카테고리명(영어 — shop 분류 영어화, 대표님). name_en 우선,
   // 대분류("-")·미매칭이면 name_ko(대분류는 TABLEWARE·OBJECTS 라 그대로 영문). 전체는
@@ -138,7 +149,7 @@ export default async function ShopPage({
             </div>
           ) : (
             <ul className="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
-              {products.map((p, i) => {
+              {paged.map((p, i) => {
                 {
                   /* 담기는 상세 페이지에서(#252, 대표님 시안 — 옵션 선택 후 담기). 카드는 상세로 유도만. */
                 }
@@ -160,6 +171,11 @@ export default async function ShopPage({
                 );
               })}
             </ul>
+          )}
+
+          {/* 페이지 구분(대표님 — < 1 2 3 … >). 검색어 없는 목록에만, 2쪽 이상일 때. */}
+          {products.length > 0 && (
+            <ShopPagination sp={sp} page={pageNum} totalPages={totalPages} />
           )}
         </div>
       </div>
