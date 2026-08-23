@@ -18,6 +18,7 @@ type Product = {
   is_active: boolean;
   is_monthly: boolean;
   images: string[] | null;
+  category_id: string | null;
 };
 
 export default async function AdminProductsPage() {
@@ -26,7 +27,7 @@ export default async function AdminProductsPage() {
 
   const { data: products } = await db
     .from("products")
-    .select("id, name, price, stock, is_active, is_monthly, images")
+    .select("id, name, price, stock, is_active, is_monthly, images, category_id")
     .order("created_at", { ascending: false })
     .returns<Product[]>();
 
@@ -40,6 +41,50 @@ export default async function AdminProductsPage() {
 
   // 잎 카테고리 선택지 — 수정 페이지와 공용(leaf-options.ts)
   const categories = leafCategoryOptions(categoryRows ?? []);
+
+  // 상품을 카테고리별로 묶어 점프 내비로 이동하게(대표님 — 콘텐츠 페이지처럼).
+  // 그룹 순서는 카테고리 트리(sort_order)를 따르고, 미분류·숨김분류는 뒤에 붙인다.
+  const rows = categoryRows ?? [];
+  const catName = new Map(rows.map((c) => [c.id, c.name_ko]));
+  const byCat = new Map<string | null, Product[]>();
+  for (const p of products ?? []) {
+    const k = p.category_id ?? null;
+    const arr = byCat.get(k);
+    if (arr) arr.push(p);
+    else byCat.set(k, [p]);
+  }
+  const groups: {
+    key: string;
+    anchor: string;
+    label: string;
+    items: Product[];
+  }[] = [];
+  const seen = new Set<string>();
+  for (const c of rows) {
+    const items = byCat.get(c.id);
+    if (items?.length) {
+      groups.push({ key: c.id, anchor: `cat-${c.id}`, label: c.name_ko, items });
+      seen.add(c.id);
+    }
+  }
+  // 트리에 없던 분류(숨김 등)에 달린 상품도 빠짐없이.
+  for (const [k, items] of byCat) {
+    if (k === null || seen.has(k)) continue;
+    groups.push({
+      key: k,
+      anchor: `cat-${k}`,
+      label: catName.get(k) ?? "기타 분류",
+      items,
+    });
+  }
+  const uncat = byCat.get(null);
+  if (uncat?.length)
+    groups.push({
+      key: "uncat",
+      anchor: "cat-uncat",
+      label: "미분류",
+      items: uncat,
+    });
 
   // 추가 옵션(애드온) 사진 — 전역 공통. 상품 관리 화면에서 바로 넣게(대표님).
   const addonImages = await Promise.all(
@@ -69,24 +114,54 @@ export default async function AdminProductsPage() {
           </div>
         </details>
 
-        {/* 목록 — 카드를 누르면 수정 페이지로(대표님). 재고·사진·삭제 등 관리는 거기서.
-            모바일에서 한 화면에 여러 개 보이도록 2열(→3·4열). */}
+        {/* 목록 — 카테고리별로 묶고 점프 내비로 이동(대표님). 카드를 누르면 수정
+            페이지로. 재고·사진·삭제 등 관리는 거기서. 모바일 2열(→3·4열). */}
         <section>
           <SectionHeading>상품 목록 ({products?.length ?? 0})</SectionHeading>
           <p className="mt-1 text-xs leading-relaxed text-wabi-fg-muted">
             상품 카드를 누르면 수정 페이지가 열립니다. 재고·사진 순서·삭제 등 모든
             관리는 수정 페이지에서 합니다.
           </p>
-          {!products?.length ? (
+          {groups.length === 0 ? (
             <div className="mt-3">
               <EmptyState>등록된 상품이 없습니다.</EmptyState>
             </div>
           ) : (
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {products.map((p) => (
-                <ProductGridCard key={p.id} product={p} />
-              ))}
-            </div>
+            <>
+              {/* 카테고리 점프 내비 — 원하는 분류로 바로 이동 */}
+              <nav className="mt-3 flex flex-wrap gap-2 text-xs">
+                {groups.map((g) => (
+                  <a
+                    key={g.key}
+                    href={`#${g.anchor}`}
+                    className="rounded-full border border-wabi-border px-3 py-1.5 text-wabi-fg-muted transition hover:border-wabi-fg hover:text-wabi-fg"
+                  >
+                    {g.label}
+                    <span className="ml-1 font-numeric text-wabi-fg-muted/70">
+                      {g.items.length}
+                    </span>
+                  </a>
+                ))}
+              </nav>
+
+              <div className="mt-6 space-y-10">
+                {groups.map((g) => (
+                  <div key={g.key} id={g.anchor} className="scroll-mt-6">
+                    <h3 className="flex items-baseline gap-2 border-b border-wabi-border pb-2 text-sm font-semibold text-wabi-fg">
+                      {g.label}
+                      <span className="font-numeric text-xs font-normal text-wabi-fg-muted">
+                        {g.items.length}
+                      </span>
+                    </h3>
+                    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                      {g.items.map((p) => (
+                        <ProductGridCard key={p.id} product={p} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </section>
 
