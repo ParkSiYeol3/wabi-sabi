@@ -77,6 +77,13 @@ export const DEFAULT_SHIPPING_FEE = SHIPPING_NOTICE;
 // 사용·관리 안내(대표님) — 상품 상세 사진과 리뷰 사이에 노출. 한 줄이 한 항목으로,
 // 상세에서 불릿 리스트로 렌더된다(대표님 — 깔끔하게 들여쓰기 구분). 문안은 어드민에서
 // 편집(줄바꿈 = 항목 구분). 기본값은 WABI 톤으로 다듬은 도자기 기물 안내.
+// 두 안내의 소제목도 대표님이 바꿀 수 있게(예: 재질별 'Check (도자기)' 등). 상세에
+// 그대로 노출된다. 비우면 기본 소제목.
+export const CARE_USAGE_LABEL_KEY = "care_usage_label";
+export const DEFAULT_CARE_USAGE_LABEL = "사용";
+export const CARE_MAINTAIN_LABEL_KEY = "care_maintain_label";
+export const DEFAULT_CARE_MAINTAIN_LABEL = "세척과 관리";
+
 export const CARE_USAGE_KEY = "care_usage";
 export const DEFAULT_CARE_USAGE = `전자레인지와 식기세척기 모두 사용하실 수 있습니다.
 전자레인지는 짧게 나누어 데워 주세요. 오래 돌리면 기물에 무리가 갈 수 있습니다.
@@ -102,7 +109,9 @@ export const CONTENT_KEYS = [
   CRITERIA_HEADING_KEY,
   SHIPPING_INFO_KEY,
   SHIPPING_FEE_KEY,
+  CARE_USAGE_LABEL_KEY,
   CARE_USAGE_KEY,
+  CARE_MAINTAIN_LABEL_KEY,
   CARE_MAINTAIN_KEY,
 ] as const;
 export type ContentKey = (typeof CONTENT_KEYS)[number];

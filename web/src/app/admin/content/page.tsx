@@ -29,6 +29,10 @@ import {
   DEFAULT_CARE_USAGE,
   CARE_MAINTAIN_KEY,
   DEFAULT_CARE_MAINTAIN,
+  CARE_USAGE_LABEL_KEY,
+  DEFAULT_CARE_USAGE_LABEL,
+  CARE_MAINTAIN_LABEL_KEY,
+  DEFAULT_CARE_MAINTAIN_LABEL,
 } from "@/lib/queries/content";
 import { PageHeader, SectionHeading } from "@/components/admin/ui";
 import { ContentField } from "@/components/admin/content-field";
@@ -93,7 +97,9 @@ export default async function AdminContentPage() {
     critHeading,
     shippingInfo,
     shippingFee,
+    careUsageLabel,
     careUsage,
+    careMaintainLabel,
     careMaintain,
   ] = await Promise.all([
     getSiteContent(PHILOSOPHY_KEY),
@@ -117,7 +123,9 @@ export default async function AdminContentPage() {
     getSiteContent(CRITERIA_HEADING_KEY),
     getSiteContent(SHIPPING_INFO_KEY),
     getSiteContent(SHIPPING_FEE_KEY),
+    getSiteContent(CARE_USAGE_LABEL_KEY),
     getSiteContent(CARE_USAGE_KEY),
+    getSiteContent(CARE_MAINTAIN_LABEL_KEY),
     getSiteContent(CARE_MAINTAIN_KEY),
   ]);
 
@@ -353,24 +361,43 @@ export default async function AdminContentPage() {
           <div className="space-y-3">
             <SectionHeading>사용 및 관리</SectionHeading>
             <p className="text-xs text-wabi-fg-muted">
-              모든 상품 상세의 사진과 리뷰 사이에 표시됩니다. 사용법·세척 관리
-              안내를 자유롭게 적어주세요(들여쓰기 없이 문장으로 이어 쓰면 자연스럽게
-              줄바꿈됩니다).
+              모든 상품 상세의 사진과 리뷰 사이에 표시됩니다. 두 묶음으로 나뉘며,
+              각 묶음의 <b>소제목</b>과 <b>본문</b>을 모두 바꿀 수 있습니다(소제목은
+              재질별 이름 등으로 자유롭게, 본문은 한 줄에 한 항목씩). 항목마다 개별
+              저장하세요.
             </p>
-            <ContentField
-              contentKey={CARE_USAGE_KEY}
-              label="사용"
-              hint="예: 식기세척기·전자레인지 사용 가능, 직화 사용 금지 등."
-              value={careUsage ?? DEFAULT_CARE_USAGE}
-              rows={6}
-            />
-            <ContentField
-              contentKey={CARE_MAINTAIN_KEY}
-              label="세척과 관리"
-              hint="예: 사용 후 바로 세척 권장, 색 배임·자연스러운 흔적 안내 등."
-              value={careMaintain ?? DEFAULT_CARE_MAINTAIN}
-              rows={5}
-            />
+            <div className="space-y-3 rounded-lg border border-wabi-border p-4">
+              <ContentField
+                contentKey={CARE_USAGE_LABEL_KEY}
+                label="첫 번째 소제목"
+                hint="상세에 그대로 노출됩니다(기본 '사용'). 예: 'Check (도자기)'."
+                value={careUsageLabel ?? DEFAULT_CARE_USAGE_LABEL}
+                rows={1}
+              />
+              <ContentField
+                contentKey={CARE_USAGE_KEY}
+                label="첫 번째 본문"
+                hint="한 줄에 한 항목. 예: 식기세척기·전자레인지 사용 가능, 직화 금지 등."
+                value={careUsage ?? DEFAULT_CARE_USAGE}
+                rows={6}
+              />
+            </div>
+            <div className="space-y-3 rounded-lg border border-wabi-border p-4">
+              <ContentField
+                contentKey={CARE_MAINTAIN_LABEL_KEY}
+                label="두 번째 소제목"
+                hint="상세에 그대로 노출됩니다(기본 '세척과 관리')."
+                value={careMaintainLabel ?? DEFAULT_CARE_MAINTAIN_LABEL}
+                rows={1}
+              />
+              <ContentField
+                contentKey={CARE_MAINTAIN_KEY}
+                label="두 번째 본문"
+                hint="한 줄에 한 항목. 예: 사용 후 바로 세척, 색 배임·자연스러운 흔적 등."
+                value={careMaintain ?? DEFAULT_CARE_MAINTAIN}
+                rows={5}
+              />
+            </div>
           </div>
 
         </PageBlock>
