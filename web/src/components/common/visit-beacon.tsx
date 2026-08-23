@@ -3,25 +3,11 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
-// 방문 비콘(0054) — 경로가 바뀔 때마다 /api/track 으로 한 번 보낸다. Vercel Web
+// 방문 비콘(0054) — 경로가 바뀔 때마다 /api/track 으로 path 를 한 번 보낸다. Vercel Web
 // Analytics 와 별개로, admin 대시보드에 방문자 수를 직접 띄우기 위한 자체 카운터.
-// visitor_id 는 localStorage 의 opaque 난수(순방문자 구분용, 개인식별 아님).
-// sendBeacon 우선(언로드에도 유실 없음) → 실패 시 keepalive fetch.
-
-const VISITOR_KEY = "wsv";
-
-function visitorId(): string {
-  try {
-    let id = localStorage.getItem(VISITOR_KEY);
-    if (!id) {
-      id = crypto.randomUUID();
-      localStorage.setItem(VISITOR_KEY, id);
-    }
-    return id;
-  } catch {
-    return "anon";
-  }
-}
+// 방문자 식별은 서버가 IP+UA 일일 해시로 처리한다(라우트 참조) — 클라는 경로만 보낸다.
+// localStorage 난수 방식은 인앱 브라우저(카톡·인스타)에서 매번 초기화돼 순방문자가
+// 부풀려져 폐기했다. sendBeacon 우선(언로드에도 유실 없음) → 실패 시 keepalive fetch.
 
 export function VisitBeacon() {
   const pathname = usePathname();
@@ -38,7 +24,7 @@ export function VisitBeacon() {
     if (last.current === pathname) return;
     last.current = pathname;
 
-    const body = JSON.stringify({ v: visitorId(), p: pathname });
+    const body = JSON.stringify({ p: pathname });
     try {
       const blob = new Blob([body], { type: "application/json" });
       if (navigator.sendBeacon?.("/api/track", blob)) return;
