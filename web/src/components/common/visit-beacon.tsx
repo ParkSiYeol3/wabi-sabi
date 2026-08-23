@@ -28,6 +28,10 @@ export function VisitBeacon() {
   const last = useRef<string | null>(null);
 
   useEffect(() => {
+    // 프로덕션 도메인(wasa.kr)에서만 집계 — 프리뷰 배포(*.vercel.app)·로컬은 제외.
+    // 이걸 안 걸면 PR마다 뜨는 프리뷰·개발 로드가 전부 프로덕션 page_views 에 섞여
+    // 방문자 수가 말이 안 되게 부풀려진다(서버에서도 한 번 더 거른다).
+    if (window.location.hostname !== "wasa.kr") return;
     // 어드민 방문은 매장 통계에서 제외(서버도 한 번 더 거른다).
     if (!pathname || pathname.startsWith("/admin")) return;
     // 같은 경로 재렌더로 중복 전송 방지.

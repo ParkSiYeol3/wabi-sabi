@@ -13,6 +13,11 @@ export async function POST(req: Request) {
     .toLowerCase();
   if (ct !== "application/json") return new Response(null, { status: 415 });
 
+  // 프로덕션 도메인만 집계 — 프리뷰 배포(*.vercel.app)·로컬 요청은 무시한다.
+  // 클라이언트 가드(VisitBeacon)와 이중 방어. 미들·프록시 뒤에서도 Host 는 실도메인.
+  const host = (req.headers.get("host") || "").split(":")[0].toLowerCase();
+  if (host !== "wasa.kr") return new Response(null, { status: 204 });
+
   // 봇 트래픽은 방문자 수를 부풀리므로 UA 로 걸러 낸다(집계 정확도).
   if (BOT_RE.test(req.headers.get("user-agent") || ""))
     return new Response(null, { status: 204 });
