@@ -125,8 +125,8 @@ export default async function AboutPage() {
         dangerouslySetInnerHTML={{ __html: storeJsonLd() }}
       />
       {/* 철학 — 히어로 없이 바로 본문(대표님 피드백, 히어로 제거) */}
-      <Container className="pb-24 pt-10 sm:pt-24 md:py-32">
-        {/* 특색 대분류(대표님) — 여러 페이지 상단에 월간 그릇·오늘의 와비사비 */}
+      <Container className="pb-24 pt-2 sm:pt-3 md:pb-32">
+        {/* 특색 대분류(대표님) — 헤더 구분선에 거의 붙게 상단 여백 최소화 */}
         <FeaturedShortcuts className="mb-10 max-w-md" />
         <div className="grid gap-16 md:grid-cols-2 md:items-center">
           <Reveal>

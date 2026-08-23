@@ -71,8 +71,9 @@ export default async function ShopPage({
       : (catHeading ?? "Shop");
 
   return (
-    <Container className="pb-16 pt-10 sm:pt-24">
-      {/* 특색 대분류(대표님) — 월간 그릇·오늘의 와비사비를 상단에 크게 */}
+    <Container className="pb-16 pt-2 sm:pt-3">
+      {/* 특색 대분류(대표님) — 월간 그릇·오늘의 와비사비. 헤더 구분선에 거의 붙게
+          상단 여백 최소화. */}
       <FeaturedShortcuts className="mb-7" />
 
       {/* 헤더 — 타이틀 ("N개 상품" 표기는 대표님 요청으로 제거). 글씨 축소(대표님) */}
