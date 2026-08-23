@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Fragment } from "react";
 import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { ProductCard } from "@/components/product/product-card";
@@ -8,14 +7,14 @@ import { MONTHLY_SLUG } from "@/lib/site";
 import { ShopSidebar } from "@/components/shop/shop-sidebar";
 import { MobileCategoryTabs } from "@/components/shop/mobile-category-tabs";
 import { FeaturedShortcuts } from "@/components/shop/featured-shortcuts";
-import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
+import { SortSelect } from "@/components/shop/sort-select";
+import { type ShopSP } from "@/lib/shop-url";
 import {
   getProducts,
   getShopBrowse,
   type ProductSort,
 } from "@/lib/queries/products";
 import { getCategoryTree } from "@/lib/queries/categories";
-import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "상품",
@@ -30,7 +29,6 @@ const sorts: { key: ProductSort; label: string }[] = [
 ];
 
 type SP = ShopSP;
-const buildQuery = buildShopQuery;
 
 export default async function ShopPage({
   searchParams,
@@ -77,8 +75,8 @@ export default async function ShopPage({
       {/* 특색 대분류(대표님) — 월간 그릇·오늘의 와비사비를 상단에 크게 */}
       <FeaturedShortcuts className="mb-7" />
 
-      {/* 헤더 — 타이틀 ("N개 상품" 표기는 대표님 요청으로 제거) */}
-      <h1 className="text-2xl font-semibold tracking-wide">{heading}</h1>
+      {/* 헤더 — 타이틀 ("N개 상품" 표기는 대표님 요청으로 제거). 글씨 축소(대표님) */}
+      <h1 className="text-lg font-semibold tracking-wide sm:text-xl">{heading}</h1>
 
       {/* 카테고리 — 대표님: 웹·모바일 모두 전 분류가 보이게. 모바일·태블릿(<lg)은
           이 그룹 나열(대분류+소분류 텍스트, 누르면 필터), 데스크톱은 좌측 사이드바. */}
@@ -95,29 +93,8 @@ export default async function ShopPage({
               제거(웹·모바일 모두 노출 안 함). 카테고리 탐색은 사이드바/드로어가 담당하고,
               직접 검색이 필요하면 ?q= URL 파라미터는 계속 동작한다(빈 결과 시 추천 노출). */}
           <div className="flex items-center justify-end pb-5">
-            {/* 정렬 — 눈에 튀지 않게 담백한 텍스트 링크(대표님: 굳이 잘 안 보여도 됨).
-                선택된 정렬만 진하게, 나머지는 흐리게. 가운뎃점으로 구분. */}
-            <div className="flex shrink-0 items-center gap-3 text-xs text-wabi-fg-muted">
-              {sorts.map((s, i) => (
-                <Fragment key={s.key}>
-                  {i > 0 && (
-                    <span aria-hidden className="text-wabi-border">
-                      ·
-                    </span>
-                  )}
-                  <Link
-                    href={buildQuery(sp, { sort: s.key })}
-                    aria-current={sort === s.key ? "true" : undefined}
-                    className={cn(
-                      "transition active:opacity-40 hover:text-wabi-fg",
-                      sort === s.key && "font-medium text-wabi-fg",
-                    )}
-                  >
-                    {s.label}
-                  </Link>
-                </Fragment>
-              ))}
-            </div>
+            {/* 정렬 — 드롭다운(대표님). 현재 필터 유지하고 sort 만 변경. */}
+            <SortSelect sp={sp} sort={sort} options={sorts} />
           </div>
 
           {products.length === 0 ? (
