@@ -5,6 +5,7 @@ import { Reveal } from "@/components/common/reveal";
 import { HelixJourney } from "@/components/home/helix-journey";
 import { SmoothScroll } from "@/components/home/smooth-scroll";
 import { HomeAuthLinks } from "@/components/home/auth-links";
+import { InstagramFeed } from "@/components/common/instagram-feed";
 import { getHomeData } from "@/lib/queries/home";
 
 // 홈이 브랜드 대표 페이지임을 명확히 — 자기 캐노니컬(/). "와비사비" 검색에서 /about 이
@@ -86,7 +87,9 @@ export default async function Home({
         </Reveal>
       </section>
 
-      {/* 방문 안내는 Contact, 뉴스레터 구독은 추후 별도 위치 — 홈은 여정으로 끝난다(#197 피드백) */}
+      {/* 인스타그램 — 홈 메인에 노출(대표님: showroom 아래는 보기 어려움). 여정·브랜드
+          다음에 실피드 레일을 둬 방문자가 바로 보게 한다. */}
+      <InstagramFeed />
     </div>
   );
 }
