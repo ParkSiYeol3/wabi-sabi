@@ -8,6 +8,7 @@ import { ShopSidebar } from "@/components/shop/shop-sidebar";
 import { MobileCategoryTabs } from "@/components/shop/mobile-category-tabs";
 import { FeaturedShortcuts } from "@/components/shop/featured-shortcuts";
 import { SortSelect } from "@/components/shop/sort-select";
+import { BackToShop } from "@/components/shop/back-to-shop";
 import { type ShopSP } from "@/lib/shop-url";
 import {
   getProducts,
@@ -78,6 +79,11 @@ export default async function ShopPage({
 
       {/* 헤더 — 타이틀 ("N개 상품" 표기는 대표님 요청으로 제거). 글씨 축소(대표님) */}
       <h1 className="text-lg font-semibold tracking-wide sm:text-xl">{heading}</h1>
+
+      {/* 월간 그릇에서 Shop 전체로 돌아가는 버튼(대표님, 모바일) */}
+      {sp.category === MONTHLY_SLUG && (
+        <BackToShop variant="button" className="mt-4 md:hidden" />
+      )}
 
       {/* 카테고리 — 대표님: 웹·모바일 모두 전 분류가 보이게. 모바일·태블릿(<lg)은
           이 그룹 나열(대분류+소분류 텍스트, 누르면 필터), 데스크톱은 좌측 사이드바. */}

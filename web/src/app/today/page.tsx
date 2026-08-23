@@ -6,6 +6,7 @@ import { MomentGrid } from "@/components/moment/moment-grid";
 import { ShopSidebar } from "@/components/shop/shop-sidebar";
 import { MobileCategoryTabs } from "@/components/shop/mobile-category-tabs";
 import { FeaturedShortcuts } from "@/components/shop/featured-shortcuts";
+import { BackToShop } from "@/components/shop/back-to-shop";
 import { createClient } from "@/lib/supabase/server";
 import { getMomentsPage, MOMENTS_PAGE_SIZE } from "@/lib/queries/moments";
 import { getCategoryTree } from "@/lib/queries/categories";
@@ -44,6 +45,9 @@ export default async function TodayPage() {
         손님들이 일상 속에서 우리의 그릇을 어떻게 쓰고 있는지 나누는 공간입니다.
         오늘의 한 컷을 함께 남겨주세요.
       </p>
+
+      {/* Shop 전체로 돌아가는 버튼(대표님, 모바일) */}
+      <BackToShop variant="button" className="mt-4 md:hidden" />
 
       {/* shop 과 동일한 분류 내비(대표님) — 분류를 누르면 해당 shop 카테고리로
           이동한다(buildShopQuery 가 /shop URL 을 만든다). "오늘의 와비사비"는
