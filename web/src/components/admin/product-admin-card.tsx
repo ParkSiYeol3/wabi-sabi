@@ -6,6 +6,7 @@ import { isLowStock } from "@/lib/inventory";
 import { adminAction } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/common/submit-button";
 import { ProductImageAdder } from "@/components/admin/product-image-adder";
+import { ProductImageEditButton } from "@/components/admin/product-image-edit-button";
 import {
   updateStock,
   toggleActive,
@@ -89,7 +90,7 @@ export function ProductAdminCard({ product: p }: { product: Product }) {
             크고 직관적으로). 사진 아래 넓은 이동 버튼 한 쌍 + 우상단 삭제. */}
         <div className="space-y-2">
           <p className="text-xs font-medium text-wabi-fg-muted">
-            사진 관리 · 첫 장이 대표 · 아래 버튼으로 순서 이동
+            사진 관리 · 첫 장이 대표 · ◀▶ 순서 이동 · 편집으로 크롭·회전·필터
           </p>
           <div className="flex gap-3 overflow-x-auto pb-1">
             {images.map((url, i, arr) => (
@@ -146,6 +147,13 @@ export function ProductAdminCard({ product: p }: { product: Product }) {
                     </SubmitButton>
                   </form>
                 </div>
+                {/* 이미 등록된 사진 편집(크롭·회전·필터) — 대표님 */}
+                <ProductImageEditButton
+                  productId={p.id}
+                  url={url}
+                  index={i}
+                  total={arr.length}
+                />
               </div>
             ))}
             <div className="flex shrink-0 items-start">
