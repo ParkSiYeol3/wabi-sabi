@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Trophy } from "lucide-react";
+import { Trophy, ChevronDown } from "lucide-react";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { won, formatDateKST } from "@/lib/orders";
 import {
@@ -33,12 +33,35 @@ type OrderRow = {
   order_items: OrderItem[] | null;
 };
 
-// 주문 항목 → 상품명 요약. 여러 건이면 "첫상품 외 N건"(대표님: 주문번호 대신 상품명).
-function itemsLabel(items: OrderItem[] | null): string {
-  const names = (items ?? []).map((i) => i.product_name).filter(Boolean) as string[];
-  if (names.length === 0) return "—";
-  if (names.length === 1) return names[0];
-  return `${names[0]} 외 ${names.length - 1}건`;
+// 주문 항목 셀 — 한 건이면 상품명, 여러 건이면 "첫상품 외 N건" + 펼쳐보기(대표님).
+// 네이티브 <details> 라 서버 컴포넌트에서 그대로 동작(클라 JS 불필요).
+function ItemsCell({ items }: { items: OrderItem[] | null }) {
+  const list = (items ?? []).filter(
+    (i): i is OrderItem & { product_name: string } => Boolean(i.product_name),
+  );
+  if (list.length === 0) return <span>—</span>;
+  if (list.length === 1) return <span>{list[0].product_name}</span>;
+  return (
+    <details className="group">
+      <summary className="flex cursor-pointer list-none items-center gap-1 marker:content-none">
+        <span>
+          {list[0].product_name} 외 {list.length - 1}건
+        </span>
+        <ChevronDown
+          className="size-3.5 shrink-0 text-wabi-fg-muted transition-transform group-open:rotate-180"
+          aria-hidden
+        />
+      </summary>
+      <ul className="mt-1.5 space-y-0.5 text-xs text-wabi-fg-muted">
+        {list.map((it, i) => (
+          <li key={i}>
+            {it.product_name}{" "}
+            <span className="font-numeric">×{it.quantity}</span>
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -296,38 +319,67 @@ export default async function AdminSalesPage({
           </div>
         ) : (
           <div className="mt-3">
-            <TablePanel>
-              <table className="w-full min-w-120 text-sm">
-                <thead className="border-b border-wabi-border bg-wabi-subtle/50 text-left text-xs text-wabi-fg-muted">
-                  <tr>
-                    <th className="px-4 py-3 font-medium">상품</th>
-                    <th className="px-4 py-3 font-medium">일시</th>
-                    <th className="px-4 py-3 font-medium">수령인</th>
-                    <th className="px-4 py-3 font-medium">상태</th>
-                    <th className="px-4 py-3 text-right font-medium">금액</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-wabi-border">
-                  {settleRows.map((o) => (
-                    <tr key={o.order_number}>
-                      <td className="px-4 py-3 text-wabi-fg">
-                        {itemsLabel(o.order_items)}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-wabi-fg-muted">
-                        {formatDateKST(o.ordered_at)}
-                      </td>
-                      <td className="px-4 py-3">{o.recipient}</td>
-                      <td className="px-4 py-3 text-wabi-fg-muted">
-                        {STATUS_LABEL[o.status] ?? o.status}
-                      </td>
-                      <td className="px-4 py-3 text-right font-numeric">
-                        {won(o.total_price)}
-                      </td>
+            {/* 모바일 — 스택 카드(가로 스크롤 없이). 상품은 펼쳐보기 지원 */}
+            <ul className="space-y-2 sm:hidden">
+              {settleRows.map((o) => (
+                <li
+                  key={o.order_number}
+                  className="rounded-xl border border-wabi-border bg-wabi-bg/40 p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 text-sm text-wabi-fg">
+                      <ItemsCell items={o.order_items} />
+                    </div>
+                    <span className="shrink-0 font-numeric text-sm font-medium text-wabi-fg">
+                      {won(o.total_price)}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-wabi-fg-muted">
+                    <span>{formatDateKST(o.ordered_at)}</span>
+                    <span>·</span>
+                    <span>{o.recipient}</span>
+                    <span>·</span>
+                    <span>{STATUS_LABEL[o.status] ?? o.status}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            {/* 데스크톱 — 테이블 */}
+            <div className="hidden sm:block">
+              <TablePanel>
+                <table className="w-full min-w-120 text-sm">
+                  <thead className="border-b border-wabi-border bg-wabi-subtle/50 text-left text-xs text-wabi-fg-muted">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">상품</th>
+                      <th className="px-4 py-3 font-medium">일시</th>
+                      <th className="px-4 py-3 font-medium">수령인</th>
+                      <th className="px-4 py-3 font-medium">상태</th>
+                      <th className="px-4 py-3 text-right font-medium">금액</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </TablePanel>
+                  </thead>
+                  <tbody className="divide-y divide-wabi-border">
+                    {settleRows.map((o) => (
+                      <tr key={o.order_number}>
+                        <td className="px-4 py-3 align-top text-wabi-fg">
+                          <ItemsCell items={o.order_items} />
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 align-top text-wabi-fg-muted">
+                          {formatDateKST(o.ordered_at)}
+                        </td>
+                        <td className="px-4 py-3 align-top">{o.recipient}</td>
+                        <td className="px-4 py-3 align-top text-wabi-fg-muted">
+                          {STATUS_LABEL[o.status] ?? o.status}
+                        </td>
+                        <td className="px-4 py-3 text-right align-top font-numeric">
+                          {won(o.total_price)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TablePanel>
+            </div>
             {settleRows.length >= 300 && (
               <p className="mt-2 text-xs text-wabi-fg-muted">
                 최근 300건만 표시됩니다. 기간을 좁혀 조회하세요.
