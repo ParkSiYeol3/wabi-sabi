@@ -56,9 +56,15 @@ export default function CartPage() {
     <Container className="py-16">
       <h1 className="text-2xl font-semibold tracking-wide">장바구니</h1>
 
+      {/* 모바일(375px)에선 [이미지+정보]가 첫 줄, 수량·금액·삭제가 아래 줄로
+          내려간다(flex-wrap + 컨트롤 묶음 w-full). 고정폭 요소가 한 줄에 다
+          들어가지 못해 이름·가격이 세로로 깨지던 문제 해결. sm+ 은 한 줄 유지. */}
       <ul className="mt-10 divide-y divide-wabi-border border-y border-wabi-border">
         {items.map((item) => (
-          <li key={item.id} className="flex items-center gap-4 py-5">
+          <li
+            key={item.id}
+            className="flex flex-wrap items-center gap-4 py-5 sm:flex-nowrap"
+          >
             <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden bg-wabi-muted">
               {item.image ? (
                 <Image
@@ -96,44 +102,51 @@ export default function CartPage() {
               )}
             </div>
 
-            {/* 수량 */}
-            <div className="flex items-center border border-wabi-border">
+            {/* 컨트롤 묶음 — 모바일은 둘째 줄(w-full)로 내려 수량·금액·삭제를 나란히,
+                sm+ 은 인라인(w-auto). */}
+            <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:gap-4">
+              <div className="flex items-center border border-wabi-border">
+                <button
+                  type="button"
+                  aria-label="수량 감소"
+                  onClick={() => setQty(item.id, item.quantity - 1)}
+                  className="flex size-11 items-center justify-center hover:bg-wabi-muted"
+                >
+                  <Minus className="size-3.5" />
+                </button>
+                <span
+                  className="w-8 text-center font-numeric text-sm"
+                  aria-live="polite"
+                >
+                  {item.quantity}
+                </span>
+                <button
+                  type="button"
+                  aria-label="수량 증가"
+                  onClick={() => setQty(item.id, item.quantity + 1)}
+                  className="flex size-11 items-center justify-center hover:bg-wabi-muted"
+                >
+                  <Plus className="size-3.5" />
+                </button>
+              </div>
+
+              <p className="text-right text-sm sm:w-24">
+                <Price
+                  value={
+                    item.price * item.quantity + addonsTotal(item.addons)
+                  }
+                />
+              </p>
+
               <button
                 type="button"
-                aria-label="수량 감소"
-                onClick={() => setQty(item.id, item.quantity - 1)}
-                className="flex size-11 items-center justify-center hover:bg-wabi-muted"
+                aria-label={`${item.name} 삭제`}
+                onClick={() => remove(item.id)}
+                className="flex size-11 shrink-0 items-center justify-center text-wabi-fg-muted transition-colors hover:text-wabi-fg"
               >
-                <Minus className="size-3.5" />
-              </button>
-              <span
-                className="w-8 text-center font-numeric text-sm"
-                aria-live="polite"
-              >
-                {item.quantity}
-              </span>
-              <button
-                type="button"
-                aria-label="수량 증가"
-                onClick={() => setQty(item.id, item.quantity + 1)}
-                className="flex size-11 items-center justify-center hover:bg-wabi-muted"
-              >
-                <Plus className="size-3.5" />
+                <X className="size-4" />
               </button>
             </div>
-
-            <p className="w-24 text-right text-sm">
-              <Price value={item.price * item.quantity + addonsTotal(item.addons)} />
-            </p>
-
-            <button
-              type="button"
-              aria-label={`${item.name} 삭제`}
-              onClick={() => remove(item.id)}
-              className="flex size-11 shrink-0 items-center justify-center text-wabi-fg-muted transition-colors hover:text-wabi-fg"
-            >
-              <X className="size-4" />
-            </button>
           </li>
         ))}
       </ul>
