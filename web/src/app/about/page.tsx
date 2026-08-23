@@ -4,7 +4,6 @@ import { Clock, MapPin, AtSign, Mail } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { FeaturedShortcuts } from "@/components/shop/featured-shortcuts";
 import { Reveal } from "@/components/common/reveal";
-import { InstagramFeed } from "@/components/common/instagram-feed";
 import { MapCard } from "@/components/map/map-card";
 import { site, business } from "@/lib/site";
 import { SITE_URL } from "@/lib/site-url";
@@ -258,10 +257,6 @@ export default async function AboutPage() {
           </div>
         </Container>
       </section>
-
-      <Reveal>
-        <InstagramFeed />
-      </Reveal>
     </>
   );
 }
