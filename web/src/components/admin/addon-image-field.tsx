@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { saveAddonImage, removeAddonImage } from "@/app/admin/content/actions";
 import type { ActionResult } from "@/app/admin/products/types";
 import { SubmitButton } from "@/components/common/submit-button";
+import { resizeFormImages } from "@/lib/resize-image";
 
 // 추가 옵션(애드온) 사진 업로드·제거 (대표님). About 사진 필드와 같은 패턴을
 // 옵션 코드별로 재사용한다. 현재 사진 미리보기 + 파일 선택 + 저장 + 제거.
@@ -22,6 +23,9 @@ export function AddonImageField({
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(
     async (prev, formData) => {
       formData.set("code", code);
+      // 업로드 전 클라이언트 리사이즈(대표님 — 5MB 넘는 원본이 스토리지 한도에
+      // 걸려 저장 실패). 긴 변 2000px·JPEG 로 재인코딩해 수백 KB로 줄인다.
+      await resizeFormImages(formData, "image");
       const result = await saveAddonImage(prev, formData);
       if (result.ok && fileRef.current) fileRef.current.value = "";
       return result;

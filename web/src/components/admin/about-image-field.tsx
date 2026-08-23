@@ -9,12 +9,16 @@ import {
 } from "@/app/admin/content/actions";
 import type { ActionResult } from "@/app/admin/products/types";
 import { SubmitButton } from "@/components/common/submit-button";
+import { resizeFormImages } from "@/lib/resize-image";
 
 // About 매장 사진 업로드·제거 (대표님). 현재 사진 미리보기 + 파일 선택 + 저장.
 export function AboutImageField({ current }: { current: string | null }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(
     async (prev, formData) => {
+      // 업로드 전 클라이언트 리사이즈 — 큰 원본이 스토리지 한도(5MB)에 걸려
+      // 저장 실패하지 않게 긴 변 2000px·JPEG 로 줄인다.
+      await resizeFormImages(formData, "image");
       const result = await saveAboutImage(prev, formData);
       if (result.ok && fileRef.current) fileRef.current.value = "";
       return result;
