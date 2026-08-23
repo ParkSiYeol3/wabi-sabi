@@ -26,7 +26,7 @@ export function FeaturedShortcuts({ className }: { className?: string }) {
           key={it.href}
           href={it.href}
           style={{ borderRadius: SHAPES[i % SHAPES.length] }}
-          className="flex flex-1 items-center justify-center border border-wabi-fg/30 bg-wabi-bg px-4 py-2.5 text-center text-sm font-medium tracking-wide text-wabi-fg transition-colors hover:border-wabi-fg hover:bg-wabi-fg hover:text-wabi-bg sm:flex-none sm:px-7"
+          className="flex flex-1 items-center justify-center border border-wabi-fg/30 bg-wabi-bg px-3 py-1.5 text-center text-xs font-medium tracking-wide text-wabi-fg transition-colors hover:border-wabi-fg hover:bg-wabi-fg hover:text-wabi-bg sm:flex-none sm:px-7 sm:py-2.5 sm:text-sm"
         >
           {it.label}
         </Link>
