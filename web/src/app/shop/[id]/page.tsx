@@ -316,7 +316,7 @@ export default async function ProductDetailPage({
               price: product.price,
               image: main,
             }}
-            stock={product.stock}
+            soldOut={product.stock <= 0}
             options={product.options}
             addons={productAddons}
             addonImages={addonImages}
