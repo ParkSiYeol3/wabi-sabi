@@ -11,9 +11,16 @@ import { won, type Addon } from "@/lib/addons";
 import type { OptionGroup, SelectedOption } from "@/lib/product-options";
 import { cn } from "@/lib/utils";
 
+// 1인 1상품 구매 수량 상한(공개). 실재고를 클라에 노출하지 않기 위해 스텝퍼는 이
+// 고정 상한까지만 늘어난다 — 재고보다 많이 담아도 서버 결제 단계에서 out_of_stock 로
+// 막힌다(checkout/actions). 재고 숫자를 클라 payload·동작에서 역산할 수 없게 하는 게
+// 목적(대표님: 재고는 손님에게 노출 금지).
+const MAX_QTY = 10;
+
 type Props = {
   product: Omit<CartItem, "quantity" | "addons" | "options">;
-  stock: number;
+  // 재고 숫자 대신 품절 여부만 받는다 — 정확한 재고는 클라로 내려보내지 않는다.
+  soldOut: boolean;
   // 상품 커스텀 옵션(색상·모양 등, 0048) — 손님이 골라야 담을 수 있다.
   options: OptionGroup[];
   // 이 상품 상세에 노출할 추가옵션(0048 enabled_addons 로 필터된 것). 비면 블록 숨김.
@@ -24,7 +31,7 @@ type Props = {
 
 export function ProductDetailActions({
   product,
-  stock,
+  soldOut,
   options,
   addons,
   addonImages,
@@ -39,13 +46,12 @@ export function ProductDetailActions({
   );
   // 담기 직후 잠깐 "담겼습니다 ✓" 로 바꿔 클릭이 먹혔음을 알린다(대표님 요청).
   const [added, setAdded] = useState(false);
-  const soldOut = stock <= 0;
 
   const optionsChosen = options.every((g) => !!selectedOptions[g.name]);
   const canBuy = !soldOut && optionsChosen;
 
   function clamp(n: number) {
-    return Math.max(1, Math.min(stock, n));
+    return Math.max(1, Math.min(MAX_QTY, n));
   }
 
   const toggleAddon = (code: string, checked: boolean) =>
@@ -200,7 +206,7 @@ export function ProductDetailActions({
           <button
             type="button"
             aria-label="수량 증가"
-            disabled={soldOut || qty >= stock}
+            disabled={soldOut || qty >= MAX_QTY}
             onClick={() => setQty((q) => clamp(q + 1))}
             className="flex size-11 items-center justify-center hover:bg-wabi-muted disabled:opacity-40"
           >
