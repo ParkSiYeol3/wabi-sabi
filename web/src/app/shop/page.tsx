@@ -110,7 +110,7 @@ export default async function ShopPage({
           {/* 툴바 — 정렬만 우측 정렬. 구분선 제거(대표님 — 선 없는 게 담백). 검색창도
               제거(웹·모바일 모두 노출 안 함). 카테고리 탐색은 사이드바/드로어가 담당하고,
               직접 검색이 필요하면 ?q= URL 파라미터는 계속 동작한다(빈 결과 시 추천 노출). */}
-          <div className="flex items-center justify-end pb-5">
+          <div className="flex items-center justify-end pb-3 sm:pb-5">
             {/* 정렬 — 드롭다운(대표님). 현재 필터 유지하고 sort 만 변경. */}
             <SortSelect sp={sp} sort={sort} options={sorts} />
           </div>
@@ -137,7 +137,7 @@ export default async function ShopPage({
                   <h2 className="text-center text-sm font-medium">
                     이런 상품은 어떠세요?
                   </h2>
-                  <ul className="mt-8 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
+                  <ul className="mt-8 grid grid-cols-2 gap-x-6 gap-y-7 sm:gap-y-10 md:grid-cols-4">
                     {suggestions.map((p) => (
                       <li key={p.id}>
                         <ProductCard product={p} />
@@ -148,7 +148,7 @@ export default async function ShopPage({
               )}
             </div>
           ) : (
-            <ul className="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
+            <ul className="mt-5 grid grid-cols-2 gap-x-6 gap-y-7 sm:mt-10 sm:gap-y-10 md:grid-cols-4">
               {paged.map((p, i) => {
                 {
                   /* 담기는 상세 페이지에서(#252, 대표님 시안 — 옵션 선택 후 담기). 카드는 상세로 유도만. */
