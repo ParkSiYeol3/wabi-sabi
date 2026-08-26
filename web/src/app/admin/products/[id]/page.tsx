@@ -108,9 +108,9 @@ export default async function AdminProductEditPage({
           </div>
         </Panel>
 
-        {/* 재고·노출 — 재고 저장(재입고 알림 경로) + 월간/노출 토글 */}
+        {/* 재고·공개 — 재고 저장(재입고 알림 경로) + 월간/공개 토글 */}
         <Panel className="p-6">
-          <SectionHeading>재고 · 노출</SectionHeading>
+          <SectionHeading>재고 · 공개</SectionHeading>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <form action={updateStock} className="flex items-center gap-2">
               <label className="text-sm text-wabi-fg-muted">재고</label>
@@ -153,10 +153,19 @@ export default async function AdminProductEditPage({
                   tone: row.is_active ? "solid" : "outline",
                 })}
               >
-                {row.is_active ? "노출중" : "숨김"}
+                {row.is_active ? "공개중" : "비공개"}
               </SubmitButton>
             </form>
           </div>
+          {/* 비공개 = 손님 화면·검색에서 완전히 감춰지지만, 관리 목록엔 그대로 남는다
+              (대표님 — 무엇을 얼마에 팔았는지 기록 유지). 품절(재고 0)과는 별개로,
+              품절은 손님에게 보이되 'Out of Stock' 표시. */}
+          <p className="mt-3 text-xs leading-relaxed text-wabi-fg-muted">
+            <b>공개중</b>이면 손님에게 보이고, <b>비공개</b>로 바꾸면 손님 화면·검색에서
+            완전히 감춰집니다. 비공개여도 이 관리 목록엔 그대로 남아 무엇을 얼마에
+            팔았는지 확인할 수 있습니다. (재고 0인 <b>품절</b>과는 다릅니다 — 품절은
+            손님에게 보이되 ‘Out of Stock’으로 표시됩니다.)
+          </p>
         </Panel>
 
         {/* 본문 수정 — 이름·가격·카테고리·설명·스펙·옵션 */}
@@ -171,8 +180,8 @@ export default async function AdminProductEditPage({
         <Panel className="border-red-200 p-6">
           <SectionHeading>상품 삭제</SectionHeading>
           <p className="mt-1 text-xs text-wabi-fg-muted">
-            삭제하면 되돌릴 수 없습니다. 잠시 숨기려면 위의 &lsquo;노출중 →
-            숨김&rsquo;을 사용하세요.
+            삭제하면 되돌릴 수 없습니다. 잠시 감추려면 위의 &lsquo;공개중 →
+            비공개&rsquo;를 사용하세요.
           </p>
           <form action={deleteProduct} className="mt-3">
             <input type="hidden" name="id" value={row.id} />

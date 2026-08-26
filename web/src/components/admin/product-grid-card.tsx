@@ -39,7 +39,7 @@ export function ProductGridCard({ product: p }: { product: Product }) {
         ) : (
           !p.is_active && (
             <span className="absolute right-2 top-2 z-20 rounded-full border border-wabi-border bg-wabi-bg/90 px-2 py-0.5 text-[10px] text-wabi-fg-muted">
-              숨김
+              비공개
             </span>
           )
         )}
