@@ -93,7 +93,7 @@ export default async function AdminProductsPage() {
 
   return (
     <>
-      <PageHeader title="상품 관리" description="상품 등록·재고·노출·삭제." />
+      <PageHeader title="상품 관리" description="상품 등록·재고·공개·삭제." />
 
       <div className="space-y-10">
         {/* 새 상품 — 접이식·맨 위(대표님): '새 상품 등록'을 눌러야 폼이 펼쳐진다.
