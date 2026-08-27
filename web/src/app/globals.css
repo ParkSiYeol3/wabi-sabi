@@ -173,6 +173,27 @@
   }
 }
 
+/* 헤더 붓 마크 등장 — 좌→우로 칠해지듯(clip-path 와이프). 첫 방문 1회만(logo-mark.tsx
+   가 sessionStorage 로 제한). PNG 라 진짜 stroke-draw 대신 마스크 와이프로 근사. */
+@keyframes logo-brush {
+  from {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0.35;
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+}
+.logo-brush {
+  animation: logo-brush 0.9s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo-brush {
+    animation: none;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
