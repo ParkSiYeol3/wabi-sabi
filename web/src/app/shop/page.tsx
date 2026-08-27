@@ -97,21 +97,28 @@ export default async function ShopPage({
       )}
 
       {/* 카테고리 — 대표님: 웹·모바일 모두 전 분류가 보이게. 모바일·태블릿(<lg)은
-          이 그룹 나열(대분류+소분류 텍스트, 누르면 필터), 데스크톱은 좌측 사이드바. */}
-      <MobileCategoryTabs sp={sp} tree={tree} />
+          카테고리 나열 + 정렬 드롭다운을 한 줄에 둔다(대표님 — 정렬이 아래로 떨어져
+          생기던 빈 공간 제거·정렬을 위로). 데스크톱은 좌측 사이드바 + 우측 툴바 정렬. */}
+      <div className="flex items-start justify-between gap-3 lg:hidden">
+        <div className="min-w-0 flex-1">
+          <MobileCategoryTabs sp={sp} tree={tree} />
+        </div>
+        <div className="mt-3 shrink-0 sm:mt-6">
+          <SortSelect sp={sp} sort={sort} options={sorts} />
+        </div>
+      </div>
 
-      <div className="mt-4 flex items-start gap-10 sm:mt-8">
+      <div className="mt-3 flex items-start gap-10 sm:mt-8">
         {/* 데스크톱 좌측 사이드바 — 소분류 토글 (#195, biomedium 참고) */}
         <div className="hidden lg:block">
           <ShopSidebar sp={sp} tree={tree} />
         </div>
 
         <div className="min-w-0 flex-1">
-          {/* 툴바 — 정렬만 우측 정렬. 구분선 제거(대표님 — 선 없는 게 담백). 검색창도
-              제거(웹·모바일 모두 노출 안 함). 카테고리 탐색은 사이드바/드로어가 담당하고,
+          {/* 데스크톱 툴바 — 정렬만 우측 정렬(모바일은 위 카테고리 줄로 올림). 구분선
+              제거(대표님 — 선 없는 게 담백). 검색창도 제거(웹·모바일 모두 노출 안 함).
               직접 검색이 필요하면 ?q= URL 파라미터는 계속 동작한다(빈 결과 시 추천 노출). */}
-          <div className="flex items-center justify-end pb-3 sm:pb-5">
-            {/* 정렬 — 드롭다운(대표님). 현재 필터 유지하고 sort 만 변경. */}
+          <div className="hidden items-center justify-end pb-5 lg:flex">
             <SortSelect sp={sp} sort={sort} options={sorts} />
           </div>
 
@@ -148,7 +155,7 @@ export default async function ShopPage({
               )}
             </div>
           ) : (
-            <ul className="mt-5 grid grid-cols-2 gap-x-6 gap-y-7 sm:mt-10 sm:gap-y-10 md:grid-cols-4">
+            <ul className="mt-1 grid grid-cols-2 gap-x-6 gap-y-7 sm:mt-10 sm:gap-y-10 md:grid-cols-4">
               {paged.map((p, i) => {
                 {
                   /* 담기는 상세 페이지에서(#252, 대표님 시안 — 옵션 선택 후 담기). 카드는 상세로 유도만. */
