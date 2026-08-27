@@ -9,6 +9,8 @@ export interface ProductCardData {
   category?: string;
   price: number;
   image?: string | null;
+  // 두 번째 사진(있으면) — 목록 카드 hover 시 교차 노출(각도 미리보기).
+  image2?: string | null;
   href?: string;
   // 재고 (#131) — 목록에서 품절을 표시하기 위해 필요. 없으면(undefined) 표시하지 않는다.
   stock?: number;
@@ -52,7 +54,12 @@ export function ProductCard({
           </span>
         )}
         {product.image ? (
-          <CardImage src={product.image} alt={product.name} eager={eager} />
+          <CardImage
+            src={product.image}
+            src2={product.image2 ?? undefined}
+            alt={product.name}
+            eager={eager}
+          />
         ) : (
           <ImageIcon
             className="size-8 text-wabi-fg-muted/40"

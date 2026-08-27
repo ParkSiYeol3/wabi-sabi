@@ -20,6 +20,11 @@ function firstImage(images: unknown): string | null {
     ? images[0]
     : null;
 }
+function secondImage(images: unknown): string | null {
+  return Array.isArray(images) && typeof images[1] === "string"
+    ? images[1]
+    : null;
+}
 function imageList(images: unknown): string[] {
   return Array.isArray(images)
     ? images.filter((s): s is string => typeof s === "string")
@@ -110,6 +115,7 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
     stock: p.stock,
     sold_out: p.sold_out,
     image: firstImage(p.images),
+    image2: secondImage(p.images),
     category: p.categories?.name_en,
   }));
 
