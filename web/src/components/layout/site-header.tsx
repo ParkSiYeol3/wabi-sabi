@@ -18,6 +18,7 @@ import { buildShopQuery } from "@/lib/shop-url";
 import { cn } from "@/lib/utils";
 import { useCart, cartCount } from "@/store/cart";
 import { useMounted } from "@/hooks/use-mounted";
+import { LogoMark } from "@/components/layout/logo-mark";
 import { useAuthStore } from "@/store/auth";
 
 // 분류 라벨 — name_en 우선(대표님: shop 분류 영어), 비었거나 "-"(대분류
@@ -66,14 +67,7 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
       <div className="mx-auto flex h-16 max-w-300 items-center justify-between px-5">
         {/* 로고 */}
         <Link href="/" className="flex items-center gap-2.5" aria-label={`${site.name} 홈`}>
-          <Image
-            src="/brand/logo-mark.png"
-            alt=""
-            width={560}
-            height={278}
-            preload
-            className="h-6 w-auto"
-          />
+          <LogoMark />
           {/* 로고 = Cormorant Garamond(대표님). 모바일에서 2줄로 줄바꿈되던 것 방지 */}
           <span className="whitespace-nowrap text-sm font-bold tracking-[0.2em] [font-family:var(--font-cormorant)]">
             {site.name}
