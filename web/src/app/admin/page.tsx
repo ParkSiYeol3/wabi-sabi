@@ -23,6 +23,7 @@ import {
 } from "@/components/admin/ui";
 import { RevenueChart } from "@/components/admin/revenue-chart";
 import { VisitorChart, type VisitDay } from "@/components/admin/visitor-chart";
+import { QuickActions } from "@/components/admin/quick-actions";
 
 type Summary = {
   awaiting_ship: number;
@@ -139,6 +140,10 @@ export default async function AdminHome() {
         title="대시보드"
         description="처리 대기 항목과 오늘 현황을 한눈에."
       />
+
+      {/* 바로가기(대표님) — 대시보드에서 사이드바 없이 자주 쓰는 섹션으로 원탭 이동.
+          admin 진입 시 대시보드가 먼저 보이되(운영 현황), 이동은 빠르게. */}
+      <QuickActions />
 
       {/* 처리 대기 — 모바일도 한눈에(2열 컴팩트, 대표님) */}
       <section>
