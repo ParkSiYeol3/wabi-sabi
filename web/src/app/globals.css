@@ -151,6 +151,28 @@
   }
 }
 
+/* 장바구니 배지 bump — 담기로 수량이 바뀌면 배지가 살짝 튀어 담김을 알린다(대표님
+   미감: 절제된 촉각 피드백). key 변경으로 재마운트되며 1회 재생. 모션 최소화 시 정지. */
+@keyframes cart-bump {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-cart-bump {
+  animation: cart-bump 0.4s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-cart-bump {
+    animation: none;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

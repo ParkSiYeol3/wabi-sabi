@@ -129,11 +129,16 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
           <Link
             href="/cart"
             aria-label={`장바구니${mounted && count > 0 ? ` (${count}개)` : ""}`}
+            data-cart-icon
             className="relative rounded-md p-3 text-wabi-fg transition-colors hover:bg-wabi-muted"
           >
             <ShoppingBag className="size-5" strokeWidth={1.5} />
             {mounted && count > 0 && (
-              <span className="absolute right-0.5 top-0.5 flex min-w-4 items-center justify-center rounded-full bg-wabi-accent px-1 font-numeric text-[10px] leading-4 text-white">
+              // key={count} — 수량이 바뀔 때마다 재마운트돼 bump 애니가 1회 재생(담김 피드백).
+              <span
+                key={count}
+                className="animate-cart-bump absolute right-0.5 top-0.5 flex min-w-4 items-center justify-center rounded-full bg-wabi-accent px-1 font-numeric text-[10px] leading-4 text-white"
+              >
                 {count}
               </span>
             )}

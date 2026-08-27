@@ -9,6 +9,7 @@ import { Price } from "@/components/product/price";
 import { useCart, type CartItem } from "@/store/cart";
 import { won, type Addon } from "@/lib/addons";
 import type { OptionGroup, SelectedOption } from "@/lib/product-options";
+import { flyToCart } from "@/lib/fly-to-cart";
 import { cn } from "@/lib/utils";
 
 // 1인 1상품 구매 수량 상한(공개). 실재고를 클라에 노출하지 않기 위해 스텝퍼는 이
@@ -71,9 +72,11 @@ export function ProductDetailActions({
     .reduce((s, a) => s + a.price, 0);
   const total = product.price * qty + addonSum;
 
-  function addToCart() {
+  function addToCart(e?: React.MouseEvent<HTMLButtonElement>) {
     if (!canBuy) return;
     add(product, qty, selectedAddons, optionSnapshot());
+    // 담기 → 장바구니 고스트 비행(대표님 인터랙션). 버튼 위치에서 헤더 장바구니로.
+    if (e) flyToCart(e.currentTarget.getBoundingClientRect(), product.image ?? null);
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1500);
   }
@@ -225,7 +228,7 @@ export function ProductDetailActions({
           type="button"
           variant="outline"
           disabled={!canBuy}
-          onClick={addToCart}
+          onClick={(e) => addToCart(e)}
           aria-live="polite"
           className="flex-1 rounded-none border-wabi-fg"
         >
@@ -258,7 +261,7 @@ export function ProductDetailActions({
             type="button"
             variant="outline"
             disabled={!canBuy}
-            onClick={addToCart}
+            onClick={(e) => addToCart(e)}
             aria-live="polite"
             className="rounded-none border-wabi-fg px-4"
           >
