@@ -14,6 +14,7 @@ type Row = {
     name: string;
     price: number;
     stock: number | null;
+    sold_out: boolean | null;
     images: unknown;
   } | null;
 };
@@ -27,7 +28,7 @@ export default async function WishlistPage() {
 
   const { data } = await supabase
     .from("wishlist")
-    .select("product_id, products(id, name, price, stock, images)")
+    .select("product_id, products(id, name, price, stock, sold_out, images)")
     .order("created_at", { ascending: false })
     .returns<Row[]>();
 
@@ -40,6 +41,7 @@ export default async function WishlistPage() {
       // PostgREST 는 미관리 컬럼을 null 로 준다. null <= 0 은 true 라 품절로 오판되므로
       // undefined 로 정규화한다(ProductCard·담기 버튼 모두 undefined 는 "미표시"로 처리).
       stock: r.products!.stock ?? undefined,
+      sold_out: r.products!.sold_out ?? undefined,
       image:
         Array.isArray(r.products!.images) &&
         typeof r.products!.images[0] === "string"

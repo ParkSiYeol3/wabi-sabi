@@ -10,6 +10,7 @@ type Product = {
   price: number;
   stock: number;
   is_active: boolean;
+  sold_out: boolean;
   is_monthly: boolean;
   images: string[] | null;
 };
@@ -19,7 +20,8 @@ type Product = {
 // 수정 페이지에서. 여기선 대표 이미지·이름·가격·상태 뱃지만 간결하게.
 export function ProductGridCard({ product: p }: { product: Product }) {
   const cover = p.images?.[0] ?? null;
-  const soldOut = p.stock <= 0;
+  // 강제 품절(sold_out) 또는 재고 0 이면 품절 표시(대표님 3상태).
+  const soldOut = p.stock <= 0 || p.sold_out;
 
   return (
     <Link
@@ -32,17 +34,16 @@ export function ProductGridCard({ product: p }: { product: Product }) {
             월간
           </span>
         )}
-        {soldOut ? (
+        {/* 비공개가 우선(손님에게 아예 안 보임) → 그다음 품절. */}
+        {!p.is_active ? (
+          <span className="absolute right-2 top-2 z-20 rounded-full border border-wabi-border bg-wabi-bg/90 px-2 py-0.5 text-[10px] text-wabi-fg-muted">
+            비공개
+          </span>
+        ) : soldOut ? (
           <span className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 text-xs tracking-wide text-wabi-fg">
             Out of Stock
           </span>
-        ) : (
-          !p.is_active && (
-            <span className="absolute right-2 top-2 z-20 rounded-full border border-wabi-border bg-wabi-bg/90 px-2 py-0.5 text-[10px] text-wabi-fg-muted">
-              비공개
-            </span>
-          )
-        )}
+        ) : null}
         {cover ? (
           <Image
             src={cover}
