@@ -31,6 +31,7 @@ type DetailRow = {
   name: string;
   price: number;
   stock: number;
+  sold_out: boolean;
   description: string | null;
   material: string | null;
   size: string | null;
@@ -49,7 +50,7 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
   const { data } = await db
     .from("products")
     .select(
-      "id, name, price, stock, description, material, size, care, origin, images, options, enabled_addons, category_id, categories(slug, name_en, name_ko)",
+      "id, name, price, stock, sold_out, description, material, size, care, origin, images, options, enabled_addons, category_id, categories(slug, name_en, name_ko)",
     )
     .eq("id", id)
     .eq("is_active", true)
@@ -61,6 +62,7 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
     name: data.name,
     price: data.price,
     stock: data.stock,
+    sold_out: data.sold_out,
     description: data.description,
     material: data.material,
     size: data.size,
@@ -81,7 +83,7 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
     data.category_id
       ? db
           .from("products")
-          .select("id, name, price, stock, images, categories(name_en)")
+          .select("id, name, price, stock, sold_out, images, categories(name_en)")
           .eq("is_active", true)
           .eq("category_id", data.category_id)
           .neq("id", id)
@@ -97,6 +99,7 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
       name: string;
       price: number;
       stock: number;
+      sold_out: boolean;
       images: unknown;
       categories: { name_en: string } | null;
     }[]
@@ -105,6 +108,7 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
     name: p.name,
     price: p.price,
     stock: p.stock,
+    sold_out: p.sold_out,
     image: firstImage(p.images),
     category: p.categories?.name_en,
   }));

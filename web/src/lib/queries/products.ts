@@ -11,6 +11,7 @@ type ProductRow = {
   name: string;
   price: number;
   stock: number;
+  sold_out: boolean;
   images: unknown;
   is_monthly: boolean;
   categories: { slug: string; name_en: string } | null;
@@ -31,6 +32,8 @@ export interface ProductDetail {
   name: string;
   price: number;
   stock: number;
+  // 강제 품절(대표님) — 재고와 무관하게 품절 처리. soldOut = stock<=0 || sold_out.
+  sold_out: boolean;
   description: string | null;
   material: string | null;
   size: string | null;
@@ -104,8 +107,8 @@ export async function getProducts({
     .from("products")
     .select(
       filterByCategory
-        ? "id, name, price, stock, images, is_monthly, categories!inner(slug, name_en)"
-        : "id, name, price, stock, images, is_monthly, categories(slug, name_en)",
+        ? "id, name, price, stock, sold_out, images, is_monthly, categories!inner(slug, name_en)"
+        : "id, name, price, stock, sold_out, images, is_monthly, categories(slug, name_en)",
     )
     .eq("is_active", true);
 
@@ -127,6 +130,7 @@ export async function getProducts({
     name: p.name,
     price: p.price,
     stock: p.stock,
+    sold_out: p.sold_out,
     image: firstImage(p.images),
     category: p.categories?.name_en,
     isMonthly: p.is_monthly,
@@ -166,7 +170,7 @@ async function loadShopBrowse(
 
   let query = db
     .from("products")
-    .select(`id, name, price, stock, images, is_monthly, ${join}`)
+    .select(`id, name, price, stock, sold_out, images, is_monthly, ${join}`)
     .eq("is_active", true);
 
   if (monthly) query = query.eq("is_monthly", true);
@@ -184,6 +188,7 @@ async function loadShopBrowse(
     name: p.name,
     price: p.price,
     stock: p.stock,
+    sold_out: p.sold_out,
     image: firstImage(p.images),
     category: p.categories?.name_en,
     isMonthly: p.is_monthly,

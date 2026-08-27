@@ -16,6 +16,7 @@ type Product = {
   price: number;
   stock: number;
   is_active: boolean;
+  sold_out: boolean;
   is_monthly: boolean;
   images: string[] | null;
   category_id: string | null;
@@ -27,7 +28,7 @@ export default async function AdminProductsPage() {
 
   const { data: products } = await db
     .from("products")
-    .select("id, name, price, stock, is_active, is_monthly, images, category_id")
+    .select("id, name, price, stock, is_active, sold_out, is_monthly, images, category_id")
     .order("created_at", { ascending: false })
     .returns<Product[]>();
 

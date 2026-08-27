@@ -163,7 +163,7 @@ export async function createPendingOrder(
   const ids = lines.map((l) => l.id);
   const { data: products } = await supabase
     .from("products")
-    .select("id, name, price, stock, options")
+    .select("id, name, price, stock, sold_out, options")
     .in("id", ids)
     .eq("is_active", true);
   if (!products || products.length === 0)
@@ -183,6 +183,9 @@ export async function createPendingOrder(
   for (const line of lines) {
     const p = priceMap.get(line.id);
     if (!p) return { ok: false, error: "유효하지 않은 상품이 있습니다." };
+    // 강제 품절(대표님) — 재고가 있어도 판매 잠금. 서버에서 구매 차단.
+    if (p.sold_out)
+      return { ok: false, error: `'${p.name}'은(는) 현재 품절입니다.` };
     if (p.stock < line.quantity)
       return { ok: false, error: `'${p.name}' 재고가 부족합니다.` };
     // 커스텀 옵션(0048) — 상품 정의와 대조. 정의된 그룹은 모두 유효값이 선택돼야

@@ -66,6 +66,7 @@ function productJsonLd(
     name: string;
     price: number;
     stock: number;
+    sold_out: boolean;
     description: string | null;
     images: string[];
   },
@@ -90,7 +91,7 @@ function productJsonLd(
         .toISOString()
         .slice(0, 10),
       availability:
-        product.stock > 0
+        product.stock > 0 && !product.sold_out
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
       // 배송 정보 — 구글 상품 리치결과/무료 리스팅에 "배송비" 노출. 기본 배송비 기준
@@ -209,6 +210,9 @@ export default async function ProductDetailPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  // 품절 표시 판단(대표님 3상태) — 재고 0 또는 강제 품절(sold_out). 비공개는 이미
+  // is_active 필터로 이 페이지에 도달하지 못한다(404).
+  const soldOut = product.stock <= 0 || product.sold_out;
   let wished = false;
   // 재입고 알림 구독 여부 (#166) — 버튼이 품절일 때만 뜨므로 그때만 조회한다.
   let restockSubscribed = false;
@@ -221,7 +225,7 @@ export default async function ProductDetailPage({
       .maybeSingle();
     wished = !!wish;
 
-    if (product.stock <= 0) {
+    if (soldOut) {
       const { data: restock } = await supabase
         .from("restock_subscriptions")
         .select("id")
@@ -275,7 +279,7 @@ export default async function ProductDetailPage({
           )}
           {/* 품절을 상세에서도 한눈에(대표님) — 히어로 사진 위 오버레이. 목록 카드와
               동일 톤. pointer-events-none 로 아래 확대 클릭은 그대로 통과. */}
-          {product.stock <= 0 && (
+          {soldOut && (
             <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-white/65 text-lg tracking-wide text-wabi-fg backdrop-blur-[1px]">
               Out of Stock
             </span>
@@ -316,14 +320,14 @@ export default async function ProductDetailPage({
               price: product.price,
               image: main,
             }}
-            soldOut={product.stock <= 0}
+            soldOut={soldOut}
             options={product.options}
             addons={productAddons}
             addonImages={addonImages}
           />
 
           {/* 품절이면 재입고 알림 (#166) — 로그인 사용자만(발송 주소 = 계정 이메일) */}
-          {product.stock <= 0 &&
+          {soldOut &&
             (user ? (
               <RestockButton
                 productId={product.id}

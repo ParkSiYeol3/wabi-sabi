@@ -12,6 +12,8 @@ export interface ProductCardData {
   href?: string;
   // 재고 (#131) — 목록에서 품절을 표시하기 위해 필요. 없으면(undefined) 표시하지 않는다.
   stock?: number;
+  // 강제 품절(대표님) — 재고 수량과 무관하게 품절 표시. 재고 0 과 OR 로 합쳐 판단.
+  sold_out?: boolean;
   // 이 달의 상품(is_monthly) — 카드 좌상단에 "이 달" 씰로 특별 표시(대표님). 없으면 미표시.
   isMonthly?: boolean;
 }
@@ -27,7 +29,10 @@ export function ProductCard({
 }) {
   const href = product.href ?? `/shop/${product.id}`;
   // stock 을 넘기지 않은 호출부(관련상품 등)는 품절 표시를 하지 않는다 — 0 과 undefined 구분.
-  const soldOut = product.stock !== undefined && product.stock <= 0;
+  // 강제 품절(sold_out)은 재고와 무관하게 품절로 표시(대표님).
+  const soldOut =
+    (product.stock !== undefined && product.stock <= 0) ||
+    product.sold_out === true;
 
   return (
     <Link href={href} className="group block">

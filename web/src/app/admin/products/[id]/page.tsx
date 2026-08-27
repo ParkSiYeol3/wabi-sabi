@@ -11,7 +11,7 @@ import { ProductImageManager } from "@/components/admin/product-image-manager";
 import { SubmitButton } from "@/components/common/submit-button";
 import {
   updateStock,
-  toggleActive,
+  setSaleStatus,
   toggleMonthly,
   deleteProduct,
 } from "@/app/admin/products/actions";
@@ -26,6 +26,7 @@ type ProductRow = Omit<ProductEditValues, "options" | "enabledAddons"> & {
   enabled_addons: unknown;
   stock: number;
   is_active: boolean;
+  sold_out: boolean;
   images: string[] | null;
 };
 
@@ -44,7 +45,7 @@ export default async function AdminProductEditPage({
     db
       .from("products")
       .select(
-        "id, name, price, category_id, is_monthly, description, material, size, care, origin, options, enabled_addons, stock, is_active, images",
+        "id, name, price, category_id, is_monthly, description, material, size, care, origin, options, enabled_addons, stock, is_active, sold_out, images",
       )
       .eq("id", id)
       .maybeSingle<ProductRow>(),
@@ -144,27 +145,46 @@ export default async function AdminProductEditPage({
               </SubmitButton>
             </form>
 
-            <form action={toggleActive}>
-              <input type="hidden" name="id" value={row.id} />
-              <input type="hidden" name="is_active" value={String(row.is_active)} />
-              <SubmitButton
-                pendingText="변경 중…"
-                className={adminAction({
-                  tone: row.is_active ? "solid" : "outline",
-                })}
-              >
-                {row.is_active ? "공개중" : "비공개"}
-              </SubmitButton>
-            </form>
+            {/* 판매 상태 3버튼(대표님) — 공개 / 비공개 / 품절. 현재 상태는 채워진
+                버튼으로 표시. 품절은 저장된 재고 수량과 무관하게 강제 품절. */}
+            <div className="flex flex-wrap items-center gap-2">
+              {(
+                [
+                  { key: "public", label: "공개" },
+                  { key: "private", label: "비공개" },
+                  { key: "soldout", label: "품절" },
+                ] as const
+              ).map((s) => {
+                const currentStatus = !row.is_active
+                  ? "private"
+                  : row.sold_out
+                    ? "soldout"
+                    : "public";
+                const active = s.key === currentStatus;
+                return (
+                  <form key={s.key} action={setSaleStatus}>
+                    <input type="hidden" name="id" value={row.id} />
+                    <input type="hidden" name="status" value={s.key} />
+                    <SubmitButton
+                      pendingText="변경 중…"
+                      className={adminAction({
+                        tone: active ? "solid" : "outline",
+                      })}
+                    >
+                      {s.label}
+                    </SubmitButton>
+                  </form>
+                );
+              })}
+            </div>
           </div>
-          {/* 비공개 = 손님 화면·검색에서 완전히 감춰지지만, 관리 목록엔 그대로 남는다
-              (대표님 — 무엇을 얼마에 팔았는지 기록 유지). 품절(재고 0)과는 별개로,
-              품절은 손님에게 보이되 'Out of Stock' 표시. */}
+          {/* 세 상태 안내(대표님). 품절은 재고 수량을 바꾸지 않고 강제로 잠근다 —
+              재고 데이터 보존. */}
           <p className="mt-3 text-xs leading-relaxed text-wabi-fg-muted">
-            <b>공개중</b>이면 손님에게 보이고, <b>비공개</b>로 바꾸면 손님 화면·검색에서
-            완전히 감춰집니다. 비공개여도 이 관리 목록엔 그대로 남아 무엇을 얼마에
-            팔았는지 확인할 수 있습니다. (재고 0인 <b>품절</b>과는 다릅니다 — 품절은
-            손님에게 보이되 ‘Out of Stock’으로 표시됩니다.)
+            <b>공개</b> — 손님에게 정상 노출·판매. <b>비공개</b> — 손님 화면·검색에서
+            완전히 감춰짐(관리 목록엔 그대로 남아 판매 기록 확인 가능). <b>품절</b> —
+            노출은 하되 ‘Out of Stock’으로 표시되고 구매 불가(저장된 재고 수량은 그대로
+            보존). 재고를 0으로 두면 자동으로도 품절 처리됩니다.
           </p>
         </Panel>
 

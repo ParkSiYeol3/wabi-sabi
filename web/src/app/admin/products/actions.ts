@@ -481,26 +481,39 @@ export async function updateStock(formData: FormData) {
   revalidatePath(`/shop/${id}`);
 }
 
-export async function toggleActive(formData: FormData) {
+// 판매 상태 3종(대표님 — 공개/비공개/품절 버튼). 재고 수량은 건드리지 않는다.
+//   · public  = is_active=true,  sold_out=false  (정상 판매)
+//   · private = is_active=false, sold_out=false  (손님 화면·검색·구매 전면 차단)
+//   · soldout = is_active=true,  sold_out=true   (노출은 하되 구매 불가·Out of Stock)
+// 저장된 재고와 무관하게 품절 표시가 가능해, 재고 데이터를 보존한 채 판매만 잠근다.
+const SALE_STATUS = {
+  public: { is_active: true, sold_out: false },
+  private: { is_active: false, sold_out: false },
+  soldout: { is_active: true, sold_out: true },
+} as const;
+type SaleStatus = keyof typeof SALE_STATUS;
+
+export async function setSaleStatus(formData: FormData) {
   const user = await requireAdmin();
   if (!adminConfigured()) return;
 
   const id = parseUuid(formData.get("id"));
-  const active = String(formData.get("is_active")) === "true";
-  if (!id) return;
+  const status = String(formData.get("status")) as SaleStatus;
+  if (!id || !(status in SALE_STATUS)) return;
 
+  const next = SALE_STATUS[status];
   const supabase = createAdminClient();
-  await supabase.from("products").update({ is_active: !active }).eq("id", id);
+  await supabase.from("products").update(next).eq("id", id);
   await logAdminAction(user, {
-    action: "product.toggle_active",
+    action: "product.set_sale_status",
     targetTable: "products",
     targetId: id,
-    meta: { is_active: !active },
+    meta: { status, ...next },
   });
   revalidatePath("/admin/products");
   revalidatePath("/");
   revalidatePath("/shop"); // 상품 목록 탐색 캐시(#185) 무효화
-  revalidatePath(`/shop/${id}`); // 상세 캐시(#181) 무효화 — 비활성 즉시 반영
+  revalidatePath(`/shop/${id}`); // 상세 캐시(#181) 무효화 — 상태 즉시 반영
 }
 
 export async function deleteProduct(formData: FormData) {
