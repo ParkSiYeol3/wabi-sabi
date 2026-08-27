@@ -23,6 +23,13 @@ function firstImage(images: unknown): string | null {
     : null;
 }
 
+// 두 번째 사진(카드 hover 교차용) — 없으면 null.
+function secondImage(images: unknown): string | null {
+  return Array.isArray(images) && typeof images[1] === "string"
+    ? images[1]
+    : null;
+}
+
 
 // (getRelatedProducts·getProduct 는 상세 캐시 번들(#181 product-detail.ts)로
 //  대체돼 소비처가 없어져 제거 — #207. ProductDetail 타입은 번들이 계속 쓴다.)
@@ -132,6 +139,7 @@ export async function getProducts({
     stock: p.stock,
     sold_out: p.sold_out,
     image: firstImage(p.images),
+    image2: secondImage(p.images),
     category: p.categories?.name_en,
     isMonthly: p.is_monthly,
   }));
@@ -190,6 +198,7 @@ async function loadShopBrowse(
     stock: p.stock,
     sold_out: p.sold_out,
     image: firstImage(p.images),
+    image2: secondImage(p.images),
     category: p.categories?.name_en,
     isMonthly: p.is_monthly,
   }));
