@@ -4,8 +4,9 @@ import { MONTHLY_SLUG } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 // 대표님: 월간 그릇·오늘의 와비사비가 우리 사이트의 특색 → 대분류로 승격해
-// shop·showroom 등 여러 페이지 상단에 크게 노출한다. 모바일은 두 버튼이 화면 폭을
-// 나눠 채우고(flex-1), 데스크톱은 자연 폭. 드로어 SHOP 하위에서는 제거(중복 방지).
+// shop·showroom 등 여러 페이지 상단에 노출한다. 폭은 자연 폭(내용에 맞춤) — 모바일에서
+// 전폭으로 늘리면(flex-1) 넓고 낮아 비정형 원이 얇아 보여, BackToShop 버튼처럼 통통한
+// blob 이 되도록 넉넉한 패딩의 자연 폭 알약으로 통일(대표님). 드로어 SHOP 하위엔 없음.
 const ITEMS = [
   { href: buildShopQuery({}, { category: MONTHLY_SLUG }), label: "월간 그릇" },
   { href: "/today", label: "오늘의 와비사비" },
@@ -26,7 +27,7 @@ export function FeaturedShortcuts({ className }: { className?: string }) {
           key={it.href}
           href={it.href}
           style={{ borderRadius: SHAPES[i % SHAPES.length] }}
-          className="flex flex-1 items-center justify-center border border-wabi-fg/30 bg-wabi-bg px-3 py-1.5 text-center text-xs font-medium tracking-wide text-wabi-fg transition-colors hover:border-wabi-fg hover:bg-wabi-fg hover:text-wabi-bg sm:flex-none sm:px-7 sm:py-2.5 sm:text-sm"
+          className="inline-flex items-center justify-center border border-wabi-fg/30 bg-wabi-bg px-4 py-2 text-center text-xs font-medium tracking-wide text-wabi-fg transition-colors hover:border-wabi-fg hover:bg-wabi-fg hover:text-wabi-bg sm:px-7 sm:py-2.5 sm:text-sm"
         >
           {it.label}
         </Link>
