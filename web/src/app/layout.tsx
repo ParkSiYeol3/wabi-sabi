@@ -86,13 +86,23 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ko_KR",
     siteName: "와비사비 WABI-SABI",
+    // OG 이미지 = /public 정적 PNG(깨끗한 고정 URL). 과거엔 app/opengraph-image
+    // 규약으로 동적 생성했는데, 그 og:image URL 에 재배포마다 바뀌는 해시 쿼리
+    // (?<hash>)가 붙었다. 네이버 Yeti/썸네일 캐시는 쿼리 붙은 og:image 를 자주
+    // 놓쳐(파비콘에서 겪은 문제와 동일), 재수집해도 배포마다 썸네일이 다시 깨졌다.
+    // 정적 파일이라 URL 이 영원히 안 바뀐다 → 네이버 한 번 재수집하면 고정.
+    // 이미지 자체는 정사각 크롭에도 여백이 남는 안전 디자인(옛 about OG 를 동결).
+    images: [
+      { url: "/og.png", width: 1200, height: 630, alt: "와비사비 WABI-SABI — Living Select Shop" },
+    ],
   },
-  // 트위터/X 카드 — 링크 공유 시 큰 이미지 카드로 노출(og:image 폴백 사용).
+  // 트위터/X 카드 — 링크 공유 시 큰 이미지 카드로 노출.
   twitter: {
     card: "summary_large_image",
     title: "와비사비 WABI-SABI",
     description:
       "순간의 아름다움보다 시간이 만들어내는 가치를 믿는 곳. 오래 곁에 두고 싶은 기물과 오브제를 큐레이션합니다.",
+    images: ["/og.png"],
   },
   // iOS "홈 화면에 추가" — standalone 실행 시 상단 제목·상태바 스타일.
   appleWebApp: {
