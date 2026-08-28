@@ -56,6 +56,13 @@ export async function confirmPayment(
       )
         return { ok: false, error: "결제 정보가 주문과 일치하지 않습니다." };
     } else {
+      // 승인 거부의 실제 원인은 body.code 에 있다(message 는 고객용 요약뿐이라
+      // "업체 사정으로 결제가 중지" 같은 모호한 문구로 원인이 가려진다). 로그에
+      // code·message·HTTP 상태·orderId 를 남겨 Vercel Logs 에서 바로 진단한다.
+      // (가맹점 미개시=NOT_AVAILABLE_PAYMENT, 키/MID 불일치=UNAUTHORIZED_KEY 등)
+      console.error(
+        `[payments] confirm 거부 status=${res.status} code=${body.code} message=${body.message} orderId=${orderId} paymentKey=${paymentKey}`,
+      );
       return { ok: false, error: body.message || "결제 승인 실패" };
     }
   }
