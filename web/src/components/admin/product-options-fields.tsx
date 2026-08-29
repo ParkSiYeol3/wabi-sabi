@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
-import { ADDONS, ADDON_CODES, won } from "@/lib/addons";
+import { ADDONS, ADDON_CODES, ADDONS_ENABLED, won } from "@/lib/addons";
 import type { OptionGroup } from "@/lib/product-options";
 import { cn } from "@/lib/utils";
 
@@ -269,36 +269,44 @@ export function ProductOptionsFields({
         )}
       </div>
 
-      {/* ── 추가옵션 노출(선물 포장·쇼핑백 각각) ──────── */}
-      <div className="border border-wabi-border p-3">
-        <p className="text-xs font-medium text-wabi-fg">
-          추가옵션 노출{" "}
-          <span className="font-normal text-wabi-fg-muted">
-            (체크한 것만 이 상품 상세에 표시)
-          </span>
-        </p>
-        <div className="mt-2 flex flex-wrap gap-4">
-          {ADDONS.map((a) => (
-            <label
-              key={a.code}
-              className="flex items-center gap-2 text-sm text-wabi-fg-muted"
-            >
-              <input
-                type="checkbox"
-                name="enabled_addons"
-                value={a.code}
-                checked={addons.includes(a.code)}
-                onChange={(e) => toggleAddon(a.code, e.target.checked)}
-                className="size-4"
-              />
-              {a.name}{" "}
-              <span className="text-xs text-wabi-fg-muted/70">
-                (+{won(a.price)})
-              </span>
-            </label>
-          ))}
+      {/* ── 추가옵션 노출(선물 포장·쇼핑백) ── 은퇴(대표님 — 기프트 카테고리 상품으로
+          판매). ADDONS_ENABLED=false 면 숨긴다. 기존 값은 hidden input 으로 보존. */}
+      {ADDONS_ENABLED ? (
+        <div className="border border-wabi-border p-3">
+          <p className="text-xs font-medium text-wabi-fg">
+            추가옵션 노출{" "}
+            <span className="font-normal text-wabi-fg-muted">
+              (체크한 것만 이 상품 상세에 표시)
+            </span>
+          </p>
+          <div className="mt-2 flex flex-wrap gap-4">
+            {ADDONS.map((a) => (
+              <label
+                key={a.code}
+                className="flex items-center gap-2 text-sm text-wabi-fg-muted"
+              >
+                <input
+                  type="checkbox"
+                  name="enabled_addons"
+                  value={a.code}
+                  checked={addons.includes(a.code)}
+                  onChange={(e) => toggleAddon(a.code, e.target.checked)}
+                  className="size-4"
+                />
+                {a.name}{" "}
+                <span className="text-xs text-wabi-fg-muted/70">
+                  (+{won(a.price)})
+                </span>
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        // 저장된 enabled_addons 를 그대로 유지(폼 제출 시 값 보존, UI 만 숨김).
+        addons.map((code) => (
+          <input key={code} type="hidden" name="enabled_addons" value={code} />
+        ))
+      )}
     </div>
   );
 }
