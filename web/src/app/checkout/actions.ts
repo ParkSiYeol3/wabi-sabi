@@ -10,6 +10,7 @@ import {
   GIFT_WRAP_CODE,
 } from "@/lib/addons";
 import { shippingFeeFor } from "@/lib/shipping";
+import { couponDiscount, couponUsable, type Coupon } from "@/lib/coupons";
 import {
   parseOptionGroups,
   validateSelection,
@@ -91,6 +92,32 @@ export async function getMyAddresses(): Promise<SavedAddress[]> {
   return data ?? [];
 }
 
+// 내 쿠폰(0059) — 지갑의 미사용·유효(활성·기간·총한도) 쿠폰. 최소주문 판정은
+// 클라이언트가 현재 subtotal 로 하고(couponUsable), 여기선 확정적으로 못 쓰는 것만 뺀다.
+export async function getMyCoupons(): Promise<Coupon[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data } = await supabase
+    .from("user_coupons")
+    .select("coupons(*)")
+    .eq("user_id", user.id)
+    .is("used_at", null);
+  const now = new Date();
+  return ((data ?? []) as unknown as { coupons: Coupon | null }[])
+    .map((r) => r.coupons)
+    .filter((c): c is Coupon => !!c)
+    .filter(
+      (c) =>
+        c.is_active &&
+        (!c.starts_at || new Date(c.starts_at) <= now) &&
+        (!c.expires_at || new Date(c.expires_at) >= now) &&
+        (c.max_uses == null || c.used_count < c.max_uses),
+    );
+}
+
 export type CreateOrderResult =
   | { ok: true; orderId: string; amount: number; orderName: string }
   | { ok: false; error: string };
@@ -100,6 +127,7 @@ export async function createPendingOrder(
   linesInput: CartLine[],
   deliveryInput: DeliveryInput,
   giftInput: GiftMessageInput,
+  couponId?: string | null,
 ): Promise<CreateOrderResult> {
   const supabase = await createClient();
   const {
@@ -243,7 +271,29 @@ export async function createPendingOrder(
   // 배송비 — 서버가 정책(lib/shipping)으로 재계산해 합산. 클라이언트가 준 값 불신.
   // total_price 에 포함되므로 confirm_order_paid·토스 승인이 전액을 검증한다.
   const shippingFee = shippingFeeFor(subtotal);
-  const amount = subtotal + shippingFee;
+
+  // 쿠폰(0059) — 로그인 사용자의 지갑에 있는 미사용·유효 쿠폰만 적용. 할인은 subtotal
+  // 에만(배송비 제외). 서버가 정의를 다시 조회해 할인액을 재계산한다(클라 값 불신).
+  let discount = 0;
+  let appliedCouponId: string | null = null;
+  if (couponId && user) {
+    const { data: wallet } = await admin
+      .from("user_coupons")
+      .select("id, coupons(*)")
+      .eq("user_id", user.id)
+      .eq("coupon_id", couponId)
+      .is("used_at", null)
+      .maybeSingle();
+    const coupon = (wallet?.coupons ?? null) as Coupon | null;
+    if (!wallet || !coupon)
+      return { ok: false, error: "사용할 수 없는 쿠폰입니다." };
+    const usable = couponUsable(coupon, subtotal);
+    if (!usable.ok) return { ok: false, error: usable.reason };
+    discount = couponDiscount(coupon, subtotal);
+    appliedCouponId = coupon.id;
+  }
+
+  const amount = subtotal + shippingFee - discount;
 
   const orderNumber = `WSB${Date.now().toString(36).toUpperCase()}`;
   const fullAddress = [delivery.postcode, delivery.address, delivery.detail]
@@ -260,6 +310,8 @@ export async function createPendingOrder(
       status: "pending",
       total_price: amount,
       shipping_fee: shippingFee,
+      coupon_id: appliedCouponId,
+      discount,
       recipient: delivery.recipient,
       phone: delivery.phone,
       address: fullAddress,

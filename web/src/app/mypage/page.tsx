@@ -8,6 +8,7 @@ import { DeleteAccountSection } from "@/components/account/delete-account-sectio
 import { NicknameForm } from "@/components/account/nickname-form";
 import { AddressAddForm } from "@/components/account/address-add-form";
 import { LinkedAccounts } from "@/components/account/linked-accounts";
+import { MyCoupons } from "@/components/account/my-coupons";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addAddress, deleteAddress } from "./actions";
@@ -115,6 +116,8 @@ export default async function MyPage({
       </section>
 
       {/* 소셜 계정 연결/해제 — identity 목록은 서버에서 조회해 초기값으로 전달 */}
+      <MyCoupons />
+
       <LinkedAccounts initialIdentities={identities_ ?? []} linkError={linkError} />
 
       <DeleteAccountSection />
