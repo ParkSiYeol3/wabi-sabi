@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
-import { couponLabel, type Coupon } from "@/lib/coupons";
+import { couponLabel, COUPONS_ENABLED, type Coupon } from "@/lib/coupons";
 
 // 마이페이지 '내 쿠폰'(0059) — 지갑의 미사용 쿠폰. RLS 로 본인 것만 조회된다.
 // 자체완결 서버 컴포넌트(마이페이지 데이터 흐름과 분리).
 export async function MyCoupons() {
+  if (!COUPONS_ENABLED) return null; // 준비 상태 — 손님에게 미노출
   const supabase = await createClient();
   const {
     data: { user },

@@ -8,7 +8,7 @@ import {
 import { SubmitButton } from "@/components/common/submit-button";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { won, formatDateKST } from "@/lib/orders";
-import { couponLabel, type Coupon } from "@/lib/coupons";
+import { couponLabel, COUPONS_ENABLED, type Coupon } from "@/lib/coupons";
 import { CouponCreateForm } from "@/components/admin/coupon-create-form";
 import { setCouponActive } from "./actions";
 
@@ -42,6 +42,13 @@ export default async function AdminCouponsPage() {
         description="할인 쿠폰을 만들고 관리합니다. 가입 축하 쿠폰은 신규 회원에게 자동 지급됩니다."
       />
 
+      {!COUPONS_ENABLED && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          <b>준비 상태입니다.</b> 지금은 쿠폰이 손님에게 노출·적용되지 않습니다(체크아웃·마이페이지 미표시).
+          여기서 미리 만들어 둘 수는 있으며, 정식 오픈은 개발자(시열님)에게 요청하세요.
+        </div>
+      )}
+
       <section>
         <SectionHeading>쿠폰 등록</SectionHeading>
         <Panel className="mt-3 p-6">
@@ -57,7 +64,7 @@ export default async function AdminCouponsPage() {
           </p>
         ) : (
           <Panel className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[720px] text-sm">
+            <table className="w-full min-w-180 text-sm">
               <thead>
                 <tr className="border-b border-wabi-border text-left text-xs text-wabi-fg-muted">
                   <th className="p-3">코드</th>

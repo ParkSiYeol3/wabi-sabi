@@ -46,7 +46,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { href: "/admin/sales", label: "매출·통계", icon: BarChart3 },
       { href: "/admin/inventory", label: "재고 관리", icon: Boxes },
       { href: "/admin/customers", label: "구매자 관리", icon: Users },
-      { href: "/admin/coupons", label: "쿠폰", icon: Ticket },
     ],
   },
   {
@@ -54,6 +53,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { href: "/admin/inquiries", label: "문의", icon: MessageCircle },
       { href: "/admin/reviews", label: "리뷰", icon: Star },
+      { href: "/admin/coupons", label: "쿠폰", icon: Ticket },
       { href: "/admin/moments", label: "오늘의 와비사비", icon: Camera },
       { href: "/admin/notices", label: "공지", icon: Megaphone },
     ],

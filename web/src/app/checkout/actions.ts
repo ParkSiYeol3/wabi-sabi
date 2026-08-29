@@ -10,7 +10,12 @@ import {
   GIFT_WRAP_CODE,
 } from "@/lib/addons";
 import { shippingFeeFor } from "@/lib/shipping";
-import { couponDiscount, couponUsable, type Coupon } from "@/lib/coupons";
+import {
+  couponDiscount,
+  couponUsable,
+  COUPONS_ENABLED,
+  type Coupon,
+} from "@/lib/coupons";
 import {
   parseOptionGroups,
   validateSelection,
@@ -95,6 +100,7 @@ export async function getMyAddresses(): Promise<SavedAddress[]> {
 // 내 쿠폰(0059) — 지갑의 미사용·유효(활성·기간·총한도) 쿠폰. 최소주문 판정은
 // 클라이언트가 현재 subtotal 로 하고(couponUsable), 여기선 확정적으로 못 쓰는 것만 뺀다.
 export async function getMyCoupons(): Promise<Coupon[]> {
+  if (!COUPONS_ENABLED) return []; // 준비 상태 — 손님에게 미노출
   const supabase = await createClient();
   const {
     data: { user },
@@ -276,7 +282,7 @@ export async function createPendingOrder(
   // 에만(배송비 제외). 서버가 정의를 다시 조회해 할인액을 재계산한다(클라 값 불신).
   let discount = 0;
   let appliedCouponId: string | null = null;
-  if (couponId && user) {
+  if (couponId && user && COUPONS_ENABLED) {
     const { data: wallet } = await admin
       .from("user_coupons")
       .select("id, coupons(*)")
