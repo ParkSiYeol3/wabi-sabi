@@ -14,6 +14,17 @@ import { cn } from "@/lib/utils";
 
 type Tab = "login" | "signup";
 
+// 오래된 탭(맥북을 몇 시간 닫아둔 사이 재배포됨)에서 폼을 제출하면, 클라이언트가
+// 참조하는 서버 액션 ID 가 새 배포엔 없어 Next 가 'Server Action "…" was not found
+// on the server' 영문 에러를 그대로 던진다(대표님 제보). 이 경우엔 새 배포의 액션을
+// 받도록 새로고침만 하면 되므로, 별도 사용자 안내로 잡아 새로고침한다.
+function isStaleServerActionError(err: unknown): boolean {
+  const m = err instanceof Error ? err.message : String(err);
+  return /server action.*(not|was not) .*found|failed-to-find-server-action/i.test(
+    m,
+  );
+}
+
 // WSB-001/003: 이메일 회원가입·로그인 (Supabase Auth).
 function AuthForm() {
   const router = useRouter();
@@ -153,6 +164,13 @@ function AuthForm() {
         }
       }
     } catch (err) {
+      if (isStaleServerActionError(err)) {
+        setError(
+          "페이지가 오래되어 새로고침이 필요합니다. 잠시 후 자동으로 새로고침됩니다…",
+        );
+        setTimeout(() => window.location.reload(), 1500);
+        return;
+      }
       setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
     } finally {
       setLoading(false);
