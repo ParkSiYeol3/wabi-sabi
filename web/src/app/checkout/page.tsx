@@ -17,8 +17,15 @@ import { PostcodeButton } from "@/components/common/postcode-button";
 import {
   createPendingOrder,
   getMyAddresses,
+  getMyCoupons,
   type SavedAddress,
 } from "./actions";
+import {
+  couponDiscount,
+  couponUsable,
+  couponLabel,
+  type Coupon,
+} from "@/lib/coupons";
 
 const EMPTY_DELIVERY = {
   recipient: "",
@@ -47,6 +54,9 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [delivery, setDelivery] = useState(EMPTY_DELIVERY);
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  // 쿠폰(0059) — 로그인 사용자의 지갑 중 유효한 것. 선택 시 subtotal 에서 할인.
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [selectedCouponId, setSelectedCouponId] = useState<string | null>(null);
   // 자동 채움은 최초 1회만 — user 참조가 갱신돼도 사용자가 수정 중인 값을 덮지 않게.
   const autoFilledRef = useRef(false);
 
@@ -67,6 +77,20 @@ export default function CheckoutPage() {
         autoFilledRef.current = true;
         fillFrom(list[0]);
       }
+    });
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  // 내 쿠폰 로드(로그인 시). 서버가 결제 시 다시 검증하므로 여기선 표시·선택만.
+  // 로그아웃 시 목록 비우기는 렌더 시점(activeCoupons)에서 파생한다(effect 내 동기
+  // setState 회피). 선택 id 가 남아도 activeCoupons 가 비면 할인은 0 이 된다.
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    getMyCoupons().then((list) => {
+      if (active) setCoupons(list);
     });
     return () => {
       active = false;
@@ -116,7 +140,18 @@ export default function CheckoutPage() {
   const merchandise = subtotal + addonSum;
   const shipping = shippingFeeFor(merchandise);
   const freeGap = amountToFreeShipping(merchandise);
-  const total = merchandise + shipping;
+  // 쿠폰 할인 — 선택 쿠폰이 현재 subtotal 에서 사용 가능할 때만 적용(서버와 동일 계산).
+  // 로그아웃 시엔 목록을 비워(파생) 남은 선택이 적용되지 않게 한다.
+  const activeCoupons = user ? coupons : [];
+  const selectedCoupon =
+    activeCoupons.find((c) => c.id === selectedCouponId) ?? null;
+  const couponOk = selectedCoupon
+    ? couponUsable(selectedCoupon, merchandise).ok
+    : false;
+  const discount =
+    selectedCoupon && couponOk ? couponDiscount(selectedCoupon, merchandise) : 0;
+  const appliedCouponId = discount > 0 ? selectedCouponId : null;
+  const total = merchandise + shipping - discount;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -144,6 +179,7 @@ export default function CheckoutPage() {
         })),
         delivery,
         giftInput,
+        appliedCouponId,
       );
       if (!res.ok) {
         setError(res.error);
@@ -246,6 +282,55 @@ export default function CheckoutPage() {
               </li>
             ))}
           </ul>
+
+          {/* 쿠폰(0059) — 내 지갑의 유효 쿠폰. 최소주문 미달은 비활성(사유 표시). */}
+          {activeCoupons.length > 0 && (
+            <div className="mt-6 border-t border-wabi-border pt-4">
+              <p className="text-sm font-medium text-wabi-fg">쿠폰</p>
+              <div className="mt-2 space-y-2">
+                <label className="flex items-center gap-2 text-sm text-wabi-fg-muted">
+                  <input
+                    type="radio"
+                    name="coupon"
+                    checked={!selectedCouponId}
+                    onChange={() => setSelectedCouponId(null)}
+                    className="size-4"
+                  />
+                  적용 안 함
+                </label>
+                {activeCoupons.map((c) => {
+                  const usable = couponUsable(c, merchandise);
+                  return (
+                    <label
+                      key={c.id}
+                      className={`flex items-start gap-2 text-sm ${
+                        usable.ok ? "text-wabi-fg" : "text-wabi-fg-muted/60"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="coupon"
+                        disabled={!usable.ok}
+                        checked={selectedCouponId === c.id}
+                        onChange={() => setSelectedCouponId(c.id)}
+                        className="mt-0.5 size-4"
+                      />
+                      <span>
+                        <span className="font-medium">{couponLabel(c)}</span>
+                        {c.description ? ` · ${c.description}` : ""}
+                        {!usable.ok && (
+                          <span className="block text-xs text-wabi-fg-muted/70">
+                            {usable.reason}
+                          </span>
+                        )}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <dl className="mt-6 space-y-2 border-t border-wabi-border pt-4 text-sm">
             <div className="flex justify-between">
               <dt className="text-wabi-fg-muted">상품 합계</dt>
@@ -268,6 +353,14 @@ export default function CheckoutPage() {
               <p className="pt-1 text-xs text-wabi-accent">
                 {won(freeGap)} 더 담으면 무료배송!
               </p>
+            )}
+            {discount > 0 && (
+              <div className="flex justify-between text-wabi-accent">
+                <dt>쿠폰 할인</dt>
+                <dd>
+                  −<Price value={discount} />
+                </dd>
+              </div>
             )}
             <div className="flex justify-between pt-2 text-base font-semibold">
               <dt>총 결제금액</dt>

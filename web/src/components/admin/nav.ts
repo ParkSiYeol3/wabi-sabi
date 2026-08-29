@@ -14,6 +14,7 @@ import {
   BarChart3,
   Users,
   Boxes,
+  Ticket,
 } from "lucide-react";
 
 // 어드민 내비게이션 단일 출처 — 사이드바(데스크톱·모바일)가 공유한다.
@@ -45,6 +46,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { href: "/admin/sales", label: "매출·통계", icon: BarChart3 },
       { href: "/admin/inventory", label: "재고 관리", icon: Boxes },
       { href: "/admin/customers", label: "구매자 관리", icon: Users },
+      { href: "/admin/coupons", label: "쿠폰", icon: Ticket },
     ],
   },
   {
