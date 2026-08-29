@@ -11,6 +11,7 @@ import { ProductDetailActions } from "@/components/product/product-detail-action
 import { RestockButton } from "@/components/product/restock-button";
 import { WishlistButton } from "@/components/product/wishlist-button";
 import { ReviewSection } from "@/components/product/review-section";
+import { ProductCareGuide } from "@/components/product/product-care-guide";
 import { Price } from "@/components/product/price";
 import { getCachedProductDetail } from "@/lib/queries/product-detail";
 import {
@@ -21,14 +22,6 @@ import {
   DEFAULT_SHIPPING_INFO,
   SHIPPING_FEE_KEY,
   DEFAULT_SHIPPING_FEE,
-  CARE_USAGE_KEY,
-  DEFAULT_CARE_USAGE,
-  CARE_MAINTAIN_KEY,
-  DEFAULT_CARE_MAINTAIN,
-  CARE_USAGE_LABEL_KEY,
-  DEFAULT_CARE_USAGE_LABEL,
-  CARE_MAINTAIN_LABEL_KEY,
-  DEFAULT_CARE_MAINTAIN_LABEL,
 } from "@/lib/queries/content";
 import { enabledAddons } from "@/lib/addons";
 import { createClient } from "@/lib/supabase/server";
@@ -95,7 +88,7 @@ function productJsonLd(
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
       // 배송 정보 — 구글 상품 리치결과/무료 리스팅에 "배송비" 노출. 기본 배송비 기준
-      // (8만원 이상 무료는 조건부라 schema 로 표현 어려워 기본요금만 명시).
+      // (10만원 이상 무료는 조건부라 schema 로 표현 어려워 기본요금만 명시).
       shippingDetails: {
         "@type": "OfferShippingDetails",
         shippingRate: {
@@ -186,24 +179,12 @@ export default async function ProductDetailPage({
     ...ADDON_IMAGE_KEYS,
     SHIPPING_INFO_KEY,
     SHIPPING_FEE_KEY,
-    CARE_USAGE_LABEL_KEY,
-    CARE_USAGE_KEY,
-    CARE_MAINTAIN_LABEL_KEY,
-    CARE_MAINTAIN_KEY,
   ]);
   const addonImages = Object.fromEntries(
     productAddons.map((a) => [a.code, contentMap[addonImageKey(a.code)]]),
   );
   const shippingInfo = contentMap[SHIPPING_INFO_KEY] || DEFAULT_SHIPPING_INFO;
   const shippingFee = contentMap[SHIPPING_FEE_KEY] || DEFAULT_SHIPPING_FEE;
-  // 사용·관리 안내(대표님) — 미저장 시 기본 문안. 빈 값이면 해당 소제목 미표시.
-  // 소제목도 편집 가능(대표님) — 재질별로 이름을 바꿔 쓸 수 있게.
-  const careUsage = contentMap[CARE_USAGE_KEY] ?? DEFAULT_CARE_USAGE;
-  const careMaintain = contentMap[CARE_MAINTAIN_KEY] ?? DEFAULT_CARE_MAINTAIN;
-  const careUsageLabel =
-    contentMap[CARE_USAGE_LABEL_KEY] || DEFAULT_CARE_USAGE_LABEL;
-  const careMaintainLabel =
-    contentMap[CARE_MAINTAIN_LABEL_KEY] || DEFAULT_CARE_MAINTAIN_LABEL;
 
   // 위시리스트 초기 상태 (로그인 시) — 사용자별이라 캐시 밖.
   const supabase = await createClient();
@@ -408,43 +389,9 @@ export default async function ProductDetailPage({
       {/* 나머지 사진 — 전체 폭에 불규칙 흩뿌림(중앙 정렬 없음). 스크롤 시 이어짐. */}
       <ProductGallery images={product.images.slice(1)} name={product.name} />
 
-      {/* 사용 및 관리 (대표님 — 사진과 리뷰 사이). 문구는 어드민 편집(site_content).
-          들여쓰기 없이 흐르는 문단(기본값은 한 문단, 편집 시 개행 반영 pre-line). */}
-      {(careUsage || careMaintain) && (
-        <section className="mt-14 max-w-2xl border-t border-wabi-border pt-8 text-sm">
-          <h2 className="text-base font-medium text-wabi-fg">사용 및 관리</h2>
-          <div className="mt-4 space-y-6 text-wabi-fg-muted">
-            {careUsage.trim() && (
-              <div>
-                <p className="mb-2 font-medium text-wabi-fg">{careUsageLabel}</p>
-                <ul className="list-disc space-y-1.5 pl-5 leading-relaxed marker:text-wabi-fg-muted">
-                  {careUsage
-                    .split("\n")
-                    .filter((l) => l.trim())
-                    .map((line, i) => (
-                      <li key={i}>{line.trim()}</li>
-                    ))}
-                </ul>
-              </div>
-            )}
-            {careMaintain.trim() && (
-              <div>
-                <p className="mb-2 font-medium text-wabi-fg">
-                  {careMaintainLabel}
-                </p>
-                <ul className="list-disc space-y-1.5 pl-5 leading-relaxed marker:text-wabi-fg-muted">
-                  {careMaintain
-                    .split("\n")
-                    .filter((l) => l.trim())
-                    .map((line, i) => (
-                      <li key={i}>{line.trim()}</li>
-                    ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
+      {/* 사용 및 관리 (대표님 — 사진과 리뷰 사이). 대표님이 정리한 케어 카드
+          (소재별 주의 + 자연스러운 변화 + 가전 가이드)를 그대로 옮긴 정적 안내. */}
+      <ProductCareGuide />
 
       {/* 리뷰 (대표님 피드백 — 게시판 3종) */}
       <ReviewSection productId={product.id} currentUserId={user?.id ?? null} />
