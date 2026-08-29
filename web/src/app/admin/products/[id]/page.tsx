@@ -21,10 +21,14 @@ import { leafCategoryOptions, type CategoryRow } from "../leaf-options";
 
 // DB 원본 행 — options/enabled_addons 는 jsonb 라 파싱해 ProductEditValues 로 변환.
 // 관리(재고·노출·사진·삭제)에 필요한 stock·is_active·images 도 함께 읽는다.
-type ProductRow = Omit<ProductEditValues, "options" | "enabledAddons"> & {
+type ProductRow = Omit<
+  ProductEditValues,
+  "options" | "enabledAddons" | "stockOption" | "optionStock"
+> & {
   options: unknown;
   enabled_addons: unknown;
   stock: number;
+  stock_option: string | null;
   is_active: boolean;
   sold_out: boolean;
   images: string[] | null;
@@ -41,20 +45,27 @@ export default async function AdminProductEditPage({
   // service_role 있으면 전체(비활성 포함), 없으면 공개 읽기
   const db = adminConfigured() ? createAdminClient() : await createClient();
 
-  const [{ data: row }, { data: categoryRows }] = await Promise.all([
-    db
-      .from("products")
-      .select(
-        "id, name, price, category_id, is_monthly, description, material, size, care, origin, options, enabled_addons, stock, is_active, sold_out, images",
-      )
-      .eq("id", id)
-      .maybeSingle<ProductRow>(),
-    db
-      .from("categories")
-      .select("id, name_ko, name_en, parent_id, is_active")
-      .order("sort_order")
-      .returns<(CategoryRow & { is_active: boolean })[]>(),
-  ]);
+  const [{ data: row }, { data: categoryRows }, { data: stockRows }] =
+    await Promise.all([
+      db
+        .from("products")
+        .select(
+          "id, name, price, category_id, is_monthly, description, material, size, care, origin, options, enabled_addons, stock, stock_option, is_active, sold_out, images",
+        )
+        .eq("id", id)
+        .maybeSingle<ProductRow>(),
+      db
+        .from("categories")
+        .select("id, name_ko, name_en, parent_id, is_active")
+        .order("sort_order")
+        .returns<(CategoryRow & { is_active: boolean })[]>(),
+      // 옵션 값별 재고(0058) — 폼 프리필용.
+      db
+        .from("product_option_stock")
+        .select("value, stock")
+        .eq("product_id", id)
+        .returns<{ value: string; stock: number }[]>(),
+    ]);
   if (!row) notFound();
 
   // jsonb → 폼 값. enabled_addons 가 배열이 아니면(구 데이터) 전체 노출로 프리필.
@@ -64,6 +75,10 @@ export default async function AdminProductEditPage({
     enabledAddons: Array.isArray(row.enabled_addons)
       ? ADDON_CODES.filter((c) => (row.enabled_addons as string[]).includes(c))
       : ADDON_CODES,
+    stockOption: row.stock_option,
+    optionStock: Object.fromEntries(
+      (stockRows ?? []).map((r) => [r.value, r.stock]),
+    ),
   };
 
   // 선택지는 노출 중(0036) 잎 분류만. 현재 카테고리가 그 목록에 없으면
@@ -113,24 +128,36 @@ export default async function AdminProductEditPage({
         <Panel className="p-6">
           <SectionHeading>재고 · 공개</SectionHeading>
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <form action={updateStock} className="flex items-center gap-2">
-              <label className="text-sm text-wabi-fg-muted">재고</label>
-              <input type="hidden" name="id" value={row.id} />
-              <input
-                name="stock"
-                type="number"
-                min={0}
-                defaultValue={row.stock}
-                aria-label={`${row.name} 재고 수량`}
-                className="w-24 rounded-lg border border-wabi-border bg-wabi-bg/60 px-2 py-1.5 text-sm outline-none transition-colors focus:border-wabi-fg"
-              />
-              <SubmitButton
-                pendingText="저장 중…"
-                className={adminAction({ tone: "outline" })}
-              >
-                저장
-              </SubmitButton>
-            </form>
+            {row.stock_option ? (
+              // 옵션 값별 재고 관리 상품(0058) — flat 재고는 값별 합이라 여기서 직접
+              // 편집하지 않는다. 값별 수량은 아래 '옵션'에서 수정한다.
+              <p className="text-sm text-wabi-fg-muted">
+                재고{" "}
+                <span className="font-medium text-wabi-fg">
+                  옵션 ‘{row.stock_option}’ 값별 관리 중
+                </span>{" "}
+                (합계 {row.stock}개 · 아래 옵션에서 수정)
+              </p>
+            ) : (
+              <form action={updateStock} className="flex items-center gap-2">
+                <label className="text-sm text-wabi-fg-muted">재고</label>
+                <input type="hidden" name="id" value={row.id} />
+                <input
+                  name="stock"
+                  type="number"
+                  min={0}
+                  defaultValue={row.stock}
+                  aria-label={`${row.name} 재고 수량`}
+                  className="w-24 rounded-lg border border-wabi-border bg-wabi-bg/60 px-2 py-1.5 text-sm outline-none transition-colors focus:border-wabi-fg"
+                />
+                <SubmitButton
+                  pendingText="저장 중…"
+                  className={adminAction({ tone: "outline" })}
+                >
+                  저장
+                </SubmitButton>
+              </form>
+            )}
 
             <form action={toggleMonthly}>
               <input type="hidden" name="id" value={row.id} />
