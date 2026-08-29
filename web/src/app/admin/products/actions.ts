@@ -66,6 +66,37 @@ function enabledAddonsField(formData: FormData): string[] {
   return ADDON_CODES.filter((c) => picked.has(c));
 }
 
+// 옵션 값별 재고(0058) — hidden `option_stock`(JSON `{group, stocks:{값:수량}}`)를
+// 안전 파싱. group 이 지정된 옵션 그룹의 값마다 재고를 둔다. products.stock 은
+// 관리 상품에선 이 합으로 유지(대시보드·품절 판정 호환). 깨진/빈 입력은 미관리.
+function optionStockField(formData: FormData): {
+  stockOption: string | null;
+  rows: { value: string; stock: number }[];
+  sum: number;
+} {
+  try {
+    const raw = JSON.parse(String(formData.get("option_stock") || "null"));
+    const group = typeof raw?.group === "string" ? raw.group.trim() : "";
+    const stocks =
+      raw?.stocks && typeof raw.stocks === "object" ? raw.stocks : null;
+    if (!group || !stocks) return { stockOption: null, rows: [], sum: 0 };
+    const rows: { value: string; stock: number }[] = [];
+    for (const [value, n] of Object.entries(stocks)) {
+      const v = String(value).trim().slice(0, 60);
+      const s = Math.max(0, Math.min(1_000_000, Math.floor(Number(n) || 0)));
+      if (v) rows.push({ value: v, stock: s });
+    }
+    if (rows.length === 0) return { stockOption: null, rows: [], sum: 0 };
+    return {
+      stockOption: group.slice(0, 40),
+      rows,
+      sum: rows.reduce((a, r) => a + r.stock, 0),
+    };
+  } catch {
+    return { stockOption: null, rows: [], sum: 0 };
+  }
+}
+
 function imageFiles(formData: FormData): File[] {
   return formData
     .getAll("images")
@@ -107,13 +138,17 @@ export async function createProduct(
     origin,
   } = parsed.data;
 
+  // 옵션 값별 재고(0058) — 관리면 products.stock 은 값별 합, stock_option 지정.
+  const optStock = optionStockField(formData);
+
   const supabase = createAdminClient();
   const { data: inserted, error: insertError } = await supabase
     .from("products")
     .insert({
       name,
       price,
-      stock,
+      stock: optStock.stockOption ? optStock.sum : stock,
+      stock_option: optStock.stockOption,
       category_id: categoryId,
       is_monthly: isMonthly,
       description,
@@ -128,6 +163,17 @@ export async function createProduct(
     .single();
   if (insertError || !inserted)
     return { ok: false, message: `등록 실패: ${insertError?.message ?? "알 수 없는 오류"}` };
+
+  // 값별 재고 행 저장(관리 상품).
+  if (optStock.stockOption && optStock.rows.length) {
+    await supabase.from("product_option_stock").insert(
+      optStock.rows.map((r) => ({
+        product_id: inserted.id,
+        value: r.value,
+        stock: r.stock,
+      })),
+    );
+  }
 
   // 이미지 업로드 → images 배열 저장. 실패는 메시지로 노출(조용히 넘기지 않음).
   const files = imageFiles(formData);
@@ -185,6 +231,9 @@ export async function updateProduct(
     origin,
   } = parsed.data;
 
+  // 옵션 값별 재고(0058) — 관리면 stock_option 지정·stock 을 합으로, 미관리면 null.
+  const optStock = optionStockField(formData);
+
   const supabase = createAdminClient();
   // select 로 매칭 row 를 돌려받아 부재(동시 삭제 등)를 성공으로 오인하지 않는다.
   const { data: updated, error } = await supabase
@@ -201,6 +250,10 @@ export async function updateProduct(
       origin,
       options: optionsField(formData),
       enabled_addons: enabledAddonsField(formData),
+      stock_option: optStock.stockOption,
+      // 관리 상품이면 flat stock 을 값별 합으로 맞춘다(미관리면 기존 stock 유지 —
+      // 본문 수정 폼은 flat 재고를 편집하지 않으므로 건드리지 않는다).
+      ...(optStock.stockOption ? { stock: optStock.sum } : {}),
     })
     .eq("id", id)
     .select("id")
@@ -208,6 +261,18 @@ export async function updateProduct(
   if (error) return { ok: false, message: `저장 실패: ${error.message}` };
   if (!updated)
     return { ok: false, message: "상품을 찾을 수 없습니다(이미 삭제되었을 수 있음)." };
+
+  // 값별 재고 행 동기화 — 관리면 교체(전량 삭제 후 재삽입), 미관리면 정리.
+  await supabase.from("product_option_stock").delete().eq("product_id", id);
+  if (optStock.stockOption && optStock.rows.length) {
+    await supabase.from("product_option_stock").insert(
+      optStock.rows.map((r) => ({
+        product_id: id,
+        value: r.value,
+        stock: r.stock,
+      })),
+    );
+  }
 
   await logAdminAction(user, {
     action: "product.update",
@@ -444,9 +509,17 @@ export async function updateStock(formData: FormData) {
   // 재입고 판정을 위해 이전 재고를 먼저 읽는다 (#166).
   const { data: before } = await supabase
     .from("products")
-    .select("stock")
+    .select("stock, stock_option")
     .eq("id", id)
-    .maybeSingle<{ stock: number }>();
+    .maybeSingle<{ stock: number; stock_option: string | null }>();
+
+  // 옵션 값별 재고 관리 상품(0058)은 목록 인라인 재고 편집을 막는다 — flat stock 은
+  // 값별 합으로 자동 유지되므로, 여기서 덮어쓰면 값별 재고와 어긋난다. 값별 재고는
+  // 상품 수정 폼에서 관리한다.
+  if (before?.stock_option) {
+    console.warn("[admin] 옵션 재고 관리 상품은 인라인 재고 편집 불가", id);
+    return;
+  }
 
   // 저장이 실패하면 감사로그·알림을 남기지 않는다(하지 않은 변경을 기록·통지하지 않도록).
   const { error: updateErr } = await supabase

@@ -44,6 +44,7 @@ type DetailRow = {
   origin: string | null;
   images: unknown;
   options: unknown;
+  stock_option: string | null;
   enabled_addons: unknown;
   category_id: string | null;
   categories: { slug: string; name_en: string; name_ko: string } | null;
@@ -55,7 +56,7 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
   const { data } = await db
     .from("products")
     .select(
-      "id, name, price, stock, sold_out, description, material, size, care, origin, images, options, enabled_addons, category_id, categories(slug, name_en, name_ko)",
+      "id, name, price, stock, sold_out, description, material, size, care, origin, images, options, stock_option, enabled_addons, category_id, categories(slug, name_en, name_ko)",
     )
     .eq("id", id)
     .eq("is_active", true)
@@ -82,6 +83,36 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
       ? (data.enabled_addons as string[])
       : [],
   };
+
+  // 옵션 값별 재고(0058) — 재고 0 이하인 값은 '품절'로 표시한다. 수량 자체는
+  // 노출하지 않고(재고 비공개), stock_option 그룹의 soldOut 에 병합해 기존 품절
+  // 처리(선택 불가·(품절) 라벨)를 그대로 재사용한다.
+  if (data.stock_option) {
+    const { data: stockRows } = await db
+      .from("product_option_stock")
+      .select("value, stock")
+      .eq("product_id", data.id);
+    const depleted = new Set(
+      (stockRows ?? [])
+        .filter((r) => (r as { stock: number }).stock <= 0)
+        .map((r) => (r as { value: string }).value),
+    );
+    if (depleted.size > 0) {
+      product.options = product.options.map((g) =>
+        g.name === data.stock_option
+          ? {
+              ...g,
+              soldOut: [
+                ...new Set([
+                  ...(g.soldOut ?? []),
+                  ...g.values.filter((v) => depleted.has(v)),
+                ]),
+              ],
+            }
+          : g,
+      );
+    }
+  }
 
   // 관련 상품(같은 카테고리) + 평점 통계 병렬.
   const [relatedRes, reviewsRes] = await Promise.all([

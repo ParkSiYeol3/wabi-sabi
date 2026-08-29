@@ -27,10 +27,15 @@ const splitValues = (s: string) =>
 export function ProductOptionsFields({
   initialOptions = [],
   initialAddons = ADDON_CODES,
+  initialStockOption = null,
+  initialOptionStock = {},
 }: {
   initialOptions?: OptionGroup[];
   // 노출 켜진 애드온 코드. 수정 폼은 상품값, 등록 폼은 기본 전체.
   initialAddons?: string[];
+  // 옵션 값별 재고(0058) — 재고를 담는 옵션 그룹 이름, 값별 재고 맵.
+  initialStockOption?: string | null;
+  initialOptionStock?: Record<string, number>;
 }) {
   // 값은 편집 편의상 쉼표 구분 문자열로 다룬다(저장 시 배열로 파싱).
   const [rows, setRows] = useState<Row[]>(
@@ -41,6 +46,17 @@ export function ProductOptionsFields({
     })),
   );
   const [addons, setAddons] = useState<string[]>(initialAddons);
+  // 재고를 관리하는 옵션 그룹 index(-1=없음=flat stock). 값별 재고는 value→수량 문자열.
+  const [stockGroup, setStockGroup] = useState<number>(() =>
+    initialStockOption
+      ? initialOptions.findIndex((g) => g.name === initialStockOption)
+      : -1,
+  );
+  const [stocks, setStocks] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      Object.entries(initialOptionStock).map(([v, n]) => [v, String(n)]),
+    ),
+  );
 
   // 직렬화 — 이름·값 트림, 빈 값·빈 그룹 제거. soldOut 은 존재하는 값만.
   // 서버(parseOptionGroups)가 재검증한다.
@@ -55,6 +71,28 @@ export function ProductOptionsFields({
       })
       .filter((g) => g.name && g.values.length),
   );
+
+  // 옵션 값별 재고(0058) 직렬화 — 재고 관리 그룹의 값마다 수량. hidden `option_stock`.
+  // 그룹이 유효(이름·값 있음)할 때만. 서버(optionStockField)가 재검증한다.
+  const stockRow = stockGroup >= 0 ? rows[stockGroup] : null;
+  const optionStockSerialized =
+    stockRow && stockRow.name.trim() && splitValues(stockRow.values).length
+      ? JSON.stringify({
+          group: stockRow.name.trim(),
+          stocks: Object.fromEntries(
+            splitValues(stockRow.values).map((v) => [
+              v,
+              Math.max(0, Math.floor(Number(stocks[v]) || 0)),
+            ]),
+          ),
+        })
+      : "";
+
+  const setStock = (value: string, n: string) =>
+    setStocks((s) => ({ ...s, [value]: n }));
+  // 재고 관리 그룹 지정 토글 — 한 그룹만. 다시 누르면 해제(flat 재고로).
+  const toggleStockGroup = (i: number) =>
+    setStockGroup((cur) => (cur === i ? -1 : i));
 
   // 이름은 있는데 선택지가 비어 "저장돼도 사라지는" 줄 — 대표님께 미리 경고.
   const incomplete = rows.filter(
@@ -79,7 +117,13 @@ export function ProductOptionsFields({
           : r,
       ),
     );
-  const removeRow = (i: number) => setRows((rs) => rs.filter((_, j) => j !== i));
+  const removeRow = (i: number) => {
+    setRows((rs) => rs.filter((_, j) => j !== i));
+    // 재고 관리 그룹 index 보정 — 지운 줄이 그 앞이면 한 칸 당기고, 그 줄이면 해제.
+    setStockGroup((cur) =>
+      cur === i ? -1 : cur > i ? cur - 1 : cur,
+    );
+  };
   const toggleAddon = (code: string, on: boolean) =>
     setAddons((a) => (on ? [...new Set([...a, code])] : a.filter((c) => c !== code)));
 
@@ -88,6 +132,7 @@ export function ProductOptionsFields({
       {/* ── 커스텀 옵션 ─────────────────────────────── */}
       <div className="border border-wabi-border p-3">
         <input type="hidden" name="options" value={serialized} />
+        <input type="hidden" name="option_stock" value={optionStockSerialized} />
         <p className="text-xs font-medium text-wabi-fg">
           옵션{" "}
           <span className="font-normal text-wabi-fg-muted">
@@ -133,33 +178,70 @@ export function ProductOptionsFields({
                 onChange={(e) => setRow(i, { values: e.target.value })}
                 className="w-full border border-wabi-border bg-transparent px-3 py-2 text-sm outline-none focus:border-wabi-fg"
               />
-              {/* 3줄: 선택지별 품절 토글 — 누르면 상세에서 (품절)·비활성 처리(대표님). */}
+              {/* 3줄: 재고 관리 지정 + (관리 시)값별 수량 / (미관리 시)수동 품절 토글 */}
               {splitValues(r.values).length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[11px] text-wabi-fg-muted">
-                    품절 표시:
-                  </span>
-                  {splitValues(r.values).map((v) => {
-                    const sold = r.soldOut.includes(v);
-                    return (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => toggleSold(i, v)}
-                        aria-pressed={sold}
-                        className={cn(
-                          "rounded border px-2 py-0.5 text-xs transition-colors",
-                          sold
-                            ? "border-red-400 bg-red-50 text-red-600 line-through"
-                            : "border-wabi-border text-wabi-fg-muted hover:border-wabi-fg hover:text-wabi-fg",
-                        )}
-                      >
-                        {v}
-                        {sold ? " 품절" : ""}
-                      </button>
-                    );
-                  })}
-                </div>
+                <>
+                  {/* 이 옵션으로 값별 재고 관리(0058) — 한 그룹만. 켜면 값별 수량 입력. */}
+                  <label className="flex items-center gap-1.5 text-[11px] text-wabi-fg-muted">
+                    <input
+                      type="checkbox"
+                      checked={stockGroup === i}
+                      onChange={() => toggleStockGroup(i)}
+                      className="size-3.5"
+                    />
+                    이 옵션으로 재고 관리 (값별 수량 · 0이면 자동 품절)
+                  </label>
+
+                  {stockGroup === i ? (
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                      {splitValues(r.values).map((v) => (
+                        <label
+                          key={v}
+                          className="flex items-center gap-1.5 text-xs text-wabi-fg-muted"
+                        >
+                          <span className="text-wabi-fg">{v}</span>
+                          <input
+                            type="number"
+                            min={0}
+                            inputMode="numeric"
+                            value={stocks[v] ?? ""}
+                            onChange={(e) => setStock(v, e.target.value)}
+                            placeholder="0"
+                            aria-label={`${v} 재고 수량`}
+                            className="w-16 border border-wabi-border bg-transparent px-2 py-1 font-numeric text-sm outline-none focus:border-wabi-fg"
+                          />
+                          <span className="text-wabi-fg-muted/70">개</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] text-wabi-fg-muted">
+                        품절 표시:
+                      </span>
+                      {splitValues(r.values).map((v) => {
+                        const sold = r.soldOut.includes(v);
+                        return (
+                          <button
+                            key={v}
+                            type="button"
+                            onClick={() => toggleSold(i, v)}
+                            aria-pressed={sold}
+                            className={cn(
+                              "rounded border px-2 py-0.5 text-xs transition-colors",
+                              sold
+                                ? "border-red-400 bg-red-50 text-red-600 line-through"
+                                : "border-wabi-border text-wabi-fg-muted hover:border-wabi-fg hover:text-wabi-fg",
+                            )}
+                          >
+                            {v}
+                            {sold ? " 품절" : ""}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           ))}

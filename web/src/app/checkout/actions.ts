@@ -163,13 +163,28 @@ export async function createPendingOrder(
   const ids = lines.map((l) => l.id);
   const { data: products } = await supabase
     .from("products")
-    .select("id, name, price, stock, sold_out, options")
+    .select("id, name, price, stock, sold_out, options, stock_option")
     .in("id", ids)
     .eq("is_active", true);
   if (!products || products.length === 0)
     return { ok: false, error: "상품 정보를 찾을 수 없습니다." };
 
   const priceMap = new Map(products.map((p) => [p.id, p]));
+
+  // 옵션 값별 재고(0058) — stock_option 이 지정된 상품은 flat stock 대신 선택 값의
+  // 재고로 판매 가능 여부를 판정한다. 관리 상품이 있을 때만 조회. 키는 `id::value`.
+  const managedIds = products
+    .filter((p) => p.stock_option)
+    .map((p) => p.id);
+  const optionStock = new Map<string, number>();
+  if (managedIds.length > 0) {
+    const { data: rows } = await supabase
+      .from("product_option_stock")
+      .select("product_id, value, stock")
+      .in("product_id", managedIds);
+    for (const r of rows ?? [])
+      optionStock.set(`${r.product_id}::${r.value}`, r.stock);
+  }
   let subtotal = 0;
   let giftSelected = false;
   const items: {
@@ -186,8 +201,23 @@ export async function createPendingOrder(
     // 강제 품절(대표님) — 재고가 있어도 판매 잠금. 서버에서 구매 차단.
     if (p.sold_out)
       return { ok: false, error: `'${p.name}'은(는) 현재 품절입니다.` };
-    if (p.stock < line.quantity)
+    // 재고 검증 — 옵션 관리 상품은 선택 값의 재고로, 아니면 flat stock 으로.
+    // (선택 값은 아래 validateSelection 이 필수로 강제하므로 존재가 보장된다.)
+    if (p.stock_option) {
+      const selected = line.options.find(
+        (o) => o.name === p.stock_option,
+      )?.value;
+      const available = selected
+        ? optionStock.get(`${p.id}::${selected}`) ?? 0
+        : 0;
+      if (available < line.quantity)
+        return {
+          ok: false,
+          error: `'${p.name}'${selected ? ` (${selected})` : ""} 재고가 부족합니다.`,
+        };
+    } else if (p.stock < line.quantity) {
       return { ok: false, error: `'${p.name}' 재고가 부족합니다.` };
+    }
     // 커스텀 옵션(0048) — 상품 정의와 대조. 정의된 그룹은 모두 유효값이 선택돼야
     // 한다(대표님이 색상 모르는 주문 방지). 서버가 진실 — 클라이언트 값 불신.
     const optionCheck = validateSelection(parseOptionGroups(p.options), line.options);

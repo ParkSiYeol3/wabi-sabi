@@ -27,6 +27,9 @@ export type ProductEditValues = {
   origin: string | null;
   options: OptionGroup[];
   enabledAddons: string[];
+  // 옵션 값별 재고(0058) — 재고 담는 옵션 그룹 이름, 값별 재고 맵.
+  stockOption: string | null;
+  optionStock: Record<string, number>;
 };
 
 // 기존 상품 본문 수정 폼 (대표님 지시 — 이미 올린 상품 글 수정).
@@ -148,6 +151,8 @@ export function ProductEditForm({
       <ProductOptionsFields
         initialOptions={product.options}
         initialAddons={product.enabledAddons}
+        initialStockOption={product.stockOption}
+        initialOptionStock={product.optionStock}
       />
       <div className="flex items-center gap-3 sm:col-span-2">
         <Button
