@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { XCircle } from "lucide-react";
 import { Container } from "@/components/layout/container";
+import { OrderCompleteMark } from "@/components/checkout/order-complete-mark";
 import { Button } from "@/components/ui/button";
 import { ClearCart } from "@/components/common/clear-cart";
 import { confirmPayment } from "@/lib/payments";
@@ -58,7 +59,7 @@ export default async function CheckoutSuccessPage({
       {success ? (
         <>
           <ClearCart />
-          <CheckCircle2 className="size-12 text-wabi-fg" strokeWidth={1.2} />
+          <OrderCompleteMark />
           <h1 className="mt-6 text-2xl font-semibold">주문이 완료되었습니다</h1>
           <p className="mt-3 text-sm text-wabi-fg-muted">
             결제금액 <Price value={Number(amount)} />
