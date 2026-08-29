@@ -25,18 +25,9 @@ import {
   DEFAULT_SHIPPING_INFO,
   SHIPPING_FEE_KEY,
   DEFAULT_SHIPPING_FEE,
-  CARE_USAGE_KEY,
-  DEFAULT_CARE_USAGE,
-  CARE_MAINTAIN_KEY,
-  DEFAULT_CARE_MAINTAIN,
-  CARE_USAGE_LABEL_KEY,
-  DEFAULT_CARE_USAGE_LABEL,
-  CARE_MAINTAIN_LABEL_KEY,
-  DEFAULT_CARE_MAINTAIN_LABEL,
 } from "@/lib/queries/content";
 import { PageHeader, SectionHeading } from "@/components/admin/ui";
 import { ContentField } from "@/components/admin/content-field";
-import { CareEditor } from "@/components/admin/care-editor";
 import { AboutImageField } from "@/components/admin/about-image-field";
 import { PrepNoticeField } from "@/components/admin/prep-notice-field";
 
@@ -98,10 +89,6 @@ export default async function AdminContentPage() {
     critHeading,
     shippingInfo,
     shippingFee,
-    careUsageLabel,
-    careUsage,
-    careMaintainLabel,
-    careMaintain,
   ] = await Promise.all([
     getSiteContent(PHILOSOPHY_KEY),
     getSiteContent(HOME_PILLAR_LABEL_KEYS[0]),
@@ -124,10 +111,6 @@ export default async function AdminContentPage() {
     getSiteContent(CRITERIA_HEADING_KEY),
     getSiteContent(SHIPPING_INFO_KEY),
     getSiteContent(SHIPPING_FEE_KEY),
-    getSiteContent(CARE_USAGE_LABEL_KEY),
-    getSiteContent(CARE_USAGE_KEY),
-    getSiteContent(CARE_MAINTAIN_LABEL_KEY),
-    getSiteContent(CARE_MAINTAIN_KEY),
   ]);
 
   const criteria = [
@@ -353,28 +336,9 @@ export default async function AdminContentPage() {
             <ContentField
               contentKey={SHIPPING_FEE_KEY}
               label="배송비 안내"
-              hint="실제 배송비는 8만원 이상 무료·미만 3,500원으로 자동 계산됩니다. 이 칸은 안내 문구(표현)만 바꿉니다 — 금액·기준선을 바꾸려면 개발(시열님)에게 알려주세요."
+              hint="실제 배송비는 10만원 이상 무료·미만 3,500원으로 자동 계산됩니다. 이 칸은 안내 문구(표현)만 바꿉니다 — 금액·기준선을 바꾸려면 개발(시열님)에게 알려주세요."
               value={shippingFee ?? DEFAULT_SHIPPING_FEE}
               rows={2}
-            />
-          </div>
-
-          <div className="space-y-3">
-            <SectionHeading>사용 및 관리</SectionHeading>
-            <p className="text-xs text-wabi-fg-muted">
-              모든 상품 상세의 사진과 리뷰 사이에 표시됩니다. 두 묶음으로 나뉘며,
-              각 묶음의 <b>소제목</b>과 <b>본문</b>을 모두 바꿀 수 있습니다. 재질
-              프리셋(세라믹·스테인리스·글라스)으로 본문을 채운 뒤 다듬어 저장하세요.
-            </p>
-            <CareEditor
-              usageLabelKey={CARE_USAGE_LABEL_KEY}
-              usageLabelValue={careUsageLabel ?? DEFAULT_CARE_USAGE_LABEL}
-              usageKey={CARE_USAGE_KEY}
-              usageValue={careUsage ?? DEFAULT_CARE_USAGE}
-              maintainLabelKey={CARE_MAINTAIN_LABEL_KEY}
-              maintainLabelValue={careMaintainLabel ?? DEFAULT_CARE_MAINTAIN_LABEL}
-              maintainKey={CARE_MAINTAIN_KEY}
-              maintainValue={careMaintain ?? DEFAULT_CARE_MAINTAIN}
             />
           </div>
 
