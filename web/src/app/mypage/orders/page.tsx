@@ -53,6 +53,11 @@ export default async function OrdersPage() {
     .select(
       "id, order_number, status, total_price, ordered_at, delivered_at, order_items(product_id, product_name, quantity, products(images))",
     )
+    // 미결제(pending)는 숨긴다 — 결제창을 열었다가 결제하지 않고 뒤로가면 주문이
+    // pending 으로 남는데(결제 전 orderId 발급이 필요한 토스 결제창 구조), 이는
+    // 실제 결제된 주문이 아니라 "결제 대기"로 보이면 오해를 준다(대표님). 방치된
+    // pending 은 cron(cleanup-pending)이 cancelled 로 정리한다. paid 이후 상태만 노출.
+    .neq("status", "pending")
     .order("ordered_at", { ascending: false })
     .returns<Order[]>();
 
