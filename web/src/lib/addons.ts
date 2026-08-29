@@ -18,6 +18,12 @@ export const ADDONS: readonly Addon[] = [
   { code: "shopping_bag", name: "쇼핑백", price: 700 },
 ] as const;
 
+// ⚠ 애드온(추가옵션) 노출 스위치(대표님 — 선물 포장·쇼핑백을 추가옵션에서 빼고
+// TABLEWARE>기프트 카테고리의 '상품'으로 판매). false 면 상품 상세의 추가옵션 선택
+// UI·상품 등록 폼의 '추가옵션 노출' 체크박스를 숨긴다. 과거 주문·장바구니에 남은
+// 애드온 라인은 resolveAddons 로 그대로 표시·계산되어 하위호환된다(백엔드 유지).
+export const ADDONS_ENABLED = false;
+
 const BY_CODE = new Map(ADDONS.map((a) => [a.code, a]));
 
 export const GIFT_WRAP_CODE = "gift_wrap";
@@ -28,6 +34,7 @@ export const ADDON_CODES = ADDONS.map((a) => a.code);
 // 순서 유지. 배열이 아니면(구 데이터) 전체 노출로 폴백(현행 동작 보존). 빈 배열이면
 // 대표님이 둘 다 껐다는 뜻 → 아무 애드온도 노출하지 않는다.
 export function enabledAddons(raw: unknown): Addon[] {
+  if (!ADDONS_ENABLED) return []; // 은퇴 — 상세에서 추가옵션 미노출(대표님)
   if (!Array.isArray(raw)) return [...ADDONS];
   const set = new Set(raw.map((c) => String(c)));
   return ADDONS.filter((a) => set.has(a.code));

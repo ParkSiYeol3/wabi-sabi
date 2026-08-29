@@ -350,39 +350,6 @@ export default async function ProductDetailPage({
             </div>
           </div>
 
-          {/* 교환·반품 안내 (#241, 갭 분석 3) — 구매 결정 순간에 정보가 없어
-              /legal 까지 가야 했다. 확정된 것만 요약(배송비 금액은 미정이라 제외,
-              허위표시 방지). 도자기 개체차 고지는 클레임 예방에 특히 중요.
-              details/summary 무JS 접이식(홈·shop 사이드바와 동일 패턴). */}
-          <details className="border-t border-wabi-border pt-4 text-sm">
-            <summary className="cursor-pointer list-none font-medium marker:content-none">
-              <span className="inline-flex w-full items-center justify-between">
-                교환·반품 안내
-                <span aria-hidden className="text-wabi-fg-muted">
-                  ＋
-                </span>
-              </span>
-            </summary>
-            <div className="mt-4 space-y-3 font-numeric text-wabi-fg-muted">
-              <p>
-                도자기·유리 등 일부 기물은 소재와 제작 과정의 특성상 색상·질감·크기·
-                굽의 형태에 <strong className="font-medium text-wabi-fg">개체별
-                미세한 차이</strong>가 있을 수 있습니다. 이는 하자가 아닌 고유한
-                특성입니다.
-              </p>
-              <p>
-                단순 변심에 의한 청약철회는 상품 수령 후{" "}
-                <strong className="font-medium text-wabi-fg">7일 이내</strong>에
-                요청할 수 있으며, 반품 배송비는 고객이 부담합니다.
-              </p>
-              <Link
-                href="/legal/refund"
-                className="inline-block underline underline-offset-2 hover:text-wabi-fg"
-              >
-                교환·환불 안내 자세히 보기 →
-              </Link>
-            </div>
-          </details>
         </div>
       </div>
 
@@ -392,6 +359,34 @@ export default async function ProductDetailPage({
       {/* 사용 및 관리 (대표님 — 사진과 리뷰 사이). 대표님이 정리한 케어 카드
           (소재별 주의 + 자연스러운 변화 + 가전 가이드)를 그대로 옮긴 정적 안내. */}
       <ProductCareGuide />
+
+      {/* 교환·반품 안내 (대표님 — 리뷰 위에 텍스트로 배치). 확정된 것만 요약
+          (배송비 금액은 미정이라 제외, 허위표시 방지). 도자기 개체차 고지는
+          클레임 예방에 특히 중요. 자세한 내용은 /legal/refund 링크. */}
+      <section className="mt-14 max-w-2xl border-t border-wabi-border pt-8 text-sm">
+        <h2 className="text-base font-medium text-wabi-fg">교환·반품 안내</h2>
+        <div className="mt-4 space-y-3 font-numeric text-wabi-fg-muted">
+          <p>
+            도자기·유리 등 일부 기물은 소재와 제작 과정의 특성상 색상·질감·크기·
+            굽의 형태에{" "}
+            <strong className="font-medium text-wabi-fg">
+              개체별 미세한 차이
+            </strong>
+            가 있을 수 있습니다. 이는 하자가 아닌 고유한 특성입니다.
+          </p>
+          <p>
+            단순 변심에 의한 청약철회는 상품 수령 후{" "}
+            <strong className="font-medium text-wabi-fg">7일 이내</strong>에
+            요청할 수 있으며, 반품 배송비는 고객이 부담합니다.
+          </p>
+          <Link
+            href="/legal/refund"
+            className="inline-block underline underline-offset-2 hover:text-wabi-fg"
+          >
+            교환·환불 안내 자세히 보기 →
+          </Link>
+        </div>
+      </section>
 
       {/* 리뷰 (대표님 피드백 — 게시판 3종) */}
       <ReviewSection productId={product.id} currentUserId={user?.id ?? null} />
