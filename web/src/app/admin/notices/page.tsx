@@ -64,41 +64,70 @@ export default async function AdminNoticesPage() {
             </div>
           ) : (
             <div className="mt-3">
-              <TablePanel>
-                <table className="w-full min-w-150 text-sm">
-                  <thead className="border-b border-wabi-border bg-wabi-subtle/50 text-left text-xs text-wabi-fg-muted">
-                    <tr>
-                      <th className="px-4 py-3 font-medium">제목</th>
-                      <th className="px-4 py-3 font-medium">작성일</th>
-                      <th className="px-4 py-3 font-medium">삭제</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-wabi-border">
-                    {notices.map((n) => (
-                      <tr
-                        key={n.id}
-                        className="transition-colors hover:bg-wabi-muted/40"
-                      >
-                        <td className="px-4 py-3">{n.title}</td>
-                        <td className="px-4 py-3 text-wabi-fg-muted">
-                          {new Date(n.created_at).toLocaleDateString("ko-KR")}
-                        </td>
-                        <td className="px-4 py-3">
-                          <form action={deleteNotice}>
-                            <input type="hidden" name="id" value={n.id} />
-                            <SubmitButton
-                              pendingText="삭제 중…"
-                              className="cursor-pointer text-xs text-red-700 underline-offset-2 transition-colors hover:text-red-800 hover:underline"
-                            >
-                              삭제
-                            </SubmitButton>
-                          </form>
-                        </td>
+              {/* 데스크톱(md↑) — 표. */}
+              <div className="hidden md:block">
+                <TablePanel>
+                  <table className="w-full min-w-150 text-sm">
+                    <thead className="border-b border-wabi-border bg-wabi-subtle/50 text-left text-xs text-wabi-fg-muted">
+                      <tr>
+                        <th className="px-4 py-3 font-medium">제목</th>
+                        <th className="px-4 py-3 font-medium">작성일</th>
+                        <th className="px-4 py-3 font-medium">삭제</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </TablePanel>
+                    </thead>
+                    <tbody className="divide-y divide-wabi-border">
+                      {notices.map((n) => (
+                        <tr
+                          key={n.id}
+                          className="transition-colors hover:bg-wabi-muted/40"
+                        >
+                          <td className="px-4 py-3">{n.title}</td>
+                          <td className="px-4 py-3 text-wabi-fg-muted">
+                            {new Date(n.created_at).toLocaleDateString("ko-KR")}
+                          </td>
+                          <td className="px-4 py-3">
+                            <form action={deleteNotice}>
+                              <input type="hidden" name="id" value={n.id} />
+                              <SubmitButton
+                                pendingText="삭제 중…"
+                                className="cursor-pointer text-xs text-red-700 underline-offset-2 transition-colors hover:text-red-800 hover:underline"
+                              >
+                                삭제
+                              </SubmitButton>
+                            </form>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </TablePanel>
+              </div>
+
+              {/* 모바일(md 미만) — 카드. 삭제 버튼이 가로스크롤 밖으로 밀리지 않게. */}
+              <ul className="space-y-3 md:hidden">
+                {notices.map((n) => (
+                  <li
+                    key={n.id}
+                    className="rounded-xl border border-wabi-border bg-wabi-bg p-4 shadow-sm"
+                  >
+                    <p className="font-medium text-wabi-fg">{n.title}</p>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <span className="text-xs text-wabi-fg-muted">
+                        {new Date(n.created_at).toLocaleDateString("ko-KR")}
+                      </span>
+                      <form action={deleteNotice}>
+                        <input type="hidden" name="id" value={n.id} />
+                        <SubmitButton
+                          pendingText="삭제 중…"
+                          className="cursor-pointer rounded-lg border border-wabi-border px-3 py-1.5 text-xs text-red-700 transition-colors hover:border-red-700 hover:bg-red-50"
+                        >
+                          삭제
+                        </SubmitButton>
+                      </form>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </section>
