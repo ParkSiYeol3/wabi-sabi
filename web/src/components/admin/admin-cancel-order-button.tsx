@@ -10,9 +10,12 @@ import { adminCancelOrder } from "@/app/admin/orders/actions";
 export function AdminCancelOrderButton({
   orderId,
   orderNumber,
+  fullWidth = false,
 }: {
   orderId: string;
   orderNumber: string;
+  /** 모바일 카드에서 버튼을 가로 꽉 채워 터치 타깃 확보. */
+  fullWidth?: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -53,7 +56,7 @@ export function AdminCancelOrderButton({
         type="button"
         onClick={() => setConfirmOpen(true)}
         disabled={pending}
-        className="cursor-pointer rounded-lg border border-wabi-border px-2.5 py-1.5 text-xs text-wabi-fg-muted transition-colors hover:border-red-700 hover:text-red-700 disabled:opacity-60"
+        className={`${fullWidth ? "w-full justify-center py-2.5" : ""} cursor-pointer rounded-lg border border-wabi-border px-2.5 py-1.5 text-xs text-wabi-fg-muted transition-colors hover:border-red-700 hover:text-red-700 disabled:opacity-60`}
       >
         {pending ? "취소 처리 중…" : "주문 취소"}
       </button>
