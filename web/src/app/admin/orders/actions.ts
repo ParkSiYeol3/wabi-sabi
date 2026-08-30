@@ -6,6 +6,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { parseUuid } from "@/lib/validation";
 import { logAdminAction } from "@/lib/audit";
 import { sendOrderShippedMail } from "@/lib/emails/order-shipped";
+import { cancelPaidOrder, type CancelResult } from "@/lib/payments";
 
 // 송장번호 입력 + 상태 배송중 전환
 export async function setTracking(formData: FormData) {
@@ -81,4 +82,29 @@ export async function markDelivered(formData: FormData) {
     meta: { status: "delivered", delivered_at: deliveredAt },
   });
   revalidatePath("/admin/orders");
+}
+
+// 관리자 주문 취소 (#어드민취소) — 배송 전(paid) 주문 전액 취소·환불.
+// 손님 마이페이지 취소와 같은 RPC(cancel_paid_order)를 쓴다: 잠금 하 paid 확인 →
+// cancelled + 재고(값별 포함)·쿠폰 복원 → 토스 실환불. RPC 가 paid 만 받으므로
+// 배송 시작(shipping) 이후 주문은 자동으로 거부된다(대면·오배송 등은 별도 처리).
+// 실환불이 걸린 액션이라 클라이언트에서 확인 모달을 거친 뒤 호출한다.
+export async function adminCancelOrder(orderId: string): Promise<CancelResult> {
+  const user = await requireAdmin();
+  if (!adminConfigured()) return { ok: false, error: "서버 키 미설정" };
+
+  const id = parseUuid(orderId);
+  if (!id) return { ok: false, error: "주문 정보가 올바르지 않습니다." };
+
+  const result = await cancelPaidOrder(id, "관리자 취소");
+  if (result.ok) {
+    await logAdminAction(user, {
+      action: "order.cancel",
+      targetTable: "orders",
+      targetId: id,
+      meta: { by: "admin" },
+    });
+    revalidatePath("/admin/orders");
+  }
+  return result;
 }
