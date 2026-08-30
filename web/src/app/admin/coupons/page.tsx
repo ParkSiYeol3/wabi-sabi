@@ -63,65 +63,138 @@ export default async function AdminCouponsPage() {
             등록된 쿠폰이 없습니다.
           </p>
         ) : (
-          <Panel className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-180 text-sm">
-              <thead>
-                <tr className="border-b border-wabi-border text-left text-xs text-wabi-fg-muted">
-                  <th className="p-3">코드</th>
-                  <th className="p-3">할인</th>
-                  <th className="p-3">최소주문</th>
-                  <th className="p-3">사용/한도</th>
-                  <th className="p-3">만료</th>
-                  <th className="p-3">가입지급</th>
-                  <th className="p-3">상태</th>
-                </tr>
-              </thead>
-              <tbody>
-                {coupons.map((c) => (
-                  <tr key={c.id} className="border-b border-wabi-border/60">
-                    <td className="p-3">
+          <>
+            {/* 데스크톱(md↑) — 표. */}
+            <Panel className="mt-3 hidden overflow-x-auto md:block">
+              <table className="w-full min-w-180 text-sm">
+                <thead>
+                  <tr className="border-b border-wabi-border text-left text-xs text-wabi-fg-muted">
+                    <th className="p-3">코드</th>
+                    <th className="p-3">할인</th>
+                    <th className="p-3">최소주문</th>
+                    <th className="p-3">사용/한도</th>
+                    <th className="p-3">만료</th>
+                    <th className="p-3">가입지급</th>
+                    <th className="p-3">상태</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {coupons.map((c) => (
+                    <tr key={c.id} className="border-b border-wabi-border/60">
+                      <td className="p-3">
+                        <span className="font-medium text-wabi-fg">{c.code}</span>
+                        {c.description && (
+                          <span className="block text-xs text-wabi-fg-muted">
+                            {c.description}
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3 tabular-nums">{couponLabel(c)}</td>
+                      <td className="p-3 tabular-nums">
+                        {c.min_order > 0 ? won(c.min_order) : "—"}
+                      </td>
+                      <td className="p-3 tabular-nums">
+                        {c.used_count}
+                        {c.max_uses != null ? ` / ${c.max_uses}` : " / ∞"}
+                      </td>
+                      <td className="p-3 text-xs text-wabi-fg-muted">
+                        {c.expires_at ? formatDateKST(c.expires_at) : "무기한"}
+                      </td>
+                      <td className="p-3">{c.auto_issue_signup ? "○" : "—"}</td>
+                      <td className="p-3">
+                        <form action={setCouponActive} className="flex items-center gap-2">
+                          <input type="hidden" name="id" value={c.id} />
+                          <input
+                            type="hidden"
+                            name="active"
+                            value={String(!c.is_active)}
+                          />
+                          <SubmitButton
+                            pendingText="변경 중…"
+                            className={adminAction({
+                              tone: c.is_active ? "solid" : "outline",
+                            })}
+                          >
+                            {c.is_active ? "활성" : "비활성"}
+                          </SubmitButton>
+                        </form>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Panel>
+
+            {/* 모바일(md 미만) — 카드. 활성 토글이 가로스크롤 밖으로 밀리지 않게. */}
+            <ul className="mt-3 space-y-3 md:hidden">
+              {coupons.map((c) => (
+                <li
+                  key={c.id}
+                  className="rounded-xl border border-wabi-border bg-wabi-bg p-4 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
                       <span className="font-medium text-wabi-fg">{c.code}</span>
                       {c.description && (
                         <span className="block text-xs text-wabi-fg-muted">
                           {c.description}
                         </span>
                       )}
-                    </td>
-                    <td className="p-3 tabular-nums">{couponLabel(c)}</td>
-                    <td className="p-3 tabular-nums">
-                      {c.min_order > 0 ? won(c.min_order) : "—"}
-                    </td>
-                    <td className="p-3 tabular-nums">
-                      {c.used_count}
-                      {c.max_uses != null ? ` / ${c.max_uses}` : " / ∞"}
-                    </td>
-                    <td className="p-3 text-xs text-wabi-fg-muted">
-                      {c.expires_at ? formatDateKST(c.expires_at) : "무기한"}
-                    </td>
-                    <td className="p-3">{c.auto_issue_signup ? "○" : "—"}</td>
-                    <td className="p-3">
-                      <form action={setCouponActive} className="flex items-center gap-2">
-                        <input type="hidden" name="id" value={c.id} />
-                        <input
-                          type="hidden"
-                          name="active"
-                          value={String(!c.is_active)}
-                        />
-                        <SubmitButton
-                          pendingText="변경 중…"
-                          className={adminAction({
-                            tone: c.is_active ? "solid" : "outline",
-                          })}
-                        >
-                          {c.is_active ? "활성" : "비활성"}
-                        </SubmitButton>
-                      </form>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Panel>
+                    </div>
+                    <span className="shrink-0 tabular-nums text-sm text-wabi-accent">
+                      {couponLabel(c)}
+                    </span>
+                  </div>
+
+                  <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 text-sm">
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-wabi-fg-muted">최소주문</dt>
+                      <dd className="tabular-nums">
+                        {c.min_order > 0 ? won(c.min_order) : "—"}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-wabi-fg-muted">사용/한도</dt>
+                      <dd className="tabular-nums">
+                        {c.used_count}
+                        {c.max_uses != null ? ` / ${c.max_uses}` : " / ∞"}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-wabi-fg-muted">만료</dt>
+                      <dd className="text-xs text-wabi-fg-muted">
+                        {c.expires_at ? formatDateKST(c.expires_at) : "무기한"}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-wabi-fg-muted">가입지급</dt>
+                      <dd>{c.auto_issue_signup ? "○" : "—"}</dd>
+                    </div>
+                  </dl>
+
+                  <form
+                    action={setCouponActive}
+                    className="mt-3 border-t border-wabi-border pt-3"
+                  >
+                    <input type="hidden" name="id" value={c.id} />
+                    <input
+                      type="hidden"
+                      name="active"
+                      value={String(!c.is_active)}
+                    />
+                    <SubmitButton
+                      pendingText="변경 중…"
+                      className={`w-full justify-center ${adminAction({
+                        tone: c.is_active ? "solid" : "outline",
+                      })}`}
+                    >
+                      {c.is_active ? "활성 (누르면 비활성)" : "비활성 (누르면 활성)"}
+                    </SubmitButton>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </section>
     </div>
