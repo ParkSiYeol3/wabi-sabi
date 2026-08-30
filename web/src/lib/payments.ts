@@ -121,7 +121,11 @@ export type CancelResult = { ok: boolean; error?: string };
 // 순서: RPC(잠금 하 paid 확인 → cancelled + 재고 복원) 먼저 → 토스 환불 나중.
 // 환불을 먼저 하면 배송 처리와 경합 시 "배송됐는데 환불" 가능(0011 주석 참고).
 // 멱등: cancelled 주문 재호출 시 토스 취소만 재확인 → 환불 실패 재시도 가능.
-export async function cancelPaidOrder(orderId: string): Promise<CancelResult> {
+// reason 은 토스 취소 사유(상점관리자·결제내역에 남음) — 손님 취소/관리자 취소 구분.
+export async function cancelPaidOrder(
+  orderId: string,
+  reason = "고객 주문 취소",
+): Promise<CancelResult> {
   if (!process.env.TOSS_SECRET_KEY)
     return { ok: false, error: "토스 시크릿 키 미설정" };
   if (!adminConfigured()) return { ok: false, error: "서버 키 미설정" };
@@ -157,7 +161,7 @@ export async function cancelPaidOrder(orderId: string): Promise<CancelResult> {
     const cancel = await fetch(`${TOSS_API}/${payment.paymentKey}/cancel`, {
       method: "POST",
       headers: { Authorization: tossAuth(), "Content-Type": "application/json" },
-      body: JSON.stringify({ cancelReason: "고객 주문 취소" }),
+      body: JSON.stringify({ cancelReason: reason }),
     });
     if (!cancel.ok) {
       const body = await cancel.json().catch(() => ({}));

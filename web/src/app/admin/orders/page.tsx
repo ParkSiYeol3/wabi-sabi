@@ -4,6 +4,7 @@ import { won, formatDateKST, trackingSearchUrl } from "@/lib/orders";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { PageHeader, TablePanel, EmptyState } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/common/submit-button";
+import { AdminCancelOrderButton } from "@/components/admin/admin-cancel-order-button";
 import { setTracking, markDelivered } from "./actions";
 
 type Order = {
@@ -55,7 +56,7 @@ export default async function AdminOrdersPage() {
     <>
       <PageHeader
         title="주문 관리"
-        description="송장 입력·배송완료 처리. 최신 주문 순."
+        description="송장 입력·배송완료·취소(배송 전 전액 환불) 처리. 최신 주문 순."
       />
       {!orders || orders.length === 0 ? (
         <EmptyState>주문이 없습니다.</EmptyState>
@@ -71,6 +72,7 @@ export default async function AdminOrdersPage() {
                 <th className="px-4 py-3 font-medium">상태</th>
                 <th className="px-4 py-3 font-medium">송장번호</th>
                 <th className="px-4 py-3 font-medium">배송완료</th>
+                <th className="px-4 py-3 font-medium">취소</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-wabi-border">
@@ -156,6 +158,18 @@ export default async function AdminOrdersPage() {
                           배송완료 처리
                         </SubmitButton>
                       </form>
+                    ) : (
+                      <span className="text-xs text-wabi-fg-muted">—</span>
+                    )}
+                  </td>
+                  {/* 취소·환불 — 배송 전(paid)만. RPC 가 paid 만 받으므로 그 외
+                      상태에서는 버튼을 숨긴다(눌러도 거부되지만 오조작 예방). */}
+                  <td className="px-4 py-3">
+                    {o.status === "paid" ? (
+                      <AdminCancelOrderButton
+                        orderId={o.id}
+                        orderNumber={o.order_number}
+                      />
                     ) : (
                       <span className="text-xs text-wabi-fg-muted">—</span>
                     )}
