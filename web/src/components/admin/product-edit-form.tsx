@@ -97,12 +97,13 @@ export function ProductEditForm({
       </label>
       <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted sm:col-span-2">
         상품 설명 (상세 페이지에 표시)
+        {/* 모바일 입력칸 확대(대표님) — 넉넉한 높이 + 16px 글씨(iOS 포커스 확대 방지). */}
         <textarea
           name="description"
-          rows={6}
+          rows={10}
           maxLength={2000}
           defaultValue={product.description ?? ""}
-          className="resize-y border border-wabi-border bg-transparent px-3 py-2 text-sm text-wabi-fg outline-none transition-colors focus:border-wabi-fg"
+          className="min-h-52 resize-y border border-wabi-border bg-transparent px-3 py-2 text-base text-wabi-fg outline-none transition-colors focus:border-wabi-fg sm:min-h-44 sm:text-sm"
         />
       </label>
       {/* 상세 스펙 — 프리셋 드롭다운 + 직접 입력(대표님). 비우면 상세에서 행 생략.

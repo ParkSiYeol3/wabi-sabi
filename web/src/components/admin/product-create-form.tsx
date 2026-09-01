@@ -142,15 +142,17 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
       {/* 상품 설명 — 상세 페이지에 노출된다. 넓게 전체 폭 차지 */}
       <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted sm:col-span-2 lg:col-span-4">
         상품 설명 (상세 페이지에 표시)
+        {/* 모바일에서 입력칸이 작아 작성이 불편(대표님) → 넉넉한 높이 + 16px 글씨
+            (iOS 포커스 확대 방지). 데스크톱은 약간 낮춘다. */}
         <textarea
           name="description"
-          rows={4}
+          rows={10}
           maxLength={2000}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           aria-label="상품 설명"
           placeholder="소재·크기·사용 안내 등 상품 설명을 입력하세요"
-          className="resize-y border border-wabi-border bg-transparent px-3 py-2 text-sm text-wabi-fg outline-none transition-colors focus:border-wabi-fg"
+          className="min-h-52 resize-y border border-wabi-border bg-transparent px-3 py-2 text-base text-wabi-fg outline-none transition-colors focus:border-wabi-fg sm:min-h-44 sm:text-sm"
         />
       </label>
       <div className="flex flex-col gap-1 text-xs text-wabi-fg-muted sm:col-span-2 lg:col-span-3">

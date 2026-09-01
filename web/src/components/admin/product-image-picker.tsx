@@ -1,15 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Pencil, X, ImagePlus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Pencil, X, ImagePlus, GripVertical } from "lucide-react";
 import { ImageEditor } from "@/components/admin/image-editor";
+import { SortableImageGrid } from "@/components/admin/sortable-image-grid";
 
 // 상품 이미지 선택 + 간단 편집(비율 크롭·회전·필터) 묶음.
 // 폼 제출은 name 을 가진 hidden file input 으로 하되, 선택·편집된 File 목록을
 // DataTransfer 로 그 input.files 에 동기화한다(부모 폼 코드는 그대로 files 를 읽는다).
 // 편집기는 선택 즉시 큐로 순회하고, 썸네일의 연필로 개별 재편집한다.
+// 순서는 손잡이를 끌어 재배치(대표님) — 첫 장이 상세 대표 이미지. 각 항목은
+// 순서가 바뀌어도 유지되는 id 를 들고 있어 드래그 키가 안정적이다.
 
 const isImage = (f: File) => f.type.startsWith("image/");
+
+type Item = { id: string; file: File };
 
 type Batch = {
   queue: File[];
@@ -25,21 +30,23 @@ export function ProductImagePicker({
   name: string;
   onFilesChange?: (count: number) => void;
 }) {
-  const [files, setFiles] = useState<File[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
   const [batch, setBatch] = useState<Batch | null>(null);
   const hiddenRef = useRef<HTMLInputElement>(null);
   const selectRef = useRef<HTMLInputElement>(null);
+  const idSeq = useRef(0);
+  const nextId = () => `img${++idSeq.current}`; // 이벤트 핸들러에서만 호출(렌더 아님).
 
   // 선택·편집된 목록을 제출용 hidden input 에 동기화(DataTransfer).
   useEffect(() => {
     const input = hiddenRef.current;
     if (input) {
       const dt = new DataTransfer();
-      for (const f of files) dt.items.add(f);
+      for (const it of items) dt.items.add(it.file);
       input.files = dt.files;
     }
-    onFilesChange?.(files.length);
-  }, [files, onFilesChange]);
+    onFilesChange?.(items.length);
+  }, [items, onFilesChange]);
 
   function startBatch(picked: File[], replaceAt: number | null) {
     const imgs = picked.filter(isImage);
@@ -60,12 +67,12 @@ export function ProductImagePicker({
       if (b.index + 1 < b.queue.length) {
         return { ...b, index: b.index + 1, results };
       }
-      // 배치 완료 — 새 선택은 뒤에 추가, 재편집은 해당 자리 교체.
+      // 배치 완료 — 새 선택은 뒤에 추가, 재편집은 해당 자리 교체(id 유지).
       if (b.replaceAt === null) {
-        setFiles((f) => [...f, ...results]);
+        setItems((f) => [...f, ...results.map((file) => ({ id: nextId(), file }))]);
       } else {
         const at = b.replaceAt;
-        setFiles((f) => f.map((x, i) => (i === at ? results[0] : x)));
+        setItems((f) => f.map((x, i) => (i === at ? { ...x, file: results[0] } : x)));
       }
       return null;
     });
@@ -76,16 +83,14 @@ export function ProductImagePicker({
     setBatch(null);
   }
 
-  const removeAt = (i: number) =>
-    setFiles((f) => f.filter((_, j) => j !== i));
+  const removeAt = (i: number) => setItems((f) => f.filter((_, j) => j !== i));
 
-  // 순서 변경(대표님) — 업로드 시점부터 재배치. 첫 장이 상세 대표 이미지가 된다.
-  const moveAt = (i: number, dir: -1 | 1) =>
-    setFiles((f) => {
-      const j = i + dir;
-      if (j < 0 || j >= f.length) return f;
+  // 순서 변경(대표님) — 드래그로 재배치. 첫 장이 상세 대표 이미지가 된다.
+  const move = (from: number, to: number) =>
+    setItems((f) => {
       const next = [...f];
-      [next[i], next[j]] = [next[j], next[i]];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
       return next;
     });
 
@@ -111,23 +116,28 @@ export function ProductImagePicker({
         <ImagePlus className="size-4" /> 이미지 선택 · 편집
       </button>
 
-      {files.length > 1 && (
+      {items.length > 1 && (
         <p className="text-[11px] text-wabi-fg-muted">
-          ‹ › 로 순서 변경 · 첫 장이 상세 대표 이미지
+          우측 하단 손잡이를 끌어 순서 변경 · 첫 장이 상세 대표 이미지
         </p>
       )}
 
-      {files.length > 0 && (
-        <ul className="flex flex-wrap gap-2">
-          {files.map((f, i) => (
-            <li
-              key={`${f.name}-${f.size}-${f.lastModified}-${i}`}
-              className="relative size-20 overflow-hidden rounded border border-wabi-border bg-wabi-muted"
-            >
-              <Thumb file={f} />
+      {items.length > 0 && (
+        <SortableImageGrid
+          className="flex flex-wrap gap-2"
+          itemClassName="size-20 overflow-hidden rounded border border-wabi-border bg-wabi-muted"
+          ids={items.map((it) => it.id)}
+          onReorder={move}
+          renderItem={(_id, i) => (
+            <>
+              {/* 파일 정체성으로 key — 재편집(교체) 시 remount 되어 새 미리보기 URL. */}
+              <Thumb
+                key={`${items[i].file.name}-${items[i].file.size}-${items[i].file.lastModified}`}
+                file={items[i].file}
+              />
               <button
                 type="button"
-                onClick={() => startBatch([f], i)}
+                onClick={() => startBatch([items[i].file], i)}
                 aria-label={`${i + 1}번째 사진 편집`}
                 className="absolute bottom-1 left-1 flex size-6 items-center justify-center rounded-full bg-black/55 text-white transition hover:bg-black/75"
               >
@@ -141,37 +151,25 @@ export function ProductImagePicker({
               >
                 <X className="size-3" />
               </button>
+              {items.length > 1 && (
+                <span
+                  data-drag-handle
+                  role="button"
+                  aria-label={`${i + 1}번째 사진 순서 이동(끌기)`}
+                  style={{ touchAction: "none" }}
+                  className="absolute bottom-1 right-1 flex size-6 cursor-grab items-center justify-center rounded-full bg-black/55 text-white transition hover:bg-black/75 active:cursor-grabbing"
+                >
+                  <GripVertical className="size-3.5" aria-hidden />
+                </span>
+              )}
               {i === 0 && (
                 <span className="absolute left-1 top-1 rounded bg-wabi-fg px-1 text-[9px] leading-tight text-white">
                   대표
                 </span>
               )}
-              {/* 순서 변경(대표님) — 좌우로 이동. 첫 장이 상세 대표 이미지. */}
-              {files.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => moveAt(i, -1)}
-                    disabled={i === 0}
-                    aria-label={`${i + 1}번째 사진 앞으로`}
-                    className="absolute left-0.5 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white transition hover:bg-black/70 disabled:pointer-events-none disabled:opacity-0"
-                  >
-                    <ChevronLeft className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveAt(i, 1)}
-                    disabled={i === files.length - 1}
-                    aria-label={`${i + 1}번째 사진 뒤로`}
-                    className="absolute right-0.5 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white transition hover:bg-black/70 disabled:pointer-events-none disabled:opacity-0"
-                  >
-                    <ChevronRight className="size-3.5" />
-                  </button>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
+            </>
+          )}
+        />
       )}
 
       {batch && (

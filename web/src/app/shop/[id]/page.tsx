@@ -355,8 +355,10 @@ export default async function ProductDetailPage({
         </div>
       </div>
 
-      {/* 나머지 사진 — 전체 폭에 불규칙 흩뿌림(중앙 정렬 없음). 스크롤 시 이어짐. */}
-      <ProductGallery images={product.images.slice(1)} name={product.name} />
+      {/* 상세 스캐터 — 전체 폭에 불규칙 흩뿌림(중앙 정렬 없음). 스크롤 시 이어짐.
+          대표(첫) 사진도 이 영역에 포함해 노출한다(대표님 — 대표 사진도 아래
+          스캐터에서 보이게). 상단 히어로와 중복되지만 의도된 노출이다. */}
+      <ProductGallery images={product.images} name={product.name} />
 
       {/* 사용 및 관리 (대표님 — 사진과 리뷰 사이). 대표님이 정리한 케어 카드
           (소재별 주의 + 자연스러운 변화 + 가전 가이드)를 그대로 옮긴 정적 안내. */}
