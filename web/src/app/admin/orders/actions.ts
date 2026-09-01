@@ -108,3 +108,31 @@ export async function adminCancelOrder(orderId: string): Promise<CancelResult> {
   }
   return result;
 }
+
+// 관리자 주문 기록 삭제(대표님 — 테스트 데이터 정리·기록 삭제). 결제/환불과 무관하게
+// DB의 주문 기록만 영구 삭제한다. order_items·payments 는 FK on delete cascade 로
+// 함께 삭제되고, user_coupons·inquiries 의 order_id 는 on delete set null 로 유지된다.
+// ⚠ 환불은 하지 않는다 — 결제된 주문은 취소(adminCancelOrder)로 환불 후 삭제할 것.
+// 되돌릴 수 없으므로 클라이언트에서 확인 모달을 거친 뒤 호출한다.
+export async function adminDeleteOrder(
+  orderId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const user = await requireAdmin();
+  if (!adminConfigured()) return { ok: false, error: "서버 키 미설정" };
+
+  const id = parseUuid(orderId);
+  if (!id) return { ok: false, error: "주문 정보가 올바르지 않습니다." };
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("orders").delete().eq("id", id);
+  if (error) return { ok: false, error: "주문 삭제에 실패했습니다." };
+
+  await logAdminAction(user, {
+    action: "order.delete",
+    targetTable: "orders",
+    targetId: id,
+    meta: { by: "admin" },
+  });
+  revalidatePath("/admin/orders");
+  return { ok: true };
+}
