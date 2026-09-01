@@ -14,7 +14,7 @@ const strokeProps = {
 
 function IconBase({ children }: { children: React.ReactNode }) {
   return (
-    <svg viewBox="0 0 40 40" className="size-9 text-wabi-fg" aria-hidden {...strokeProps}>
+    <svg viewBox="0 0 40 40" className="size-7 text-wabi-fg sm:size-9" aria-hidden {...strokeProps}>
       {children}
     </svg>
   );
@@ -44,37 +44,6 @@ const WoodIcon = (
     <ellipse cx="20" cy="20" rx="15" ry="8" />
     <ellipse cx="20" cy="20" rx="9.5" ry="5" />
     <ellipse cx="20" cy="20" rx="4" ry="2" />
-  </IconBase>
-);
-
-// 가전 픽토그램
-const MicrowaveIcon = (
-  <IconBase>
-    <rect x="6" y="11" width="28" height="18" rx="1.5" />
-    <rect x="9.5" y="14.5" width="15" height="11" rx="1" />
-    <path d="M28 15 v10" />
-  </IconBase>
-);
-const OvenIcon = (
-  <IconBase>
-    <rect x="7" y="9" width="26" height="22" rx="1.5" />
-    <path d="M7 16 h26" />
-    <path d="M11 12.5 h4 M18 12.5 h4" />
-    <rect x="11" y="19.5" width="18" height="8.5" rx="1" />
-  </IconBase>
-);
-const DishwasherIcon = (
-  <IconBase>
-    <rect x="9" y="7" width="22" height="26" rx="1.5" />
-    <path d="M9 13 h22" />
-    <circle cx="14" cy="10" r="0.6" />
-    <circle cx="18" cy="10" r="0.6" />
-    <path d="M15 18 v9 M20 18 v9 M25 18 v9" />
-  </IconBase>
-);
-const DirectHeatIcon = (
-  <IconBase>
-    <path d="M20 6 c5 6 8 9 8 14 a8 8 0 0 1 -16 0 c0 -3 2 -6 4 -8 c1 3 3 3 4 2 Z" />
   </IconBase>
 );
 
@@ -128,20 +97,12 @@ const MATERIALS: Material[] = [
   },
 ];
 
-const APPLIANCES: { en: string; ko: string; note: string; icon: React.ReactNode }[] =
-  [
-    { en: "MICROWAVE", ko: "전자레인지", note: "제품별 확인", icon: MicrowaveIcon },
-    { en: "OVEN", ko: "오븐", note: "제품별 확인", icon: OvenIcon },
-    { en: "DISHWASHER", ko: "식기세척기", note: "제품별 확인", icon: DishwasherIcon },
-    { en: "DIRECT HEAT", ko: "직화", note: "사용 금지", icon: DirectHeatIcon },
-  ];
-
 export function ProductCareGuide() {
   return (
-    <section className="mt-14 border-t border-wabi-border pt-10 text-sm">
+    <section className="mt-10 border-t border-wabi-border pt-7 text-xs sm:mt-14 sm:pt-10 sm:text-sm">
       {/* PRODUCT CARE — 소재별 주의사항 */}
       <div className="text-center">
-        <h2 className="text-lg font-medium tracking-[0.2em] text-wabi-fg">
+        <h2 className="text-base font-medium tracking-[0.2em] text-wabi-fg sm:text-lg">
           PRODUCT CARE
         </h2>
         <p className="mt-3 leading-relaxed text-wabi-fg-muted">
@@ -151,9 +112,9 @@ export function ProductCareGuide() {
         </p>
       </div>
 
-      <div className="mx-auto mt-10 grid max-w-2xl gap-x-10 gap-y-9 sm:grid-cols-2">
+      <div className="mx-auto mt-7 grid max-w-2xl gap-x-6 gap-y-6 sm:mt-10 sm:grid-cols-2 sm:gap-x-10 sm:gap-y-9">
         {MATERIALS.map((m) => (
-          <div key={m.en} className="flex gap-4">
+          <div key={m.en} className="flex gap-3 sm:gap-4">
             <div className="shrink-0 pt-0.5">{m.icon}</div>
             <div className="min-w-0">
               <p className="font-medium tracking-[0.12em] text-wabi-fg">{m.en}</p>
@@ -173,8 +134,9 @@ export function ProductCareGuide() {
         ))}
       </div>
 
-      {/* ABOUT NATURAL CHANGES — 자연스러운 변화 + 가전 사용 가이드 */}
-      <div className="mt-14 border-t border-wabi-border pt-10 text-center">
+      {/* ABOUT NATURAL CHANGES — 자연스러운 변화 안내(대표님: 가전 픽토그램·나선·하단
+          문구는 제거, 텍스트만 유지). */}
+      <div className="mt-10 border-t border-wabi-border pt-8 text-center sm:mt-14 sm:pt-10">
         <h2 className="tracking-[0.2em] text-wabi-fg">ABOUT NATURAL CHANGES</h2>
         <p className="mt-3 leading-relaxed text-wabi-fg-muted">
           작은 점, 색의 차이, 미세한 스크래치 등은
@@ -184,35 +146,6 @@ export function ProductCareGuide() {
           사용 시간이 쌓이며 생기는 변화는
           <br />
           제품의 일부이자, 당신의 시간이 더해지는 과정입니다.
-        </p>
-
-        {/* 시간의 흐름을 뜻하는 나선 곡선(브랜드 모티프) */}
-        <svg
-          viewBox="0 0 260 70"
-          className="mx-auto mt-8 h-12 w-auto text-wabi-fg/35"
-          aria-hidden
-          {...strokeProps}
-        >
-          <path d="M130 6 v58 M130 10 C 70 20 70 44 130 40 C 190 36 190 60 130 64 M130 10 C 190 20 190 44 130 40 C 70 36 70 60 130 64" />
-        </svg>
-
-        <ul className="mx-auto mt-8 grid max-w-xl grid-cols-2 gap-y-8 sm:grid-cols-4">
-          {APPLIANCES.map((a) => (
-            <li key={a.en} className="flex flex-col items-center gap-2 px-2">
-              {a.icon}
-              <span className="text-xs font-medium tracking-[0.1em] text-wabi-fg">
-                {a.en}
-              </span>
-              <span className="text-xs text-wabi-fg-muted">{a.ko}</span>
-              <span className="text-xs text-wabi-fg-muted">{a.note}</span>
-            </li>
-          ))}
-        </ul>
-
-        <p className="mt-9 leading-relaxed text-xs text-wabi-fg-muted">
-          제품별로 사용 가능 여부가 다를 수 있으니
-          <br />
-          위 소재별 안내와 상품 정보를 함께 확인해주세요.
         </p>
       </div>
     </section>

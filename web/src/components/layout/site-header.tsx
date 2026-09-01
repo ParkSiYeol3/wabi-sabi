@@ -10,7 +10,7 @@ import {
   ShoppingBag,
   User,
   Heart,
-  Receipt,
+  Package,
   ChevronDown,
 } from "lucide-react";
 import { nav, site, type CategoryNode } from "@/lib/site";
@@ -116,7 +116,7 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
                 aria-label="주문 내역"
                 className="hidden rounded-md p-3 text-wabi-fg transition-colors hover:bg-wabi-muted md:inline-flex"
               >
-                <Receipt className="size-5" strokeWidth={1.5} />
+                <Package className="size-5" strokeWidth={1.5} />
               </Link>
             </>
           )}
@@ -353,7 +353,7 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
                   onClick={closeMenu}
                   className="flex items-center gap-2 py-3 text-sm tracking-wide text-wabi-fg-muted transition-colors hover:text-wabi-fg"
                 >
-                  <Receipt className="size-4" strokeWidth={1.5} />
+                  <Package className="size-4" strokeWidth={1.5} />
                   Orders
                 </Link>
               </>
