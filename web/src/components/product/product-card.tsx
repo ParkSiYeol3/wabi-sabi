@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ImageIcon } from "lucide-react";
 import { CardImage } from "@/components/product/card-image";
 import { Price } from "@/components/product/price";
+import { isStockSoldOut } from "@/lib/inventory";
 
 export interface ProductCardData {
   id: string;
@@ -31,9 +32,10 @@ export function ProductCard({
 }) {
   const href = product.href ?? `/shop/${product.id}`;
   // stock 을 넘기지 않은 호출부(관련상품 등)는 품절 표시를 하지 않는다 — 0 과 undefined 구분.
-  // 강제 품절(sold_out)은 재고와 무관하게 품절로 표시(대표님).
+  // 강제 품절(sold_out)은 재고와 무관하게 품절로 표시(대표님). 예약분(매장 1개)을
+  // 뺀 판매 가능 수량 기준으로 품절 판정(재고 1개 남으면 품절 — 대표님).
   const soldOut =
-    (product.stock !== undefined && product.stock <= 0) ||
+    (product.stock !== undefined && isStockSoldOut(product.stock)) ||
     product.sold_out === true;
 
   return (

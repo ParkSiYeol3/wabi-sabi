@@ -24,6 +24,7 @@ import {
   DEFAULT_SHIPPING_FEE,
 } from "@/lib/queries/content";
 import { enabledAddons } from "@/lib/addons";
+import { isStockSoldOut } from "@/lib/inventory";
 import { createClient } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/site-url";
 import { BASE_SHIPPING_FEE } from "@/lib/shipping";
@@ -191,9 +192,10 @@ export default async function ProductDetailPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  // 품절 표시 판단(대표님 3상태) — 재고 0 또는 강제 품절(sold_out). 비공개는 이미
-  // is_active 필터로 이 페이지에 도달하지 못한다(404).
-  const soldOut = product.stock <= 0 || product.sold_out;
+  // 품절 표시 판단(대표님 3상태) — 판매 가능 수량 0(재고 1개 남으면 품절, 매장
+  // 비치용 예약) 또는 강제 품절(sold_out). 비공개는 이미 is_active 필터로 이
+  // 페이지에 도달하지 못한다(404).
+  const soldOut = isStockSoldOut(product.stock) || product.sold_out;
   let wished = false;
   // 재입고 알림 구독 여부 (#166) — 버튼이 품절일 때만 뜨므로 그때만 조회한다.
   let restockSubscribed = false;

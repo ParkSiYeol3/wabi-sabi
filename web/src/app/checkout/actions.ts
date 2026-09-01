@@ -10,6 +10,7 @@ import {
   GIFT_WRAP_CODE,
 } from "@/lib/addons";
 import { shippingFeeFor } from "@/lib/shipping";
+import { availableStock } from "@/lib/inventory";
 import {
   couponDiscount,
   couponUsable,
@@ -237,19 +238,20 @@ export async function createPendingOrder(
       return { ok: false, error: `'${p.name}'은(는) 현재 품절입니다.` };
     // 재고 검증 — 옵션 관리 상품은 선택 값의 재고로, 아니면 flat stock 으로.
     // (선택 값은 아래 validateSelection 이 필수로 강제하므로 존재가 보장된다.)
+    // 판매 가능 수량 = 실재고 − 매장 예약분(대표님: 재고 1개는 매장에 남긴다).
     if (p.stock_option) {
       const selected = line.options.find(
         (o) => o.name === p.stock_option,
       )?.value;
       const available = selected
-        ? optionStock.get(`${p.id}::${selected}`) ?? 0
+        ? availableStock(optionStock.get(`${p.id}::${selected}`) ?? 0)
         : 0;
       if (available < line.quantity)
         return {
           ok: false,
           error: `'${p.name}'${selected ? ` (${selected})` : ""} 재고가 부족합니다.`,
         };
-    } else if (p.stock < line.quantity) {
+    } else if (availableStock(p.stock) < line.quantity) {
       return { ok: false, error: `'${p.name}' 재고가 부족합니다.` };
     }
     // 커스텀 옵션(0048) — 상품 정의와 대조. 정의된 그룹은 모두 유효값이 선택돼야
