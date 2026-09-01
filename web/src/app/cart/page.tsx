@@ -65,42 +65,51 @@ export default function CartPage() {
             key={item.id}
             className="flex flex-wrap items-center gap-4 py-5 sm:flex-nowrap"
           >
-            <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden bg-wabi-muted">
-              {item.image ? (
-                <Image
-                  src={item.image}
-                  alt={item.name}
-                  fill
-                  sizes="80px"
-                  className="object-cover"
-                />
-              ) : (
-                <ImageIcon
-                  className="size-6 text-wabi-fg-muted/40"
-                  strokeWidth={1}
-                  aria-hidden
-                />
-              )}
-            </div>
+            {/* 이미지+상품정보는 상세 페이지로 이동(대표님). 수량·삭제 컨트롤은
+                링크 밖에 둔다(중첩 인터랙션 방지). group 으로 상품명 hover 밑줄. */}
+            <Link
+              href={`/shop/${item.id}`}
+              className="group flex min-w-0 flex-1 items-center gap-4"
+            >
+              <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden bg-wabi-muted">
+                {item.image ? (
+                  <Image
+                    src={item.image}
+                    alt={item.name}
+                    fill
+                    sizes="80px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <ImageIcon
+                    className="size-6 text-wabi-fg-muted/40"
+                    strokeWidth={1}
+                    aria-hidden
+                  />
+                )}
+              </div>
 
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm">{item.name}</p>
-              <p className="mt-1 text-xs text-wabi-fg-muted">
-                <Price value={item.price} />
-              </p>
-              {/* 커스텀 옵션(색상·모양 등, 0048) — 가격 영향 없음. 배포 전 저장된
-                  게스트 장바구니엔 options 가 없을 수 있어 옵셔널 체이닝으로 가드. */}
-              {item.options?.length ? (
-                <p className="mt-1 text-xs text-wabi-fg-muted">
-                  {item.options.map((o) => `${o.name}: ${o.value}`).join(" · ")}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm underline-offset-4 group-hover:underline">
+                  {item.name}
                 </p>
-              ) : null}
-              {item.addons.length > 0 && (
                 <p className="mt-1 text-xs text-wabi-fg-muted">
-                  + {resolveAddons(item.addons).map((a) => a.name).join(", ")}
+                  <Price value={item.price} />
                 </p>
-              )}
-            </div>
+                {/* 커스텀 옵션(색상·모양 등, 0048) — 가격 영향 없음. 배포 전 저장된
+                    게스트 장바구니엔 options 가 없을 수 있어 옵셔널 체이닝으로 가드. */}
+                {item.options?.length ? (
+                  <p className="mt-1 text-xs text-wabi-fg-muted">
+                    {item.options.map((o) => `${o.name}: ${o.value}`).join(" · ")}
+                  </p>
+                ) : null}
+                {item.addons.length > 0 && (
+                  <p className="mt-1 text-xs text-wabi-fg-muted">
+                    + {resolveAddons(item.addons).map((a) => a.name).join(", ")}
+                  </p>
+                )}
+              </div>
+            </Link>
 
             {/* 컨트롤 묶음 — 모바일은 둘째 줄(w-full)로 내려 수량·금액·삭제를 나란히,
                 sm+ 은 인라인(w-auto). */}

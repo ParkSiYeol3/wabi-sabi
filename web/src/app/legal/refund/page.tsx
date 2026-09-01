@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LegalPage, Article } from "@/components/layout/legal-layout";
-import { business } from "@/lib/site";
+import { business, site } from "@/lib/site";
 import {
   getSiteContent,
   SHIPPING_INFO_KEY,
@@ -113,8 +113,16 @@ export default async function RefundPage() {
 
       <Article heading="9. 문의">
         <p>
-          교환·환불 관련 문의는 몰의 문의 게시판 또는 {business.email} 로 연락해
-          주시기 바랍니다.
+          교환·환불 관련 문의는 문의 게시판 또는 인스타그램{" "}
+          <a
+            href={site.instagramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-wabi-fg underline underline-offset-2"
+          >
+            @{site.instagram}
+          </a>
+          으로 연락해 주시기 바랍니다.
         </p>
       </Article>
     </LegalPage>
