@@ -5,6 +5,7 @@ import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { PageHeader, TablePanel, EmptyState } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/common/submit-button";
 import { AdminCancelOrderButton } from "@/components/admin/admin-cancel-order-button";
+import { AdminDeleteOrderButton } from "@/components/admin/admin-delete-order-button";
 import { setTracking, markDelivered } from "./actions";
 
 type OrderItem = {
@@ -116,7 +117,7 @@ export default async function AdminOrdersPage() {
     <>
       <PageHeader
         title="주문 관리"
-        description="송장 입력·배송완료·취소(배송 전 전액 환불) 처리. 최신 주문 순."
+        description="송장 입력·배송완료·취소(배송 전 전액 환불)·기록 삭제. 최신 주문 순."
       />
       {!orders || orders.length === 0 ? (
         <EmptyState>주문이 없습니다.</EmptyState>
@@ -135,7 +136,7 @@ export default async function AdminOrdersPage() {
                     <th className="px-4 py-3 font-medium">상태</th>
                     <th className="px-4 py-3 font-medium">송장번호</th>
                     <th className="px-4 py-3 font-medium">배송완료</th>
-                    <th className="px-4 py-3 font-medium">취소</th>
+                    <th className="px-4 py-3 font-medium">취소·삭제</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-wabi-border">
@@ -179,17 +180,22 @@ export default async function AdminOrdersPage() {
                           <span className="text-xs text-wabi-fg-muted">—</span>
                         )}
                       </td>
-                      {/* 취소·환불 — 배송 전(paid)만. RPC 가 paid 만 받으므로 그 외
-                          상태에서는 버튼을 숨긴다(눌러도 거부되지만 오조작 예방). */}
+                      {/* 취소·환불(배송 전 paid만) + 기록 삭제(모든 상태). 취소는
+                          RPC 가 paid 만 받아 그 외엔 숨긴다. 삭제는 결제와 무관하게
+                          기록만 지운다(테스트 데이터 정리·대표님). */}
                       <td className="px-4 py-3">
-                        {o.status === "paid" ? (
-                          <AdminCancelOrderButton
+                        <div className="flex flex-col items-start gap-1.5">
+                          {o.status === "paid" && (
+                            <AdminCancelOrderButton
+                              orderId={o.id}
+                              orderNumber={o.order_number}
+                            />
+                          )}
+                          <AdminDeleteOrderButton
                             orderId={o.id}
                             orderNumber={o.order_number}
                           />
-                        ) : (
-                          <span className="text-xs text-wabi-fg-muted">—</span>
-                        )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -255,6 +261,11 @@ export default async function AdminOrdersPage() {
                       fullWidth
                     />
                   )}
+                  <AdminDeleteOrderButton
+                    orderId={o.id}
+                    orderNumber={o.order_number}
+                    fullWidth
+                  />
                 </div>
               </li>
             ))}
