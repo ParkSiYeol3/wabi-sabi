@@ -338,6 +338,54 @@ export async function addProductImages(
   return { ok: true, message: `이미지 ${urls.length}장 추가됨` };
 }
 
+// 이미지 순서 일괄 저장(대표님 — 드래그로 재배치). order 는 현재 이미지 URL 을
+// 새 순서로 나열한 JSON 배열. 현재 이미지 집합과 정확히 일치(같은 원소·개수)할
+// 때만 반영한다 — 임의 URL 주입·유실을 막는다. 첫 장이 대표(히어로·목록 썸네일).
+export async function reorderProductImages(formData: FormData) {
+  const user = await requireAdmin();
+  if (!adminConfigured()) return;
+
+  const id = parseUuid(formData.get("id"));
+  if (!id) return;
+  let order: unknown;
+  try {
+    order = JSON.parse(String(formData.get("order") || "[]"));
+  } catch {
+    return;
+  }
+  if (!Array.isArray(order) || order.some((u) => typeof u !== "string")) return;
+  const next = order as string[];
+
+  const supabase = createAdminClient();
+  const { data: product } = await supabase
+    .from("products")
+    .select("images")
+    .eq("id", id)
+    .single();
+  const current: string[] = Array.isArray(product?.images)
+    ? (product!.images as string[])
+    : [];
+
+  // 순열 검증 — 개수 같고, 정렬 후 완전히 일치해야 반영(집합 보존).
+  if (
+    next.length !== current.length ||
+    [...next].sort().join(" ") !== [...current].sort().join(" ")
+  )
+    return;
+
+  await supabase.from("products").update({ images: next }).eq("id", id);
+  await logAdminAction(user, {
+    action: "product.reorder_images",
+    targetTable: "products",
+    targetId: id,
+    meta: { count: next.length },
+  });
+  revalidatePath("/admin/products");
+  revalidatePath("/");
+  revalidatePath("/shop");
+  revalidatePath(`/shop/${id}`);
+}
+
 // 상품 이미지 1개 삭제 (배열에서 제거 + 스토리지 삭제).
 export async function removeProductImage(formData: FormData) {
   await requireAdmin();

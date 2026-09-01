@@ -50,7 +50,7 @@ export function ProductGallery({
           >
             <ProductImageZoom
               src={src}
-              alt={`${name} 상세 이미지 ${i + 2}`}
+              alt={`${name} 상세 이미지 ${i + 1}`}
               sizes="(max-width: 768px) 94vw, 60vw"
               natural
             />

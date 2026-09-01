@@ -117,6 +117,7 @@ export default async function AdminProductEditPage({
           <SectionHeading>사진 관리</SectionHeading>
           <div className="mt-3">
             <ProductImageManager
+              key={(row.images ?? []).join("|")}
               productId={row.id}
               images={row.images ?? []}
               name={row.name}
