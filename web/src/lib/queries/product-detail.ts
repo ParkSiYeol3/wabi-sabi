@@ -4,6 +4,7 @@ import type { ProductCardData } from "@/components/product/product-card";
 import type { ProductDetail } from "@/lib/queries/products";
 import type { ReviewStats } from "@/lib/queries/reviews";
 import { parseOptionGroups } from "@/lib/product-options";
+import { STORE_RESERVE } from "@/lib/inventory";
 
 // 상품 상세의 공개 데이터(상품·관련상품·평점)를 한 번에 캐시한다 (#181).
 // 리뷰/위시/재입고 구독 등 사용자별 데이터는 여기 넣지 않는다(캐시 밖에서 조회).
@@ -84,9 +85,9 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
       : [],
   };
 
-  // 옵션 값별 재고(0058) — 재고 0 이하인 값은 '품절'로 표시한다. 수량 자체는
-  // 노출하지 않고(재고 비공개), stock_option 그룹의 soldOut 에 병합해 기존 품절
-  // 처리(선택 불가·(품절) 라벨)를 그대로 재사용한다.
+  // 옵션 값별 재고(0058) — 재고가 예약분(매장 1개) 이하인 값은 '품절'로 표시한다.
+  // 수량 자체는 노출하지 않고(재고 비공개), stock_option 그룹의 soldOut 에 병합해
+  // 기존 품절 처리(선택 불가·(품절) 라벨)를 그대로 재사용한다.
   if (data.stock_option) {
     const { data: stockRows } = await db
       .from("product_option_stock")
@@ -94,7 +95,7 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
       .eq("product_id", data.id);
     const depleted = new Set(
       (stockRows ?? [])
-        .filter((r) => (r as { stock: number }).stock <= 0)
+        .filter((r) => (r as { stock: number }).stock <= STORE_RESERVE)
         .map((r) => (r as { value: string }).value),
     );
     if (depleted.size > 0) {
