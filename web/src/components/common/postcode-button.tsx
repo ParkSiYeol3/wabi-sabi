@@ -96,13 +96,21 @@ export function PostcodeButton({
     }).embed(el, { autoClose: true });
   }, [open, onComplete]);
 
-  // 모달 열림 동안 바디 스크롤 잠금.
+  // 모달 열림 동안 바디 스크롤 잠금 + Escape 닫기 + 포커스 복귀(a11y).
+  // 위젯이 iframe 이라 포커스 트랩은 쓰지 않는다(주소 검색칸으로 Tab 이 들어가야 함).
   useEffect(() => {
     if (!open) return;
+    const prevActive = document.activeElement as HTMLElement | null;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
     return () => {
+      document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
+      prevActive?.focus?.();
     };
   }, [open]);
 

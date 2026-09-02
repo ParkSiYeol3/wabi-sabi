@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useModalA11y } from "@/lib/use-modal-a11y";
 import { adminCancelOrder } from "@/app/admin/orders/actions";
 
 // 관리자 주문 취소 버튼 — paid(배송 전) 주문에만 렌더. 확인 모달 후 전액 취소·환불.
@@ -21,20 +22,10 @@ export function AdminCancelOrderButton({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
-
-  useEffect(() => {
-    if (!confirmOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !pending) setConfirmOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [confirmOpen, pending]);
+  // 배경 스크롤 잠금 · Escape 닫기 · 초기 포커스 · 포커스 트랩 · 복귀(a11y).
+  const dialogRef = useModalA11y(confirmOpen, () => {
+    if (!pending) setConfirmOpen(false);
+  });
 
   const doCancel = () => {
     setError(null);
@@ -73,7 +64,9 @@ export function AdminCancelOrderButton({
           }}
         >
           <div
-            className="w-full max-w-sm border border-wabi-border bg-wabi-bg p-6 text-left shadow-lg"
+            ref={dialogRef}
+            tabIndex={-1}
+            className="w-full max-w-sm border border-wabi-border bg-wabi-bg p-6 text-left shadow-lg outline-none"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-xs font-medium tracking-[0.2em] text-wabi-fg-muted">
