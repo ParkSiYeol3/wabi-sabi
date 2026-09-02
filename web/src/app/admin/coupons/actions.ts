@@ -118,3 +118,48 @@ export async function setCouponActive(formData: FormData) {
   });
   revalidatePath("/admin/coupons");
 }
+
+// 쿠폰 삭제(대표님 — 오입력·테스트 쿠폰 정리). 이미 사용된 쿠폰은 삭제하지 않는다:
+// 주문(orders.coupon_id)이 참조하고 있으면 주문 기록 정합성이 깨지고, DB FK(RESTRICT)
+// 도 삭제를 막는다. 사용 이력이 있으면 '비활성화'로 유도한다(is_active=false 로 이미
+// 발급·사용이 전면 차단됨). 미사용 쿠폰만 지운다 — 지갑 발급분(user_coupons)은
+// on delete cascade 로 함께 정리된다.
+export async function deleteCoupon(
+  formData: FormData,
+): Promise<CouponActionResult> {
+  const user = await requireAdmin();
+  if (!adminConfigured())
+    return { ok: false, message: "SUPABASE_SERVICE_ROLE_KEY 미설정" };
+  const id = String(formData.get("id") || "");
+  if (!id) return { ok: false, message: "쿠폰 정보가 올바르지 않습니다." };
+
+  const supabase = createAdminClient();
+  const { data: coupon } = await supabase
+    .from("coupons")
+    .select("code, used_count")
+    .eq("id", id)
+    .single();
+  if (!coupon) return { ok: false, message: "쿠폰을 찾을 수 없습니다." };
+  if ((coupon.used_count ?? 0) > 0)
+    return {
+      ok: false,
+      message: "이미 사용된 쿠폰은 삭제할 수 없습니다. 비활성화만 가능합니다.",
+    };
+
+  const { error } = await supabase.from("coupons").delete().eq("id", id);
+  if (error)
+    // 주문(pending 포함)이 참조 중이면 FK 로 막힌다 — 삭제 대신 비활성화로 유도.
+    return {
+      ok: false,
+      message: "이 쿠폰을 참조하는 주문이 있어 삭제할 수 없습니다. 비활성화하세요.",
+    };
+
+  await logAdminAction(user, {
+    action: "coupon.delete",
+    targetTable: "coupons",
+    targetId: id,
+    meta: { code: coupon.code },
+  });
+  revalidatePath("/admin/coupons");
+  return { ok: true, message: `쿠폰 '${coupon.code}' 삭제 완료` };
+}

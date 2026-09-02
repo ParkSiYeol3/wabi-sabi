@@ -10,6 +10,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { won, formatDateKST } from "@/lib/orders";
 import { couponLabel, COUPONS_ENABLED, type Coupon } from "@/lib/coupons";
 import { CouponCreateForm } from "@/components/admin/coupon-create-form";
+import { CouponDeleteButton } from "@/components/admin/coupon-delete-button";
 import { setCouponActive } from "./actions";
 
 type CouponRow = Coupon & {
@@ -102,22 +103,25 @@ export default async function AdminCouponsPage() {
                       </td>
                       <td className="p-3">{c.auto_issue_signup ? "○" : "—"}</td>
                       <td className="p-3">
-                        <form action={setCouponActive} className="flex items-center gap-2">
-                          <input type="hidden" name="id" value={c.id} />
-                          <input
-                            type="hidden"
-                            name="active"
-                            value={String(!c.is_active)}
-                          />
-                          <SubmitButton
-                            pendingText="변경 중…"
-                            className={adminAction({
-                              tone: c.is_active ? "solid" : "outline",
-                            })}
-                          >
-                            {c.is_active ? "활성" : "비활성"}
-                          </SubmitButton>
-                        </form>
+                        <div className="flex items-center gap-2">
+                          <form action={setCouponActive} className="flex items-center gap-2">
+                            <input type="hidden" name="id" value={c.id} />
+                            <input
+                              type="hidden"
+                              name="active"
+                              value={String(!c.is_active)}
+                            />
+                            <SubmitButton
+                              pendingText="변경 중…"
+                              className={adminAction({
+                                tone: c.is_active ? "solid" : "outline",
+                              })}
+                            >
+                              {c.is_active ? "활성" : "비활성"}
+                            </SubmitButton>
+                          </form>
+                          <CouponDeleteButton couponId={c.id} code={c.code} />
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -172,25 +176,25 @@ export default async function AdminCouponsPage() {
                     </div>
                   </dl>
 
-                  <form
-                    action={setCouponActive}
-                    className="mt-3 border-t border-wabi-border pt-3"
-                  >
-                    <input type="hidden" name="id" value={c.id} />
-                    <input
-                      type="hidden"
-                      name="active"
-                      value={String(!c.is_active)}
-                    />
-                    <SubmitButton
-                      pendingText="변경 중…"
-                      className={`w-full justify-center ${adminAction({
-                        tone: c.is_active ? "solid" : "outline",
-                      })}`}
-                    >
-                      {c.is_active ? "활성 (누르면 비활성)" : "비활성 (누르면 활성)"}
-                    </SubmitButton>
-                  </form>
+                  <div className="mt-3 space-y-2 border-t border-wabi-border pt-3">
+                    <form action={setCouponActive}>
+                      <input type="hidden" name="id" value={c.id} />
+                      <input
+                        type="hidden"
+                        name="active"
+                        value={String(!c.is_active)}
+                      />
+                      <SubmitButton
+                        pendingText="변경 중…"
+                        className={`w-full justify-center ${adminAction({
+                          tone: c.is_active ? "solid" : "outline",
+                        })}`}
+                      >
+                        {c.is_active ? "활성 (누르면 비활성)" : "비활성 (누르면 활성)"}
+                      </SubmitButton>
+                    </form>
+                    <CouponDeleteButton couponId={c.id} code={c.code} fullWidth />
+                  </div>
                 </li>
               ))}
             </ul>
