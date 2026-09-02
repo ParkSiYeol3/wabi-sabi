@@ -189,7 +189,7 @@ export function ProductOptionsFields({
                       onChange={() => toggleStockGroup(i)}
                       className="size-3.5"
                     />
-                    이 옵션으로 재고 관리 (값별 수량 · 0이면 자동 품절)
+                    이 옵션으로 재고 관리 (값별 수량 1개면 자동 품절 처리)
                   </label>
 
                   {stockGroup === i ? (
