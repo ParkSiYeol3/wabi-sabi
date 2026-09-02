@@ -110,6 +110,13 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    // AVIF 우선(WebP 폴백) — 모바일 셀룰러에서 이미지가 20~30% 더 작게 전송된다
+    // (LCP·데이터 절약). 브라우저 협상으로 지원 시에만 AVIF, 아니면 WebP. Vercel Pro
+    // 라 최적화 quota 여유(과거 무료 tier quota 소진 사고는 Pro 전환으로 해소).
+    formats: ["image/avif", "image/webp"],
+    // 최적화 이미지 캐시 수명 — 상품 사진은 자주 안 바뀌고 교체 시 URL 이 달라져
+    // 캐시가 자연 무효화되므로 길게 잡아 재최적화 비용·지연을 줄인다(31일).
+    minimumCacheTTL: 2678400,
     // Supabase Storage 상품 이미지 허용 (next/image)
     remotePatterns: [
       {
