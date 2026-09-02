@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useModalA11y } from "@/lib/use-modal-a11y";
 import { deleteCoupon } from "@/app/admin/coupons/actions";
 
 // 쿠폰 삭제 버튼(대표님 — 오입력·테스트 쿠폰 정리). 확인 모달 후 삭제.
@@ -22,20 +23,10 @@ export function CouponDeleteButton({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
-
-  useEffect(() => {
-    if (!confirmOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !pending) setConfirmOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [confirmOpen, pending]);
+  // 배경 스크롤 잠금 · Escape 닫기 · 초기 포커스 · 포커스 트랩 · 복귀(a11y).
+  const dialogRef = useModalA11y(confirmOpen, () => {
+    if (!pending) setConfirmOpen(false);
+  });
 
   const doDelete = () => {
     setError(null);
@@ -76,7 +67,9 @@ export function CouponDeleteButton({
           }}
         >
           <div
-            className="w-full max-w-sm border border-wabi-border bg-wabi-bg p-6 text-left shadow-lg"
+            ref={dialogRef}
+            tabIndex={-1}
+            className="w-full max-w-sm border border-wabi-border bg-wabi-bg p-6 text-left shadow-lg outline-none"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-xs font-medium tracking-[0.2em] text-wabi-fg-muted">
