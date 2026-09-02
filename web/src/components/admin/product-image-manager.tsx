@@ -106,7 +106,7 @@ export function ProductImageManager({
                   onClick={() => setCover(url)}
                   className="flex h-8 w-full cursor-pointer items-center justify-center gap-1 rounded-md border border-wabi-border bg-wabi-bg text-xs text-wabi-fg transition-colors hover:border-wabi-fg hover:bg-wabi-muted"
                 >
-                  <Star className="size-3.5" aria-hidden /> 대표로
+                  <Star className="size-3.5" aria-hidden /> 대표
                 </button>
               )}
               <ProductImageEditButton
