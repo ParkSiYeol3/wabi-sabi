@@ -1,7 +1,18 @@
 import { test, expect } from "@playwright/test";
+import { addFirstInStockToCart } from "./helpers";
 
-// 신규 기능 스모크 (🟡-6) — 오늘의 와비사비 커뮤니티·마이페이지 게이트·배경음.
+// 신규 기능 스모크 (🟡-6) — 오늘의 와비사비 커뮤니티·마이페이지 게이트·장바구니.
 // 로그인 없이 도달 가능한 표면만 검증(닉네임 모달·글쓰기는 계정 필요라 범위 밖).
+
+// '정식 오픈 준비중' 안내 모달(PrepNotice)이 첫 클릭을 가로채지 않도록, 페이지
+// 스크립트보다 먼저 세션 저장소에 '닫음'을 심는다(smoke.spec 과 동일 가드).
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    try {
+      sessionStorage.setItem("wasa_prep_dismissed", "1");
+    } catch {}
+  });
+});
 
 test("오늘의 와비사비 — 페이지·비로그인 작성 안내", async ({ page }) => {
   await page.goto("/today");
@@ -32,25 +43,19 @@ test("마이페이지 — 비로그인 시 로그인으로 리다이렉트", asy
   await expect(page).toHaveURL(/\/auth\?redirect=/);
 });
 
-test("배경음 — 홈에 재생 토글이 있고, 클릭 유도 힌트가 뜬다", async ({
-  page,
-}) => {
-  await page.goto("/");
-  // 토글 버튼(비재생 상태 라벨) — 전 페이지 공통.
-  await expect(
-    page.getByRole("button", { name: "배경음 켜기" }),
-  ).toBeVisible();
-  // 홈에서만 뜨는 클릭 유도 힌트(0.9s 지연 후 등장).
-  await expect(
-    page.getByText("화면을 클릭하면 잔잔한 배경음이 흐릅니다"),
-  ).toBeVisible({ timeout: 4_000 });
+// 장바구니 상품 → 상세 링크 (#587, 대표님). 담긴 상품(이미지+정보)을 누르면
+// 해당 상세로 이동한다. 수량·삭제 컨트롤은 링크 밖이라 중첩 인터랙션 없음.
+test("장바구니 — 담긴 상품을 누르면 상세로 이동", async ({ page }) => {
+  const added = await addFirstInStockToCart(page);
+  test.skip(!added, "재고 있는 상품 없음 — 담기 스킵");
+
+  await page.goto("/cart");
+  await expect(page.getByRole("heading", { name: "장바구니" })).toBeVisible();
+  // /cart 에서 /shop/<id> 로 가는 링크는 담긴 상품뿐(‘쇼핑 계속하기’=/shop exact).
+  const itemLink = page.locator('a[href^="/shop/"]').first();
+  await expect(itemLink).toBeVisible();
+  await itemLink.click();
+  await expect(page).toHaveURL(/\/shop\/[0-9a-f-]+/);
 });
 
-test("배경음 힌트 — 홈이 아닌 페이지엔 뜨지 않는다", async ({ page }) => {
-  await page.goto("/shop");
-  // 잠깐 기다려도(힌트 지연보다 길게) 힌트 문구가 없어야 한다.
-  await page.waitForTimeout(1_500);
-  await expect(
-    page.getByText("화면을 클릭하면 잔잔한 배경음이 흐릅니다"),
-  ).toHaveCount(0);
-});
+// (배경음/AmbientPlayer 테스트 제거 — 해당 기능이 코드에서 제거되어 스모크 대상 아님.)
