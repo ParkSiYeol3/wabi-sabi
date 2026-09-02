@@ -388,10 +388,9 @@ export async function reorderProductImages(formData: FormData) {
 
 // 상품 이미지 1개 삭제 (배열에서 제거 + 스토리지 삭제).
 export async function removeProductImage(formData: FormData) {
-  await requireAdmin();
+  const user = await requireAdmin();
   if (!adminConfigured()) return;
 
-  const user = await requireAdmin();
   const id = parseUuid(formData.get("id"));
   const url = String(formData.get("url") || "");
   if (!id || !url) return;
