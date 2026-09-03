@@ -28,6 +28,10 @@ type Props = {
   addons: Addon[];
   /** 애드온 코드별 썸네일 URL(대표님 어드민 업로드). 없으면 사진 자리만 표시. */
   addonImages?: Record<string, string | undefined>;
+  /** 변형 그룹(0061) — 값별로 가격이 다른 옵션 그룹 이름(사이즈 등). 없으면 null. */
+  variantGroup?: string | null;
+  /** 그 그룹의 값별 판매가. 값이 없으면 기본가(product.price)를 쓴다. */
+  variantPrices?: Record<string, number>;
 };
 
 export function ProductDetailActions({
@@ -36,6 +40,8 @@ export function ProductDetailActions({
   options,
   addons,
   addonImages,
+  variantGroup = null,
+  variantPrices = {},
 }: Props) {
   const router = useRouter();
   const add = useCart((s) => s.add);
@@ -66,15 +72,23 @@ export function ProductDetailActions({
       .map((g) => ({ name: g.name, value: selectedOptions[g.name] }))
       .filter((o): o is SelectedOption => !!o.value);
 
-  // 스티키 바에 보여줄 합계 — 수량 × 단가 + 선택한 애드온(옵션은 가격 영향 없음).
+  // 값별 가격(0061) — 변형 그룹에서 고른 값에 가격이 있으면 그 가격이 단가.
+  // 서버(checkout/actions)가 결제 시 DB 로 다시 계산하므로 여기 값은 표시·전달용.
+  const chosenVariant = variantGroup ? selectedOptions[variantGroup] : undefined;
+  const unitPrice =
+    (chosenVariant ? variantPrices[chosenVariant] : undefined) ?? product.price;
+  // 담을 때는 고른 값의 가격으로 담는다(장바구니 표시가 실제 결제가와 맞게).
+  const cartProduct = { ...product, price: unitPrice };
+
+  // 스티키 바에 보여줄 합계 — 수량 × 단가 + 선택한 애드온.
   const addonSum = addons
     .filter((a) => selectedAddons.includes(a.code))
     .reduce((s, a) => s + a.price, 0);
-  const total = product.price * qty + addonSum;
+  const total = unitPrice * qty + addonSum;
 
   function addToCart(e?: React.MouseEvent<HTMLButtonElement>) {
     if (!canBuy) return;
-    add(product, qty, selectedAddons, optionSnapshot());
+    add(cartProduct, qty, selectedAddons, optionSnapshot());
     // 담기 → 장바구니 고스트 비행(대표님 인터랙션). 버튼 위치에서 헤더 장바구니로.
     if (e) flyToCart(e.currentTarget.getBoundingClientRect(), product.image ?? null);
     setAdded(true);
@@ -82,7 +96,7 @@ export function ProductDetailActions({
   }
   function buyNow() {
     if (!canBuy) return;
-    add(product, qty, selectedAddons, optionSnapshot());
+    add(cartProduct, qty, selectedAddons, optionSnapshot());
     router.push("/cart");
   }
 
@@ -120,6 +134,14 @@ export function ProductDetailActions({
                       )}
                     >
                       {v}
+                      {/* 값별 가격(0061, 대표님 — 사이즈 M/L 금액 차이). 가격이
+                          지정된 값에만 붙인다. 미지정 값은 기본가라 표기 생략. */}
+                      {g.name === variantGroup &&
+                        variantPrices[v] !== undefined && (
+                          <span className="ml-1.5 font-numeric text-[0.9em] opacity-80">
+                            {variantPrices[v].toLocaleString("ko-KR")}원
+                          </span>
+                        )}
                       {valueSoldOut && " (품절)"}
                     </button>
                   );

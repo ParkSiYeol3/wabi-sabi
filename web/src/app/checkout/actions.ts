@@ -206,19 +206,25 @@ export async function createPendingOrder(
 
   const priceMap = new Map(products.map((p) => [p.id, p]));
 
-  // 옵션 값별 재고(0058) — stock_option 이 지정된 상품은 flat stock 대신 선택 값의
-  // 재고로 판매 가능 여부를 판정한다. 관리 상품이 있을 때만 조회. 키는 `id::value`.
+  // 옵션 값별 재고·가격(0058·0061) — stock_option 이 지정된 상품은 flat stock 대신
+  // 선택 값의 재고로 판매 가능 여부를 판정하고, 값에 가격이 있으면 그 가격으로 판다
+  // (사이즈 M/L 처럼 값마다 금액이 다름 — 대표님). 관리 상품이 있을 때만 조회.
+  // 키는 `id::value`. 가격은 서버가 DB 에서 다시 읽어 쓴다 — 클라이언트 값 불신.
   const managedIds = products
     .filter((p) => p.stock_option)
     .map((p) => p.id);
   const optionStock = new Map<string, number>();
+  const optionPrice = new Map<string, number>();
   if (managedIds.length > 0) {
     const { data: rows } = await supabase
       .from("product_option_stock")
-      .select("product_id, value, stock")
+      .select("product_id, value, stock, price")
       .in("product_id", managedIds);
-    for (const r of rows ?? [])
+    for (const r of rows ?? []) {
       optionStock.set(`${r.product_id}::${r.value}`, r.stock);
+      if (typeof r.price === "number")
+        optionPrice.set(`${r.product_id}::${r.value}`, r.price);
+    }
   }
   let subtotal = 0;
   let giftSelected = false;
@@ -239,6 +245,8 @@ export async function createPendingOrder(
     // 재고 검증 — 옵션 관리 상품은 선택 값의 재고로, 아니면 flat stock 으로.
     // (선택 값은 아래 validateSelection 이 필수로 강제하므로 존재가 보장된다.)
     // 판매 가능 수량 = 실재고 − 매장 예약분(대표님: 재고 1개는 매장에 남긴다).
+    // 값별 가격(0061) — 변형 그룹에서 고른 값에 가격이 있으면 그 가격, 없으면 기본가.
+    let unitPrice = p.price;
     if (p.stock_option) {
       const selected = line.options.find(
         (o) => o.name === p.stock_option,
@@ -251,6 +259,7 @@ export async function createPendingOrder(
           ok: false,
           error: `'${p.name}'${selected ? ` (${selected})` : ""} 재고가 부족합니다.`,
         };
+      if (selected) unitPrice = optionPrice.get(`${p.id}::${selected}`) ?? p.price;
     } else if (availableStock(p.stock) < line.quantity) {
       return { ok: false, error: `'${p.name}' 재고가 부족합니다.` };
     }
@@ -265,11 +274,12 @@ export async function createPendingOrder(
     const lineAddonTotal = addonsTotal(line.addons);
     if (resolveAddons(line.addons).some((a) => a.code === GIFT_WRAP_CODE))
       giftSelected = true;
-    subtotal += p.price * line.quantity + lineAddonTotal;
+    subtotal += unitPrice * line.quantity + lineAddonTotal;
     items.push({
       product_id: p.id,
       product_name: p.name,
-      price: p.price,
+      // 주문 스냅샷은 실제 판매가(값별 가격 반영) — 주문내역·메일이 이 값을 쓴다.
+      price: unitPrice,
       quantity: line.quantity,
       addons: lineAddons,
       options: optionCheck.options,

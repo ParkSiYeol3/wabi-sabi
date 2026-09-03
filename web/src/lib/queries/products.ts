@@ -50,6 +50,10 @@ export interface ProductDetail {
   category: { slug: string; name_en: string; name_ko: string } | null;
   // 상품별 커스텀 옵션(색상·모양 등, 0048) — 손님이 상세에서 선택.
   options: OptionGroup[];
+  // 변형 그룹(0058·0061) — 재고·가격을 값별로 관리하는 옵션 그룹 이름. 없으면 null.
+  variantGroup?: string | null;
+  // 그 그룹의 값별 판매가(0061, 사이즈 M/L 금액 차이). 값이 없으면 기본가(price) 사용.
+  variantPrices?: Record<string, number>;
   // 이 상품 상세에 노출할 추가옵션 코드(0048) — enabledAddons() 로 Addon[] 변환.
   enabledAddons: string[];
 }

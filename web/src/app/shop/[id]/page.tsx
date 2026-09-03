@@ -196,6 +196,9 @@ export default async function ProductDetailPage({
   // 비치용 예약) 또는 강제 품절(sold_out). 비공개는 이미 is_active 필터로 이
   // 페이지에 도달하지 못한다(404).
   const soldOut = isStockSoldOut(product.stock) || product.sold_out;
+  // 값별 가격(0061)이 하나라도 있으면 표시 가격은 '최저가~'가 된다.
+  const hasVariantPrices =
+    Object.keys(product.variantPrices ?? {}).length > 0;
   let wished = false;
   // 재입고 알림 구독 여부 (#166) — 버튼이 품절일 때만 뜨므로 그때만 조회한다.
   let restockSubscribed = false;
@@ -283,8 +286,13 @@ export default async function ProductDetailPage({
             <h1 className="text-2xl font-semibold">{product.name}</h1>
             <WishlistButton productId={product.id} initial={wished} />
           </div>
+          {/* 값별 가격(0061)이 있으면 대표 가격은 최저가라 '~'를 붙여 '이 금액부터'임을
+              알린다(대표님 — 사이즈 M/L 금액 차이). 정확한 값별 금액은 옵션 버튼에. */}
           <p className="mt-4 text-2xl font-semibold">
             <Price value={product.price} />
+            {hasVariantPrices && (
+              <span className="text-wabi-fg-muted">~</span>
+            )}
           </p>
 
           {/* 관리자가 입력한 줄바꿈(엔터)을 그대로 보존 — 기본 <p>는 개행을 공백으로
@@ -307,6 +315,8 @@ export default async function ProductDetailPage({
             options={product.options}
             addons={productAddons}
             addonImages={addonImages}
+            variantGroup={product.variantGroup ?? null}
+            variantPrices={product.variantPrices ?? {}}
           />
 
           {/* 품절이면 재입고 알림 (#166) — 로그인 사용자만(발송 주소 = 계정 이메일) */}
