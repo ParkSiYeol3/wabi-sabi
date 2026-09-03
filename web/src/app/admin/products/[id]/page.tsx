@@ -12,7 +12,6 @@ import { SubmitButton } from "@/components/common/submit-button";
 import {
   updateStock,
   setSaleStatus,
-  toggleMonthly,
   deleteProduct,
 } from "@/app/admin/products/actions";
 import { parseOptionGroups } from "@/lib/product-options";
@@ -50,7 +49,7 @@ export default async function AdminProductEditPage({
       db
         .from("products")
         .select(
-          "id, name, price, category_id, is_monthly, description, material, size, care, origin, options, enabled_addons, stock, stock_option, is_active, sold_out, images",
+          "id, name, price, category_id, description, material, size, care, origin, options, enabled_addons, stock, stock_option, is_active, sold_out, images",
         )
         .eq("id", id)
         .maybeSingle<ProductRow>(),
@@ -125,7 +124,7 @@ export default async function AdminProductEditPage({
           </div>
         </Panel>
 
-        {/* 재고·공개 — 재고 저장(재입고 알림 경로) + 월간/공개 토글 */}
+        {/* 재고·공개 — 재고 저장(재입고 알림 경로) + 판매 상태 3버튼 */}
         <Panel className="p-6">
           <SectionHeading>재고 · 공개</SectionHeading>
           <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -159,19 +158,6 @@ export default async function AdminProductEditPage({
                 </SubmitButton>
               </form>
             )}
-
-            <form action={toggleMonthly}>
-              <input type="hidden" name="id" value={row.id} />
-              <input type="hidden" name="is_monthly" value={String(row.is_monthly)} />
-              <SubmitButton
-                pendingText="변경 중…"
-                className={adminAction({
-                  tone: row.is_monthly ? "solid" : "outline",
-                })}
-              >
-                {row.is_monthly ? "월간 지정됨" : "월간 지정"}
-              </SubmitButton>
-            </form>
 
             {/* 판매 상태 3버튼(대표님) — 공개 / 비공개 / 품절. 현재 상태는 채워진
                 버튼으로 표시. 품절은 저장된 재고 수량과 무관하게 강제 품절. */}

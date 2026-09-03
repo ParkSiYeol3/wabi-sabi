@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { site, business, legalNav, MONTHLY_SLUG } from "@/lib/site";
+import { site, business, legalNav } from "@/lib/site";
 import { getCategoryTree } from "@/lib/queries/categories";
 import { LogoutButton } from "@/components/account/logout-button";
 
@@ -57,10 +57,9 @@ export async function SiteFooter() {
   const ftc = ftcUrl();
   const tree = await getCategoryTree();
 
-  // 상품 열: 전체 상품 → 월간 그릇 → 대분류들.
+  // 상품 열: 전체 상품 → 대분류들. (월간 그릇은 오프라인 매장 전용 전환으로 제거 — 대표님)
   const shopLinks: FooterLink[] = [
     { label: "전체 상품", href: "/shop" },
-    { label: "월간 그릇", href: `/shop?category=${MONTHLY_SLUG}` },
     ...tree.map((c) => ({ label: c.ko, href: `/shop?category=${c.slug}` })),
   ];
   // 안내 열: SHOWROOM(소개=오시는 길 합침) + 고객 게시판. 마이페이지(대표님 —

@@ -20,7 +20,6 @@ export type ProductEditValues = {
   name: string;
   price: number;
   category_id: string | null;
-  is_monthly: boolean;
   description: string | null;
   material: string | null;
   size: string | null;
@@ -86,15 +85,6 @@ export function ProductEditForm({
             </option>
           ))}
         </select>
-      </label>
-      <label className="flex items-center gap-2 self-end pb-2 text-sm text-wabi-fg-muted">
-        <input
-          type="checkbox"
-          name="is_monthly"
-          defaultChecked={product.is_monthly}
-          className="size-4"
-        />
-        월간 그릇
       </label>
       <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted sm:col-span-2">
         상품 설명 (상세 페이지에 표시)

@@ -23,7 +23,6 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("0");
   const [categoryId, setCategoryId] = useState("");
-  const [isMonthly, setIsMonthly] = useState(false);
   const [description, setDescription] = useState("");
   // 스펙 피커(원산지·소재·사이즈·주의)·이미지 피커는 내부 상태라 성공 후 초기화하려면
   // remount(key 증가)한다 — 하나의 카운터로 함께 리셋.
@@ -40,7 +39,6 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
         setPrice("");
         setStock("0");
         setCategoryId("");
-        setIsMonthly(false);
         setDescription("");
         setPickerKey((k) => k + 1);
       }
@@ -127,16 +125,6 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
           customPlaceholder="주의사항 직접 입력 (예: 전자레인지 사용 불가)"
         />
       </div>
-      <label className="flex items-center gap-2 text-sm text-wabi-fg-muted">
-        <input
-          type="checkbox"
-          name="is_monthly"
-          checked={isMonthly}
-          onChange={(e) => setIsMonthly(e.target.checked)}
-          className="size-4"
-        />
-        월간 그릇
-      </label>
       {/* 커스텀 옵션(색상·모양 등) + 추가옵션 노출(선물 포장·쇼핑백) — 성공 후
           pickerKey 로 함께 remount 초기화. */}
       <ProductOptionsFields key={`options-${pickerKey}`} />

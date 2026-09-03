@@ -65,7 +65,7 @@ export const nav = [
 // Shop 카테고리 2계층 트리 (#193, 대표님 피드백 — 상품군 확장: 다도·액세서리 등).
 // DB(categories, 마이그 0032)와 여기가 함께 진실이다 — 트리를 바꾸면 마이그도 함께.
 // 상품은 소분류(잎)에 연결하고, '선물'처럼 하위 없는 대분류엔 직접 연결한다.
-// All=전체보기, monthly=이 달의 상품(is_monthly)은 카테고리가 아니라 별도 필터.
+// All=전체보기. (월간 그릇 필터는 오프라인 매장 전용 전환으로 제거 — 대표님)
 export type CategoryLeaf = { slug: string; ko: string; en: string };
 export type CategoryNode = CategoryLeaf & {
   children?: readonly CategoryLeaf[];
@@ -104,5 +104,4 @@ export const categoryTree: readonly CategoryNode[] = [
 // (필터용 slug 확장 categorySlugs 는 0036 DB 구조 승격으로
 //  lib/queries/categories.ts getCategorySlugs 로 이동 — 어드민 추가 분류 반영.)
 
-// 이 달의 상품 — Shop 탭에서 카테고리와 같은 줄에 노출하되 필터는 is_monthly 로 동작.
-export const MONTHLY_SLUG = "monthly";
+// (월간 그릇 MONTHLY_SLUG 제거 — 오프라인 매장 전용으로 전환돼 온라인 노출·필터 없음. 대표님)

@@ -24,7 +24,6 @@ const productFieldsSchema = z.object({
   name: z.string().trim().min(1).max(120),
   price: z.number().int().min(0).max(100_000_000),
   categoryId: uuidSchema.nullable(),
-  isMonthly: z.boolean(),
   // 상품 설명 — 상세 페이지에 노출된다. 비우면 null(설명 없이 렌더).
   description: z.string().trim().max(2000).nullable(),
   // 상세 스펙(소재·사이즈·주의·원산지 0035) — 비우면 null(표시 생략).
@@ -43,7 +42,6 @@ function productFields(formData: FormData) {
     name: String(formData.get("name") || "").trim(),
     price: numField(formData.get("price")),
     categoryId: String(formData.get("category_id") || "") || null,
-    isMonthly: formData.get("is_monthly") === "on",
     description: text("description"),
     material: text("material"),
     size: text("size"),
@@ -130,7 +128,6 @@ export async function createProduct(
     price,
     stock,
     categoryId,
-    isMonthly,
     description,
     material,
     size,
@@ -150,7 +147,6 @@ export async function createProduct(
       stock: optStock.stockOption ? optStock.sum : stock,
       stock_option: optStock.stockOption,
       category_id: categoryId,
-      is_monthly: isMonthly,
       description,
       material,
       size,
@@ -223,7 +219,6 @@ export async function updateProduct(
     name,
     price,
     categoryId,
-    isMonthly,
     description,
     material,
     size,
@@ -242,7 +237,6 @@ export async function updateProduct(
       name,
       price,
       category_id: categoryId,
-      is_monthly: isMonthly,
       description,
       material,
       size,
@@ -523,26 +517,7 @@ export async function replaceProductImage(
   return { ok: true, message: "사진을 교체했습니다." };
 }
 
-export async function toggleMonthly(formData: FormData) {
-  const user = await requireAdmin();
-  if (!adminConfigured()) return;
-
-  const id = parseUuid(formData.get("id"));
-  const monthly = String(formData.get("is_monthly")) === "true";
-  if (!id) return;
-
-  const supabase = createAdminClient();
-  await supabase.from("products").update({ is_monthly: !monthly }).eq("id", id);
-  await logAdminAction(user, {
-    action: "product.toggle_monthly",
-    targetTable: "products",
-    targetId: id,
-    meta: { is_monthly: !monthly },
-  });
-  revalidatePath("/admin/products");
-  revalidatePath("/");
-  revalidatePath("/shop"); // 상품 목록 탐색 캐시(#185) 무효화
-}
+// (toggleMonthly 제거 — 월간 그릇이 오프라인 매장 전용으로 전환돼 온라인 지정 불필요. 대표님)
 
 export async function updateStock(formData: FormData) {
   const user = await requireAdmin();
