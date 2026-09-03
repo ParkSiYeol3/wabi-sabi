@@ -13,7 +13,6 @@ type ProductRow = {
   stock: number;
   sold_out: boolean;
   images: unknown;
-  is_monthly: boolean;
   categories: { slug: string; name_en: string } | null;
 };
 
@@ -104,9 +103,7 @@ export async function getProducts({
 }: ProductQuery = {}): Promise<ProductCardData[]> {
   const supabase = await createClient();
 
-  // category="monthly" 는 종류가 아니라 이 달의 상품 필터(is_monthly).
-  const monthly = category === "monthly";
-  const filterByCategory = !!category && !monthly;
+  const filterByCategory = !!category;
 
   // 카테고리 필터는 slug→id 별도 조회 대신 !inner 조인 필터로 한 번에.
   // 대분류 slug 는 하위 소분류까지 확장해 매칭한다(#193 2계층 트리).
@@ -114,12 +111,11 @@ export async function getProducts({
     .from("products")
     .select(
       filterByCategory
-        ? "id, name, price, stock, sold_out, images, is_monthly, categories!inner(slug, name_en)"
-        : "id, name, price, stock, sold_out, images, is_monthly, categories(slug, name_en)",
+        ? "id, name, price, stock, sold_out, images, categories!inner(slug, name_en)"
+        : "id, name, price, stock, sold_out, images, categories(slug, name_en)",
     )
     .eq("is_active", true);
 
-  if (monthly) query = query.eq("is_monthly", true);
   if (filterByCategory)
     query = query.in("categories.slug", await getCategorySlugs(category!));
   if (q && q.trim()) query = query.ilike("name", `%${q.trim()}%`);
@@ -141,7 +137,6 @@ export async function getProducts({
     image: firstImage(p.images),
     image2: secondImage(p.images),
     category: p.categories?.name_en,
-    isMonthly: p.is_monthly,
   }));
   if (sort === "popular" || sort === "likes") {
     const rank = await rankBy(
@@ -169,8 +164,7 @@ async function loadShopBrowse(
   sort: ProductSort,
 ): Promise<ProductCardData[]> {
   const db = createPublicClient();
-  const monthly = category === "monthly";
-  const filterByCategory = !!category && !monthly;
+  const filterByCategory = !!category;
 
   const join = filterByCategory
     ? "categories!inner(slug, name_en)"
@@ -178,12 +172,11 @@ async function loadShopBrowse(
 
   let query = db
     .from("products")
-    .select(`id, name, price, stock, sold_out, images, is_monthly, ${join}`)
+    .select(`id, name, price, stock, sold_out, images, ${join}`)
     .eq("is_active", true);
 
-  if (monthly) query = query.eq("is_monthly", true);
   // 대분류 slug 는 하위 소분류까지 확장해 매칭한다(#193 2계층 트리, 0036 DB 판).
-  else if (filterByCategory)
+  if (filterByCategory)
     query = query.in("categories.slug", await getCategorySlugs(category));
 
   query = query.order("created_at", { ascending: false });
@@ -200,7 +193,6 @@ async function loadShopBrowse(
     image: firstImage(p.images),
     image2: secondImage(p.images),
     category: p.categories?.name_en,
-    isMonthly: p.is_monthly,
   }));
   if (sort === "popular" || sort === "likes") {
     const rank = await rankBy(

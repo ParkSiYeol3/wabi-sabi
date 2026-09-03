@@ -3,13 +3,11 @@ import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { ProductCard } from "@/components/product/product-card";
 import { Reveal } from "@/components/common/reveal";
-import { MONTHLY_SLUG } from "@/lib/site";
 import { ShopSidebar } from "@/components/shop/shop-sidebar";
 import { MobileCategoryTabs } from "@/components/shop/mobile-category-tabs";
 import { FeaturedShortcuts } from "@/components/shop/featured-shortcuts";
 import { SortSelect } from "@/components/shop/sort-select";
 import { ShopPagination } from "@/components/shop/shop-pagination";
-import { BackToShop } from "@/components/shop/back-to-shop";
 import { type ShopSP } from "@/lib/shop-url";
 import {
   getProducts,
@@ -67,7 +65,6 @@ export default async function ShopPage({
 
   // 페이지 타이틀 = 선택 카테고리명(영어 — shop 분류 영어화, 대표님). name_en 우선,
   // 대분류("-")·미매칭이면 name_ko(대분류는 TABLEWARE·OBJECTS 라 그대로 영문). 전체는
-  // "Shop", 이 달의 상품만 한글 유지(대표님 — 이 달·오늘의는 영어화 제외).
   const activeNode =
     tree.find((n) => n.slug === sp.category) ??
     tree.flatMap((n) => n.children ?? []).find((c) => c.slug === sp.category);
@@ -76,25 +73,16 @@ export default async function ShopPage({
       ? activeNode.en
       : activeNode.ko
     : undefined;
-  const heading = !sp.category
-    ? "Shop"
-    : sp.category === MONTHLY_SLUG
-      ? "월간 그릇"
-      : (catHeading ?? "Shop");
+  const heading = !sp.category ? "Shop" : (catHeading ?? "Shop");
 
   return (
     <Container className="pb-16 pt-2 sm:pt-3">
-      {/* 특색 대분류(대표님) — 월간 그릇·오늘의 와비사비. 헤더 구분선에 거의 붙게
+      {/* 특색 대분류(대표님) — 오늘의 와비사비. 헤더 구분선에 거의 붙게
           상단 여백 최소화. 아래 여백은 모바일에서 특히 축소(대표님). */}
       <FeaturedShortcuts className="mb-3.5 sm:mb-7" />
 
       {/* 헤더 — 타이틀 ("N개 상품" 표기는 대표님 요청으로 제거). 글씨 축소(대표님) */}
       <h1 className="text-lg font-semibold tracking-wide sm:text-xl">{heading}</h1>
-
-      {/* 월간 그릇에서 Shop 전체로 돌아가는 버튼(대표님, 모바일) */}
-      {sp.category === MONTHLY_SLUG && (
-        <BackToShop variant="button" className="mt-4 md:hidden" />
-      )}
 
       {/* 카테고리 — 대표님: 웹·모바일 모두 전 분류가 보이게. 모바일·태블릿(<lg)은
           카테고리 나열 + 정렬 드롭다운을 한 줄에 둔다(대표님 — 정렬이 아래로 떨어져

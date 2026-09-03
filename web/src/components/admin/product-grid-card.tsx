@@ -11,7 +11,6 @@ type Product = {
   stock: number;
   is_active: boolean;
   sold_out: boolean;
-  is_monthly: boolean;
   images: string[] | null;
 };
 
@@ -30,11 +29,6 @@ export function ProductGridCard({ product: p }: { product: Product }) {
       className="group block overflow-hidden rounded-xl border border-wabi-border bg-wabi-bg/50 shadow-sm transition-colors hover:border-wabi-fg/40"
     >
       <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-wabi-muted">
-        {p.is_monthly && (
-          <span className="absolute left-2 top-2 z-20 rounded-full bg-wabi-fg/90 px-2 py-0.5 text-[10px] font-medium tracking-wide text-wabi-bg">
-            월간
-          </span>
-        )}
         {/* 비공개가 우선(손님에게 아예 안 보임) → 그다음 품절. */}
         {!p.is_active ? (
           <span className="absolute right-2 top-2 z-20 rounded-full border border-wabi-border bg-wabi-bg/90 px-2 py-0.5 text-[10px] text-wabi-fg-muted">
