@@ -369,7 +369,7 @@ export async function reorderProductImages(formData: FormData) {
   // 순열 검증 — 개수 같고, 정렬 후 완전히 일치해야 반영(집합 보존).
   if (
     next.length !== current.length ||
-    [...next].sort().join(" ") !== [...current].sort().join(" ")
+    [...next].sort().join("\u0000") !== [...current].sort().join("\u0000")
   )
     return;
 
