@@ -22,7 +22,7 @@ import { leafCategoryOptions, type CategoryRow } from "../leaf-options";
 // 관리(재고·노출·사진·삭제)에 필요한 stock·is_active·images 도 함께 읽는다.
 type ProductRow = Omit<
   ProductEditValues,
-  "options" | "enabledAddons" | "stockOption" | "optionStock"
+  "options" | "enabledAddons" | "stockOption" | "optionStock" | "optionPrice"
 > & {
   options: unknown;
   enabled_addons: unknown;
@@ -58,12 +58,12 @@ export default async function AdminProductEditPage({
         .select("id, name_ko, name_en, parent_id, is_active")
         .order("sort_order")
         .returns<(CategoryRow & { is_active: boolean })[]>(),
-      // 옵션 값별 재고(0058) — 폼 프리필용.
+      // 옵션 값별 재고·가격(0058·0061) — 폼 프리필용.
       db
         .from("product_option_stock")
-        .select("value, stock")
+        .select("value, stock, price")
         .eq("product_id", id)
-        .returns<{ value: string; stock: number }[]>(),
+        .returns<{ value: string; stock: number; price: number | null }[]>(),
     ]);
   if (!row) notFound();
 
@@ -77,6 +77,13 @@ export default async function AdminProductEditPage({
     stockOption: row.stock_option,
     optionStock: Object.fromEntries(
       (stockRows ?? []).map((r) => [r.value, r.stock]),
+    ),
+    optionPrice: Object.fromEntries(
+      (stockRows ?? [])
+        .filter((r): r is { value: string; stock: number; price: number } =>
+          typeof r.price === "number",
+        )
+        .map((r) => [r.value, r.price]),
     ),
   };
 

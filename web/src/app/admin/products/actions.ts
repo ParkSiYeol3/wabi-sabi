@@ -64,35 +64,81 @@ function enabledAddonsField(formData: FormData): string[] {
   return ADDON_CODES.filter((c) => picked.has(c));
 }
 
-// 옵션 값별 재고(0058) — hidden `option_stock`(JSON `{group, stocks:{값:수량}}`)를
-// 안전 파싱. group 이 지정된 옵션 그룹의 값마다 재고를 둔다. products.stock 은
-// 관리 상품에선 이 합으로 유지(대시보드·품절 판정 호환). 깨진/빈 입력은 미관리.
+// 옵션 값별 재고·가격(0058·0061) — hidden `option_stock`
+// (JSON `{group, stocks:{값:수량}, prices:{값:금액|null}}`)를 안전 파싱.
+// group 이 지정된 옵션 그룹(=변형 그룹)의 값마다 재고와 가격을 둔다.
+//   · products.stock 은 관리 상품에선 값별 재고의 합으로 유지(대시보드·품절 판정 호환)
+//   · products.price 는 값별 가격이 하나라도 있으면 그 최저가로 유지(목록 '최저가~' 표시)
+// 가격 미입력(빈칸)은 null = 기본가 사용. 깨진/빈 입력은 미관리.
+const EMPTY_OPT_STOCK = {
+  stockOption: null,
+  rows: [] as { value: string; stock: number; price: number | null }[],
+  sum: 0,
+  minPrice: null as number | null,
+};
 function optionStockField(formData: FormData): {
   stockOption: string | null;
-  rows: { value: string; stock: number }[];
+  rows: { value: string; stock: number; price: number | null }[];
   sum: number;
+  minPrice: number | null;
 } {
   try {
     const raw = JSON.parse(String(formData.get("option_stock") || "null"));
     const group = typeof raw?.group === "string" ? raw.group.trim() : "";
     const stocks =
       raw?.stocks && typeof raw.stocks === "object" ? raw.stocks : null;
-    if (!group || !stocks) return { stockOption: null, rows: [], sum: 0 };
-    const rows: { value: string; stock: number }[] = [];
+    if (!group || !stocks) return EMPTY_OPT_STOCK;
+    const prices =
+      raw?.prices && typeof raw.prices === "object" ? raw.prices : {};
+    const rows: { value: string; stock: number; price: number | null }[] = [];
     for (const [value, n] of Object.entries(stocks)) {
       const v = String(value).trim().slice(0, 60);
+      if (!v) continue;
       const s = Math.max(0, Math.min(1_000_000, Math.floor(Number(n) || 0)));
-      if (v) rows.push({ value: v, stock: s });
+      // 가격은 빈칸·비수치면 null(기본가 사용). 음수·과대값은 클램프.
+      const rawPrice = (prices as Record<string, unknown>)[v];
+      const priceNum =
+        rawPrice === null || rawPrice === undefined || String(rawPrice).trim() === ""
+          ? null
+          : Number(rawPrice);
+      const price =
+        priceNum !== null && Number.isFinite(priceNum)
+          ? Math.max(0, Math.min(100_000_000, Math.floor(priceNum)))
+          : null;
+      rows.push({ value: v, stock: s, price });
     }
-    if (rows.length === 0) return { stockOption: null, rows: [], sum: 0 };
+    if (rows.length === 0) return EMPTY_OPT_STOCK;
+    const set = rows
+      .map((r) => r.price)
+      .filter((p): p is number => p !== null);
     return {
       stockOption: group.slice(0, 40),
       rows,
       sum: rows.reduce((a, r) => a + r.stock, 0),
+      minPrice: set.length ? Math.min(...set) : null,
     };
   } catch {
-    return { stockOption: null, rows: [], sum: 0 };
+    return EMPTY_OPT_STOCK;
   }
+}
+
+// 값별 가격 확정(0061) — 한 값이라도 가격이 들어오면 나머지 빈칸은 '입력한 기본가'로
+// 못박는다. 그러지 않으면 products.price 가 최저가로 덮이면서(목록 '최저가~' 표시)
+// 빈칸 값이 그 최저가로 조용히 떨어진다(기본가 25,000 · M 20,000 · L 빈칸 → L 이
+// 20,000 이 돼버림). 확정 후의 최저가를 대표 가격으로 쓴다.
+function resolveVariantPrices(
+  rows: { value: string; stock: number; price: number | null }[],
+  basePrice: number,
+): {
+  rows: { value: string; stock: number; price: number | null }[];
+  minPrice: number | null;
+} {
+  if (!rows.some((r) => r.price !== null)) return { rows, minPrice: null };
+  const filled = rows.map((r) => ({ ...r, price: r.price ?? basePrice }));
+  return {
+    rows: filled,
+    minPrice: Math.min(...filled.map((r) => r.price)),
+  };
 }
 
 function imageFiles(formData: FormData): File[] {
@@ -137,13 +183,16 @@ export async function createProduct(
 
   // 옵션 값별 재고(0058) — 관리면 products.stock 은 값별 합, stock_option 지정.
   const optStock = optionStockField(formData);
+  // 값별 가격 확정(0061) — 빈칸은 입력한 기본가로 못박고, 그 최저가를 대표 가격으로.
+  const variant = resolveVariantPrices(optStock.rows, price);
 
   const supabase = createAdminClient();
   const { data: inserted, error: insertError } = await supabase
     .from("products")
     .insert({
       name,
-      price,
+      // 값별 가격이 있으면 대표 가격은 최저가로 맞춘다(목록 '최저가~' 표시, 0061).
+      price: variant.minPrice ?? price,
       stock: optStock.stockOption ? optStock.sum : stock,
       stock_option: optStock.stockOption,
       category_id: categoryId,
@@ -160,13 +209,14 @@ export async function createProduct(
   if (insertError || !inserted)
     return { ok: false, message: `등록 실패: ${insertError?.message ?? "알 수 없는 오류"}` };
 
-  // 값별 재고 행 저장(관리 상품).
-  if (optStock.stockOption && optStock.rows.length) {
+  // 값별 재고·가격 행 저장(관리 상품).
+  if (optStock.stockOption && variant.rows.length) {
     await supabase.from("product_option_stock").insert(
-      optStock.rows.map((r) => ({
+      variant.rows.map((r) => ({
         product_id: inserted.id,
         value: r.value,
         stock: r.stock,
+        price: r.price,
       })),
     );
   }
@@ -228,6 +278,8 @@ export async function updateProduct(
 
   // 옵션 값별 재고(0058) — 관리면 stock_option 지정·stock 을 합으로, 미관리면 null.
   const optStock = optionStockField(formData);
+  // 값별 가격 확정(0061) — 빈칸은 입력한 기본가로 못박고, 그 최저가를 대표 가격으로.
+  const variant = resolveVariantPrices(optStock.rows, price);
 
   const supabase = createAdminClient();
   // select 로 매칭 row 를 돌려받아 부재(동시 삭제 등)를 성공으로 오인하지 않는다.
@@ -235,7 +287,8 @@ export async function updateProduct(
     .from("products")
     .update({
       name,
-      price,
+      // 값별 가격이 있으면 대표 가격은 최저가로 맞춘다(목록 '최저가~' 표시, 0061).
+      price: variant.minPrice ?? price,
       category_id: categoryId,
       description,
       material,
@@ -256,14 +309,15 @@ export async function updateProduct(
   if (!updated)
     return { ok: false, message: "상품을 찾을 수 없습니다(이미 삭제되었을 수 있음)." };
 
-  // 값별 재고 행 동기화 — 관리면 교체(전량 삭제 후 재삽입), 미관리면 정리.
+  // 값별 재고·가격 행 동기화 — 관리면 교체(전량 삭제 후 재삽입), 미관리면 정리.
   await supabase.from("product_option_stock").delete().eq("product_id", id);
-  if (optStock.stockOption && optStock.rows.length) {
+  if (optStock.stockOption && variant.rows.length) {
     await supabase.from("product_option_stock").insert(
-      optStock.rows.map((r) => ({
+      variant.rows.map((r) => ({
         product_id: id,
         value: r.value,
         stock: r.stock,
+        price: r.price,
       })),
     );
   }

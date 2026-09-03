@@ -85,14 +85,24 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
       : [],
   };
 
-  // 옵션 값별 재고(0058) — 재고가 예약분(매장 1개) 이하인 값은 '품절'로 표시한다.
-  // 수량 자체는 노출하지 않고(재고 비공개), stock_option 그룹의 soldOut 에 병합해
-  // 기존 품절 처리(선택 불가·(품절) 라벨)를 그대로 재사용한다.
+  // 옵션 값별 재고·가격(0058·0061) — 재고가 예약분(매장 1개) 이하인 값은 '품절'로
+  // 표시한다. 수량 자체는 노출하지 않고(재고 비공개), stock_option 그룹의 soldOut 에
+  // 병합해 기존 품절 처리(선택 불가·(품절) 라벨)를 그대로 재사용한다.
+  // 값별 가격은 손님에게 보여야 하므로(사이즈 M/L 금액 차이) 그대로 내보낸다.
   if (data.stock_option) {
     const { data: stockRows } = await db
       .from("product_option_stock")
-      .select("value, stock")
+      .select("value, stock, price")
       .eq("product_id", data.id);
+    product.variantGroup = data.stock_option;
+    product.variantPrices = Object.fromEntries(
+      (stockRows ?? [])
+        .filter((r) => typeof (r as { price: number | null }).price === "number")
+        .map((r) => [
+          (r as { value: string }).value,
+          (r as { price: number }).price,
+        ]),
+    );
     const depleted = new Set(
       (stockRows ?? [])
         .filter((r) => (r as { stock: number }).stock <= STORE_RESERVE)

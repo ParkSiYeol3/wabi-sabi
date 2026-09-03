@@ -29,6 +29,7 @@ export function ProductOptionsFields({
   initialAddons = ADDON_CODES,
   initialStockOption = null,
   initialOptionStock = {},
+  initialOptionPrice = {},
 }: {
   initialOptions?: OptionGroup[];
   // 노출 켜진 애드온 코드. 수정 폼은 상품값, 등록 폼은 기본 전체.
@@ -36,6 +37,8 @@ export function ProductOptionsFields({
   // 옵션 값별 재고(0058) — 재고를 담는 옵션 그룹 이름, 값별 재고 맵.
   initialStockOption?: string | null;
   initialOptionStock?: Record<string, number>;
+  // 옵션 값별 가격(0061) — 값별 금액 맵(없는 값은 기본가).
+  initialOptionPrice?: Record<string, number>;
 }) {
   // 값은 편집 편의상 쉼표 구분 문자열로 다룬다(저장 시 배열로 파싱).
   const [rows, setRows] = useState<Row[]>(
@@ -57,6 +60,12 @@ export function ProductOptionsFields({
       Object.entries(initialOptionStock).map(([v, n]) => [v, String(n)]),
     ),
   );
+  // 값별 가격(0061) — 빈칸이면 기본가 사용. value→금액 문자열.
+  const [prices, setPrices] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      Object.entries(initialOptionPrice).map(([v, n]) => [v, String(n)]),
+    ),
+  );
 
   // 직렬화 — 이름·값 트림, 빈 값·빈 그룹 제거. soldOut 은 존재하는 값만.
   // 서버(parseOptionGroups)가 재검증한다.
@@ -72,8 +81,9 @@ export function ProductOptionsFields({
       .filter((g) => g.name && g.values.length),
   );
 
-  // 옵션 값별 재고(0058) 직렬화 — 재고 관리 그룹의 값마다 수량. hidden `option_stock`.
-  // 그룹이 유효(이름·값 있음)할 때만. 서버(optionStockField)가 재검증한다.
+  // 옵션 값별 재고·가격(0058·0061) 직렬화 — 변형 그룹의 값마다 수량과 금액.
+  // hidden `option_stock`. 그룹이 유효(이름·값 있음)할 때만. 가격 빈칸은 null(기본가).
+  // 서버(optionStockField)가 재검증한다.
   const stockRow = stockGroup >= 0 ? rows[stockGroup] : null;
   const optionStockSerialized =
     stockRow && stockRow.name.trim() && splitValues(stockRow.values).length
@@ -85,11 +95,23 @@ export function ProductOptionsFields({
               Math.max(0, Math.floor(Number(stocks[v]) || 0)),
             ]),
           ),
+          prices: Object.fromEntries(
+            splitValues(stockRow.values).map((v) => {
+              const raw = String(prices[v] ?? "").trim();
+              const n = Number(raw);
+              return [
+                v,
+                raw === "" || !Number.isFinite(n) ? null : Math.max(0, Math.floor(n)),
+              ];
+            }),
+          ),
         })
       : "";
 
   const setStock = (value: string, n: string) =>
     setStocks((s) => ({ ...s, [value]: n }));
+  const setPrice = (value: string, n: string) =>
+    setPrices((s) => ({ ...s, [value]: n }));
   // 재고 관리 그룹 지정 토글 — 한 그룹만. 다시 누르면 해제(flat 재고로).
   const toggleStockGroup = (i: number) =>
     setStockGroup((cur) => (cur === i ? -1 : i));
@@ -189,31 +211,51 @@ export function ProductOptionsFields({
                       onChange={() => toggleStockGroup(i)}
                       className="size-3.5"
                     />
-                    이 옵션으로 재고 관리 (값별 수량 1개면 자동 품절 처리)
+                    이 옵션으로 재고·가격 관리 (값별 수량 1개면 자동 품절 처리)
                   </label>
 
                   {stockGroup === i ? (
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                      {splitValues(r.values).map((v) => (
-                        <label
-                          key={v}
-                          className="flex items-center gap-1.5 text-xs text-wabi-fg-muted"
-                        >
-                          <span className="text-wabi-fg">{v}</span>
-                          <input
-                            type="number"
-                            min={0}
-                            inputMode="numeric"
-                            value={stocks[v] ?? ""}
-                            onChange={(e) => setStock(v, e.target.value)}
-                            placeholder="0"
-                            aria-label={`${v} 재고 수량`}
-                            className="w-16 border border-wabi-border bg-transparent px-2 py-1 font-numeric text-sm outline-none focus:border-wabi-fg"
-                          />
-                          <span className="text-wabi-fg-muted/70">개</span>
-                        </label>
-                      ))}
-                    </div>
+                    <>
+                      <div className="flex flex-col gap-2">
+                        {splitValues(r.values).map((v) => (
+                          <div
+                            key={v}
+                            className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-wabi-fg-muted"
+                          >
+                            <span className="min-w-12 text-wabi-fg">{v}</span>
+                            <input
+                              type="number"
+                              min={0}
+                              inputMode="numeric"
+                              value={stocks[v] ?? ""}
+                              onChange={(e) => setStock(v, e.target.value)}
+                              placeholder="0"
+                              aria-label={`${v} 재고 수량`}
+                              className="w-16 border border-wabi-border bg-transparent px-2 py-1 font-numeric text-sm outline-none focus:border-wabi-fg"
+                            />
+                            <span className="text-wabi-fg-muted/70">개</span>
+                            {/* 값별 가격(0061, 대표님 — 사이즈 M/L 금액 차이).
+                                비우면 위의 기본 가격으로 판매된다. */}
+                            <input
+                              type="number"
+                              min={0}
+                              inputMode="numeric"
+                              value={prices[v] ?? ""}
+                              onChange={(e) => setPrice(v, e.target.value)}
+                              placeholder="기본가"
+                              aria-label={`${v} 가격`}
+                              className="w-24 border border-wabi-border bg-transparent px-2 py-1 font-numeric text-sm outline-none focus:border-wabi-fg"
+                            />
+                            <span className="text-wabi-fg-muted/70">원</span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-wabi-fg-muted">
+                        가격을 비워두면 위에 입력한 <b>기본 가격</b>으로 팔립니다.
+                        값마다 금액을 넣으면(예: M 20,000 / L 25,000) 목록에는{" "}
+                        <b>최저가~</b>로 보이고, 손님이 고른 값의 금액으로 결제됩니다.
+                      </p>
+                    </>
                   ) : (
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="text-[11px] text-wabi-fg-muted">
