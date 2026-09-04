@@ -97,8 +97,16 @@ export default function TermsPage() {
 
       <Article heading="제9조 (문의처)">
         <p>
-          본 약관에 관한 문의는 {business.email} 또는 몰의 문의 게시판으로
-          연락해 주시기 바랍니다.
+          본 약관에 관한 문의는 몰의 문의 게시판 또는 인스타그램{" "}
+          <a
+            href={site.instagramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-wabi-fg underline underline-offset-2"
+          >
+            @{site.instagram}
+          </a>
+          으로 연락해 주시기 바랍니다.
         </p>
       </Article>
     </LegalPage>
