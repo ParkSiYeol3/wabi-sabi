@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { LegalPage, Article } from "@/components/layout/legal-layout";
-import { business, site } from "@/lib/site";
+import { site } from "@/lib/site";
 import {
   getSiteContent,
   SHIPPING_INFO_KEY,
@@ -11,10 +11,25 @@ import {
 
 export const metadata: Metadata = { title: "교환·환불 안내" };
 
+// 문의 창구는 이메일이 아니라 인스타그램 DM (대표님) — §3·§9 공용.
+function InstagramLink() {
+  return (
+    <a
+      href={site.instagramUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-wabi-fg underline underline-offset-2"
+    >
+      @{site.instagram}
+    </a>
+  );
+}
+
 // ⚠ 초안 — 대표님 확인 및 필요 시 법률 검토 후 확정할 것 (#106).
 // 실제 구현과 일치시킬 것: 배송 전(paid) 주문만 사이트에서 직접 취소 가능하고
 // (cancel_paid_order RPC → 토스 전액 환불), 배송 이후는 문의 게시판 경유다.
-// 반품 배송비·회수 방법은 대표님 확정 필요(현재 문구는 법정 원칙만 기술).
+// 반품 배송비·불량 접수 창구는 대표님 확정분 반영(2026-09-04): 접수는 문의 게시판,
+// 연락은 인스타 DM(이메일 아님), 불량 반품비는 회사 부담.
 // 배송 안내 문구는 어드민 편집값(미저장 시 기본) — 상품 상세와 같은 출처.
 export default async function RefundPage() {
   const [shippingInfo, shippingFee] = await Promise.all([
@@ -22,7 +37,7 @@ export default async function RefundPage() {
     getSiteContent(SHIPPING_FEE_KEY),
   ]);
   return (
-    <LegalPage title="교환·환불 안내" effectiveDate="2026년 7월 13일">
+    <LegalPage title="교환·환불 안내" effectiveDate="2026년 9월 4일">
       <Article heading="1. 배송 안내">
         <p className="whitespace-pre-line">
           {shippingInfo || DEFAULT_SHIPPING_INFO}
@@ -36,7 +51,7 @@ export default async function RefundPage() {
         <p>
           이용자는 상품을 수령한 날부터 <strong className="text-wabi-fg">7일
           이내</strong>에 청약철회(반품)를 요청할 수 있습니다. 상품의 내용이 표시
-          내용과 다르거나 계약과 다르게 이행된 경우에는 수령일부터 3개월 이내, 그
+          내용과 다르거나 계약과 다르게 이행된 경우에는 수령일부터 4개월 이내, 그
           사실을 안 날부터 30일 이내에 청약철회가 가능합니다.
         </p>
       </Article>
@@ -48,8 +63,8 @@ export default async function RefundPage() {
           전액 환불됩니다.
         </p>
         <p>
-          배송이 시작된 이후에는 사이트에서 직접 취소할 수 없으며, 문의 게시판 또는{" "}
-          {business.email} 로 연락해 주시기 바랍니다.
+          배송이 시작된 이후에는 사이트에서 직접 취소할 수 없으며, 문의 게시판 또는
+          인스타그램 <InstagramLink /> 으로 연락해 주시기 바랍니다.
         </p>
       </Article>
 
@@ -82,9 +97,10 @@ export default async function RefundPage() {
 
       <Article heading="6. 불량·오배송">
         <p>
-          상품이 파손되었거나 주문과 다른 상품이 배송된 경우, 수령일부터 3개월 이내에
-          문의 게시판 또는 {business.email} 로 알려주시면 교환 또는 전액 환불해
-          드립니다. 이 경우 반품에 필요한 비용은 회사가 부담합니다.
+          상품이 파손되었거나 주문과 다른 상품이 배송된 경우, 상품 수령 후{" "}
+          <strong className="text-wabi-fg">48시간 이내</strong>에 문의 게시판으로
+          접수해 주시고 7일 이내에 상품이 도착하면 신속하게 처리해 드립니다. 이 경우
+          반품비는 회사가 부담합니다.
         </p>
         <p>
           접수 시 파손 부위 또는 배송된 상품의 사진을 함께 보내주시면 처리가
@@ -113,16 +129,8 @@ export default async function RefundPage() {
 
       <Article heading="9. 문의">
         <p>
-          교환·환불 관련 문의는 문의 게시판 또는 인스타그램{" "}
-          <a
-            href={site.instagramUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-wabi-fg underline underline-offset-2"
-          >
-            @{site.instagram}
-          </a>
-          으로 연락해 주시기 바랍니다.
+          교환·환불 관련 문의는 문의 게시판 또는 인스타그램 <InstagramLink /> 으로
+          연락해 주시기 바랍니다.
         </p>
       </Article>
     </LegalPage>
