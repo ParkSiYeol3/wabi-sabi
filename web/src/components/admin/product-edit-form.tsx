@@ -125,9 +125,10 @@ export function ProductEditForm({
           label="사이즈"
           options={SIZES}
           presetAsTemplate
+          multiline
           initial={product.size ?? ""}
           emptyLabel="사이즈 선택 안 함"
-          customPlaceholder="사이즈 (예: Ø20×12 h2.5 · 지름 12cm)"
+          customPlaceholder={"사이즈 (여러 줄 가능)\n예: 티스푼·티포크 13cm\n버터나이프 14.5cm"}
         />
       </label>
       {/* 주의사항 — 복수 선택 + 직접 입력 여러 개(대표님). 칩·입력을 감싸므로

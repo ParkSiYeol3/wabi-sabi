@@ -105,15 +105,18 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
       {/* 원산지 — 한·일·중 드롭다운 + 직접 입력(대표님). 저장값은 완성형 문자열 */}
       <OriginPicker key={`origin-${pickerKey}`} />
       {/* 사이즈 — 치수 형식 프리셋(Ø× 등) 드롭다운. 고르면 편집칸에 채워져 숫자만
-          이어 적는다(presetAsTemplate). 규격이 제각각이라 값이 아닌 형식 프리셋. */}
+          이어 적는다(presetAsTemplate). 규격이 제각각이라 값이 아닌 형식 프리셋.
+          multiline: 세트 상품처럼 품목별 치수를 여러 줄로 적을 수 있게(대표님 —
+          한 줄 input 이라 엔터가 저장으로 먹혀 줄바꿈이 안 됐음). */}
       <AttributePicker
         key={`size-${pickerKey}`}
         name="size"
         label="사이즈"
         options={SIZES}
         presetAsTemplate
+        multiline
         emptyLabel="사이즈 선택 안 함"
-        customPlaceholder="사이즈 (예: Ø20×12 h2.5 · 지름 12cm)"
+        customPlaceholder={"사이즈 (여러 줄 가능)\n예: 티스푼·티포크 13cm\n버터나이프 14.5cm"}
       />
       {/* 주의사항 — 복수 선택 + 직접 입력 여러 개(대표님). 폭이 필요해 한 줄 차지. */}
       <div className="flex flex-col gap-1 text-xs text-wabi-fg-muted sm:col-span-2 lg:col-span-4">
