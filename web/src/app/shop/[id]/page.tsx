@@ -4,7 +4,10 @@ import { notFound } from "next/navigation";
 import { ImageIcon } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { ProductCard } from "@/components/product/product-card";
-import { ProductGallery } from "@/components/product/product-gallery";
+import {
+  ProductGallery,
+  isGalleryLayout,
+} from "@/components/product/product-gallery";
 import { ProductImageZoom } from "@/components/product/product-image-zoom";
 import { BackToShop } from "@/components/shop/back-to-shop";
 import { ProductDetailActions } from "@/components/product/product-detail-actions";
@@ -43,6 +46,8 @@ export async function generateMetadata({
   return {
     title: product.name,
     description,
+    // ?layout= 같은 쿼리가 붙은 주소가 색인되지 않게 정규 주소를 못 박는다(#609).
+    alternates: { canonical: `/shop/${product.id}` },
     openGraph: {
       title: product.name,
       description,
@@ -163,10 +168,16 @@ function breadcrumbJsonLd(product: {
 
 export default async function ProductDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  // ?layout= 은 상세 사진 배치 시안 비교용(#609) — 대표님이 프리뷰에서 4안을 직접
+  // 보고 고르기 위한 임시 스위치다. 확정되면 이 prop 과 분기를 함께 지운다.
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
+  const sp = (await searchParams) ?? {};
+  const layout = isGalleryLayout(sp.layout) ? sp.layout : "scatter";
   // 공개 데이터(상품·관련상품·평점)는 캐시된 번들로 (#181).
   const bundle = await getCachedProductDetail(id);
   if (!bundle) notFound();
@@ -368,7 +379,11 @@ export default async function ProductDetailPage({
       {/* 상세 스캐터 — 전체 폭에 불규칙 흩뿌림(중앙 정렬 없음). 스크롤 시 이어짐.
           대표(첫) 사진도 이 영역에 포함해 노출한다(대표님 — 대표 사진도 아래
           스캐터에서 보이게). 상단 히어로와 중복되지만 의도된 노출이다. */}
-      <ProductGallery images={product.images} name={product.name} />
+      <ProductGallery
+        images={product.images}
+        name={product.name}
+        layout={layout}
+      />
 
       {/* 사용 및 관리 (대표님 — 사진과 리뷰 사이). 대표님이 정리한 케어 카드
           (소재별 주의 + 자연스러운 변화 + 가전 가이드)를 그대로 옮긴 정적 안내. */}
