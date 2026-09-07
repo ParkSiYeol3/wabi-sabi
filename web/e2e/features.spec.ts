@@ -59,3 +59,29 @@ test("장바구니 — 담긴 상품을 누르면 상세로 이동", async ({ pa
 });
 
 // (배경음/AmbientPlayer 테스트 제거 — 해당 기능이 코드에서 제거되어 스모크 대상 아님.)
+
+// 상세 히어로 사진 넘기기 (#611, 대표님). 화살표로 다음 컷으로 이동하고 표시가
+// 따라온다. 사진이 한 장뿐인 상품엔 화살표가 없으므로 여러 장인 상품을 찾아 검증한다.
+test("상품 상세 — 화살표로 히어로 사진을 넘긴다", async ({ page }) => {
+  await page.goto("/shop");
+  const cards = page.locator('a[href^="/shop/"]');
+  const hrefs = (await cards.evaluateAll((els) =>
+    els.map((e) => (e as HTMLAnchorElement).getAttribute("href")),
+  )).filter((h): h is string => !!h);
+  test.skip(hrefs.length === 0, "상품 없음");
+
+  let found = false;
+  for (const href of hrefs.slice(0, 8)) {
+    await page.goto(href);
+    const next = page.getByRole("button", { name: "다음 사진" });
+    if ((await next.count()) === 0) continue;
+
+    const counter = page.locator('[aria-live="polite"]').first();
+    await expect(counter).toHaveText(/^1 \/ \d+$/);
+    await next.click();
+    await expect(counter).toHaveText(/^2 \/ \d+$/);
+    found = true;
+    break;
+  }
+  test.skip(!found, "사진이 여러 장인 상품 없음 — 넘길 대상 없음");
+});
