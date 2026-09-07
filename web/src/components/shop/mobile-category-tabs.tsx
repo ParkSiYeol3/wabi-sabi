@@ -48,6 +48,7 @@ export function MobileCategoryTabs({
   tree,
   todayActive = false,
   tabletOnly = false,
+  className,
 }: {
   sp: ShopSP;
   tree: CategoryNode[];
@@ -55,6 +56,8 @@ export function MobileCategoryTabs({
   todayActive?: boolean;
   // true 면 태블릿(md~lg)에서만 노출. 기본은 lg 미만 전부(모바일+태블릿).
   tabletOnly?: boolean;
+  // 바깥 여백 조절용(shop 은 타이틀에 더 바짝 붙인다 — 대표님). twMerge 라 덮어쓴다.
+  className?: string;
 }) {
   const current = sp.category;
   // 지금 보고 있는 대분류(그 대분류이거나 그 소분류를 볼 때). 있으면 대표님 지시대로
@@ -70,6 +73,7 @@ export function MobileCategoryTabs({
         // 여백 축소(대표님) — 모바일은 타이틀·상품과 바짝, sm+는 기존 유지.
         "mt-3 pb-2 sm:mt-6 sm:pb-4",
         tabletOnly ? "hidden md:block lg:hidden" : "lg:hidden",
+        className,
       )}
     >
       <nav

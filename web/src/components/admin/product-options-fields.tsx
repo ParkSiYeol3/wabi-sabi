@@ -18,6 +18,10 @@ import { cn } from "@/lib/utils";
 
 type Row = { name: string; values: string; soldOut: string[] };
 
+// 옵션 이름 빠른 선택(대표님 2026-09-05) — "색상"·"종류" 같은 이름을 매번 손으로
+// 치는 게 번거롭다는 피드백. 눌러서 채우고 바로 선택지만 적으면 된다.
+const NAME_PRESETS = ["색상", "사이즈", "종류", "모양"] as const;
+
 const splitValues = (s: string) =>
   s
     .split(",")
@@ -192,7 +196,31 @@ export function ProductOptionsFields({
                   <X className="size-4" />
                 </button>
               </div>
-              {/* 2줄: 선택지(전폭 — 모바일에서 안 잘리게) */}
+              {/* 2줄: 이름 빠른 선택 — 눌러서 채운다(대표님, 타이핑 한 번 덜) */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {NAME_PRESETS.map((preset) => {
+                  const on = r.name.trim() === preset;
+                  return (
+                    <button
+                      key={preset}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() =>
+                        setRow(i, { name: on ? "" : preset })
+                      }
+                      className={cn(
+                        "rounded border px-2 py-0.5 text-xs transition-colors",
+                        on
+                          ? "border-wabi-fg bg-wabi-fg text-wabi-bg"
+                          : "border-wabi-border text-wabi-fg-muted hover:border-wabi-fg hover:text-wabi-fg",
+                      )}
+                    >
+                      {preset}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* 3줄: 선택지(전폭 — 모바일에서 안 잘리게) */}
               <input
                 aria-label={`옵션 ${i + 1} 선택지`}
                 placeholder="선택지 — 쉼표로 구분 (예: 아이보리, 블루)"
@@ -200,7 +228,7 @@ export function ProductOptionsFields({
                 onChange={(e) => setRow(i, { values: e.target.value })}
                 className="w-full border border-wabi-border bg-transparent px-3 py-2 text-sm outline-none focus:border-wabi-fg"
               />
-              {/* 3줄: 재고 관리 지정 + (관리 시)값별 수량 / (미관리 시)수동 품절 토글 */}
+              {/* 4줄: 재고 관리 지정 + (관리 시)값별 수량 / (미관리 시)수동 품절 토글 */}
               {splitValues(r.values).length > 0 && (
                 <>
                   {/* 이 옵션으로 값별 재고 관리(0058) — 한 그룹만. 켜면 값별 수량 입력. */}

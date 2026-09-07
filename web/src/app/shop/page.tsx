@@ -77,21 +77,24 @@ export default async function ShopPage({
 
   return (
     <Container className="pb-16 pt-2 sm:pt-3">
-      {/* 특색 대분류(대표님) — 오늘의 와비사비. 헤더 구분선에 거의 붙게
-          상단 여백 최소화. 아래 여백은 모바일에서 특히 축소(대표님). */}
-      <FeaturedShortcuts className="mb-3.5 sm:mb-7" />
-
-      {/* 헤더 — 타이틀 ("N개 상품" 표기는 대표님 요청으로 제거). 글씨 축소(대표님) */}
-      <h1 className="text-lg font-semibold tracking-wide sm:text-xl">{heading}</h1>
+      {/* 헤더 — 타이틀 + 특색 필(오늘의 와비사비)을 한 줄에(대표님 2026-09-05):
+          필이 한 줄을 통째로 먹어 타이틀·분류 위에 빈 공간이 남았다 → 필은 우측으로
+          올리고 분류를 위로 당긴다. ("N개 상품" 표기는 이전에 제거, 글씨 축소도 대표님) */}
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="min-w-0 truncate text-lg font-semibold tracking-wide sm:text-xl">
+          {heading}
+        </h1>
+        <FeaturedShortcuts className="shrink-0" />
+      </div>
 
       {/* 카테고리 — 대표님: 웹·모바일 모두 전 분류가 보이게. 모바일·태블릿(<lg)은
           카테고리 나열 + 정렬 드롭다운을 한 줄에 둔다(대표님 — 정렬이 아래로 떨어져
           생기던 빈 공간 제거·정렬을 위로). 데스크톱은 좌측 사이드바 + 우측 툴바 정렬. */}
       <div className="flex items-start justify-between gap-3 lg:hidden">
         <div className="min-w-0 flex-1">
-          <MobileCategoryTabs sp={sp} tree={tree} />
+          <MobileCategoryTabs sp={sp} tree={tree} className="mt-2 sm:mt-3" />
         </div>
-        <div className="mt-3 shrink-0 sm:mt-6">
+        <div className="mt-2 shrink-0 sm:mt-3">
           <SortSelect sp={sp} sort={sort} options={sorts} />
         </div>
       </div>

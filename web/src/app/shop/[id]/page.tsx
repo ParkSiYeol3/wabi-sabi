@@ -345,7 +345,7 @@ export default async function ProductDetailPage({
                   <dt className="w-20 shrink-0 text-wabi-fg-muted">
                     {s.label}
                   </dt>
-                  <dd className="font-numeric">{s.value}</dd>
+                  <dd className="whitespace-pre-line font-numeric">{s.value}</dd>
                 </div>
               ))}
             </dl>
