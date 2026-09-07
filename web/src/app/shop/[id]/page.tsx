@@ -4,11 +4,8 @@ import { notFound } from "next/navigation";
 import { ImageIcon } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { ProductCard } from "@/components/product/product-card";
-import {
-  ProductGallery,
-  isGalleryLayout,
-} from "@/components/product/product-gallery";
-import { ProductImageZoom } from "@/components/product/product-image-zoom";
+import { ProductGallery } from "@/components/product/product-gallery";
+import { ProductImageCarousel } from "@/components/product/product-image-carousel";
 import { BackToShop } from "@/components/shop/back-to-shop";
 import { ProductDetailActions } from "@/components/product/product-detail-actions";
 import { RestockButton } from "@/components/product/restock-button";
@@ -168,16 +165,10 @@ function breadcrumbJsonLd(product: {
 
 export default async function ProductDetailPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  // ?layout= 은 상세 사진 배치 시안 비교용(#609) — 대표님이 프리뷰에서 4안을 직접
-  // 보고 고르기 위한 임시 스위치다. 확정되면 이 prop 과 분기를 함께 지운다.
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
-  const sp = (await searchParams) ?? {};
-  const layout = isGalleryLayout(sp.layout) ? sp.layout : "scatter";
   // 공개 데이터(상품·관련상품·평점)는 캐시된 번들로 (#181).
   const bundle = await getCachedProductDetail(id);
   if (!bundle) notFound();
@@ -254,34 +245,30 @@ export default async function ProductDetailPage({
       />
       {/* Shop 으로 — 상단에 보일 듯 안 보일 듯 흐리게(대표님) */}
       <BackToShop variant="subtle" className="mb-5" />
-      {/* 히어로 — 첫(메인) 사진 + 정보. 스크롤을 내리면 정보와 함께 위로 사라지고
-          아래 스캐터 사진만 이어진다(대표님 시안 — 정보를 우측에 고정하지 않음). */}
+      {/* 히어로 — 사진 + 정보. 스크롤을 내리면 정보와 함께 위로 사라지고 아래
+          갤러리 사진만 이어진다(대표님 시안 — 정보를 우측에 고정하지 않음).
+          사진은 좌우 화살표로 넘긴다(#611, 대표님) — 첫 화면에서 바로 다음 컷 확인. */}
       <div className="grid items-start gap-12 md:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden bg-wabi-muted">
-          {main ? (
-            <ProductImageZoom
-              src={main}
-              alt={product.name}
-              sizes="(max-width: 768px) 100vw, 45vw"
-              preload
+        {main ? (
+          <ProductImageCarousel
+            images={product.images}
+            name={product.name}
+            soldOut={soldOut}
+          />
+        ) : (
+          <div className="relative flex aspect-square items-center justify-center bg-wabi-muted">
+            <ImageIcon
+              className="size-12 text-wabi-fg-muted/40"
+              strokeWidth={1}
+              aria-hidden
             />
-          ) : (
-            <div className="flex h-full items-center justify-center">
-              <ImageIcon
-                className="size-12 text-wabi-fg-muted/40"
-                strokeWidth={1}
-                aria-hidden
-              />
-            </div>
-          )}
-          {/* 품절을 상세에서도 한눈에(대표님) — 히어로 사진 위 오버레이. 목록 카드와
-              동일 톤. pointer-events-none 로 아래 확대 클릭은 그대로 통과. */}
-          {soldOut && (
-            <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-white/65 text-lg tracking-wide text-wabi-fg backdrop-blur-[1px]">
-              Out of Stock
-            </span>
-          )}
-        </div>
+            {soldOut && (
+              <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-white/65 text-lg tracking-wide text-wabi-fg backdrop-blur-[1px]">
+                Out of Stock
+              </span>
+            )}
+          </div>
+        )}
 
         {/* 정보 — 히어로에만. sticky 아님(첫 사진과 함께 스크롤). */}
         <div>
@@ -376,14 +363,10 @@ export default async function ProductDetailPage({
         </div>
       </div>
 
-      {/* 상세 스캐터 — 전체 폭에 불규칙 흩뿌림(중앙 정렬 없음). 스크롤 시 이어짐.
-          대표(첫) 사진도 이 영역에 포함해 노출한다(대표님 — 대표 사진도 아래
-          스캐터에서 보이게). 상단 히어로와 중복되지만 의도된 노출이다. */}
-      <ProductGallery
-        images={product.images}
-        name={product.name}
-        layout={layout}
-      />
+      {/* 상세 갤러리 — 1:2:1 구성(대표님 시안 B안). 대표(첫) 사진도 이 영역에
+          포함해 노출한다(대표님 — 대표 사진도 아래에서 보이게). 상단 히어로와
+          중복되지만 의도된 노출이다. */}
+      <ProductGallery images={product.images} name={product.name} />
 
       {/* 사용 및 관리 (대표님 — 사진과 리뷰 사이). 대표님이 정리한 케어 카드
           (소재별 주의 + 자연스러운 변화 + 가전 가이드)를 그대로 옮긴 정적 안내. */}

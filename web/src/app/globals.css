@@ -210,17 +210,12 @@
   }
 }
 
-/* 상세 갤러리 배치 슬롯 (#609) — 폭·좌측 오프셋을 인라인 CSS 변수로 받는다.
-   Tailwind 는 동적 임의값(w-[${x}%])을 생성하지 못해 정적 클래스 배열을 늘어놓아야
-   했는데, 그러면 같은 기하값을 이음선(金継ぎ) SVG 좌표로 재사용할 수 없다. 숫자를
-   한 곳에 두고 여기로 흘려보내 배치와 이음선이 같은 원본을 공유하게 한다. */
-.wabi-slot {
-  width: var(--w);
-  margin-left: var(--l);
+/* 히어로 사진 캐러셀 트랙 (#611) — 가로 스크롤은 살리고 막대만 감춘다.
+   손가락으로 미는 동작이 기본 스크롤이라 제스처 코드 없이 동작한다. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-@media (min-width: 768px) {
-  .wabi-slot {
-    width: var(--wd);
-    margin-left: var(--ld);
-  }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
