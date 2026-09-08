@@ -34,11 +34,22 @@ export function StoneGarden({
   // 휠은 세로로 들어온다 — 정원은 옆으로 흐르므로 가로 스크롤로 옮긴다.
   // React 가 root 에 붙이는 wheel 리스너는 passive 라 preventDefault 가 먹지
   // 않는다 → 여기서 passive:false 로 직접 건다.
+  //
+  // 다만 마당이 화면에 온전히 들어오기 전에는 가로채지 않는다(#630, 시열님).
+  // 페이지에 막 들어오면 마당은 아래쪽이 잘려 있는데, 그때부터 세로 휠을 뺏으면
+  // 마당을 화면에 맞출 방법이 없어 답답해진다. 온전히 보일 때만 마당이 흐르고,
+  // 좌우 끝에 닿으면 다시 페이지로 넘긴다 — 들어올 때도 나갈 때도 막히지 않는다.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
       if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+
+      // 마당이 위아래로 잘려 있으면 세로 스크롤을 그대로 흘려보낸다.
+      const box = el.getBoundingClientRect();
+      const framed = box.top >= -2 && box.bottom <= window.innerHeight + 2;
+      if (!framed) return;
+
       // 이미 끝에 닿았으면 페이지 스크롤을 막지 않는다(정원에 갇히지 않게).
       const max = el.scrollWidth - el.clientWidth;
       const next = el.scrollLeft + e.deltaY;

@@ -4,6 +4,7 @@ import { Container } from "@/components/layout/container";
 import { StoneGarden } from "@/components/garden/stone-garden";
 import { getTodayStones, kstDateKey } from "@/lib/queries/garden";
 import { placeStones } from "@/lib/garden-layout";
+import { getGardenCopy, toParagraphs } from "@/lib/queries/content";
 
 // 빌드 프리렌더에서 실행되지 않게 요청 시 렌더로 고정한다. anon 클라(createPublicClient)
 // 는 공개 env 없이 만들면 throw 하는데 CI 빌드엔 그 env 가 없다 — /shop 은 searchParams
@@ -27,28 +28,29 @@ export const metadata: Metadata = {
 // 배치는 날짜로 정해진다(一期一会) — 오늘의 정원은 오늘만의 것이고, 내일 오면
 // 다른 그릇이 다른 자리에 놓인다.
 export default async function GardenPage() {
-  const stones = await getTodayStones();
+  const [stones, copy] = await Promise.all([getTodayStones(), getGardenCopy()]);
   const placed = placeStones(stones, kstDateKey());
+  // 본문은 빈 줄로 문단을 나눈다 — 대표님이 어드민에서 엔터 두 번으로 나눌 수 있게.
+  const body = toParagraphs(copy.body);
 
   return (
     <div className="pb-16">
       <Container className="pt-3">
         <h1 className="text-lg font-semibold tracking-wide sm:text-xl">
-          間, 마
+          {copy.heading}
         </h1>
         {/* 한 줄만 살짝 누운 글씨로(대표님) — 설명이 아니라 읊조림처럼 읽히게. */}
         <p className="mt-2.5 text-sm leading-6 tracking-wide text-wabi-fg italic">
-          돌과 모래, 그리고 그 사이의 여백.
+          {copy.lead}
         </p>
-        <p className="mt-3 max-w-2xl text-xs leading-6 text-wabi-fg-muted">
-          間(마)는 사물과 사물 사이의 빈 자리를 뜻합니다. 이곳의 마당은 무엇을
-          채웠는가가 아니라 무엇을 비웠는가로 읽힙니다. 가레산스이(枯山水)는 물
-          없이 물을 그리는 마당이라, 모래는 물이 되고 돌은 섬이 됩니다.
-        </p>
-        <p className="mt-1.5 max-w-2xl text-xs leading-6 text-wabi-fg-muted">
-          들어가지 않고, 마루에 앉아 바라봅니다. 오늘 놓인 그릇입니다 — 옆으로
-          밀어 둘러보세요.
-        </p>
+        {body.map((para, i) => (
+          <p
+            key={i}
+            className={`max-w-2xl text-xs leading-6 text-wabi-fg-muted ${i === 0 ? "mt-3" : "mt-1.5"}`}
+          >
+            {para}
+          </p>
+        ))}
       </Container>
 
       {/* 정원은 화면 폭을 다 쓴다 — 컨테이너 안에 가두면 마당이 상자가 된다. */}
@@ -58,16 +60,14 @@ export default async function GardenPage() {
           <StoneGarden stones={placed} width="min(320vw, 2600px)" />
         ) : (
           <div className="garden-sand flex h-[46vh] items-center justify-center">
-            <p className="text-xs text-wabi-fg-muted">
-              오늘은 마당이 비어 있습니다.
-            </p>
+            <p className="text-xs text-wabi-fg-muted">{copy.empty}</p>
           </div>
         )}
       </div>
 
       <Container className="mt-8">
         <p className="text-center text-xs leading-6 text-wabi-fg-muted">
-          오래 앉아 계셔도 좋습니다.
+          {copy.outro}
         </p>
         <p className="mt-6 text-center">
           <Link

@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { logAdminAction } from "@/lib/audit";
@@ -10,6 +10,7 @@ import {
   ABOUT_IMAGE_KEY,
   addonImageKey,
   PREP_NOTICE_KEY,
+  GARDEN_CONTENT_TAG,
 } from "@/lib/queries/content";
 import { ADDONS } from "@/lib/addons";
 import { uploadSiteImage, deleteProductImage } from "@/lib/storage";
@@ -58,6 +59,10 @@ export async function saveContent(
   revalidatePath("/"); // 홈 캐시된 소개문구 즉시 무효화
   revalidatePath("/about");
   revalidatePath("/admin/content");
+  // 정원 문구는 unstable_cache 안에 있어 경로 재검증으로는 안 풀린다 — 태그로 무효화.
+  // updateTag: 서버 액션 전용 즉시 무효화(read-your-own-writes, Next 16).
+  updateTag(GARDEN_CONTENT_TAG);
+  revalidatePath("/garden");
   return { ok: true, message: "저장되었습니다." };
 }
 
