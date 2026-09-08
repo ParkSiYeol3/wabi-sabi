@@ -220,18 +220,21 @@
   /* 돌 크기 배수 — 좁은 화면에선 같은 vmin 이라도 돌이 작아 보여 키운다. */
   --stone-scale: 1;
   background-color: #ece3d3;
+  /* 자갈은 실사 사진 타일이다(#632, 시열님 — 자연 배경 위에 그릇을 올려놓는 느낌).
+     CSS 그라디언트로는 알갱이가 안 나온다. 사진 위에 갈퀴 결을 긋고, 브랜드 톤에
+     맞추려고 크림 한 겹을 덮는다. 레이어 순서 = 위에서 아래(결 → 크림 → 자갈). */
   background-image:
     repeating-linear-gradient(
       0deg,
-      rgba(66, 60, 48, 0.115) 0 1px,
+      rgba(66, 60, 48, 0.145) 0 1px,
       transparent 1px 13px
     ),
-    /* 자잘한 자갈 결 — 결 사이를 메워 종이처럼 매끈해 보이지 않게 한다. */
-    repeating-linear-gradient(
-      0deg,
-      rgba(66, 60, 48, 0.03) 0 1px,
-      transparent 1px 4px
-    );
+    linear-gradient(rgba(236, 227, 211, 0.34), rgba(236, 227, 211, 0.34)),
+    url("/garden/sand.webp");
+  background-size:
+    auto,
+    auto,
+    520px auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
   overscroll-behavior-x: contain;
