@@ -12,6 +12,9 @@ import { Volume2, VolumeX } from "lucide-react";
 const SRC = "/sounds/garden-forest-stream.mp3";
 const VOLUME = 0.32;
 const FADE_MS = 1200;
+// 원본 앞 0~53초 구간만 반복(대표님, 구 AmbientPlayer #336 와 같은 지점) — 그 뒤는
+// 소리가 이상해진다. 파일을 다시 인코딩하지 않고 재생 구간만 코드로 제한한다.
+const LOOP_END = 53;
 
 export function GardenSound() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -58,6 +61,10 @@ export function GardenSound() {
       created.loop = true;
       created.preload = "none";
       created.volume = 0;
+      // 53초에 닿으면 처음으로 되감는다 — 끊김 없이 앞 구간만 계속 돈다.
+      created.addEventListener("timeupdate", () => {
+        if (created.currentTime >= LOOP_END) created.currentTime = 0;
+      });
       audioRef.current = created;
     } else {
       audioRef.current.volume = 0;

@@ -36,7 +36,8 @@ export default async function GardenPage() {
         <h1 className="text-lg font-semibold tracking-wide sm:text-xl">
           間, 마
         </h1>
-        <p className="mt-2.5 text-sm leading-6 text-wabi-fg">
+        {/* 한 줄만 살짝 누운 글씨로(대표님) — 설명이 아니라 읊조림처럼 읽히게. */}
+        <p className="mt-2.5 text-sm leading-6 tracking-wide text-wabi-fg italic">
           돌과 모래, 그리고 그 사이의 여백.
         </p>
         <p className="mt-3 max-w-2xl text-xs leading-6 text-wabi-fg-muted">
