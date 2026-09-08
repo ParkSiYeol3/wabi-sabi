@@ -5,7 +5,7 @@ import { ImageIcon } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductGallery } from "@/components/product/product-gallery";
-import { ProductImageCarousel } from "@/components/product/product-image-carousel";
+import { ProductImageZoom } from "@/components/product/product-image-zoom";
 import { BackToShop } from "@/components/shop/back-to-shop";
 import { ProductDetailActions } from "@/components/product/product-detail-actions";
 import { RestockButton } from "@/components/product/restock-button";
@@ -245,30 +245,35 @@ export default async function ProductDetailPage({
       />
       {/* Shop 으로 — 상단에 보일 듯 안 보일 듯 흐리게(대표님) */}
       <BackToShop variant="subtle" className="mb-5" />
-      {/* 히어로 — 사진 + 정보. 스크롤을 내리면 정보와 함께 위로 사라지고 아래
-          갤러리 사진만 이어진다(대표님 시안 — 정보를 우측에 고정하지 않음).
-          사진은 좌우 화살표로 넘긴다(#611, 대표님) — 첫 화면에서 바로 다음 컷 확인. */}
+      {/* 히어로 — 첫(메인) 사진 + 정보. 스크롤을 내리면 정보와 함께 위로 사라지고
+          아래 갤러리 사진만 이어진다(대표님 시안 — 정보를 우측에 고정하지 않음).
+          좌우 넘기기(#611)는 대표님 판단으로 되돌렸다(#613) — 한 장 고정. */}
       <div className="grid items-start gap-12 md:grid-cols-2">
-        {main ? (
-          <ProductImageCarousel
-            images={product.images}
-            name={product.name}
-            soldOut={soldOut}
-          />
-        ) : (
-          <div className="relative flex aspect-square items-center justify-center bg-wabi-muted">
-            <ImageIcon
-              className="size-12 text-wabi-fg-muted/40"
-              strokeWidth={1}
-              aria-hidden
+        <div className="relative aspect-square overflow-hidden bg-wabi-muted">
+          {main ? (
+            <ProductImageZoom
+              src={main}
+              alt={product.name}
+              sizes="(max-width: 768px) 100vw, 45vw"
+              preload
             />
-            {soldOut && (
-              <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-white/65 text-lg tracking-wide text-wabi-fg backdrop-blur-[1px]">
-                Out of Stock
-              </span>
-            )}
-          </div>
-        )}
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <ImageIcon
+                className="size-12 text-wabi-fg-muted/40"
+                strokeWidth={1}
+                aria-hidden
+              />
+            </div>
+          )}
+          {/* 품절을 상세에서도 한눈에(대표님) — 히어로 사진 위 오버레이. 목록 카드와
+              동일 톤. pointer-events-none 로 아래 조작은 그대로 통과. */}
+          {soldOut && (
+            <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-white/65 text-lg tracking-wide text-wabi-fg backdrop-blur-[1px]">
+              Out of Stock
+            </span>
+          )}
+        </div>
 
         {/* 정보 — 히어로에만. sticky 아님(첫 사진과 함께 스크롤). */}
         <div>
@@ -293,14 +298,8 @@ export default async function ProductDetailPage({
             )}
           </p>
 
-          {/* 관리자가 입력한 줄바꿈(엔터)을 그대로 보존 — 기본 <p>는 개행을 공백으로
-              합쳐 문단 구분이 사라진다. whitespace-pre-line 로 엔터=줄바꿈,
-              빈 줄=문단 간격이 그대로 반영된다(대표님). */}
-          {product.description && (
-            <p className="mt-6 whitespace-pre-line text-sm leading-7 text-wabi-fg-muted">
-              {product.description}
-            </p>
-          )}
+          {/* 상세 설명은 아래 갤러리 첫 사진 밑으로 옮겼다(대표님 #613) —
+              ProductGallery 의 description prop. */}
 
           <ProductDetailActions
             product={{
@@ -363,10 +362,14 @@ export default async function ProductDetailPage({
         </div>
       </div>
 
-      {/* 상세 갤러리 — 1:2:1 구성(대표님 시안 B안). 대표(첫) 사진도 이 영역에
-          포함해 노출한다(대표님 — 대표 사진도 아래에서 보이게). 상단 히어로와
-          중복되지만 의도된 노출이다. */}
-      <ProductGallery images={product.images} name={product.name} />
+      {/* 상세 갤러리 — 앞 네 장은 1:2:1(시안 B), 다섯 번째부터 불규칙(대표님 #613).
+          상세 설명은 첫 사진 바로 아래에 놓인다. 대표(첫) 사진도 이 영역에 포함해
+          노출한다(대표님) — 상단 히어로와 중복되지만 의도된 노출이다. */}
+      <ProductGallery
+        images={product.images}
+        name={product.name}
+        description={product.description}
+      />
 
       {/* 사용 및 관리 (대표님 — 사진과 리뷰 사이). 대표님이 정리한 케어 카드
           (소재별 주의 + 자연스러운 변화 + 가전 가이드)를 그대로 옮긴 정적 안내. */}

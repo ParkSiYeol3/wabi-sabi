@@ -210,12 +210,3 @@
   }
 }
 
-/* 히어로 사진 캐러셀 트랙 (#611) — 가로 스크롤은 살리고 막대만 감춘다.
-   손가락으로 미는 동작이 기본 스크롤이라 제스처 코드 없이 동작한다. */
-.no-scrollbar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
