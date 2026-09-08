@@ -12,12 +12,12 @@ import { placeStones } from "@/lib/garden-layout";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "돌의 정원",
+  title: "間, 마",
   description:
-    "물 없이 물을 그리는 마당, 가레산스이. 오늘 놓인 그릇을 앉은 자리에서 천천히 둘러보세요.",
+    "돌과 모래, 그리고 그 사이의 여백. 물 없이 물을 그리는 마당에 오늘의 그릇을 놓았습니다.",
 };
 
-// 돌의 정원 (#616, 대표님) — 우리 몰만의 자리.
+// 間, 마 (#616 → #621, 대표님) — 우리 몰만의 자리.
 //
 // 대표님이 원한 것: "팔지만 파는 듯하지 않은 편안함". 가레산스이는 구조가 이미
 // 그렇다 — 들어가는 정원이 아니라 앉아서 보는 정원이라 소유가 아니라 응시가 된다.
@@ -34,14 +34,19 @@ export default async function GardenPage() {
     <div className="pb-16">
       <Container className="pt-3">
         <h1 className="text-lg font-semibold tracking-wide sm:text-xl">
-          돌의 정원
+          間, 마
         </h1>
-        <p className="mt-3 max-w-2xl text-xs leading-6 text-wabi-fg-muted">
-          가레산스이(枯山水)는 물 없이 물을 그리는 마당입니다. 모래는 물이 되고
-          돌은 섬이 됩니다. 들어가지 않고, 마루에 앉아 바라봅니다.
+        <p className="mt-2.5 text-sm leading-6 text-wabi-fg">
+          돌과 모래, 그리고 그 사이의 여백.
         </p>
-        <p className="mt-1.5 text-xs leading-6 text-wabi-fg-muted">
-          오늘 놓인 그릇입니다. 옆으로 밀어 둘러보세요.
+        <p className="mt-3 max-w-2xl text-xs leading-6 text-wabi-fg-muted">
+          間(마)는 사물과 사물 사이의 빈 자리를 뜻합니다. 이곳의 마당은 무엇을
+          채웠는가가 아니라 무엇을 비웠는가로 읽힙니다. 가레산스이(枯山水)는 물
+          없이 물을 그리는 마당이라, 모래는 물이 되고 돌은 섬이 됩니다.
+        </p>
+        <p className="mt-1.5 max-w-2xl text-xs leading-6 text-wabi-fg-muted">
+          들어가지 않고, 마루에 앉아 바라봅니다. 오늘 놓인 그릇입니다 — 옆으로
+          밀어 둘러보세요.
         </p>
       </Container>
 

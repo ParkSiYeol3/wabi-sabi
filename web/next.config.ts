@@ -49,6 +49,8 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: https://${SUPABASE_HOST} https://*.tosspayments.com ${MAP_ASSETS}`,
   "font-src 'self' data:",
+  // 정원 배경음(#621) — 같은 출처 파일뿐. default-src 로도 통과하지만 명시해 둔다.
+  "media-src 'self'",
   `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST} https://*.tosspayments.com ${MAP_SCRIPT} ${MAP_ASSETS} ${MAP_TELEMETRY} ${POSTCODE_SCRIPT}`,
   `frame-src https://*.tosspayments.com ${MAP_FRAMES} ${POSTCODE_FRAME}`,
   "object-src 'none'",

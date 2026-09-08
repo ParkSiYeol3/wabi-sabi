@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { PlacedStone } from "@/lib/garden-layout";
+import { GardenSound } from "@/components/garden/garden-sound";
 import { cn } from "@/lib/utils";
 
 // 돌의 정원 — 가레산스이(枯山水) 감상 화면 (#616, 대표님).
@@ -26,6 +27,7 @@ export function StoneGarden({
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const rippleRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<string | null>(null);
 
   // 휠은 세로로 들어온다 — 정원은 옆으로 흐르므로 가로 스크롤로 옮긴다.
@@ -46,6 +48,27 @@ export function StoneGarden({
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  // 借景(차경) 시차 — 담 너머 나무는 멀리 있으니 눈을 돌려도 덜 움직인다. 모래보다
+  // 훨씬 느리게 밀어 거리감을 만든다. transform 만 만져 리렌더가 없다.
+  useEffect(() => {
+    const el = scrollRef.current;
+    const back = backdropRef.current;
+    if (!el || !back) return;
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        back.style.transform = `translateX(${-el.scrollLeft * 0.22}px)`;
+      });
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, []);
 
   // 砂紋 — 손이 지나간 자리에 이는 물결. 상태를 두지 않고 스타일만 직접 만져
@@ -81,10 +104,25 @@ export function StoneGarden({
 
   return (
     <div className="relative">
+      {/* 借景 — 담 너머로 빌려 온 풍경. 정원 안에 나무를 심지 않고 밖의 나무를
+          들여다본다. 스크롤 컨테이너 밖에 둬 함께 흐르지 않고 아주 느리게만 민다. */}
+      {/* 모래 위에 얹는다(z-10) — 담은 그 뒤의 땅을 가리는 게 맞고, 모래 배경이
+          불투명해 뒤에 두면 통째로 덮인다. */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[32%] overflow-hidden">
+        <div
+          ref={backdropRef}
+          aria-hidden
+          className="garden-shakkei absolute top-0 -left-[15%] h-full w-[130%]"
+        >
+          {/* 가까운 나무 — 담 바로 뒤에서 솟는다. 담(::after)보다 먼저 그려져 뒤에 선다. */}
+          <span className="garden-trees absolute inset-x-0 top-0 bottom-[26%] block" />
+        </div>
+      </div>
+
       <div
         ref={scrollRef}
         // 모래밭 — 갈퀴질한 결을 가로로 길게 긋는다(마루와 나란한 방향).
-        className="garden-sand relative h-[62vh] min-h-100 overflow-x-auto overflow-y-hidden sm:h-[70vh]"
+        className="garden-sand relative h-[68vh] min-h-112 overflow-x-auto overflow-y-hidden sm:h-[76vh]"
         // 빈 모래를 누르면 떠올랐던 이름이 가라앉는다.
         onClick={() => setActive(null)}
       >
@@ -110,6 +148,19 @@ export function StoneGarden({
                   } as CSSProperties
                 }
               >
+                {/* 苔 — 돌 밑동의 이끼. 정원에서 유일한 초록이다. */}
+                {s.moss && (
+                  <span
+                    aria-hidden
+                    className="garden-moss pointer-events-none absolute top-1/2 left-1/2"
+                    style={{
+                      width: `calc(var(--s) * var(--stone-scale) * ${s.moss.scale}vmin)`,
+                      height: `calc(var(--s) * var(--stone-scale) * ${s.moss.scale * 0.62}vmin)`,
+                      borderRadius: s.moss.radius,
+                      transform: `translate(calc(-50% + ${s.moss.dx}%), calc(-50% + ${s.moss.dy}%))`,
+                    }}
+                  />
+                )}
                 {/* 돌 둘레의 파문 — 물이 없는 곳에 그린 물결. */}
                 <span
                   aria-hidden
@@ -166,6 +217,11 @@ export function StoneGarden({
         aria-hidden
         className="garden-engawa pointer-events-none absolute right-0 bottom-0 left-0 h-14 sm:h-20"
       />
+
+      {/* 정원의 소리 — 마루 끝에 놓인 스위치처럼 오른쪽 아래에. */}
+      <div className="pointer-events-none absolute right-3 bottom-3 z-20 sm:right-5 sm:bottom-6">
+        <GardenSound />
+      </div>
     </div>
   );
 }

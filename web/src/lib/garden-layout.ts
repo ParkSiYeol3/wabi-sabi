@@ -14,10 +14,11 @@ import { seededRandom, type Stone } from "@/lib/queries/garden";
 
 const GROUPS = [5, 2, 3, 2, 3] as const;
 
-// 정원 폭·높이에 대한 백분율. 아래쪽은 마루(縁側)가 덮으므로 비워 둔다.
+// 정원 폭·높이에 대한 백분율. 위쪽은 담과 그 너머 나무(借景)가, 아래쪽은
+// 마루(縁側)가 덮으므로 모래로 쓸 수 있는 띠는 그 사이뿐이다.
 const X_START = 4;
-const FAR = [10, 30] as const;
-const NEAR = [42, 64] as const;
+const FAR = [27, 43] as const;
+const NEAR = [50, 68] as const;
 
 export type PlacedStone = Stone & {
   // 정원 좌표(%) — 왼쪽 위 기준.
@@ -25,6 +26,17 @@ export type PlacedStone = Stone & {
   y: number;
   // 돌 크기(vmin). 가까운 띠일수록 크게 — 원근.
   size: number;
+  // 苔(이끼) — 돌 밑동에 앉은 이끼. 모든 돌에 있진 않다(있는 편이 자연스럽다).
+  // 정원에서 유일한 초록이라 몇 군데만 둬야 눈에 든다.
+  moss: Moss | null;
+};
+
+// 이끼 한 덩이 — 돌 기준 배수 크기와 어긋난 위치, 그리고 제각각인 모서리 반경.
+export type Moss = {
+  scale: number;
+  dx: number;
+  dy: number;
+  radius: string;
 };
 
 // 무리 크기 목록. 돌이 모자라면 앞에서부터 채우고 남는 무리는 버린다.
@@ -56,11 +68,32 @@ export function placeStones(stones: Stone[], dateKey: string): PlacedStone[] {
       const y = between(band[0], band[1]);
       // 가까운 띠(y 가 큰 쪽)일수록 크게 — 앞에 놓인 돌이 커 보이는 원근.
       const depth = (y - FAR[0]) / (NEAR[1] - FAR[0]);
+      // 이끼는 절반 조금 안 되게 — 다 깔면 잔디밭이 되고 없으면 메마르다.
+      const hasMoss = rand() < 0.45;
       placed.push({
         ...stones[k++],
         x,
         y,
         size: 12 + depth * 9 + between(-1.2, 1.2),
+        moss: hasMoss
+          ? {
+              scale: between(1.5, 2.1),
+              dx: between(-14, 14),
+              dy: between(4, 18),
+              // 완벽한 원이 아니라 손으로 앉힌 얼룩처럼 모서리를 제각각으로.
+              radius: [
+                `${Math.round(between(38, 62))}%`,
+                `${Math.round(between(38, 62))}%`,
+                `${Math.round(between(38, 62))}%`,
+                `${Math.round(between(38, 62))}%`,
+                "/",
+                `${Math.round(between(40, 60))}%`,
+                `${Math.round(between(40, 60))}%`,
+                `${Math.round(between(40, 60))}%`,
+                `${Math.round(between(40, 60))}%`,
+              ].join(" "),
+            }
+          : null,
       });
       // 무리 안에서는 좁게 벌린다.
       x += between(3.5, 5.5);
