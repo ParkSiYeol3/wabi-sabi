@@ -281,41 +281,68 @@
 .garden-shakkei {
   background: linear-gradient(180deg, #ebe4d4 0%, #e7e0d1 58%, #e4ddcd 100%);
 }
-/* 먼 숲 — 뒤로 물러난 한 겹. 짙고 더 흐려 거리가 생긴다. */
+/* 먼 숲 — 뒤로 물러난 한 겹. 짙고 더 흐려 거리가 생긴다.
+   반지름은 vh 로 준다: % 로 주면 가로 반지름이 "요소 폭"의 비율이라, 정원처럼 넓고
+   낮은 띠에서는 우듬지 하나가 수백 px 로 퍼져 서로 겹쳐 초록 띠가 돼 버린다.
+   중심은 요소 아래(100% 너머)에 두고 세로 반지름을 크게 잡아 우듬지만 솟게 한다. */
 .garden-shakkei::before {
   content: "";
   position: absolute;
   inset: 0 0 30% 0;
   background-image:
     radial-gradient(
-      ellipse 13% 62% at 4% 96%,
-      rgba(84, 100, 68, 0.62),
-      transparent 68%
+      ellipse 7.5vh 11.0vh at 3% 108%,
+      rgba(88,104,72,0.52),
+      transparent 72%
     ),
     radial-gradient(
-      ellipse 16% 74% at 26% 98%,
-      rgba(92, 108, 72, 0.6),
-      transparent 68%
+      ellipse 9.0vh 13.5vh at 14% 106%,
+      rgba(80,96,66,0.50),
+      transparent 72%
     ),
     radial-gradient(
-      ellipse 12% 56% at 44% 98%,
-      rgba(80, 96, 64, 0.58),
-      transparent 70%
+      ellipse 6.5vh 9.5vh at 24% 110%,
+      rgba(96,112,76,0.48),
+      transparent 72%
     ),
     radial-gradient(
-      ellipse 17% 70% at 66% 96%,
-      rgba(90, 106, 70, 0.6),
-      transparent 68%
+      ellipse 9.8vh 14.5vh at 35% 105%,
+      rgba(82,98,66,0.50),
+      transparent 72%
     ),
     radial-gradient(
-      ellipse 14% 64% at 88% 98%,
-      rgba(84, 100, 66, 0.6),
-      transparent 68%
+      ellipse 7.2vh 10.5vh at 46% 108%,
+      rgba(92,108,72,0.48),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 9.2vh 13.8vh at 58% 106%,
+      rgba(78,94,64,0.50),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 6.8vh 10.0vh at 68% 110%,
+      rgba(94,110,74,0.48),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 9.6vh 14.2vh at 79% 105%,
+      rgba(84,100,68,0.50),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 7.4vh 11.2vh at 90% 108%,
+      rgba(90,106,72,0.48),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 8.8vh 13.0vh at 99% 106%,
+      rgba(80,96,66,0.50),
+      transparent 72%
     );
-  filter: blur(9px);
+  filter: blur(7px);
 }
-/* 築地塀 — 흙담과 그 위의 기와. 담이 정원과 바깥을 가르고, 나무는 담 뒤에서 솟는다.
-   가까운 나무 한 겹은 담 요소의 그림자 대신 배경으로 겹쳐 그린다. */
+/* 築地塀 — 흙담과 그 위의 기와. 담이 정원과 바깥을 가르고, 나무는 담 뒤에서 솟는다. */
 .garden-shakkei::after {
   content: "";
   position: absolute;
@@ -334,45 +361,66 @@
     inset 0 2px 0 rgba(255, 255, 255, 0.28),
     0 8px 18px rgba(66, 60, 48, 0.1);
 }
-/* 가까운 나무 — 담 바로 뒤. 진하고 덜 흐려 앞으로 나온다. */
+/* 가까운 나무 — 담 바로 뒤. 진하고 덜 흐려 앞으로 나온다. 키가 큰 것과 낮은 것을
+   번갈아 둬 나무 한 그루씩으로 읽히게 한다. */
 .garden-trees {
   background-image:
     radial-gradient(
-      ellipse 11% 58% at 13% 100%,
-      rgba(72, 90, 58, 0.78),
-      transparent 66%
+      ellipse 5.0vh 15.0vh at 7% 104%,
+      rgba(66,84,54,0.72),
+      transparent 72%
     ),
     radial-gradient(
-      ellipse 9% 46% at 22% 100%,
-      rgba(104, 122, 78, 0.7),
-      transparent 68%
+      ellipse 4.0vh 11.0vh at 16% 107%,
+      rgba(104,122,78,0.62),
+      transparent 72%
     ),
     radial-gradient(
-      ellipse 13% 66% at 37% 100%,
-      rgba(66, 84, 54, 0.76),
-      transparent 66%
+      ellipse 5.6vh 17.5vh at 25% 102%,
+      rgba(58,76,50,0.72),
+      transparent 72%
     ),
     radial-gradient(
-      ellipse 10% 50% at 53% 100%,
-      rgba(112, 128, 84, 0.68),
-      transparent 68%
+      ellipse 3.8vh 10.0vh at 33% 108%,
+      rgba(112,128,84,0.60),
+      transparent 72%
     ),
     radial-gradient(
-      ellipse 12% 62% at 72% 100%,
-      rgba(70, 88, 56, 0.76),
-      transparent 66%
+      ellipse 5.2vh 16.0vh at 42% 104%,
+      rgba(68,86,56,0.70),
+      transparent 72%
     ),
     radial-gradient(
-      ellipse 9% 44% at 84% 100%,
-      rgba(108, 124, 80, 0.68),
-      transparent 68%
+      ellipse 4.2vh 12.0vh at 51% 106%,
+      rgba(100,118,76,0.62),
+      transparent 72%
     ),
     radial-gradient(
-      ellipse 12% 58% at 96% 100%,
-      rgba(76, 94, 60, 0.74),
-      transparent 66%
+      ellipse 5.8vh 18.0vh at 60% 102%,
+      rgba(56,74,48,0.72),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 3.9vh 10.5vh at 69% 108%,
+      rgba(110,126,82,0.60),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 5.1vh 15.5vh at 78% 104%,
+      rgba(70,88,58,0.70),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 4.4vh 12.5vh at 87% 106%,
+      rgba(102,120,78,0.62),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 5.5vh 17.0vh at 96% 102%,
+      rgba(62,80,52,0.72),
+      transparent 72%
     );
-  filter: blur(4px);
+  filter: blur(2.5px);
 }
 
 /* 苔 — 돌 밑동의 이끼. 마당에서 유일한 초록이라 몇 군데만 앉힌다. */
