@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { PlacedStone } from "@/lib/garden-layout";
 import { GardenSound } from "@/components/garden/garden-sound";
+import { Shakkei } from "@/components/garden/shakkei";
 import { cn } from "@/lib/utils";
 
 // 돌의 정원 — 가레산스이(枯山水) 감상 화면 (#616, 대표님).
@@ -114,8 +115,7 @@ export function StoneGarden({
           aria-hidden
           className="garden-shakkei absolute top-0 -left-[15%] h-full w-[130%]"
         >
-          {/* 가까운 나무 — 담 바로 뒤에서 솟는다. 담(::after)보다 먼저 그려져 뒤에 선다. */}
-          <span className="garden-trees absolute inset-x-0 top-0 bottom-[26%] block" />
+          <Shakkei />
         </div>
       </div>
 
@@ -148,6 +148,16 @@ export function StoneGarden({
                   } as CSSProperties
                 }
               >
+                {/* 돌이 모래에 닿는 자리 — 그림자가 있어야 놓인 것으로 보인다. */}
+                <span
+                  aria-hidden
+                  className="garden-stone-shadow pointer-events-none absolute top-1/2 left-1/2"
+                  style={{
+                    width: "calc(var(--s) * var(--stone-scale) * 1.12vmin)",
+                    height: "calc(var(--s) * var(--stone-scale) * 0.34vmin)",
+                    transform: "translate(calc(-50% + 4%), calc(-50% + 44%))",
+                  }}
+                />
                 {/* 苔 — 돌 밑동의 이끼. 정원에서 유일한 초록이다. */}
                 {s.moss && (
                   <span
