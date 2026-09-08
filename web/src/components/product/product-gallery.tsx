@@ -18,21 +18,29 @@ import { ProductImageZoom } from "@/components/product/product-image-zoom";
 // 높이를 맞춰 채운다: 세로 사진과 가로 사진이 짝이 되면 높이가 크게 어긋나 한쪽에
 // 빈 공간이 뭉텅이로 남아 고장난 것처럼 보이기 때문이다.
 
-// 1:2:1 로 정돈해 보여줄 앞부분 장수 — 전폭 1 + 짝 2 + 전폭 1.
+// 1:2:1 로 정돈해 보여줄 앞부분 장수 — 큰 한 장 + 짝 둘 + 큰 한 장.
 const ORDERED_COUNT = 4;
 
+// 사진이 너무 크다는 피드백(대표님 2026-09-08) — 컨테이너 폭을 그대로 쓰지 않고
+// 한 뼘 물린다. 오른쪽에 남는 여백이 곧 사진의 크기를 정해 준다. 폭은 칸이 아니라
+// 행에 건다 — 칸에 걸면 두 장짜리 행은 grow 로 다시 전폭이 돼 큰 사진보다 넓어진다.
+// 짝 행은 둘이 나눠 가지므로 한 장짜리보다 조금 넓게 잡아야 각각이 작아 보이지 않는다.
+const ROW_W = ["w-[88%] md:w-[62%]", "w-[92%] md:w-[74%]"] as const;
+
 // 짝 행의 공통 높이 — 둘의 폭이 달라도(48:52) 높이는 같아야 한 벌로 보인다.
-const PAIR_H = "h-56 sm:h-72 md:h-[26rem]";
+// 큰 사진과 함께 한 단계씩 낮췄다(대표님).
+const PAIR_H = "h-44 sm:h-56 md:h-80";
 
 // 불규칙 구간 — 폭 + 좌측 오프셋(모바일 / md 이상). 합이 100% 이내라 넘치지 않는다.
 // 모바일은 폭이 좁아 데스크톱만큼 흩뿌리면 답답하므로 완만하게 흩는다.
+// (폭을 한 단계씩 줄였다 — 대표님 2026-09-08. 흩뿌림의 리듬은 그대로 두고 크기만.)
 const SLOTS = [
-  "w-[86%] ml-[0%] md:w-[58%] md:ml-[0%]",
-  "w-[74%] ml-[26%] md:w-[46%] md:ml-[50%]",
-  "w-[94%] ml-[6%] md:w-[64%] md:ml-[13%]",
-  "w-[70%] ml-[4%] md:w-[44%] md:ml-[4%]",
-  "w-[82%] ml-[18%] md:w-[52%] md:ml-[46%]",
-  "w-[90%] ml-[10%] md:w-[60%] md:ml-[27%]",
+  "w-[72%] ml-[0%] md:w-[46%] md:ml-[2%]",
+  "w-[62%] ml-[30%] md:w-[37%] md:ml-[56%]",
+  "w-[78%] ml-[8%] md:w-[50%] md:ml-[16%]",
+  "w-[58%] ml-[4%] md:w-[35%] md:ml-[6%]",
+  "w-[68%] ml-[24%] md:w-[42%] md:ml-[52%]",
+  "w-[75%] ml-[12%] md:w-[48%] md:ml-[30%]",
 ] as const;
 const GAPS = [
   "mt-12 md:mt-24",
@@ -75,7 +83,7 @@ export function ProductGallery({
       {rows.map((row, r) => (
         <div key={`o${r}`}>
           <div
-            className={`flex items-end gap-3 md:gap-5 ${ROW_GAP[r % ROW_GAP.length]}`}
+            className={`flex items-end gap-3 md:gap-5 ${ROW_W[row.length === 2 ? 1 : 0]} ${ROW_GAP[r % ROW_GAP.length]}`}
           >
             {row.map((i, k) => {
               const paired = row.length === 2;
@@ -93,8 +101,8 @@ export function ProductGallery({
                     alt={`${name} 상세 이미지 ${i + 1}`}
                     sizes={
                       paired
-                        ? "(max-width: 768px) 48vw, 30vw"
-                        : "(max-width: 768px) 94vw, 62vw"
+                        ? "(max-width: 768px) 44vw, 26vw"
+                        : "(max-width: 768px) 86vw, 46vw"
                     }
                     natural={!paired}
                   />
@@ -124,7 +132,7 @@ export function ProductGallery({
             <ProductImageZoom
               src={src}
               alt={`${name} 상세 이미지 ${i + 1}`}
-              sizes="(max-width: 768px) 94vw, 60vw"
+              sizes="(max-width: 768px) 76vw, 46vw"
               natural
             />
           </div>
