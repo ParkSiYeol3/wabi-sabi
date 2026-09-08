@@ -62,11 +62,11 @@ test("장바구니 — 담긴 상품을 누르면 상세로 이동", async ({ pa
 
 // (히어로 사진 넘기기 테스트 제거 — 좌우 넘기기를 되돌려 대상 기능이 없다, #613.)
 
-// 돌의 정원 (#616, 대표님) — 감상 화면. 첫 손짓엔 이름만 뜨고(이동 없음), 한 번
+// 間, 마 (#616, 대표님) — 감상 화면. 첫 손짓엔 이름만 뜨고(이동 없음), 한 번
 // 더 눌러야 상세로 나간다. "팔지만 파는 듯하지 않게" 라는 운영 정책이 곧 동작이다.
-test("돌의 정원 — 두 번 눌러야 상세로 나간다", async ({ page }) => {
+test("間, 마 — 두 번 눌러야 상세로 나간다", async ({ page }) => {
   await page.goto("/garden");
-  await expect(page.getByRole("heading", { name: "돌의 정원" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "間, 마" })).toBeVisible();
 
   const stone = page.locator('a[href^="/shop/"]').first();
   test.skip((await stone.count()) === 0, "마당이 비어 있음");
