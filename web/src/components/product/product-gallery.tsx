@@ -1,88 +1,135 @@
 import { ProductImageZoom } from "@/components/product/product-image-zoom";
 
-// 상품 상세 사진 배치 — 1 : 2 : 1 구성 (#611, 대표님 시안 B안).
+// 상품 상세 사진 배치 (#248 → #609 → #611 → #613).
 //
-// 처음엔 tableofcraft 를 참고한 무작위 흩뿌림이었다(#248). 규칙이 "불규칙하게"뿐이라
-// 남의 사이트처럼 보인다는 지적을 받아 규칙 있는 4안을 만들어 비교했고(#609),
-// 대표님이 별도 시안으로 이 구성을 골랐다 — 흩뿌리지 않고, 한 장 크게 → 두 장
-// 나란히 → 한 장 크게 를 되풀이한다.
+// 앞 네 장은 1 : 2 : 1 로 정돈하고(대표님 시안 B), 다섯 번째부터는 처음에 쓰던
+// 불규칙 배치로 풀어놓는다(대표님 #613). 상품을 처음 볼 때는 규칙 있는 박자로
+// 차분히 보여주고, 더 내려간 손님에게는 흩어진 리듬을 주자는 뜻이다.
 //
-// 큰 한 장이 숨을 고르고 두 장이 시선을 나눴다가 다시 큰 한 장으로 모인다. 무작위가
-// 아니라 반복되는 박자라 "왜 여기 있는가"에 답이 있고, 두 장 짝은 폭을 48:52 로
-// 어긋내 완전한 이등분을 피한다(不均整 — 대칭 없이 이룬 균형).
+//   1행  전폭 한 장          ← 여기 아래에 상세 설명이 들어간다(대표님 #613)
+//   2행  두 장 나란히(48:52)
+//   3행  전폭 한 장
+//   4행~ 불규칙 — 폭·좌우 오프셋·간격이 층마다 다른 흩뿌림
 //
+// 짝은 폭을 48:52 로 어긋내 정확한 반반을 피한다(不均整 — 대칭 없이 이룬 균형).
 // 상태 없는 서버 컴포넌트 — 인덱스 기반 결정적이라 SSR 이 흔들리지 않는다.
 //
-// 전폭 행은 원본 비율 그대로 둔다(대표님 #502 — 올린 모양대로). 짝 행만 높이를
-// 맞춰 채운다(object-cover): 세로 사진과 가로 사진이 짝이 되면 높이가 크게 어긋나
-// 한쪽에 빈 공간이 뭉텅이로 남아 고장난 것처럼 보이기 때문이고, 시안 B 도 짝은
-// 같은 크기 상자로 그려져 있다. 잘리는 게 싫으면 object-contain 한 줄로 바꾸면 된다.
+// 전폭·불규칙 사진은 원본 비율 그대로 둔다(대표님 #502 — 올린 모양대로). 짝 행만
+// 높이를 맞춰 채운다: 세로 사진과 가로 사진이 짝이 되면 높이가 크게 어긋나 한쪽에
+// 빈 공간이 뭉텅이로 남아 고장난 것처럼 보이기 때문이다.
 
-// 층 간격 — 큰 한 장 뒤엔 넉넉히, 짝 뒤엔 조금 좁게. 되풀이되는 호흡.
-const ROW_GAP = ["mt-12 md:mt-24", "mt-10 md:mt-20", "mt-12 md:mt-24"] as const;
+// 1:2:1 로 정돈해 보여줄 앞부분 장수 — 전폭 1 + 짝 2 + 전폭 1.
+const ORDERED_COUNT = 4;
 
 // 짝 행의 공통 높이 — 둘의 폭이 달라도(48:52) 높이는 같아야 한 벌로 보인다.
 const PAIR_H = "h-56 sm:h-72 md:h-[26rem]";
 
-// 이미지 인덱스를 행 단위로 묶는다: [한 장] → [두 장] → [한 장] → 되풀이.
-// 짝을 만들 사진이 한 장뿐이면 그 장은 전폭으로 둔다(장수가 홀수여도 안 깨진다).
-function toRows(n: number): number[][] {
-  const rows: number[][] = [];
-  let i = 0;
-  let step = 0;
-  while (i < n) {
-    if (step === 1 && i + 1 < n) {
-      rows.push([i, i + 1]);
-      i += 2;
-    } else {
-      rows.push([i]);
-      i += 1;
-    }
-    step = (step + 1) % 3;
-  }
+// 불규칙 구간 — 폭 + 좌측 오프셋(모바일 / md 이상). 합이 100% 이내라 넘치지 않는다.
+// 모바일은 폭이 좁아 데스크톱만큼 흩뿌리면 답답하므로 완만하게 흩는다.
+const SLOTS = [
+  "w-[86%] ml-[0%] md:w-[58%] md:ml-[0%]",
+  "w-[74%] ml-[26%] md:w-[46%] md:ml-[50%]",
+  "w-[94%] ml-[6%] md:w-[64%] md:ml-[13%]",
+  "w-[70%] ml-[4%] md:w-[44%] md:ml-[4%]",
+  "w-[82%] ml-[18%] md:w-[52%] md:ml-[46%]",
+  "w-[90%] ml-[10%] md:w-[60%] md:ml-[27%]",
+] as const;
+const GAPS = [
+  "mt-12 md:mt-24",
+  "mt-7 md:mt-14",
+  "mt-14 md:mt-28",
+  "mt-8 md:mt-16",
+  "mt-10 md:mt-20",
+] as const;
+
+// 정돈 구간의 층 간격 — 큰 한 장 뒤엔 넉넉히, 짝 뒤엔 조금 좁게.
+const ROW_GAP = ["", "mt-10 md:mt-20", "mt-12 md:mt-24"] as const;
+
+// 앞부분을 행으로 묶는다: [한 장] → [두 장] → [한 장]. 장수가 모자라면 있는 만큼만.
+function orderedRows(n: number): number[][] {
+  const rows: number[][] = [[0]];
+  if (n >= 3) rows.push([1, 2]);
+  else if (n === 2) rows.push([1]);
+  if (n >= 4) rows.push([3]);
   return rows;
 }
 
 export function ProductGallery({
   images,
   name,
+  description,
 }: {
   images: string[];
   name: string;
+  // 상세 설명 — 첫 사진 바로 아래에 놓는다(대표님 #613). 정보 칸이 아니라 사진
+  // 흐름 안에서 읽히게 하려는 배치라 여기로 내려왔다.
+  description?: string | null;
 }) {
   if (images.length === 0) return null;
 
+  const headCount = Math.min(images.length, ORDERED_COUNT);
+  const rows = orderedRows(headCount);
+
   return (
     <div className="mt-10 md:mt-16">
-      {toRows(images.length).map((row, r) => (
-        <div
-          key={r}
-          className={`flex items-end gap-3 md:gap-5 ${r === 0 ? "" : ROW_GAP[r % ROW_GAP.length]}`}
-        >
-          {row.map((i, k) => {
-            const paired = row.length === 2;
-            return (
-              <div
-                key={i}
-                // 짝 행은 48:52 로 어긋내 정확한 반반을 피한다(왼쪽이 조금 좁다).
-                style={paired ? { flexBasis: k === 0 ? "48%" : "52%" } : undefined}
-                className={`relative min-w-0 grow bg-wabi-muted ${paired ? PAIR_H : ""}`}
-              >
-                <ProductImageZoom
-                  src={images[i]}
-                  alt={`${name} 상세 이미지 ${i + 1}`}
-                  sizes={
-                    paired
-                      ? "(max-width: 768px) 48vw, 30vw"
-                      : "(max-width: 768px) 94vw, 62vw"
+      {rows.map((row, r) => (
+        <div key={`o${r}`}>
+          <div
+            className={`flex items-end gap-3 md:gap-5 ${ROW_GAP[r % ROW_GAP.length]}`}
+          >
+            {row.map((i, k) => {
+              const paired = row.length === 2;
+              return (
+                <div
+                  key={i}
+                  // 짝 행은 48:52 로 어긋내 정확한 반반을 피한다(왼쪽이 조금 좁다).
+                  style={
+                    paired ? { flexBasis: k === 0 ? "48%" : "52%" } : undefined
                   }
-                  natural={!paired}
-                />
-              </div>
-            );
-          })}
+                  className={`relative min-w-0 grow bg-wabi-muted ${paired ? PAIR_H : ""}`}
+                >
+                  <ProductImageZoom
+                    src={images[i]}
+                    alt={`${name} 상세 이미지 ${i + 1}`}
+                    sizes={
+                      paired
+                        ? "(max-width: 768px) 48vw, 30vw"
+                        : "(max-width: 768px) 94vw, 62vw"
+                    }
+                    natural={!paired}
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 상세 설명 — 첫 사진 바로 아래(대표님 #613). 한 줄이 너무 길면 읽기
+              힘들어 폭을 제한한다. 관리자가 넣은 엔터·빈 줄은 그대로 보존. */}
+          {r === 0 && description && (
+            <p className="mt-8 max-w-2xl whitespace-pre-line text-sm leading-7 text-wabi-fg-muted md:mt-12">
+              {description}
+            </p>
+          )}
         </div>
       ))}
+
+      {/* 다섯 번째 사진부터 — 처음에 쓰던 불규칙 배치(대표님 #613). */}
+      {images.slice(ORDERED_COUNT).map((src, k) => {
+        const i = ORDERED_COUNT + k;
+        return (
+          <div
+            key={i}
+            className={`relative bg-wabi-muted ${GAPS[k % GAPS.length]} ${SLOTS[k % SLOTS.length]}`}
+          >
+            <ProductImageZoom
+              src={src}
+              alt={`${name} 상세 이미지 ${i + 1}`}
+              sizes="(max-width: 768px) 94vw, 60vw"
+              natural
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }

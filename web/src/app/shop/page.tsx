@@ -76,30 +76,35 @@ export default async function ShopPage({
   const heading = !sp.category ? "Shop" : (catHeading ?? "Shop");
 
   return (
-    <Container className="pb-16 pt-2 sm:pt-3">
-      {/* 헤더 — 타이틀 + 특색 필(오늘의 와비사비)을 한 줄에(대표님 2026-09-05):
-          필이 한 줄을 통째로 먹어 타이틀·분류 위에 빈 공간이 남았다 → 필은 우측으로
-          올리고 분류를 위로 당긴다. ("N개 상품" 표기는 이전에 제거, 글씨 축소도 대표님) */}
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="min-w-0 truncate text-lg font-semibold tracking-wide sm:text-xl">
-          {heading}
-        </h1>
-        <FeaturedShortcuts className="shrink-0" />
-      </div>
+    <Container className="pb-16 pt-6">
+      {/* 특색 필(오늘의 와비사비) — 다시 제 줄로 올리고 오른쪽에 붙인다(대표님
+          2026-09-07). 타이틀과 한 줄에 두니 빽빽해서, 줄은 나누되 헤더 구분선부터
+          그리드까지 간격을 24px 하나로 통일해 "일정 간격의 여백"을 만든다.
+          ("N개 상품" 표기는 이전에 제거, 글씨 축소도 대표님) */}
+      <FeaturedShortcuts className="justify-end" />
+
+      <h1 className="mt-6 min-w-0 truncate text-lg font-semibold tracking-wide sm:text-xl">
+        {heading}
+      </h1>
 
       {/* 카테고리 — 대표님: 웹·모바일 모두 전 분류가 보이게. 모바일·태블릿(<lg)은
           카테고리 나열 + 정렬 드롭다운을 한 줄에 둔다(대표님 — 정렬이 아래로 떨어져
           생기던 빈 공간 제거·정렬을 위로). 데스크톱은 좌측 사이드바 + 우측 툴바 정렬. */}
       <div className="flex items-start justify-between gap-3 lg:hidden">
         <div className="min-w-0 flex-1">
-          <MobileCategoryTabs sp={sp} tree={tree} className="mt-2 sm:mt-3" />
+          {/* 컴포넌트 기본 여백(mt-3/sm:mt-6 · pb-2/sm:pb-4)을 24px 한 값으로 덮는다 */}
+          <MobileCategoryTabs
+            sp={sp}
+            tree={tree}
+            className="mt-6 pb-0 sm:mt-6 sm:pb-0"
+          />
         </div>
-        <div className="mt-2 shrink-0 sm:mt-3">
+        <div className="mt-6 shrink-0">
           <SortSelect sp={sp} sort={sort} options={sorts} />
         </div>
       </div>
 
-      <div className="mt-3 flex items-start gap-10 sm:mt-8">
+      <div className="mt-6 flex items-start gap-10">
         {/* 데스크톱 좌측 사이드바 — 소분류 토글 (#195, biomedium 참고) */}
         <div className="hidden lg:block">
           <ShopSidebar sp={sp} tree={tree} />
