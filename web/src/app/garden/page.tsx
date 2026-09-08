@@ -5,6 +5,12 @@ import { StoneGarden } from "@/components/garden/stone-garden";
 import { getTodayStones, kstDateKey } from "@/lib/queries/garden";
 import { placeStones } from "@/lib/garden-layout";
 
+// 빌드 프리렌더에서 실행되지 않게 요청 시 렌더로 고정한다. anon 클라(createPublicClient)
+// 는 공개 env 없이 만들면 throw 하는데 CI 빌드엔 그 env 가 없다 — /shop 은 searchParams
+// 덕에 자연히 동적이라 이 함정을 피했지만 이 페이지는 인자가 없어 정적 대상이 된다.
+// 데이터는 안에서 unstable_cache(1시간)로 잡으므로 요청마다 DB 를 치지 않는다.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "돌의 정원",
   description:
