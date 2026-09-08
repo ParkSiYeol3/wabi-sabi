@@ -6,10 +6,14 @@ import { ProductImageZoom } from "@/components/product/product-image-zoom";
 // 불규칙 배치로 풀어놓는다(대표님 #613). 상품을 처음 볼 때는 규칙 있는 박자로
 // 차분히 보여주고, 더 내려간 손님에게는 흩어진 리듬을 주자는 뜻이다.
 //
-//   1행  전폭 한 장          ← 여기 아래에 상세 설명이 들어간다(대표님 #613)
+//   1행  한 장            ← 여기 아래에 상세 설명이 들어간다(대표님 #613)
 //   2행  두 장 나란히(48:52)
-//   3행  전폭 한 장
+//   3행  한 장
 //   4행~ 불규칙 — 폭·좌우 오프셋·간격이 층마다 다른 흩뿌림
+//   맨끝 한 장            ← 첫 장과 같은 자리·같은 크기(대표님 #626)
+//
+// 마지막 한 장을 첫 장과 똑같이 두면 흩뿌림이 시작과 끝 사이에 갇힌다. 들고 날
+// 때의 박자가 같아 페이지가 한 바퀴 돌아 제자리로 오는 느낌이 난다(序破急).
 //
 // 짝은 폭을 48:52 로 어긋내 정확한 반반을 피한다(不均整 — 대칭 없이 이룬 균형).
 // 상태 없는 서버 컴포넌트 — 인덱스 기반 결정적이라 SSR 이 흔들리지 않는다.
@@ -25,11 +29,13 @@ const ORDERED_COUNT = 4;
 // 한 뼘 물린다. 오른쪽에 남는 여백이 곧 사진의 크기를 정해 준다. 폭은 칸이 아니라
 // 행에 건다 — 칸에 걸면 두 장짜리 행은 grow 로 다시 전폭이 돼 큰 사진보다 넓어진다.
 // 짝 행은 둘이 나눠 가지므로 한 장짜리보다 조금 넓게 잡아야 각각이 작아 보이지 않는다.
-const ROW_W = ["w-[88%] md:w-[62%]", "w-[92%] md:w-[74%]"] as const;
+// (다시 한 단계 더 줄였다 — 대표님 #626 "훨씬 작게". 짝 행도 같이 내려야
+// 한 장짜리가 여전히 가장 큰 장으로 읽힌다.)
+const ROW_W = ["w-[72%] md:w-[46%]", "w-[86%] md:w-[64%]"] as const;
 
 // 짝 행의 공통 높이 — 둘의 폭이 달라도(48:52) 높이는 같아야 한 벌로 보인다.
-// 큰 사진과 함께 한 단계씩 낮췄다(대표님).
-const PAIR_H = "h-44 sm:h-56 md:h-80";
+// 큰 사진과 함께 한 단계씩 낮췄다(대표님, #626 재차).
+const PAIR_H = "h-36 sm:h-48 md:h-64";
 
 // 불규칙 구간 — 폭 + 좌측 오프셋(모바일 / md 이상). 합이 100% 이내라 넘치지 않는다.
 // 모바일은 폭이 좁아 데스크톱만큼 흩뿌리면 답답하므로 완만하게 흩는다.
@@ -78,6 +84,12 @@ export function ProductGallery({
   const headCount = Math.min(images.length, ORDERED_COUNT);
   const rows = orderedRows(headCount);
 
+  // 정돈 구간 뒤에 남는 장들. 그중 맨 끝 한 장은 첫 장과 같은 자리로 빼 둔다 —
+  // 남는 게 한 장뿐이면 흩뿌릴 것 없이 그 한 장이 곧 마지막 장이다.
+  const tail = images.slice(ORDERED_COUNT);
+  const last = tail.length > 0 ? tail[tail.length - 1] : null;
+  const scattered = tail.slice(0, -1);
+
   return (
     <div className="mt-10 md:mt-16">
       {rows.map((row, r) => (
@@ -121,8 +133,9 @@ export function ProductGallery({
         </div>
       ))}
 
-      {/* 다섯 번째 사진부터 — 처음에 쓰던 불규칙 배치(대표님 #613). */}
-      {images.slice(ORDERED_COUNT).map((src, k) => {
+      {/* 다섯 번째 사진부터 — 처음에 쓰던 불규칙 배치(대표님 #613).
+          단, 맨 마지막 한 장은 흩뿌리지 않고 첫 장 자리로 돌려놓는다. */}
+      {scattered.map((src, k) => {
         const i = ORDERED_COUNT + k;
         return (
           <div
@@ -138,6 +151,20 @@ export function ProductGallery({
           </div>
         );
       })}
+
+      {/* 마지막 한 장 — 첫 장과 같은 폭, 같은 왼쪽 정렬(대표님 #626). */}
+      {last && (
+        <div
+          className={`relative bg-wabi-muted mt-12 md:mt-24 ${ROW_W[0]}`}
+        >
+          <ProductImageZoom
+            src={last}
+            alt={`${name} 상세 이미지 ${images.length}`}
+            sizes="(max-width: 768px) 86vw, 46vw"
+            natural
+          />
+        </div>
+      )}
     </div>
   );
 }
