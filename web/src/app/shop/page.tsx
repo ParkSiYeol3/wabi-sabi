@@ -76,14 +76,15 @@ export default async function ShopPage({
   const heading = !sp.category ? "Shop" : (catHeading ?? "Shop");
 
   return (
-    <Container className="pb-16 pt-6">
+    <Container className="pb-16 pt-3">
       {/* 특색 필(오늘의 와비사비) — 다시 제 줄로 올리고 오른쪽에 붙인다(대표님
           2026-09-07). 타이틀과 한 줄에 두니 빽빽해서, 줄은 나누되 헤더 구분선부터
-          그리드까지 간격을 24px 하나로 통일해 "일정 간격의 여백"을 만든다.
+          그리드까지 간격을 하나로 통일해 "일정 간격의 여백"을 만든다. 24px 은
+          너무 헐거워 16px 으로 좁혔다(대표님 2026-09-08) — 간격은 여전히 균일.
           ("N개 상품" 표기는 이전에 제거, 글씨 축소도 대표님) */}
       <FeaturedShortcuts className="justify-end" />
 
-      <h1 className="mt-6 min-w-0 truncate text-lg font-semibold tracking-wide sm:text-xl">
+      <h1 className="mt-4 min-w-0 truncate text-lg font-semibold tracking-wide sm:text-xl">
         {heading}
       </h1>
 
@@ -96,15 +97,15 @@ export default async function ShopPage({
           <MobileCategoryTabs
             sp={sp}
             tree={tree}
-            className="mt-6 pb-0 sm:mt-6 sm:pb-0"
+            className="mt-4 pb-0 sm:mt-4 sm:pb-0"
           />
         </div>
-        <div className="mt-6 shrink-0">
+        <div className="mt-4 shrink-0">
           <SortSelect sp={sp} sort={sort} options={sorts} />
         </div>
       </div>
 
-      <div className="mt-6 flex items-start gap-10">
+      <div className="mt-4 flex items-start gap-10">
         {/* 데스크톱 좌측 사이드바 — 소분류 토글 (#195, biomedium 참고) */}
         <div className="hidden lg:block">
           <ShopSidebar sp={sp} tree={tree} />
