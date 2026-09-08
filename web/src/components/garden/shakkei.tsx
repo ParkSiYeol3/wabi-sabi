@@ -9,6 +9,11 @@
 // 두면 종이 오린 것 같아서, 밑동 쪽 그늘과 햇빛 받는 쪽을 같이 얹는다. 다른 하나는
 // 불규칙 — 키도 간격도 제각각이어야 하고, 나무가 없는 하늘도 있어야 한다.
 //
+// 흐림은 다시 얹는다(대표님 #628 — 흐릿한 쪽이 낫다). 다만 예전처럼 흐림으로
+// 형태를 만들지는 않는다. 형태는 SVG 가 잡고, 흐림은 그 위에 공기만 얹는 역할이다.
+// 그래서 먼 숲은 세게(4.5px), 가까운 나무는 아주 약하게(1.6px) — 거리에 따라
+// 다르게 걸어야 흐림이 뭉갬이 아니라 깊이로 읽힌다.
+//
 // 타일 셋을 돌려 쓰고 홀수 장은 좌우를 뒤집는다. 여섯 장을 가야 같은 그림이
 // 돌아오므로 화면 안에서는 반복이 보이지 않는다.
 
@@ -259,13 +264,19 @@ export function Shakkei() {
         tiles={FAR_TILES}
         count={9}
         ratio="aspect-[31/10]"
-        className="absolute inset-x-0 bottom-[26%] flex h-[44%] items-end"
+        className="garden-far absolute inset-x-0 bottom-[26%] flex h-[44%] items-end"
       />
       <Row
         tiles={NEAR_TILES}
         count={11}
         ratio="aspect-[12/5]"
-        className="absolute inset-x-0 bottom-[26%] flex h-[76%] items-end"
+        className="garden-near absolute inset-x-0 bottom-[26%] flex h-[76%] items-end"
+      />
+
+      {/* 아지랑이 — 담에 가까울수록 옅은 빛이 낀다. 흐림만으로는 안 나는 공기다. */}
+      <span
+        aria-hidden
+        className="garden-haze pointer-events-none absolute inset-x-0 bottom-[26%] block h-[52%]"
       />
 
       {/* 築地塀 — 흙을 다져 올린 담과 그 위의 기와. 담이 정원과 바깥을 가른다. */}
