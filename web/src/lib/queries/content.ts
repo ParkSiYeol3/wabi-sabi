@@ -96,6 +96,23 @@ export const DEFAULT_CARE_MAINTAIN = `음식에 따라 표면에 옅은 색이 �
 작은 흔적과 미세한 차이는 손으로 빚은 기물이 지닌 자연스러운 표정입니다.
 그 결까지 천천히, 오래 곁에 두고 사용해 주세요.`;
 
+// 間, 마 (정원) 문구 — 대표님이 어드민에서 고칠 수 있게(#630). 이 화면은 물건을
+// 파는 말이 아니라 "머무는 말"이라, 톤을 계속 다듬게 된다. 코드를 고쳐야 한 글자가
+// 바뀌는 상태로 두면 다듬을 수가 없다.
+export const GARDEN_HEADING_KEY = "garden_heading";
+export const GARDEN_LEAD_KEY = "garden_lead";
+export const GARDEN_BODY_KEY = "garden_body";
+export const GARDEN_OUTRO_KEY = "garden_outro";
+export const GARDEN_EMPTY_KEY = "garden_empty";
+
+export const DEFAULT_GARDEN_HEADING = "間, 마";
+export const DEFAULT_GARDEN_LEAD = "돌과 모래, 그리고 그 사이의 여백.";
+export const DEFAULT_GARDEN_BODY = `間(마)는 사물과 사물 사이의 빈 자리를 뜻합니다. 이곳의 마당은 무엇을 채웠는가가 아니라 무엇을 비웠는가로 읽힙니다. 가레산스이(枯山水)는 물 없이 물을 그리는 마당이라, 모래는 물이 되고 돌은 섬이 됩니다.
+
+들어가지 않고, 마루에 앉아 바라봅니다. 오늘 놓인 그릇입니다 — 옆으로 밀어 둘러보세요.`;
+export const DEFAULT_GARDEN_OUTRO = "오래 앉아 계셔도 좋습니다.";
+export const DEFAULT_GARDEN_EMPTY = "오늘은 마당이 비어 있습니다.";
+
 // 편집 가능한 전체 키 — 액션 enum·타입 안전의 단일 출처.
 export const CONTENT_KEYS = [
   PHILOSOPHY_KEY,
@@ -113,6 +130,11 @@ export const CONTENT_KEYS = [
   CARE_USAGE_KEY,
   CARE_MAINTAIN_LABEL_KEY,
   CARE_MAINTAIN_KEY,
+  GARDEN_HEADING_KEY,
+  GARDEN_LEAD_KEY,
+  GARDEN_BODY_KEY,
+  GARDEN_OUTRO_KEY,
+  GARDEN_EMPTY_KEY,
 ] as const;
 export type ContentKey = (typeof CONTENT_KEYS)[number];
 
@@ -243,3 +265,49 @@ export function toParagraphs(text: string): string[] {
     .map((p) => p.trim())
     .filter(Boolean);
 }
+
+// 정원 문구 묶음 — /garden 은 force-dynamic 이라 캐시가 없으면 요청마다 DB 를 친다.
+// 저장 즉시 반영돼야 하므로 태그를 걸고, 어드민 저장 액션이 이 태그를 무효화한다.
+export const GARDEN_CONTENT_TAG = "garden-content";
+
+export type GardenCopy = {
+  heading: string;
+  lead: string;
+  body: string;
+  outro: string;
+  empty: string;
+};
+
+async function loadGardenCopy(): Promise<GardenCopy> {
+  const fallback: GardenCopy = {
+    heading: DEFAULT_GARDEN_HEADING,
+    lead: DEFAULT_GARDEN_LEAD,
+    body: DEFAULT_GARDEN_BODY,
+    outro: DEFAULT_GARDEN_OUTRO,
+    empty: DEFAULT_GARDEN_EMPTY,
+  };
+  try {
+    const map = await getPublicContent([
+      GARDEN_HEADING_KEY,
+      GARDEN_LEAD_KEY,
+      GARDEN_BODY_KEY,
+      GARDEN_OUTRO_KEY,
+      GARDEN_EMPTY_KEY,
+    ]);
+    return {
+      heading: map[GARDEN_HEADING_KEY] || fallback.heading,
+      lead: map[GARDEN_LEAD_KEY] || fallback.lead,
+      body: map[GARDEN_BODY_KEY] || fallback.body,
+      outro: map[GARDEN_OUTRO_KEY] || fallback.outro,
+      empty: map[GARDEN_EMPTY_KEY] || fallback.empty,
+    };
+  } catch (e) {
+    console.error("[garden] 문구 조회 실패 — 기본 문구로", e);
+    return fallback;
+  }
+}
+
+export const getGardenCopy = unstable_cache(loadGardenCopy, ["garden-copy"], {
+  revalidate: 300,
+  tags: [GARDEN_CONTENT_TAG],
+});
