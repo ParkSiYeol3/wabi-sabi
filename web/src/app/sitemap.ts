@@ -15,6 +15,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // 공개 게시판 — 신선한 콘텐츠라 색인 가치 높다. 내부 링크(푸터)로만 크롤되던
     // 것을 사이트맵에 명시해 색인을 확실히 한다. 문의(/inquiry)는 비밀글 위주라 제외.
     { url: `${BASE}/today`, lastModified: now, changeFrequency: "daily", priority: 0.6 },
+    // 돌의 정원(#616) — 배치가 매일 바뀌는 감상 페이지.
+    { url: `${BASE}/garden`, lastModified: now, changeFrequency: "daily", priority: 0.5 },
     { url: `${BASE}/notice`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     { url: `${BASE}/review`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     // 법적고지 (#106) — 색인 대상(전자상거래 필수 고지라 검색 노출이 정상)

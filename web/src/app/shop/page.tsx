@@ -77,35 +77,41 @@ export default async function ShopPage({
 
   return (
     <Container className="pb-16 pt-3">
-      {/* 특색 필(오늘의 와비사비) — 다시 제 줄로 올리고 오른쪽에 붙인다(대표님
-          2026-09-07). 타이틀과 한 줄에 두니 빽빽해서, 줄은 나누되 헤더 구분선부터
-          그리드까지 간격을 하나로 통일해 "일정 간격의 여백"을 만든다. 24px 은
-          너무 헐거워 16px 으로 좁혔다(대표님 2026-09-08) — 간격은 여전히 균일.
+      {/* 헤더 — 타이틀과 특색 필을 같은 선상에(대표님 2026-09-08). 필이 둘이라
+          좁은 화면에선 한 줄에 다 못 들어가므로 flex-wrap 으로 넘기고 ml-auto 로
+          오른쪽에 붙여 둔다(넘어가도 오른쪽 정렬 유지). 아래로는 필→정렬→상품카드
+          간격을 같은 값으로 맞춘다 — 대표님이 요청한 "같은 거리".
           ("N개 상품" 표기는 이전에 제거, 글씨 축소도 대표님) */}
-      <FeaturedShortcuts className="justify-end" />
-
-      <h1 className="mt-4 min-w-0 truncate text-lg font-semibold tracking-wide sm:text-xl">
-        {heading}
-      </h1>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h1 className="min-w-0 truncate text-lg font-semibold tracking-wide sm:text-xl">
+          {heading}
+        </h1>
+        <FeaturedShortcuts className="ml-auto shrink-0" />
+      </div>
 
       {/* 카테고리 — 대표님: 웹·모바일 모두 전 분류가 보이게. 모바일·태블릿(<lg)은
           카테고리 나열 + 정렬 드롭다운을 한 줄에 둔다(대표님 — 정렬이 아래로 떨어져
           생기던 빈 공간 제거·정렬을 위로). 데스크톱은 좌측 사이드바 + 우측 툴바 정렬. */}
-      <div className="flex items-start justify-between gap-3 lg:hidden">
+      {/* 분류 + 정렬 — 정렬 상자를 분류 줄의 세로 가운데에 둔다. 분류가 두 줄로
+          접히면서 정렬 상자 아래에만 여백이 더 생겨 "필↔정렬"과 "정렬↔상품"이
+          달라 보였는데, 가운데 정렬하면 위아래가 같은 거리로 나뉜다(대표님). */}
+      <div className="mt-4 flex items-center justify-between gap-3 lg:hidden">
         <div className="min-w-0 flex-1">
-          {/* 컴포넌트 기본 여백(mt-3/sm:mt-6 · pb-2/sm:pb-4)을 24px 한 값으로 덮는다 */}
+          {/* 컴포넌트 기본 여백(mt-3/sm:mt-6 · pb-2/sm:pb-4)은 줄 자체가 갖게 덮는다 */}
           <MobileCategoryTabs
             sp={sp}
             tree={tree}
-            className="mt-4 pb-0 sm:mt-4 sm:pb-0"
+            className="mt-0 pb-0 sm:mt-0 sm:pb-0"
           />
         </div>
-        <div className="mt-4 shrink-0">
+        <div className="shrink-0">
           <SortSelect sp={sp} sort={sort} options={sorts} />
         </div>
       </div>
 
-      <div className="mt-4 flex items-start gap-10">
+      {/* 모바일은 분류 줄이 위에 있어 4px 만 덜 띄워야 "정렬↔상품"이 "필↔정렬"과
+          같아진다(대표님). lg 이상은 분류 줄이 없어 제목 바로 아래라 16px 그대로. */}
+      <div className="mt-3 flex items-start gap-10 lg:mt-4">
         {/* 데스크톱 좌측 사이드바 — 소분류 토글 (#195, biomedium 참고) */}
         <div className="hidden lg:block">
           <ShopSidebar sp={sp} tree={tree} />
