@@ -10,6 +10,7 @@ import { AttributePicker } from "@/components/admin/attribute-picker";
 import { CareMultiPicker } from "@/components/admin/care-multi-picker";
 import { ProductOptionsFields } from "@/components/admin/product-options-fields";
 import { AutoGrowTextarea } from "@/components/admin/auto-grow-textarea";
+import { blockImplicitSubmit } from "@/lib/form-keys";
 import { MATERIALS, SIZES, CARES } from "@/lib/product-attributes";
 import type { OptionGroup } from "@/lib/product-options";
 
@@ -50,7 +51,12 @@ export function ProductEditForm({
   >(updateProduct, null);
 
   return (
-    <form action={formAction} className="grid gap-3 sm:grid-cols-2">
+    <form
+      action={formAction}
+      // 한 줄 입력칸의 엔터로 저장되지 않게(대표님) — 설명·사이즈의 줄바꿈은 그대로.
+      onKeyDown={blockImplicitSubmit}
+      className="grid gap-3 sm:grid-cols-2"
+    >
       <input type="hidden" name="id" value={product.id} />
       <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted">
         상품명
@@ -109,7 +115,7 @@ export function ProductEditForm({
           options={MATERIALS}
           initial={product.material ?? ""}
           emptyLabel="소재 선택 안 함"
-          customPlaceholder="소재 직접 입력 (예: 도자기)"
+          customPlaceholder="소재 직접 입력 (예: Ceramic)"
         />
       </label>
       <label className="flex flex-col gap-1 text-xs text-wabi-fg-muted">

@@ -11,6 +11,7 @@ import { AttributePicker } from "@/components/admin/attribute-picker";
 import { CareMultiPicker } from "@/components/admin/care-multi-picker";
 import { ProductOptionsFields } from "@/components/admin/product-options-fields";
 import { AutoGrowTextarea } from "@/components/admin/auto-grow-textarea";
+import { blockImplicitSubmit } from "@/lib/form-keys";
 import { ProductImagePicker } from "@/components/admin/product-image-picker";
 import { MATERIALS, SIZES, CARES } from "@/lib/product-attributes";
 
@@ -48,7 +49,12 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
   );
 
   return (
-    <form action={formAction} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <form
+      action={formAction}
+      // 한 줄 입력칸의 엔터로 저장되지 않게(대표님) — 설명·사이즈의 줄바꿈은 그대로.
+      onKeyDown={blockImplicitSubmit}
+      className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+    >
       <Input
         name="name"
         required
@@ -100,7 +106,7 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
         label="소재"
         options={MATERIALS}
         emptyLabel="소재 선택 안 함"
-        customPlaceholder="소재 직접 입력 (예: 도자기)"
+        customPlaceholder="소재 직접 입력 (예: Ceramic)"
       />
       {/* 원산지 — 한·일·중 드롭다운 + 직접 입력(대표님). 저장값은 완성형 문자열 */}
       <OriginPicker key={`origin-${pickerKey}`} />
