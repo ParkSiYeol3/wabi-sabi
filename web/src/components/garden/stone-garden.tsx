@@ -167,7 +167,9 @@ export function StoneGarden({
       <div
         ref={scrollRef}
         // 모래밭 — 갈퀴질한 결을 가로로 길게 긋는다(마루와 나란한 방향).
-        className="garden-sand relative h-[68vh] min-h-112 overflow-x-auto overflow-y-hidden sm:h-[76vh]"
+        // isolate — 돌의 z-index(앞뒤 순서용)를 이 상자 안에 가둔다(#644). 가두지
+        // 않으면 돌이 마루와 소리 버튼 위로 올라와 버튼을 덮는다.
+        className="garden-sand relative isolate h-[68vh] min-h-112 overflow-x-auto overflow-y-hidden sm:h-[76vh]"
         // 빈 모래를 누르면 떠올랐던 이름이 가라앉는다.
         onClick={() => setActive(null)}
       >
@@ -188,6 +190,8 @@ export function StoneGarden({
                   {
                     left: `${s.x}%`,
                     top: `${s.y}%`,
+                    // 아래에 놓인 돌일수록 앞. 이 값은 돌끼리의 앞뒤일 뿐이라
+                    // 컨테이너가 isolate 로 가둬 바깥 UI 를 넘지 않는다.
                     zIndex: Math.round(s.y),
                     "--s": s.size,
                   } as CSSProperties
