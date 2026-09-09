@@ -262,13 +262,13 @@ export function Shakkei() {
       {/* 뒤 숲이 먼저, 앞 나무가 그 위에, 담이 마지막 — 그리는 순서가 곧 거리다. */}
       <Row
         tiles={FAR_TILES}
-        count={9}
+        count={12}
         ratio="aspect-[31/10]"
         className="garden-far absolute inset-x-0 bottom-[26%] flex h-[44%] items-end"
       />
       <Row
         tiles={NEAR_TILES}
-        count={11}
+        count={15}
         ratio="aspect-[12/5]"
         className="garden-near absolute inset-x-0 bottom-[26%] flex h-[76%] items-end"
       />

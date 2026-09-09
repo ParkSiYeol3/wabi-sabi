@@ -64,6 +64,10 @@ export function StoneGarden({
 
   // 借景(차경) 시차 — 담 너머 나무는 멀리 있으니 눈을 돌려도 덜 움직인다. 모래보다
   // 훨씬 느리게 밀어 거리감을 만든다. transform 만 만져 리렌더가 없다.
+  //
+  // 밀 수 있는 거리는 레이어가 화면 밖으로 나가 있는 만큼이 전부다(#634). 그보다
+  // 더 밀면 오른쪽 끝이 화면 안으로 들어와 담과 나무가 뚝 끊긴다 — 마당 끝까지
+  // 밀어 본 손님에게만 보이던 버그였다. 남은 여백을 재서 거기까지만 민다.
   useEffect(() => {
     const el = scrollRef.current;
     const back = backdropRef.current;
@@ -73,7 +77,11 @@ export function StoneGarden({
       if (frame) return;
       frame = requestAnimationFrame(() => {
         frame = 0;
-        back.style.transform = `translateX(${-el.scrollLeft * 0.22}px)`;
+        // 레이어는 부모보다 넓고 좌우로 반씩 물려 있다 → 한쪽 여백 = (폭 차이)/2.
+        const slack = (back.offsetWidth - (back.parentElement?.clientWidth ?? 0)) / 2;
+        // 2px 은 반올림 여유 — 딱 맞춰 두면 소수점 오차로 실낱 같은 틈이 보인다.
+        const shift = Math.min(el.scrollLeft * 0.22, Math.max(slack - 2, 0));
+        back.style.transform = `translateX(${-shift}px)`;
       });
     };
     el.addEventListener("scroll", onScroll, { passive: true });
@@ -124,7 +132,7 @@ export function StoneGarden({
         <div
           ref={backdropRef}
           aria-hidden
-          className="garden-shakkei absolute top-0 -left-[15%] h-full w-[130%]"
+          className="garden-shakkei absolute top-0 -left-[30%] h-full w-[160%]"
         >
           <Shakkei />
         </div>
