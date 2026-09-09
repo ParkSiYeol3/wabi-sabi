@@ -36,27 +36,53 @@ export function StoneGarden({
   //
   // 다만 마당이 화면에 온전히 들어오기 전에는 가로채지 않는다(#630, 시열님).
   // 페이지에 막 들어오면 마당은 아래쪽이 잘려 있는데, 그때부터 세로 휠을 뺏으면
-  // 마당을 화면에 맞출 방법이 없어 답답해진다. 온전히 보일 때만 마당이 흐르고,
-  // 좌우 끝에 닿으면 다시 페이지로 넘긴다 — 들어올 때도 나갈 때도 막히지 않는다.
+  // 마당을 화면에 맞출 방법이 없어 답답해진다.
+  //
+  // 판정은 **손짓(gesture)마다 한 번만** 한다(#642, 시열님 — 화면이 흔들림).
+  // 트랙패드·관성 스크롤은 이벤트가 수십 개 이어져 오는데, 매 이벤트마다 다시
+  // 판정하면 마당이 끝에 닿는 순간 남은 관성이 통째로 페이지에 쏟아진다. 가로로
+  // 밀던 중에 화면이 세로로 튀는 게 그 때문이다. 한 손짓의 임자를 처음에 정하고
+  // 끝까지 지키면, 마당은 마당대로 흐르고 페이지는 다음 손짓에 움직인다.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
+
+    // 마지막 휠로부터 이 시간이 지나면 새 손짓으로 본다(관성 꼬리보다 길게).
+    const GESTURE_GAP = 180;
+    let owner: "garden" | "page" | null = null;
+    let lastAt = 0;
+
+    // 휠 델타의 단위는 브라우저마다 다르다(픽셀/줄/페이지). 줄·페이지로 오면
+    // 숫자가 한 자릿수라 그대로 쓰면 마당이 거의 안 움직인다.
+    const px = (d: number, mode: number) =>
+      mode === 1 ? d * 16 : mode === 2 ? d * el.clientWidth : d;
+
     const onWheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      if (e.timeStamp - lastAt > GESTURE_GAP) owner = null;
+      lastAt = e.timeStamp;
 
-      // 마당이 위아래로 잘려 있으면 세로 스크롤을 그대로 흘려보낸다.
-      const box = el.getBoundingClientRect();
-      const framed = box.top >= -2 && box.bottom <= window.innerHeight + 2;
-      if (!framed) return;
+      if (owner === null) {
+        const box = el.getBoundingClientRect();
+        const framed = box.top >= -2 && box.bottom <= window.innerHeight + 2;
+        const max = el.scrollWidth - el.clientWidth;
+        // 마당이 온전히 보이고, 세로 의도이고, 그 방향으로 아직 밀 데가 남았을 때만.
+        const mine =
+          framed &&
+          Math.abs(e.deltaY) > Math.abs(e.deltaX) &&
+          ((e.deltaY > 0 && el.scrollLeft < max - 1) ||
+            (e.deltaY < 0 && el.scrollLeft > 1));
+        owner = mine ? "garden" : "page";
+      }
 
-      // 이미 끝에 닿았으면 페이지 스크롤을 막지 않는다(정원에 갇히지 않게).
-      const max = el.scrollWidth - el.clientWidth;
-      const next = el.scrollLeft + e.deltaY;
-      if ((next < 0 && el.scrollLeft === 0) || (next > max && el.scrollLeft === max))
-        return;
+      // 페이지 차례면 손대지 않는다 — 가로 제스처·마당 밖에서는 원래대로 동작.
+      if (owner !== "garden") return;
+
+      // 마당 차례면 끝에 닿아도 계속 막는다. 여기서 놓아 주면 남은 관성이
+      // 페이지로 쏟아져 화면이 튄다. 손을 뗐다 다시 밀면 페이지가 움직인다.
       e.preventDefault();
-      el.scrollLeft = next;
+      el.scrollLeft += px(e.deltaY + e.deltaX, e.deltaMode);
     };
+
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
