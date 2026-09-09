@@ -43,14 +43,14 @@ export default async function GardenPage() {
         <p className="mt-2.5 text-sm leading-6 tracking-wide text-wabi-fg italic">
           {copy.lead}
         </p>
-        {body.map((para, i) => (
-          <p
-            key={i}
-            className={`max-w-2xl text-xs leading-6 text-wabi-fg-muted ${i === 0 ? "mt-3" : "mt-1.5"}`}
-          >
-            {para}
-          </p>
-        ))}
+        {/* 문단 사이는 줄 간격보다 넓어야 문단으로 읽힌다(#646). mt-1.5(6px)로는
+            줄바꿈과 구분이 안 돼 대표님이 어드민에서 빈 줄로 나눠도 붙어 보였다.
+            About 소개문(space-y-5)과 같은 방식으로 맞춘다. */}
+        <div className="mt-3 max-w-2xl space-y-4 text-xs leading-6 text-wabi-fg-muted">
+          {body.map((para, i) => (
+            <p key={i}>{para}</p>
+          ))}
+        </div>
       </Container>
 
       {/* 정원은 화면 폭을 다 쓴다 — 컨테이너 안에 가두면 마당이 상자가 된다. */}
