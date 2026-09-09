@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import type { PlacedStone } from "@/lib/garden-layout";
 import { GardenSound } from "@/components/garden/garden-sound";
-import { Shakkei } from "@/components/garden/shakkei";
 import { cn } from "@/lib/utils";
 
 // 돌의 정원 — 가레산스이(枯山水) 감상 화면 (#616, 대표님).
@@ -128,13 +127,14 @@ export function StoneGarden({
           들여다본다. 스크롤 컨테이너 밖에 둬 함께 흐르지 않고 아주 느리게만 민다. */}
       {/* 모래 위에 얹는다(z-10) — 담은 그 뒤의 땅을 가리는 게 맞고, 모래 배경이
           불투명해 뒤에 두면 통째로 덮인다. */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[32%] overflow-hidden">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[34%] overflow-hidden">
         <div
           ref={backdropRef}
           aria-hidden
           className="garden-shakkei absolute top-0 -left-[30%] h-full w-[160%]"
         >
-          <Shakkei />
+          {/* 苔 — 초록이 모래에 닿는 자리. 실제 마당에서도 이끼가 경계를 맡는다. */}
+          <span className="garden-moss-edge absolute inset-x-0 bottom-0 block h-6 sm:h-8" />
         </div>
       </div>
 

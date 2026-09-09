@@ -17,8 +17,8 @@ const GROUPS = [5, 2, 3, 2, 3] as const;
 // 정원 폭·높이에 대한 백분율. 위쪽은 담과 그 너머 나무(借景)가, 아래쪽은
 // 마루(縁側)가 덮으므로 모래로 쓸 수 있는 띠는 그 사이뿐이다.
 const X_START = 4;
-const FAR = [35, 47] as const;
-const NEAR = [53, 69] as const;
+const FAR = [40, 51] as const;
+const NEAR = [56, 69] as const;
 
 export type PlacedStone = Stone & {
   // 정원 좌표(%) — 왼쪽 위 기준.
