@@ -33,6 +33,17 @@ const ORDERED_COUNT = 4;
 // 한 장짜리가 여전히 가장 큰 장으로 읽힌다.)
 const ROW_W = ["w-[72%] md:w-[46%]", "w-[86%] md:w-[64%]"] as const;
 
+// 짝 행만 모바일에서 가운데로 모은다(대표님 #648).
+//
+// 한 장짜리는 왼쪽에 붙은 채 오른쪽을 크게 비우니 의도한 여백(間)으로 읽힌다.
+// 두 장이 나란히 놓인 행은 하나의 띠로 읽히는데, 375px 에서 그 띠가 오른쪽
+// 47px 을 앞두고 끊기니 어느 선에도 맞지 않는 미완성으로 보였다. 남는 폭을
+// 양쪽으로 나눠 띠를 가운데 세운다.
+//
+// 데스크톱은 그대로 왼쪽 정렬 — 1:2:1 정돈 구간이 통째로 왼쪽에 기대 있고
+// 불규칙 구간이 그 선에서 흩어지는 시안 B 의 뼈대라 건드리지 않는다.
+const PAIR_ALIGN = "mx-auto md:mx-0";
+
 // 짝 행의 공통 높이 — 둘의 폭이 달라도(48:52) 높이는 같아야 한 벌로 보인다.
 // 큰 사진과 함께 한 단계씩 낮췄다(대표님, #626 재차).
 const PAIR_H = "h-36 sm:h-48 md:h-64";
@@ -95,7 +106,7 @@ export function ProductGallery({
       {rows.map((row, r) => (
         <div key={`o${r}`}>
           <div
-            className={`flex items-end gap-3 md:gap-5 ${ROW_W[row.length === 2 ? 1 : 0]} ${ROW_GAP[r % ROW_GAP.length]}`}
+            className={`flex items-end gap-3 md:gap-5 ${ROW_W[row.length === 2 ? 1 : 0]} ${row.length === 2 ? PAIR_ALIGN : ""} ${ROW_GAP[r % ROW_GAP.length]}`}
           >
             {row.map((i, k) => {
               const paired = row.length === 2;
