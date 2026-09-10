@@ -14,6 +14,7 @@ import { ReviewSection } from "@/components/product/review-section";
 import { ProductCareGuide } from "@/components/product/product-care-guide";
 import { Price } from "@/components/product/price";
 import { getCachedProductDetail } from "@/lib/queries/product-detail";
+import { splitCare } from "@/lib/product-attributes";
 import {
   getPublicContent,
   ADDON_IMAGE_KEYS,
@@ -225,12 +226,18 @@ export default async function ProductDetailPage({
   }
 
   const main = product.images[0] ?? null;
+  // 주의사항만 여러 항목을 " · " 로 이어 붙인 값이라(CareMultiPicker) 항목마다
+  // 줄을 나눈다(대표님 2026-09-10, #650). 한 줄로 이어 붙으면 항목 안에도 맨점이
+  // 있어("전자레인지·식기세척기 사용 가능") 어디까지가 한 항목인지 안 보인다.
+  // 나머지 스펙은 한 값이라 그대로 한 줄.
   const specs = [
-    { label: "소재", value: product.material },
-    { label: "원산지", value: product.origin },
-    { label: "사이즈", value: product.size },
-    { label: "주의사항", value: product.care },
-  ].filter((s) => s.value);
+    { label: "소재", items: [product.material] },
+    { label: "원산지", items: [product.origin] },
+    { label: "사이즈", items: [product.size] },
+    { label: "주의사항", items: splitCare(product.care) },
+  ]
+    .map((s) => ({ ...s, items: s.items.filter((v): v is string => !!v) }))
+    .filter((s) => s.items.length > 0);
 
   return (
     // 모바일 하단 스티키 구매 바가 콘텐츠를 가리지 않게 아래 여백 확보(데스크톱은 무바).
@@ -342,7 +349,13 @@ export default async function ProductDetailPage({
                   <dt className="w-20 shrink-0 text-wabi-fg-muted">
                     {s.label}
                   </dt>
-                  <dd className="whitespace-pre-line font-numeric">{s.value}</dd>
+                  {/* 항목 간격(space-y-1.5)은 줄 간격보다 넓어야 한 항목이 두 줄로
+                      넘어가도 항목 경계가 보인다(#646 에서 배운 것). */}
+                  <dd className="space-y-1.5 whitespace-pre-line font-numeric">
+                    {s.items.map((v) => (
+                      <p key={v}>{v}</p>
+                    ))}
+                  </dd>
                 </div>
               ))}
             </dl>

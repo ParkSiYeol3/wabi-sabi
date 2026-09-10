@@ -41,3 +41,20 @@ export const CARES: readonly string[] = [
   "손세척 권장",
   "첫 사용 전 미온수 세척",
 ] as const;
+
+// 주의사항 항목 구분자 — 어드민이 고른 여러 항목을 기존 단일 `care` 컬럼 하나에
+// 이어 붙일 때 쓴다(CareMultiPicker). 조인·분해가 같은 값을 보게 여기 둔다.
+//
+// ⚠ 반드시 " · "(공백-점-공백) 전체로 나눠야 한다. 프리셋 문구 자체가 맨점을
+// 쓰기 때문이다 — "오븐·직화 사용 불가", "전자레인지·식기세척기 사용 가능".
+// 맨점만으로 split 하면 한 항목이 둘로 쪼개진다. 새 프리셋을 넣을 때도 문구
+// 안에 " · " 를 공백까지 그대로 넣지 말 것.
+export const CARE_SEP = " · ";
+
+// 저장된 care 문자열을 항목 배열로 되돌린다. 값이 없으면 빈 배열.
+export function splitCare(care: string | null | undefined): string[] {
+  return (care ?? "")
+    .split(CARE_SEP)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}

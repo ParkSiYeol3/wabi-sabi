@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CARE_SEP as SEP, splitCare } from "@/lib/product-attributes";
 
 // 주의사항 복수 선택 (대표님) — 프리셋을 여러 개 토글 + 직접 입력도 여러 개 추가.
 // 저장은 기존 단일 `care` 컬럼에 " · " 로 이어 붙인 문자열(상세 스펙 렌더·스키마 그대로).
 // 프리셋 문구엔 " · "(공백-점-공백)가 없어 되읽기(split)가 안전하다.
-const SEP = " · ";
+// 구분자는 상세 렌더도 같이 쓰므로 product-attributes 에 둔다(#650).
 
 export function CareMultiPicker({
   name,
@@ -20,12 +21,7 @@ export function CareMultiPicker({
   initial?: string;
   customPlaceholder?: string;
 }) {
-  const [selected, setSelected] = useState<string[]>(
-    initial
-      .split(SEP)
-      .map((s) => s.trim())
-      .filter(Boolean),
-  );
+  const [selected, setSelected] = useState<string[]>(splitCare(initial));
   const [draft, setDraft] = useState("");
 
   const toggle = (v: string) =>
