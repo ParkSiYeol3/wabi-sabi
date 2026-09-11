@@ -25,16 +25,6 @@ import {
   DEFAULT_SHIPPING_INFO,
   SHIPPING_FEE_KEY,
   DEFAULT_SHIPPING_FEE,
-  GARDEN_HEADING_KEY,
-  GARDEN_LEAD_KEY,
-  GARDEN_BODY_KEY,
-  GARDEN_OUTRO_KEY,
-  GARDEN_EMPTY_KEY,
-  DEFAULT_GARDEN_HEADING,
-  DEFAULT_GARDEN_LEAD,
-  DEFAULT_GARDEN_BODY,
-  DEFAULT_GARDEN_OUTRO,
-  DEFAULT_GARDEN_EMPTY,
 } from "@/lib/queries/content";
 import { PageHeader, SectionHeading } from "@/components/admin/ui";
 import { ContentField } from "@/components/admin/content-field";
@@ -72,7 +62,6 @@ const CONTENT_NAV = [
   { id: "g-home", label: "홈" },
   { id: "g-about", label: "About (소개)" },
   { id: "g-product", label: "상품 상세" },
-  { id: "g-garden", label: "間, 마 (정원)" },
   { id: "g-global", label: "전역 설정" },
 ] as const;
 
@@ -100,11 +89,6 @@ export default async function AdminContentPage() {
     critHeading,
     shippingInfo,
     shippingFee,
-    gardenHeading,
-    gardenLead,
-    gardenBody,
-    gardenOutro,
-    gardenEmpty,
   ] = await Promise.all([
     getSiteContent(PHILOSOPHY_KEY),
     getSiteContent(HOME_PILLAR_LABEL_KEYS[0]),
@@ -127,11 +111,6 @@ export default async function AdminContentPage() {
     getSiteContent(CRITERIA_HEADING_KEY),
     getSiteContent(SHIPPING_INFO_KEY),
     getSiteContent(SHIPPING_FEE_KEY),
-    getSiteContent(GARDEN_HEADING_KEY),
-    getSiteContent(GARDEN_LEAD_KEY),
-    getSiteContent(GARDEN_BODY_KEY),
-    getSiteContent(GARDEN_OUTRO_KEY),
-    getSiteContent(GARDEN_EMPTY_KEY),
   ]);
 
   const criteria = [
@@ -363,60 +342,6 @@ export default async function AdminContentPage() {
             />
           </div>
 
-        </PageBlock>
-
-        {/* ── 間, 마 (정원) ── */}
-        <PageBlock
-          id="g-garden"
-          label="間, 마 (정원)"
-          note="wasa.kr/garden — 오늘의 그릇을 마당에 놓아 보여 주는 화면."
-        >
-          <div className="space-y-3">
-            <SectionHeading>머리말</SectionHeading>
-            <p className="text-xs text-wabi-fg-muted">
-              마당 위에 놓이는 문구입니다. 파는 말이 아니라 머무는 말이라
-              생각하고 적어주세요.
-            </p>
-            <ContentField
-              contentKey={GARDEN_HEADING_KEY}
-              label="제목"
-              hint="화면 맨 위 제목입니다(기본 '間, 마')."
-              value={gardenHeading ?? DEFAULT_GARDEN_HEADING}
-              rows={1}
-            />
-            <ContentField
-              contentKey={GARDEN_LEAD_KEY}
-              label="한 줄 문구"
-              hint="제목 바로 아래, 살짝 누운 글씨로 나오는 한 줄입니다."
-              value={gardenLead ?? DEFAULT_GARDEN_LEAD}
-              rows={2}
-            />
-            <ContentField
-              contentKey={GARDEN_BODY_KEY}
-              label="설명 본문"
-              hint="빈 줄(엔터 두 번)로 문단을 나눕니다. 마지막 문단에 '옆으로 밀어 둘러보세요' 같은 안내를 두면 손님이 마당을 어떻게 보는지 알 수 있습니다."
-              value={gardenBody ?? DEFAULT_GARDEN_BODY}
-              rows={8}
-            />
-          </div>
-
-          <div className="space-y-3">
-            <SectionHeading>맺음말</SectionHeading>
-            <ContentField
-              contentKey={GARDEN_OUTRO_KEY}
-              label="마당 아래 한 줄"
-              hint="마당 아래, 상점으로 가는 링크 위에 놓입니다."
-              value={gardenOutro ?? DEFAULT_GARDEN_OUTRO}
-              rows={2}
-            />
-            <ContentField
-              contentKey={GARDEN_EMPTY_KEY}
-              label="마당이 비었을 때"
-              hint="판매중인 상품이 하나도 없을 때 마당 자리에 표시됩니다."
-              value={gardenEmpty ?? DEFAULT_GARDEN_EMPTY}
-              rows={2}
-            />
-          </div>
         </PageBlock>
 
         {/* ── 전역 설정 ── */}
