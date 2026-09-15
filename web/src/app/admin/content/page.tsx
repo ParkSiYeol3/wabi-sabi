@@ -25,6 +25,8 @@ import {
   DEFAULT_SHIPPING_INFO,
   SHIPPING_FEE_KEY,
   DEFAULT_SHIPPING_FEE,
+  TODAY_INTRO_KEY,
+  DEFAULT_TODAY_INTRO,
 } from "@/lib/queries/content";
 import { PageHeader, SectionHeading } from "@/components/admin/ui";
 import { ContentField } from "@/components/admin/content-field";
@@ -62,6 +64,7 @@ const CONTENT_NAV = [
   { id: "g-home", label: "홈" },
   { id: "g-about", label: "About (소개)" },
   { id: "g-product", label: "상품 상세" },
+  { id: "g-today", label: "오늘의 와비사비" },
   { id: "g-global", label: "전역 설정" },
 ] as const;
 
@@ -89,6 +92,7 @@ export default async function AdminContentPage() {
     critHeading,
     shippingInfo,
     shippingFee,
+    todayIntro,
   ] = await Promise.all([
     getSiteContent(PHILOSOPHY_KEY),
     getSiteContent(HOME_PILLAR_LABEL_KEYS[0]),
@@ -111,6 +115,7 @@ export default async function AdminContentPage() {
     getSiteContent(CRITERIA_HEADING_KEY),
     getSiteContent(SHIPPING_INFO_KEY),
     getSiteContent(SHIPPING_FEE_KEY),
+    getSiteContent(TODAY_INTRO_KEY),
   ]);
 
   const criteria = [
@@ -342,6 +347,21 @@ export default async function AdminContentPage() {
             />
           </div>
 
+        </PageBlock>
+
+        {/* ── 오늘의 와비사비 (#663) ── */}
+        <PageBlock
+          id="g-today"
+          label="오늘의 와비사비"
+          note="손님 사진·이야기 게시판 상단의 안내 문구."
+        >
+          <ContentField
+            contentKey={TODAY_INTRO_KEY}
+            label="안내 문구"
+            hint="줄을 바꾸면 화면에서도 그 자리에서 줄이 바뀝니다."
+            value={todayIntro ?? DEFAULT_TODAY_INTRO}
+            rows={4}
+          />
         </PageBlock>
 
         {/* ── 전역 설정 ── */}
