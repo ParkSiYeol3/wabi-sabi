@@ -10,11 +10,16 @@ import { BackToShop } from "@/components/shop/back-to-shop";
 import { createClient } from "@/lib/supabase/server";
 import { getMomentsPage, MOMENTS_PAGE_SIZE } from "@/lib/queries/moments";
 import { getCategoryTree } from "@/lib/queries/categories";
+import {
+  getSiteContent,
+  TODAY_INTRO_KEY,
+  DEFAULT_TODAY_INTRO,
+} from "@/lib/queries/content";
 
 export const metadata: Metadata = {
   title: "오늘의 와비사비",
   description:
-    "손님들이 일상 속에서 와비사비의 그릇을 어떻게 쓰고 있는지 나누는 공간입니다.",
+    "와비사비의 기물이 일상에서 어떻게 쓰이는지 — 오늘의 식탁, 좋아하는 음식, 작은 레시피를 나누는 공간입니다.",
 };
 
 export default async function TodayPage() {
@@ -25,9 +30,10 @@ export default async function TodayPage() {
 
   // 첫 페이지(12) — 이후는 그리드의 "더보기"가 이어붙인다. 카테고리 트리는
   // shop 과 동일한 분류 내비를 /today 에도 보여주기 위함(대표님) — 병렬 조회.
-  const [{ moments, hasMore }, tree] = await Promise.all([
+  const [{ moments, hasMore }, tree, intro] = await Promise.all([
     getMomentsPage(0, MOMENTS_PAGE_SIZE),
     getCategoryTree(),
+    getSiteContent(TODAY_INTRO_KEY),
   ]);
 
   return (
@@ -38,12 +44,11 @@ export default async function TodayPage() {
       <h1 className="text-lg font-semibold tracking-tight sm:text-xl">
         오늘의 와비사비
       </h1>
-      {/* max-w 를 넓혀 데스크톱에서 한 줄로 붙게(대표님 — "남겨주세요."만 다음 줄로
-          넘어가 이상). text-pretty 로 좁은 폭에서 줄바꿈되더라도 마지막 줄에 한
-          단어만 남는(orphan) 것을 막는다. */}
-      <p className="mt-2.5 max-w-3xl text-pretty text-xs leading-6 text-wabi-fg-muted">
-        손님들이 일상 속에서 우리의 그릇을 어떻게 쓰고 있는지 나누는 공간입니다.
-        오늘의 한 컷을 함께 남겨주세요.
+      {/* 안내 멘트는 어드민 > 콘텐츠에서 편집(#663). 입력한 줄바꿈이 그대로 화면
+          줄바꿈(pre-line). text-pretty 로 좁은 폭에서 한 줄이 접히더라도 마지막 줄에
+          한 단어만 남는(orphan) 것을 막는다. */}
+      <p className="mt-2.5 max-w-3xl whitespace-pre-line text-pretty text-xs leading-6 text-wabi-fg-muted">
+        {intro ?? DEFAULT_TODAY_INTRO}
       </p>
 
       {/* Shop 전체로 돌아가는 버튼(대표님, 모바일) */}

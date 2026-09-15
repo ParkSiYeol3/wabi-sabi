@@ -57,6 +57,7 @@ export async function saveContent(
 
   revalidatePath("/"); // 홈 캐시된 소개문구 즉시 무효화
   revalidatePath("/about");
+  revalidatePath("/today"); // 오늘의 와비사비 안내 멘트(#663)
   revalidatePath("/admin/content");
   return { ok: true, message: "저장되었습니다." };
 }

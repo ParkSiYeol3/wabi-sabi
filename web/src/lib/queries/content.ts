@@ -96,6 +96,13 @@ export const DEFAULT_CARE_MAINTAIN = `음식에 따라 표면에 옅은 색이 �
 작은 흔적과 미세한 차이는 손으로 빚은 기물이 지닌 자연스러운 표정입니다.
 그 결까지 천천히, 오래 곁에 두고 사용해 주세요.`;
 
+// 오늘의 와비사비 상단 안내(대표님 — 정식 운영 후 멘트 교체 + 어드민 편집, #663).
+// 줄바꿈이 그대로 화면 줄바꿈이 된다(whitespace-pre-line).
+export const TODAY_INTRO_KEY = "today_intro";
+export const DEFAULT_TODAY_INTRO = `와비사비의 기물이 당신의 일상에서는 어떻게 쓰이고 있나요?
+오늘의 식탁, 좋아하는 음식, 작은 레시피까지
+와비사비와 함께한 이야기를 자유롭게 남겨주세요.`;
+
 // 편집 가능한 전체 키 — 액션 enum·타입 안전의 단일 출처.
 export const CONTENT_KEYS = [
   PHILOSOPHY_KEY,
@@ -113,6 +120,7 @@ export const CONTENT_KEYS = [
   CARE_USAGE_KEY,
   CARE_MAINTAIN_LABEL_KEY,
   CARE_MAINTAIN_KEY,
+  TODAY_INTRO_KEY,
 ] as const;
 export type ContentKey = (typeof CONTENT_KEYS)[number];
 
