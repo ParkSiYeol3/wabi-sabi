@@ -4,9 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { PageHeader, EmptyState } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/common/submit-button";
+import { ProductTagPicker } from "@/components/moment/product-tag-picker";
+import { getTaggableProducts } from "@/lib/queries/moments";
 import {
   adminSetMomentHidden,
   adminDeleteMoment,
+  adminSetMomentProducts,
   adminSetCommentHidden,
   adminDeleteComment,
 } from "./actions";
@@ -18,6 +21,7 @@ type Moment = {
   body: string | null;
   created_at: string;
   hidden: boolean;
+  product_ids: string[] | null;
 };
 
 type Comment = {
@@ -32,11 +36,14 @@ type Comment = {
 // "오늘의 와비사비" 모더레이션 — 숨김/삭제. service_role 있으면 숨김 포함 전체.
 export default async function AdminMomentsPage() {
   const db = adminConfigured() ? createAdminClient() : await createClient();
-  const { data } = await db
-    .from("wabi_moments")
-    .select("id, author_name, image_url, body, created_at, hidden")
-    .order("created_at", { ascending: false })
-    .returns<Moment[]>();
+  const [{ data }, products] = await Promise.all([
+    db
+      .from("wabi_moments")
+      .select("id, author_name, image_url, body, created_at, hidden, product_ids")
+      .order("created_at", { ascending: false })
+      .returns<Moment[]>(),
+    getTaggableProducts(), // 기물 태그 편집 목록(#664)
+  ]);
   const moments = data ?? [];
 
   // 댓글 — 숨김 포함 최신순(service_role). 상세로 이동해 맥락 확인 가능.
@@ -62,8 +69,9 @@ export default async function AdminMomentsPage() {
           {moments.map((m) => (
             <li
               key={m.id}
-              className="flex gap-4 border border-wabi-border bg-wabi-bg p-4"
+              className="border border-wabi-border bg-wabi-bg p-4"
             >
+              <div className="flex gap-4">
               <div className="relative size-20 shrink-0 overflow-hidden rounded bg-wabi-muted">
                 <Image
                   src={m.image_url}
@@ -114,6 +122,28 @@ export default async function AdminMomentsPage() {
                   </SubmitButton>
                 </form>
               </div>
+              </div>
+
+              {/* 사진 속 기물 태그(#664) — 손님이 안 달았거나 잘못 단 태그를 고친다.
+                  key 로 저장된 값이 바뀌면 피커를 새로 마운트해 화면과 DB 를 맞춘다. */}
+              <form
+                action={adminSetMomentProducts}
+                className="mt-4 space-y-2 border-t border-wabi-border pt-3"
+              >
+                <input type="hidden" name="id" value={m.id} />
+                <p className="text-xs font-medium text-wabi-fg">사진 속 기물</p>
+                <ProductTagPicker
+                  key={(m.product_ids ?? []).join(",")}
+                  products={products}
+                  defaultSelected={m.product_ids ?? []}
+                />
+                <SubmitButton
+                  pendingText="저장 중…"
+                  className="cursor-pointer text-xs text-wabi-fg underline underline-offset-2 transition-colors hover:text-wabi-fg-muted"
+                >
+                  태그 저장
+                </SubmitButton>
+              </form>
             </li>
           ))}
         </ul>

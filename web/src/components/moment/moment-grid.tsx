@@ -7,6 +7,7 @@ import { useState, useTransition } from "react";
 import type { MomentCard } from "@/lib/queries/moments";
 import { loadMoreMoments, deleteMoment } from "@/app/today/actions";
 import { MomentLikeButton } from "@/components/moment/moment-like-button";
+import { MomentProductTags } from "@/components/moment/moment-product-tags";
 import { SubmitButton } from "@/components/common/submit-button";
 
 // 게시판 목록 — 더보기 페이지네이션(0039). 첫 페이지는 서버가 넘기고, 이후는
@@ -37,7 +38,7 @@ export function MomentGrid({
 
   if (moments.length === 0)
     return (
-      <p className="mt-16 text-center text-sm text-wabi-fg-muted">
+      <p className="mt-16 text-pretty text-center text-sm text-wabi-fg-muted">
         아직 올라온 이야기가 없습니다. 첫 번째 순간을 남겨보세요.
       </p>
     );
@@ -83,6 +84,8 @@ export function MomentGrid({
                   {m.body}
                 </Link>
               )}
+              {/* 사진 속 기물 태그(#664) — 누르면 상품 상세 */}
+              <MomentProductTags products={m.products} variant="compact" />
               {/* 공감·댓글 수 */}
               <div className="mt-1 flex items-center gap-3">
                 <MomentLikeButton

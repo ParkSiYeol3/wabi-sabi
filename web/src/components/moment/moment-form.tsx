@@ -5,16 +5,20 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createMoment, type MomentResult } from "@/app/today/actions";
 import { resizeFormImages } from "@/lib/resize-image";
+import { ProductTagPicker } from "@/components/moment/product-tag-picker";
+import type { MomentProductTag } from "@/lib/queries/moments";
 
 const MAX_IMAGES = 10;
 
-// "오늘의 와비사비" 작성 폼 — 사진 필수(여러 장, 인스타 피드식) + 짧은 글(선택).
-// 로그인 사용자 전용(page 에서 게이트). 성공 시 입력 초기화.
-export function MomentForm() {
+// "오늘의 와비사비" 작성 폼 — 사진 필수(여러 장, 인스타 피드식) + 짧은 글(선택)
+// + 사진 속 기물 태그(선택, #664). 로그인 사용자 전용(page 에서 게이트). 성공 시 입력 초기화.
+export function MomentForm({ products }: { products: MomentProductTag[] }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const [count, setCount] = useState(0);
+  // 태그 피커는 내부 상태라 성공 시 key 를 바꿔 새로 마운트해 비운다.
+  const [resetKey, setResetKey] = useState(0);
   const [state, action, pending] = useActionState<MomentResult | null, FormData>(
     async (prev, formData) => {
       // 업로드 전 리사이즈 — 여러 장·모바일 원본이 서버액션 바디 한도를 넘지 않게.
@@ -24,6 +28,7 @@ export function MomentForm() {
         if (fileRef.current) fileRef.current.value = "";
         if (bodyRef.current) bodyRef.current.value = "";
         setCount(0);
+        setResetKey((k) => k + 1);
         // 서버 데이터(첫 페이지) 재요청 → 방금 올린 글이 그리드에 바로 뜬다
         // (그리드는 최신 글 id 로 keying 돼 새 데이터로 remount 된다).
         router.refresh();
@@ -73,6 +78,9 @@ export function MomentForm() {
         placeholder="일상 속 우리 그릇 이야기를 짧게 남겨주세요 (선택)"
         className="w-full resize-y border border-wabi-border bg-transparent px-3 py-2 text-base outline-none transition-colors focus:border-wabi-fg md:text-sm"
       />
+      {products.length > 0 && (
+        <ProductTagPicker key={resetKey} products={products} />
+      )}
       <div className="flex items-center gap-3">
         <Button
           type="submit"
