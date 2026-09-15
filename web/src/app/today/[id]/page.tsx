@@ -7,6 +7,7 @@ import { MomentLikeButton } from "@/components/moment/moment-like-button";
 import { MomentCarousel } from "@/components/moment/moment-carousel";
 import { MomentCommentForm } from "@/components/moment/moment-comment-form";
 import { MomentShareButton } from "@/components/moment/moment-share-button";
+import { MomentProductTags } from "@/components/moment/moment-product-tags";
 import { SubmitButton } from "@/components/common/submit-button";
 import { createClient } from "@/lib/supabase/server";
 import { getMoment, getMomentComments } from "@/lib/queries/moments";
@@ -77,6 +78,13 @@ export default async function MomentDetailPage({ params }: Params) {
             <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-wabi-fg">
               {moment.body}
             </p>
+          )}
+
+          {/* 사진 속 기물 태그(#664) — 누르면 상품 상세 */}
+          {moment.products.length > 0 && (
+            <div className="mt-6">
+              <MomentProductTags products={moment.products} variant="full" />
+            </div>
           )}
 
           <div className="mt-6 flex items-center gap-4">

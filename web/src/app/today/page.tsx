@@ -8,7 +8,11 @@ import { MobileCategoryTabs } from "@/components/shop/mobile-category-tabs";
 import { FeaturedShortcuts } from "@/components/shop/featured-shortcuts";
 import { BackToShop } from "@/components/shop/back-to-shop";
 import { createClient } from "@/lib/supabase/server";
-import { getMomentsPage, MOMENTS_PAGE_SIZE } from "@/lib/queries/moments";
+import {
+  getMomentsPage,
+  getTaggableProducts,
+  MOMENTS_PAGE_SIZE,
+} from "@/lib/queries/moments";
 import { getCategoryTree } from "@/lib/queries/categories";
 import {
   getSiteContent,
@@ -30,10 +34,12 @@ export default async function TodayPage() {
 
   // 첫 페이지(12) — 이후는 그리드의 "더보기"가 이어붙인다. 카테고리 트리는
   // shop 과 동일한 분류 내비를 /today 에도 보여주기 위함(대표님) — 병렬 조회.
-  const [{ moments, hasMore }, tree, intro] = await Promise.all([
+  const [{ moments, hasMore }, tree, intro, taggable] = await Promise.all([
     getMomentsPage(0, MOMENTS_PAGE_SIZE),
     getCategoryTree(),
     getSiteContent(TODAY_INTRO_KEY),
+    // 작성 폼의 기물 태그 목록(#664) — 폼은 로그인 사용자에게만 보이므로 그때만 조회.
+    user ? getTaggableProducts() : Promise.resolve([]),
   ]);
 
   return (
@@ -72,7 +78,7 @@ export default async function TodayPage() {
         <div className="min-w-0 flex-1">
           <div>
             {user ? (
-              <MomentForm />
+              <MomentForm products={taggable} />
             ) : (
               <p className="border border-wabi-border bg-wabi-subtle/40 px-4 py-3 text-sm text-wabi-fg-muted">
                 <Link

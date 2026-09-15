@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/admin";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { deleteProductImage } from "@/lib/storage";
 import { logAdminAction } from "@/lib/audit";
+import { sanitizeProductIds } from "@/lib/moment-products";
 
 // "오늘의 와비사비" 모더레이션 (관리자) — 숨김 토글 / 삭제. service_role 로 RLS 우회.
 const idSchema = z.string().uuid();
@@ -47,22 +48,62 @@ export async function adminDeleteMoment(formData: FormData) {
   const supabase = createAdminClient();
   const { data: row } = await supabase
     .from("wabi_moments")
-    .select("image_url")
+    .select("image_url, image_urls")
     .eq("id", id)
-    .maybeSingle<{ image_url: string }>();
+    .maybeSingle<{ image_url: string; image_urls: string[] | null }>();
 
   const { error } = await supabase.from("wabi_moments").delete().eq("id", id);
   if (error) {
     console.error("[admin] moment 삭제 실패", id, error);
     return;
   }
-  if (row?.image_url) await deleteProductImage(row.image_url);
+  // 올린 사진 전부 회수(다중, 0051) — 커버만 지우면 나머지 장이 스토리지에 남는다.
+  const urls = row?.image_urls?.length
+    ? row.image_urls
+    : row?.image_url
+      ? [row.image_url]
+      : [];
+  await Promise.all(urls.map((u) => deleteProductImage(u)));
   await logAdminAction(user, {
     action: "moment.delete",
     targetTable: "wabi_moments",
     targetId: id,
   });
   revalidatePath("/today");
+  revalidateMoment(id);
+  revalidatePath("/admin/moments");
+}
+
+// 사진 속 기물 태그 고치기(#664) — 손님이 안 달았거나 잘못 단 태그를 관리자가
+// 바로잡는다. 비워서 저장하면 태그가 모두 빠진다.
+export async function adminSetMomentProducts(formData: FormData) {
+  const user = await requireAdmin();
+  if (!adminConfigured()) return;
+
+  const id = String(formData.get("id") || "");
+  if (!idSchema.safeParse(id).success) return;
+
+  const supabase = createAdminClient();
+  const productIds = await sanitizeProductIds(
+    supabase,
+    formData.getAll("product_id"),
+  );
+  const { error } = await supabase
+    .from("wabi_moments")
+    .update({ product_ids: productIds })
+    .eq("id", id);
+  if (error) {
+    console.error("[admin] moment 태그 저장 실패", id, error);
+    return;
+  }
+  await logAdminAction(user, {
+    action: "moment.set_products",
+    targetTable: "wabi_moments",
+    targetId: id,
+    meta: { count: productIds.length },
+  });
+  revalidatePath("/today");
+  revalidateMoment(id);
   revalidatePath("/admin/moments");
 }
 

@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminConfigured } from "@/lib/supabase/admin";
 import { rateLimit } from "@/lib/rate-limit";
 import { uploadSiteImage, deleteProductImage } from "@/lib/storage";
+import { sanitizeProductIds } from "@/lib/moment-products";
 import {
   getMomentsPage,
   MOMENTS_PAGE_SIZE,
@@ -51,6 +52,12 @@ export async function createMoment(
     return { ok: false, message: "글은 500자 이내로 써주세요." };
   const body = parsedBody.data || null;
 
+  // 사진 속 기물 태그(#664, 선택) — 판매중 상품만·중복 제거·최대 5개.
+  const productIds = await sanitizeProductIds(
+    supabase,
+    formData.getAll("product_id"),
+  );
+
   // 사용자당 시간 10건 — 도배 차단(키가 user.id 라 IP 우회 무효).
   const { ok } = await rateLimit(`moment:${user.id}`, 10, 3_600);
   if (!ok)
@@ -82,6 +89,7 @@ export async function createMoment(
     image_url: urls[0], // 커버(첫 장) — 그리드·OG 호환
     image_urls: urls,
     body,
+    product_ids: productIds,
   });
   if (insErr) {
     await Promise.all(urls.map((u) => deleteProductImage(u))); // 저장 실패 시 회수
