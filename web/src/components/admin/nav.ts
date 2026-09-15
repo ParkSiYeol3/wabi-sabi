@@ -13,6 +13,7 @@ import {
   Bug,
   BarChart3,
   Users,
+  UserRound,
   Boxes,
   Ticket,
 } from "lucide-react";
@@ -51,6 +52,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     heading: "고객",
     items: [
+      { href: "/admin/members", label: "회원 관리", icon: UserRound },
       { href: "/admin/inquiries", label: "문의", icon: MessageCircle },
       { href: "/admin/reviews", label: "리뷰", icon: Star },
       { href: "/admin/coupons", label: "쿠폰", icon: Ticket },
