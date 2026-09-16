@@ -6,6 +6,7 @@ import {
   clearServerCart,
   enqueueCartWrite,
 } from "@/lib/cart-sync";
+import { cartLineKey } from "@/lib/cart-line";
 import type { SelectedOption } from "@/lib/product-options";
 
 export interface CartItem {
@@ -14,10 +15,13 @@ export interface CartItem {
   price: number;
   image?: string | null;
   quantity: number;
-  // 라인 단위 추가 옵션 코드(#253). 라인당 1세트 — 같은 상품 재담기 시 최신으로 덮어쓴다.
+  // 라인 단위 추가 옵션 코드(#253).
   addons: string[];
-  // 라인이 고른 커스텀 옵션(색상·모양 등, 0048). 재담기 시 최신으로 덮어쓴다.
+  // 라인이 고른 커스텀 옵션(색상·모양 등, 0048).
   options: SelectedOption[];
+  // 줄의 신원(#677) — 상품 id + 옵션 + 애드온 조합. 같은 상품이라도 옵션이 다르면
+  // 다른 줄이다. 삭제·수량 변경·서버 동기화가 모두 이 키를 가리킨다.
+  lineKey: string;
 }
 
 interface CartState {
@@ -25,13 +29,13 @@ interface CartState {
   // 로그인 사용자 id — 있으면 조작을 서버에 write-through(낙관적). 없으면 게스트(로컬).
   userId: string | null;
   add: (
-    item: Omit<CartItem, "quantity" | "addons" | "options">,
+    item: Omit<CartItem, "quantity" | "addons" | "options" | "lineKey">,
     qty?: number,
     addons?: string[],
     options?: SelectedOption[],
   ) => void;
-  remove: (id: string) => void;
-  setQty: (id: string, qty: number) => void;
+  remove: (lineKey: string) => void;
+  setQty: (lineKey: string, qty: number) => void;
   clear: () => void;
   // 계정 연동 — auth-provider 가 호출. 서버 병합·로드 결과로 로컬 교체.
   bindUser: (userId: string, items: CartItem[]) => void;
@@ -40,25 +44,22 @@ interface CartState {
 }
 
 // 장바구니 (WSB-013). 비로그인=게스트 로컬(localStorage), 로그인=서버 동기화(0015).
+// 줄 구분은 lineKey(#677, 0064) — 옵션이 다르면 다른 줄로 쌓인다.
 export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
       userId: null,
       add: (item, qty = 1, addons = [], options = []) => {
+        const lineKey = cartLineKey(item.id, options, addons);
         set((s) => {
-          const existing = s.items.find((i) => i.id === item.id);
+          const existing = s.items.find((i) => i.lineKey === lineKey);
           if (existing) {
-            // 라인당 옵션 1세트 — 재담기 시 수량은 더하고 옵션·추가옵션은 최신으로 덮어쓴다.
+            // 옵션까지 똑같은 줄을 또 담은 것 → 수량만 더한다.
             return {
               items: s.items.map((i) =>
-                i.id === item.id
-                  ? {
-                      ...i,
-                      quantity: Math.min(i.quantity + qty, 99),
-                      addons,
-                      options,
-                    }
+                i.lineKey === lineKey
+                  ? { ...i, quantity: Math.min(i.quantity + qty, 99) }
                   : i,
               ),
             };
@@ -67,40 +68,53 @@ export const useCart = create<CartState>()(
           return {
             items: [
               ...s.items,
-              { ...item, quantity: Math.min(qty, 99), addons, options },
+              {
+                ...item,
+                quantity: Math.min(qty, 99),
+                addons,
+                options,
+                lineKey,
+              },
             ],
           };
         });
         const { userId, items } = get();
         if (userId) {
-          const next = items.find((i) => i.id === item.id)?.quantity ?? qty;
+          const next = items.find((i) => i.lineKey === lineKey)?.quantity ?? qty;
           void enqueueCartWrite(userId, () =>
-            upsertServerItem(userId, item.id, next, addons, options),
+            upsertServerItem(userId, lineKey, item.id, next, addons, options),
           );
         }
       },
-      remove: (id) => {
-        set((s) => ({ items: s.items.filter((i) => i.id !== id) }));
+      remove: (lineKey) => {
+        set((s) => ({ items: s.items.filter((i) => i.lineKey !== lineKey) }));
         const { userId } = get();
         if (userId)
-          void enqueueCartWrite(userId, () => removeServerItem(userId, id));
+          void enqueueCartWrite(userId, () => removeServerItem(userId, lineKey));
       },
-      setQty: (id, qty) => {
+      setQty: (lineKey, qty) => {
         set((s) => ({
           items:
             qty <= 0
-              ? s.items.filter((i) => i.id !== id)
+              ? s.items.filter((i) => i.lineKey !== lineKey)
               : s.items.map((i) =>
-                  i.id === id ? { ...i, quantity: Math.min(qty, 99) } : i,
+                  i.lineKey === lineKey
+                    ? { ...i, quantity: Math.min(qty, 99) }
+                    : i,
                 ),
         }));
         const { userId, items } = get();
         if (userId) {
-          const line = items.find((i) => i.id === id);
-          const addons = line?.addons ?? [];
-          const options = line?.options ?? [];
+          const line = items.find((i) => i.lineKey === lineKey);
           void enqueueCartWrite(userId, () =>
-            upsertServerItem(userId, id, qty, addons, options),
+            upsertServerItem(
+              userId,
+              lineKey,
+              line?.id ?? lineKey.split("::")[0],
+              qty,
+              line?.addons ?? [],
+              line?.options ?? [],
+            ),
           );
         }
       },
@@ -121,6 +135,19 @@ export const useCart = create<CartState>()(
       // 오인돼 mergeGuestCart 가 자기 자신을 재병합, 로그인/새로고침마다 수량이
       // 배가되어 99(상한)까지 쌓였다(대표님 제보 버그). 게스트일 때만 로컬 캐시한다.
       partialize: (s) => ({ items: s.userId ? [] : s.items }),
+      // #677 이전에 저장된 게스트 장바구니엔 lineKey 가 없다 — 열자마자 삭제·수량
+      // 변경이 먹통이 되지 않게 복원 시 채워 넣는다.
+      version: 2,
+      migrate: (persisted) => {
+        const state = persisted as { items?: CartItem[] } | undefined;
+        if (!state?.items) return { items: [] } as { items: CartItem[] };
+        return {
+          items: state.items.map((i) => ({
+            ...i,
+            lineKey: i.lineKey ?? cartLineKey(i.id, i.options, i.addons),
+          })),
+        } as { items: CartItem[] };
+      },
     },
   ),
 );

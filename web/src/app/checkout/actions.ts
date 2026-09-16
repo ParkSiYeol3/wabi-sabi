@@ -22,6 +22,7 @@ import {
   validateSelection,
   type SelectedOption,
 } from "@/lib/product-options";
+import { cartLineKey } from "@/lib/cart-line";
 
 // 입력 스키마 (보안_체크리스트 P1 입력 검증) — 서버 액션은 공개 엔드포인트,
 // 폼을 거치지 않은 임의 페이로드(음수 수량·초대형 문자열 등)를 여기서 차단.
@@ -41,15 +42,20 @@ const cartLineSchema = z.object({
     .max(8)
     .default([]),
 });
-// 중복 상품 id 거부 — 같은 상품을 여러 줄로 쪼개면 라인별 재고 체크를
-// 우회해 재고 이상 주문 가능(줄마다 stock ≥ qty 만 검사되므로).
+// 같은 상품이라도 옵션이 다르면 다른 줄이다(#677 — 블랙 1·라임 1). 그래서 중복
+// 판정을 상품 id 가 아니라 줄 키(상품+옵션+애드온)로 한다.
+// ⚠ 줄을 쪼개 재고를 우회하지 못하게, 재고 검증은 아래에서 **상품별·옵션값별로
+// 수량을 합산해** 한 번에 한다(예전엔 줄마다 stock ≥ qty 만 봐서, 중복 줄을
+// 금지하는 것으로 막고 있었다).
 const linesSchema = z
   .array(cartLineSchema)
   .min(1)
   .max(30)
   .refine(
-    (ls) => new Set(ls.map((l) => l.id)).size === ls.length,
-    "중복 상품이 있습니다.",
+    (ls) =>
+      new Set(ls.map((l) => cartLineKey(l.id, l.options, l.addons))).size ===
+      ls.length,
+    "같은 구성의 상품이 중복되어 있습니다.",
   );
 const deliverySchema = z.object({
   recipient: z.string().trim().min(1).max(50),
@@ -236,32 +242,57 @@ export async function createPendingOrder(
     addons: { code: string; name: string; price: number }[];
     options: SelectedOption[];
   }[] = [];
+  // 재고 검증 — 줄이 아니라 **상품(옵션 관리 상품은 옵션 값)별로 수량을 합산**해
+  // 한 번에 본다(#677). 같은 상품을 옵션만 바꿔 여러 줄로 담을 수 있게 되면서,
+  // 줄마다 stock ≥ qty 만 보면 재고 3개짜리를 2줄×2개=4개로 살 수 있다.
+  // 판매 가능 수량 = 실재고 − 매장 예약분(대표님: 재고 1개는 매장에 남긴다).
+  const wantByProduct = new Map<string, number>();
+  const wantByOptionValue = new Map<string, number>();
+  for (const line of lines) {
+    const p = priceMap.get(line.id);
+    if (!p) return { ok: false, error: "유효하지 않은 상품이 있습니다." };
+    if (p.stock_option) {
+      const selected = line.options.find(
+        (o) => o.name === p.stock_option,
+      )?.value;
+      // 값 미선택은 아래 validateSelection 이 잡는다. 여기선 합산만.
+      const key = `${p.id}::${selected ?? ""}`;
+      wantByOptionValue.set(key, (wantByOptionValue.get(key) ?? 0) + line.quantity);
+    } else {
+      wantByProduct.set(p.id, (wantByProduct.get(p.id) ?? 0) + line.quantity);
+    }
+  }
+  for (const [productId, want] of wantByProduct) {
+    const p = priceMap.get(productId)!;
+    if (availableStock(p.stock) < want)
+      return { ok: false, error: `'${p.name}' 재고가 부족합니다.` };
+  }
+  for (const [key, want] of wantByOptionValue) {
+    const [productId, value] = key.split("::");
+    const p = priceMap.get(productId)!;
+    const available = value
+      ? availableStock(optionStock.get(key) ?? 0)
+      : 0;
+    if (available < want)
+      return {
+        ok: false,
+        error: `'${p.name}'${value ? ` (${value})` : ""} 재고가 부족합니다.`,
+      };
+  }
+
   for (const line of lines) {
     const p = priceMap.get(line.id);
     if (!p) return { ok: false, error: "유효하지 않은 상품이 있습니다." };
     // 강제 품절(대표님) — 재고가 있어도 판매 잠금. 서버에서 구매 차단.
     if (p.sold_out)
       return { ok: false, error: `'${p.name}'은(는) 현재 품절입니다.` };
-    // 재고 검증 — 옵션 관리 상품은 선택 값의 재고로, 아니면 flat stock 으로.
-    // (선택 값은 아래 validateSelection 이 필수로 강제하므로 존재가 보장된다.)
-    // 판매 가능 수량 = 실재고 − 매장 예약분(대표님: 재고 1개는 매장에 남긴다).
     // 값별 가격(0061) — 변형 그룹에서 고른 값에 가격이 있으면 그 가격, 없으면 기본가.
     let unitPrice = p.price;
     if (p.stock_option) {
       const selected = line.options.find(
         (o) => o.name === p.stock_option,
       )?.value;
-      const available = selected
-        ? availableStock(optionStock.get(`${p.id}::${selected}`) ?? 0)
-        : 0;
-      if (available < line.quantity)
-        return {
-          ok: false,
-          error: `'${p.name}'${selected ? ` (${selected})` : ""} 재고가 부족합니다.`,
-        };
       if (selected) unitPrice = optionPrice.get(`${p.id}::${selected}`) ?? p.price;
-    } else if (availableStock(p.stock) < line.quantity) {
-      return { ok: false, error: `'${p.name}' 재고가 부족합니다.` };
     }
     // 커스텀 옵션(0048) — 상품 정의와 대조. 정의된 그룹은 모두 유효값이 선택돼야
     // 한다(대표님이 색상 모르는 주문 방지). 서버가 진실 — 클라이언트 값 불신.
