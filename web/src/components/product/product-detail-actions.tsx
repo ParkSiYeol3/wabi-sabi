@@ -19,7 +19,8 @@ import { cn } from "@/lib/utils";
 const MAX_QTY = 10;
 
 type Props = {
-  product: Omit<CartItem, "quantity" | "addons" | "options">;
+  // lineKey 는 담을 때 store 가 만든다(#677) — 상품+옵션+애드온 조합이라 여기선 모른다.
+  product: Omit<CartItem, "quantity" | "addons" | "options" | "lineKey">;
   // 재고 숫자 대신 품절 여부만 받는다 — 정확한 재고는 클라로 내려보내지 않는다.
   soldOut: boolean;
   // 상품 커스텀 옵션(색상·모양 등, 0048) — 손님이 골라야 담을 수 있다.

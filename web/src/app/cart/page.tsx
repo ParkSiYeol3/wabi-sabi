@@ -61,8 +61,9 @@ export default function CartPage() {
           들어가지 못해 이름·가격이 세로로 깨지던 문제 해결. sm+ 은 한 줄 유지. */}
       <ul className="mt-10 divide-y divide-wabi-border border-y border-wabi-border">
         {items.map((item) => (
+          // 줄의 신원은 lineKey(#677) — 같은 상품이라도 옵션이 다르면 다른 줄이다.
           <li
-            key={item.id}
+            key={item.lineKey}
             className="flex flex-wrap items-center gap-4 py-5 sm:flex-nowrap"
           >
             {/* 이미지+상품정보는 상세 페이지로 이동(대표님). 수량·삭제 컨트롤은
@@ -118,7 +119,7 @@ export default function CartPage() {
                 <button
                   type="button"
                   aria-label="수량 감소"
-                  onClick={() => setQty(item.id, item.quantity - 1)}
+                  onClick={() => setQty(item.lineKey, item.quantity - 1)}
                   className="flex size-11 items-center justify-center hover:bg-wabi-muted"
                 >
                   <Minus className="size-3.5" />
@@ -132,7 +133,7 @@ export default function CartPage() {
                 <button
                   type="button"
                   aria-label="수량 증가"
-                  onClick={() => setQty(item.id, item.quantity + 1)}
+                  onClick={() => setQty(item.lineKey, item.quantity + 1)}
                   className="flex size-11 items-center justify-center hover:bg-wabi-muted"
                 >
                   <Plus className="size-3.5" />
@@ -150,7 +151,7 @@ export default function CartPage() {
               <button
                 type="button"
                 aria-label={`${item.name} 삭제`}
-                onClick={() => remove(item.id)}
+                onClick={() => remove(item.lineKey)}
                 className="flex size-11 shrink-0 items-center justify-center text-wabi-fg-muted transition-colors hover:text-wabi-fg"
               >
                 <X className="size-4" />
