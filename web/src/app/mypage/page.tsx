@@ -9,6 +9,8 @@ import { NicknameForm } from "@/components/account/nickname-form";
 import { AddressAddForm } from "@/components/account/address-add-form";
 import { LinkedAccounts } from "@/components/account/linked-accounts";
 import { MyCoupons } from "@/components/account/my-coupons";
+import { MarketingConsentToggle } from "@/components/account/marketing-consent-toggle";
+import { getMarketingConsent } from "@/lib/queries/consent";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addAddress, deleteAddress } from "./actions";
@@ -49,6 +51,9 @@ export default async function MyPage({
     .order("created_at", { ascending: false })
     .returns<Address[]>();
 
+  // 마케팅 수신 동의 현재 상태(#671) — 이력의 최신 행. 기록이 없으면 미동의.
+  const marketingConsent = await getMarketingConsent(user.id);
+
   // 소셜 연결 상태 — identity 목록(email·google·kakao)을 서버에서 조회해 LinkedAccounts
   // 초기값으로 넘긴다(클라 effect 없이 SSR 초기 렌더). 세션 기반 getUserIdentities 는
   // 서버(@supabase/ssr)에서 identities 를 비워 돌려줘 이미 연결된 소셜이 "연결 안 됨"으로
@@ -70,6 +75,14 @@ export default async function MyPage({
           <p className="font-numeric">이메일: {profile?.email ?? user.email}</p>
         </div>
         <NicknameForm defaultName={profile?.name ?? ""} />
+      </section>
+
+      {/* 소식 받기 — 마케팅 수신 동의(#671). 켜고 끌 때마다 동의·철회 이력이 남는다 */}
+      <section className="mt-14">
+        <h2 className="text-lg font-medium">소식 받기</h2>
+        <div className="mt-4">
+          <MarketingConsentToggle initial={marketingConsent} />
+        </div>
       </section>
 
       {/* 배송지 */}
