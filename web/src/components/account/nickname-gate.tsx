@@ -91,6 +91,19 @@ export function NicknameGate() {
             aria-label="닉네임"
             className="rounded-none font-numeric"
           />
+          {/* 마케팅 수신 동의(선택, #671) — 소셜 가입 회원은 이 자리 말고는 동의할
+              곳이 없었다. 체크하지 않아도 저장은 그대로 진행된다(필수 아님). */}
+          <label className="flex cursor-pointer items-start gap-2.5 pt-1">
+            <input
+              type="checkbox"
+              name="marketing"
+              className="mt-0.5 size-4 shrink-0 cursor-pointer accent-wabi-accent"
+            />
+            <span className="text-xs leading-5 text-wabi-fg-muted">
+              (선택) 신상품·이벤트 소식을 메일로 받겠습니다. 마이페이지에서 언제든
+              끌 수 있어요.
+            </span>
+          </label>
           {state && !state.ok && (
             <p role="alert" className="text-sm text-red-700">
               {state.message}
