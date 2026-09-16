@@ -17,7 +17,8 @@ const schema = z.object({
     .max(40)
     .regex(/^[A-Za-z0-9-]+$/, "코드는 영문·숫자·하이픈만"),
   description: z.string().trim().max(100).optional(),
-  discountType: z.enum(["fixed", "percent"]),
+  // free_shipping(0066) — 배송비를 0으로. 할인값은 쓰이지 않는다(폼이 1을 보낸다).
+  discountType: z.enum(["fixed", "percent", "free_shipping"]),
   discountValue: z.number().int().min(1).max(10_000_000),
   minOrder: z.number().int().min(0).max(10_000_000).default(0),
   maxDiscount: z.number().int().min(1).max(10_000_000).optional(),
