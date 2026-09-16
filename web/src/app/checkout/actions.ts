@@ -336,9 +336,10 @@ export async function createPendingOrder(
     const coupon = (wallet?.coupons ?? null) as Coupon | null;
     if (!wallet || !coupon)
       return { ok: false, error: "사용할 수 없는 쿠폰입니다." };
-    const usable = couponUsable(coupon, subtotal);
+    // 배송비를 함께 넘긴다 — 무료배송 쿠폰(0066)은 배송비만큼 깎고, 이미 무료면 못 쓴다.
+    const usable = couponUsable(coupon, subtotal, shippingFee);
     if (!usable.ok) return { ok: false, error: usable.reason };
-    discount = couponDiscount(coupon, subtotal);
+    discount = couponDiscount(coupon, subtotal, shippingFee);
     appliedCouponId = coupon.id;
   }
 

@@ -3,14 +3,16 @@
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { createCoupon, type CouponActionResult } from "@/app/admin/coupons/actions";
+import type { CouponDiscountType } from "@/lib/coupons";
 
-// 쿠폰 등록 폼(대표님). 정액(원)·정률(%) 선택. 최소주문·기간·총한도·1인한도·가입지급.
+// 쿠폰 등록 폼(대표님). 정액(원)·정률(%)·무료배송 선택.
+// 최소주문·기간·총한도·1인한도·가입지급.
 export function CouponCreateForm() {
   const [state, action, pending] = useActionState<
     CouponActionResult | null,
     FormData
   >(async (_p, fd) => createCoupon(_p, fd), null);
-  const [type, setType] = useState<"fixed" | "percent">("fixed");
+  const [type, setType] = useState<CouponDiscountType>("fixed");
 
   const input =
     "border border-wabi-border bg-transparent px-3 py-2 text-sm outline-none focus:border-wabi-fg";
@@ -31,24 +33,37 @@ export function CouponCreateForm() {
         <select
           name="discount_type"
           value={type}
-          onChange={(e) => setType(e.target.value as "fixed" | "percent")}
+          onChange={(e) => setType(e.target.value as CouponDiscountType)}
           className={input}
         >
           <option value="fixed">정액 (원)</option>
           <option value="percent">정률 (%)</option>
+          <option value="free_shipping">무료배송</option>
         </select>
       </label>
-      <label className="grid gap-1 text-xs text-wabi-fg-muted">
-        할인값 {type === "percent" ? "(%)" : "(원)"}
-        <input
-          name="discount_value"
-          type="number"
-          min={1}
-          required
-          placeholder={type === "percent" ? "10" : "3000"}
-          className={`${input} font-numeric`}
-        />
-      </label>
+      {/* 무료배송은 깎을 금액이 그 주문의 배송비로 정해져 있어 입력칸이 없다(0066).
+          서버 검증이 할인값을 1 이상으로 요구하므로 쓰이지 않는 값 1을 보낸다. */}
+      {type === "free_shipping" ? (
+        <div className="grid gap-1 text-xs text-wabi-fg-muted">
+          할인값
+          <input type="hidden" name="discount_value" value="1" />
+          <p className="px-3 py-2 text-xs leading-5 text-wabi-fg-muted">
+            배송비만큼 자동으로 깎입니다. 이미 무료배송인 주문에는 사용할 수 없어요.
+          </p>
+        </div>
+      ) : (
+        <label className="grid gap-1 text-xs text-wabi-fg-muted">
+          할인값 {type === "percent" ? "(%)" : "(원)"}
+          <input
+            name="discount_value"
+            type="number"
+            min={1}
+            required
+            placeholder={type === "percent" ? "10" : "3000"}
+            className={`${input} font-numeric`}
+          />
+        </label>
+      )}
 
       <label className="grid gap-1 text-xs text-wabi-fg-muted">
         최소 주문금액 (원, 없으면 0)

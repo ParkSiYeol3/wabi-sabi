@@ -145,11 +145,14 @@ export default function CheckoutPage() {
   const activeCoupons = user ? coupons : [];
   const selectedCoupon =
     activeCoupons.find((c) => c.id === selectedCouponId) ?? null;
+  // 배송비를 함께 넘긴다 — 무료배송 쿠폰(0066)은 배송비만큼 깎고, 이미 무료면 못 쓴다.
   const couponOk = selectedCoupon
-    ? couponUsable(selectedCoupon, merchandise).ok
+    ? couponUsable(selectedCoupon, merchandise, shipping).ok
     : false;
   const discount =
-    selectedCoupon && couponOk ? couponDiscount(selectedCoupon, merchandise) : 0;
+    selectedCoupon && couponOk
+      ? couponDiscount(selectedCoupon, merchandise, shipping)
+      : 0;
   const appliedCouponId = discount > 0 ? selectedCouponId : null;
   const total = merchandise + shipping - discount;
 
@@ -299,7 +302,7 @@ export default function CheckoutPage() {
                   적용 안 함
                 </label>
                 {activeCoupons.map((c) => {
-                  const usable = couponUsable(c, merchandise);
+                  const usable = couponUsable(c, merchandise, shipping);
                   return (
                     <label
                       key={c.id}
