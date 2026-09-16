@@ -208,4 +208,17 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
+  /* 본문 숫자도 라이닝으로(시열님 — 공지 본문 "7일" 의 7 이 베이스라인 아래로
+     처져 보였다). 본문 스택의 라틴은 Cormorant Garamond 이고 그 기본 숫자꼴이
+     oldstyle(3·5·7·9 가 처지는 형태)이라, 가격·날짜에 쓰는 .font-numeric 과
+     같은 화면에서 숫자 모양이 갈렸다. 여기서 라이닝으로 통일한다.
+     폼 컨트롤은 font-variant-numeric 을 자동 상속하지 않아 명시 지정.
+     자릿수 폭 고정(tabular)은 정렬이 필요한 .font-numeric·.admin-numeric 만 유지. */
+  body,
+  input,
+  textarea,
+  select,
+  button {
+    font-variant-numeric: lining-nums;
+  }
 }
