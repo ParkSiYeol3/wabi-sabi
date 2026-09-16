@@ -470,6 +470,51 @@ export async function removeProductImage(formData: FormData) {
   revalidatePath(`/shop/${id}`);
 }
 
+// 상품 사진 여러 장 한 번에 삭제 (대표님 #678) — 사진을 통째로 바꿀 때 한 장씩
+// ×를 누르는 게 번거롭다. 선택한 것만 지우거나(url 여러 개), all=true 로 전부 지운다.
+// 전부 지우면 대표 사진이 없어져 목록·상세가 사진 자리(플레이스홀더)로 표시된다 —
+// 새로 올릴 때까지의 정상 상태다.
+export async function removeProductImages(formData: FormData) {
+  const user = await requireAdmin();
+  if (!adminConfigured()) return;
+
+  const id = parseUuid(formData.get("id"));
+  if (!id) return;
+  const all = String(formData.get("all")) === "true";
+  const urls = formData.getAll("url").map(String).filter(Boolean);
+  if (!all && urls.length === 0) return;
+
+  const supabase = createAdminClient();
+  const { data: product } = await supabase
+    .from("products")
+    .select("images")
+    .eq("id", id)
+    .single();
+  const current: string[] = Array.isArray(product?.images)
+    ? (product!.images as string[])
+    : [];
+  if (current.length === 0) return;
+
+  // 지울 대상은 "지금 DB 에 있는 것" 기준 — 화면이 오래돼 이미 지운 url 이 와도 무시된다.
+  const removing = all ? current : current.filter((u) => urls.includes(u));
+  if (removing.length === 0) return;
+  const next = all ? [] : current.filter((u) => !urls.includes(u));
+
+  await supabase.from("products").update({ images: next }).eq("id", id);
+  // 스토리지 파일 회수 — DB 갱신이 끝난 뒤(고아 참조보다 고아 파일이 안전).
+  await Promise.all(removing.map((u) => deleteProductImage(u)));
+  await logAdminAction(user, {
+    action: all ? "product.remove_all_images" : "product.remove_images",
+    targetTable: "products",
+    targetId: id,
+    meta: { count: removing.length, all },
+  });
+  revalidatePath("/admin/products");
+  revalidatePath("/");
+  revalidatePath("/shop");
+  revalidatePath(`/shop/${id}`);
+}
+
 // 상품 이미지 순서 이동 (배열 스왑) — 상세 페이지 스캐터 위치는 images 배열 순서로
 // 결정되므로(첫 장=대표 히어로, 이후가 순서대로 불규칙 슬롯), 대표님이 사진 위치를
 // 의도해 배치할 수 있게 한 칸씩 앞(left)/뒤(right)로 옮긴다. url 이 중복될 수 있어
