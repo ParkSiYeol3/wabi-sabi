@@ -238,7 +238,13 @@ export function HelixJourney({
             // 화면 상단 이탈 시. 리드인 코일 없이 첫 멘트를 상단에 둘 수 있어(k2) 회전수를
             // 6~7 로 유지한다(대표님). 데스크톱(ci===0)은 리드인+위치 페이드라 스크롤해야
             // 등장 → 웹 로드 시 첫 멘트가 보이지 않는다(대표님 웹 피드백).
-            const tIn = clamp01((performance.now() - introT0) / 1600);
+            // 기준은 이 효과가 붙은 시점(introT0)이 아니라 페이지가 열린 시점
+            // (performance.now() 의 0)이다. 느린 기기에서는 하이드레이션이 늦어
+            // introT0 기준이면 "로드 지연 + 1.6초" 가 겹쳐 첫 멘트가 한참 뒤에야
+            // 뜬다(모바일 Lighthouse LCP 6.5초, 그중 90% 가 렌더 지연). 페이지가
+            // 열린 시점을 기준으로 하면 빠른 기기의 연출은 그대로고, 느린 기기에서는
+            // 기다린 만큼 페이드가 이미 진행돼 바로 보인다.
+            const tIn = clamp01(performance.now() / 1600);
             const fadeIn = tIn * tIn * (3 - 2 * tIn); // smoothstep
             const fadeOut = clamp01((dotY - vh * 0.06) / (vh * cfg.fade));
             vis = Math.min(fadeIn, fadeOut);

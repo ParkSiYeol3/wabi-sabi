@@ -179,6 +179,10 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
           open ? "pointer-events-auto" : "pointer-events-none",
         )}
         aria-hidden={!open}
+        // aria-hidden 만으로는 안의 링크가 탭 순서에 남아 "안 보이는데 포커스는
+        // 가는" 상태가 된다(Lighthouse aria-hidden-focus). inert 로 닫힌 동안
+        // 포커스·접근성 트리에서 통째로 뺀다.
+        inert={!open}
       >
         {/* 딤 배경 */}
         <div
