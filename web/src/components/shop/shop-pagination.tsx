@@ -57,7 +57,7 @@ export function ShopPagination({
         it === "…" ? (
           <span
             key={`e${i}`}
-            className="px-1 text-sm text-wabi-fg-muted/60"
+            className="px-1 text-sm text-wabi-fg-muted"
             aria-hidden
           >
             …

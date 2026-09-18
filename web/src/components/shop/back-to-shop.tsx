@@ -33,7 +33,7 @@ export function BackToShop({
     <Link
       href="/shop"
       className={cn(
-        "inline-flex items-center gap-1 text-xs text-wabi-fg-muted/60 transition-colors hover:text-wabi-fg",
+        "inline-flex items-center gap-1 text-xs text-wabi-fg-muted transition-colors hover:text-wabi-fg",
         className,
       )}
     >
