@@ -29,12 +29,15 @@ export function MarketingConsentToggle({ initial }: { initial: boolean }) {
         />
         <span className="text-sm leading-6 text-wabi-fg-muted">
           <span className="text-wabi-fg">신상품·이벤트 소식을 메일로 받기</span>
-          <span className="ml-2 text-xs">(선택 · 언제든 끌 수 있습니다)</span>
           {pending && <span className="ml-2 text-xs">저장 중…</span>}
           {!pending && state && (
+            // 켠 결과만 초록. 끈 결과는 실패와 같은 빨강 — 지금 소식을 못 받는 상태라는
+            // 뜻이라 눈에 띄어야 한다.
             <span
               role="status"
-              className={`ml-2 text-xs ${state.ok ? "text-green-700" : "text-red-700"}`}
+              className={`ml-2 text-xs ${
+                state.ok && state.agreed ? "text-green-700" : "text-red-700"
+              }`}
             >
               {state.message}
             </span>
