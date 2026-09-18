@@ -101,7 +101,7 @@ export async function setMarketingConsent(
   revalidatePath("/mypage");
   return {
     ok: true,
-    message: agreed ? "받기로 했습니다." : "받지 않기로 했습니다.",
+    message: agreed ? "좋은 소식 보내드리겠습니다." : "해제되었습니다.",
     agreed,
   };
 }
