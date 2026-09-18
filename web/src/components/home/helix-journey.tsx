@@ -373,6 +373,12 @@ export function HelixJourney({
               // 멘트 블록 세로 위치 — 모바일은 극점별 미세보정(점은 pos.y 그대로).
               const commentTop =
                 ci === 1 ? pos.y + (MOBILE_MOMENT_NUDGE[i] ?? 0) : pos.y;
+              // 모바일 첫 멘트만 JS 없이도 보이게 심는다. 나머지는 스크롤을 따라
+              // 나타나므로 JS 가 와야 뜻이 생기지만, 이 한 장은 "열자마자 서서히
+              // 나타나는" 자리라 로드에 매여 있을 이유가 없다. 느린 망에서 JS 를
+              // 기다리느라 6.7초에야 뜨던 것이(모바일 LCP) 첫 그림에 들어온다.
+              // 페이드는 CSS 가 맡고(.moment-intro), 1.6초 뒤 JS 가 이어받는다.
+              const introOnLoad = ci === 1 && i === 0;
               return (
                 <div key={v.han}>
                   <div
@@ -396,8 +402,8 @@ export function HelixJourney({
                           // 텍스트는 그 반대 절반에 둬 점·라벨이 겹치지 않는다. 긴 본문(侘·選)은
                           // 우측 극점이라 좌측에, 짧은 寂(2줄)만 좌측 극점이라 우측에 앉는다.
                           dotLeft
-                          ? "absolute left-[28%] right-[7%] text-right"
-                          : "absolute left-[7%] right-[28%] text-left"
+                          ? `absolute left-[28%] right-[7%] text-right${introOnLoad ? " moment-intro" : ""}`
+                          : `absolute left-[7%] right-[28%] text-left${introOnLoad ? " moment-intro" : ""}`
                         : `absolute w-[28%] max-w-72 md:w-[26%] ${
                             dotLeft
                               ? "right-[calc((100-var(--dx))*1%+14px)] text-right"
@@ -406,12 +412,13 @@ export function HelixJourney({
                     }
                     style={{
                       top: `${commentTop}%`,
-                      opacity: 0,
-                      transform: "translateY(-50%) scale(0.78)",
+                      opacity: introOnLoad ? 1 : 0,
+                      transform: `translateY(-50%) scale(${introOnLoad ? 1 : 0.78})`,
                       ["--dx" as string]: pos.x,
                     }}
-                    // 초기(숨김) 상태 — JS 로드 전에도 키보드·스크린리더에서 제외
-                    inert
+                    // 초기(숨김) 상태 — JS 로드 전에도 키보드·스크린리더에서 제외.
+                    // 첫 멘트는 처음부터 보이므로 제외하지 않는다.
+                    inert={!introOnLoad}
                   >
                     <div className="[font-family:var(--ws-serif)] text-[40px] leading-none text-[#423c30] md:text-[52px]">
                       {v.han}
