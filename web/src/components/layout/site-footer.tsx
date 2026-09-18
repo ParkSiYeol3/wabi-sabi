@@ -32,9 +32,9 @@ type FooterLink = { label: string; href: string };
 function LinkColumn({ title, links }: { title: string; links: FooterLink[] }) {
   return (
     <div className="min-w-28">
-      <h3 className="text-[11px] font-medium uppercase tracking-[0.15em] text-white/40">
+      <h2 className="text-[11px] font-medium uppercase tracking-[0.15em] text-white/50">
         {title}
-      </h3>
+      </h2>
       <ul className="mt-3 space-y-2">
         {links.map((l) => (
           <li key={l.href + l.label}>
@@ -101,7 +101,7 @@ export async function SiteFooter() {
             <div className="mt-3 lg:flex lg:justify-end">
               <LogoutButton variant="link" />
             </div>
-            <address className="mt-5 space-y-1 font-numeric text-[11px] not-italic leading-relaxed text-white/40">
+            <address className="mt-5 space-y-1 font-numeric text-[11px] not-italic leading-relaxed text-white/50">
               {businessLines().map((line) => (
                 <p key={line}>{line}</p>
               ))}
@@ -118,7 +118,7 @@ export async function SiteFooter() {
                 </p>
               )}
             </address>
-            <p className="mt-4 font-numeric text-[11px] text-white/40">
+            <p className="mt-4 font-numeric text-[11px] text-white/50">
               © {new Date().getFullYear()} {site.name}. All rights reserved.
             </p>
           </div>
