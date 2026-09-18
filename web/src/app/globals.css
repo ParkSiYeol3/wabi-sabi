@@ -222,3 +222,28 @@
     font-variant-numeric: lining-nums;
   }
 }
+
+/* 홈 곡선 여정 — 모바일 첫 멘트의 등장(helix-journey). 이 한 장만 JS 없이도
+   보이게 심어 두고(서버 렌더 opacity 1), 페이드는 CSS 가 맡는다. 느린 망에서
+   JS 를 기다리느라 첫 화면이 비어 있던 문제를 없애려는 것이다.
+   채우기(fill)를 주지 않아 1.6초 뒤에는 JS 가 계산한 값이 그대로 이어받는다. */
+@keyframes wabi-moment-in {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.78);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+}
+
+.moment-intro {
+  animation: wabi-moment-in 1.6s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .moment-intro {
+    animation: none;
+  }
+}
