@@ -20,8 +20,29 @@ export type { ImageSize };
 // SOF 앞에 EXIF 썸네일이 통째로 들어간 JPEG 도 있어 넉넉히 받는다.
 const HEAD_BYTES = 131072;
 
+// next.config 의 images.remotePatterns 와 같은 범위 — 우리 스토리지 공개 경로만.
+// 조회 주소는 DB(products.images)에서 오므로 값이 어쩌다 바뀌어도 서버가 바깥으로
+// 요청을 나가지 않게 막아 둔다(SSRF).
+const STORAGE_HOST = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+  : null;
+
+function allowed(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return (
+      u.protocol === "https:" &&
+      !!STORAGE_HOST &&
+      u.hostname === STORAGE_HOST &&
+      u.pathname.startsWith("/storage/v1/object/public/")
+    );
+  } catch {
+    return false;
+  }
+}
+
 async function probeImageSize(url: string): Promise<ImageSize | null> {
-  if (!/^https?:\/\//.test(url)) return null;
+  if (!allowed(url)) return null;
   try {
     const res = await fetch(url, {
       headers: { Range: `bytes=0-${HEAD_BYTES - 1}` },
