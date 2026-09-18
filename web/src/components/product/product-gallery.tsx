@@ -1,4 +1,5 @@
 import { ProductImageZoom } from "@/components/product/product-image-zoom";
+import { getImageSizes } from "@/lib/image-size";
 
 // 상품 상세 사진 배치 (#248 → #609 → #611 → #613).
 //
@@ -114,7 +115,7 @@ function orderedRows(n: number): number[][] {
   return rows;
 }
 
-export function ProductGallery({
+export async function ProductGallery({
   images,
   name,
   description,
@@ -126,6 +127,10 @@ export function ProductGallery({
   description?: string | null;
 }) {
   if (images.length === 0) return null;
+
+  // 원본 비율로 그리는 장들은 크기를 미리 알아야 자리를 잡아 둘 수 있다.
+  // 못 읽은 장은 지도에 없고, 그 장만 예전처럼 로드 후 높이가 정해진다.
+  const sizes = await getImageSizes(images);
 
   const headCount = Math.min(images.length, ORDERED_COUNT);
   const rows = orderedRows(headCount);
@@ -163,6 +168,7 @@ export function ProductGallery({
                         : "(max-width: 768px) 92vw, 46vw"
                     }
                     natural={!paired}
+                    intrinsic={sizes.get(images[i]) ?? null}
                   />
                 </div>
               );
@@ -196,6 +202,7 @@ export function ProductGallery({
               alt={`${name} 상세 이미지 ${i + 1}`}
               sizes="(max-width: 768px) 88vw, 46vw"
               natural
+              intrinsic={sizes.get(src) ?? null}
             />
           </div>
         );
@@ -213,6 +220,7 @@ export function ProductGallery({
             alt={`${name} 상세 이미지 ${images.length}`}
             sizes="(max-width: 768px) 92vw, 46vw"
             natural
+            intrinsic={sizes.get(last) ?? null}
           />
         </div>
       )}

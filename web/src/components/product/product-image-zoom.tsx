@@ -14,6 +14,7 @@ export function ProductImageZoom({
   preload = false,
   imgClassName = "object-cover",
   natural = false,
+  intrinsic,
 }: {
   src: string;
   alt: string;
@@ -21,14 +22,18 @@ export function ProductImageZoom({
   preload?: boolean;
   imgClassName?: string;
   natural?: boolean;
+  // 원본 픽셀 크기 — 알면 넘긴다(lib/image-size). 넘기면 브라우저가 사진이
+  // 오기 전에 높이를 잡아 둬 아래 내용이 밀리지 않는다(CLS). 모르면 예전처럼
+  // 0 으로 두고 로드 후 높이가 정해진다.
+  intrinsic?: { width: number; height: number } | null;
 }) {
   if (natural) {
     return (
       <Image
         src={src}
         alt={alt}
-        width={0}
-        height={0}
+        width={intrinsic?.width ?? 0}
+        height={intrinsic?.height ?? 0}
         sizes={sizes}
         preload={preload}
         className="h-auto w-full"
