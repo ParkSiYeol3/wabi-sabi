@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { NOINDEX } from "@/lib/seo";
 import { Lock } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { getInquiry } from "@/lib/queries/inquiries";
@@ -12,7 +13,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const q = await getInquiry(id);
-  if (!q) return { title: "문의를 찾을 수 없음" };
+  if (!q) return { title: "문의를 찾을 수 없음", robots: NOINDEX };
   return { title: q.title };
 }
 

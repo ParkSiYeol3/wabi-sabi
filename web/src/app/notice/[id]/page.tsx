@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { NOINDEX } from "@/lib/seo";
 import { Container } from "@/components/layout/container";
 import { getNotice } from "@/lib/queries/notices";
 
@@ -11,7 +12,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const notice = await getNotice(id);
-  if (!notice) return { title: "공지를 찾을 수 없음" };
+  if (!notice) return { title: "공지를 찾을 수 없음", robots: NOINDEX };
   return { title: notice.title, description: `WABI-SABI 공지 — ${notice.title}` };
 }
 
