@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { NOINDEX } from "@/lib/seo";
 import { ImageIcon } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { ProductCard } from "@/components/product/product-card";
@@ -37,7 +38,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const bundle = await getCachedProductDetail(id);
-  if (!bundle) return { title: "상품을 찾을 수 없음" };
+  if (!bundle) return { title: "상품을 찾을 수 없음", robots: NOINDEX };
   const { product } = bundle;
   // `??` 는 빈 문자열("") 설명을 통과시켜 meta description 이 비어짐(Lighthouse SEO 감점) → `||`
   const description = product.description || `${product.name} — WABI-SABI`;
