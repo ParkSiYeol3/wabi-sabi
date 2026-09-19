@@ -53,6 +53,53 @@ test("상세 → 담기 → 장바구니 → 주문하기(auth 게이트)", asyn
   await expect(page.getByRole("heading", { name: "배송지" })).toBeVisible();
 });
 
+// 결제 직전 계산 검증 — 8/29 실결제 이후 장바구니 줄 신원(0064)·재고 합산(0065)·
+// 쿠폰 유형(0066)이 전부 바뀌었는데 그 뒤로 실결제가 한 건도 없었다(오픈 1주차
+// 점검). 결제 버튼은 여전히 누르지 않는다(주문이 실제로 만들어지고 결제창이 뜬다).
+// 대신 손님이 내야 할 금액이 화면에서 맞아떨어지는지, 필수값 없이 눌렀을 때
+// 주문이 안 만들어지는지까지 본다.
+test("체크아웃 — 금액 계산과 필수값 가드", async ({ page }) => {
+  const added = await addFirstInStockToCart(page);
+  test.skip(!added, "재고 있는 상품 없음 — 담기 스킵");
+
+  await page.goto("/checkout");
+  await expect(page.getByRole("heading", { name: "주문/결제" })).toBeVisible();
+
+  const won = async (label: string): Promise<number | null> => {
+    const row = page.locator("dl div").filter({ hasText: label }).first();
+    if ((await row.count()) === 0) return null;
+    const text = (await row.innerText()).replace(/[^0-9무료]/g, "");
+    if (text.includes("무료")) return 0;
+    const n = Number(text.replace(/[^0-9]/g, ""));
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const subtotal = await won("상품 합계");
+  const shipping = await won("배송비");
+  const total = await won("총 결제금액");
+  expect(subtotal, "상품 합계가 보여야 한다").not.toBeNull();
+  expect(total, "총 결제금액이 보여야 한다").not.toBeNull();
+
+  // 배송비 정책(lib/shipping)과 합계가 어긋나면 손님이 낼 금액이 틀어진다.
+  expect(total).toBe((subtotal ?? 0) + (shipping ?? 0));
+  // 10만원 미만이면 배송비가 붙고, 이상이면 무료 — 정책이 화면에 반영되는지.
+  expect(shipping).toBe((subtotal ?? 0) >= 100_000 ? 0 : 3_500);
+
+  // 결제 버튼에 찍힌 금액도 같아야 한다(요약과 버튼이 다른 값을 쓰면 안 된다).
+  const payButton = page.getByRole("button", { name: /결제하기/ });
+  await expect(payButton).toBeEnabled();
+  const onButton = Number(
+    ((await payButton.innerText()).match(/[0-9,]+/)?.[0] ?? "").replace(/,/g, ""),
+  );
+  expect(onButton).toBe(total);
+
+  // 필수값(받는 분·연락처·주소)을 비운 채 눌러도 주문이 만들어지면 안 된다.
+  // 브라우저 필수값 검사에 막혀 그 자리에 머문다.
+  await payButton.click();
+  await expect(page).toHaveURL(/\/checkout$/);
+  await expect(page.getByRole("heading", { name: "주문/결제" })).toBeVisible();
+});
+
 test("푸터 — 전자상거래법 사업자 표시", async ({ page }) => {
   await page.goto("/shop");
   await expect(page.getByText(/사업자등록번호 411-74-00574/)).toBeVisible();
