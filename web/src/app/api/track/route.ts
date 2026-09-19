@@ -25,11 +25,13 @@ function kstDay(): string {
   return new Date(Date.now() + 9 * 3_600_000).toISOString().slice(0, 10);
 }
 
-// 봇 트래픽은 방문자 수를 부풀리므로 UA 로 걸러 낸다. 실제 크롤러·프리뷰 스크레이퍼만
+// 봇 트래픽은 방문자 수를 부풀리므로 UA 로 걸러 낸다. 우리 E2E 스모크(WasaE2E)도
+// 여기서 걸러진다 — 프로덕션을 그대로 돌기 때문에 안 거르면 머지할 때마다
+// 방문자·장바구니·결제 수가 늘어난다(실제로 9/17~18 결제 조회 26건 중 대부분이 이것이었다). 실제 크롤러·프리뷰 스크레이퍼만
 // 대상 — 카카오톡/인스타/라인 **인앱 브라우저는 실제 사람**이라 제외하지 않는다(그
 // 과다 계상은 위 해시 방식으로 해소된다).
 const BOT_RE =
-  /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|headless|preview|scanner|monitor|uptime|lighthouse|pagespeed|ahrefs|semrush|mj12|dotbot|petalbot|applebot|yandex|baiduspider|duckduckbot|whatsapp|telegrambot|discordbot|slackbot|twitterbot|python-requests|axios|node-fetch|\bcurl\b|wget|go-http|okhttp/i;
+  /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|headless|preview|scanner|monitor|uptime|lighthouse|pagespeed|ahrefs|semrush|mj12|dotbot|petalbot|applebot|yandex|baiduspider|duckduckbot|whatsapp|telegrambot|discordbot|slackbot|twitterbot|python-requests|axios|node-fetch|\bcurl\b|wget|go-http|okhttp|wasae2e/i;
 
 export async function POST(req: Request) {
   const ct = (req.headers.get("content-type") || "")
