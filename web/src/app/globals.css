@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+/* 한글 본문 글꼴(마루부리) @font-face — 두 조각으로 나눠 받는다(#699). */
+@import "./fonts.css";
 
 @custom-variant dark (&:is(.dark *));
 

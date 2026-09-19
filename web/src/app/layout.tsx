@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Noto_Serif_JP } from "next/font/google";
-import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/components/account/auth-provider";
 import { SessionTimeout } from "@/components/account/session-timeout";
@@ -22,12 +21,9 @@ import { business } from "@/lib/site";
 // 전체 self-host, 한글 완성형 11172자 전부 커버), 라틴=Cormorant, 일본어
 // 가나=Noto Serif JP 폴백. 스택 순서로 글자별 담당(라틴→Cormorant, 한글→마루부리,
 // 가나→Noto Serif JP). 셀프호스팅이라 CSP·외부요청 없음.
-const maruburi = localFont({
-  src: "../fonts/MaruBuri-Light.woff2",
-  weight: "300",
-  variable: "--font-maruburi",
-  display: "swap",
-});
+// 마루부리는 next/font 대신 globals.css 의 @font-face 로 싣는다(#699) — next/font 는
+// 한 번의 호출 안에서 파일마다 다른 unicode-range 를 줄 수 없어, 큰 한글 글꼴을
+// 조각내 필요한 것만 받게 할 수 없다. 변수는 app/fonts.css 가 정의한다.
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
   subsets: ["latin"],
@@ -160,7 +156,7 @@ export default async function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${cormorant.variable} ${maruburi.variable} ${notoSerifJp.variable} h-full antialiased`}
+      className={`${cormorant.variable} ${notoSerifJp.variable} h-full antialiased`}
     >
       {/* 스티키 푸터 — 뷰포트 기준 min-h-dvh 로 본문이 짧거나 로딩 중이어도 항상
           화면을 채워, 긴 푸터가 헤더 밑으로 올라와 화면을 덮는 버그를 막는다.
