@@ -24,6 +24,7 @@ import {
 import { RevenueChart } from "@/components/admin/revenue-chart";
 import { VisitorChart, type VisitDay } from "@/components/admin/visitor-chart";
 import { QuickActions } from "@/components/admin/quick-actions";
+import { sourceLabel } from "@/lib/traffic-source";
 
 type Summary = {
   awaiting_ship: number;
@@ -37,6 +38,8 @@ type Summary = {
 };
 
 type TrendDay = { day: string; orders: number; revenue: number };
+type VisitSource = { source: string; visitors: number; views: number };
+
 type VisitSummary = {
   today_views: number;
   today_visitors: number;
@@ -71,12 +74,14 @@ async function loadDashboard() {
   const db = createAdminClient();
   // 방문 요약(0054)·추이(0056)는 마이그 push 전이면 함수가 없어 에러가 난다. 대시보드
   // 전체를 죽이지 않도록 throwOnError 없이 조회하고, 실패하면 0/빈 배열로 둔다.
-  const [visitsRes, visitTrendRes] = await Promise.all([
+  const [visitsRes, visitTrendRes, sourcesRes] = await Promise.all([
     db.rpc("admin_visit_summary"),
     db.rpc("admin_visit_trend", { p_days: 14 }),
+    db.rpc("admin_visit_sources", { p_days: 7 }),
   ]);
   const visits = (visitsRes.data as VisitSummary[] | null)?.[0] ?? EMPTY_VISITS;
   const visitTrend = (visitTrendRes.data as VisitDay[] | null) ?? [];
+  const visitSources = (sourcesRes.data as VisitSource[] | null) ?? [];
 
   const [summaryRes, trendRes, lowStockRes, recentRes] = await Promise.all([
     db
@@ -112,6 +117,7 @@ async function loadDashboard() {
     recent: recentRes.data ?? [],
     visits,
     visitTrend,
+    visitSources,
   };
 }
 
@@ -131,7 +137,7 @@ export default async function AdminHome() {
     );
   }
 
-  const { summary: s, trend, lowStock, recent, visits, visitTrend } =
+  const { summary: s, trend, lowStock, recent, visits, visitTrend, visitSources } =
     await loadDashboard();
 
   return (
@@ -240,6 +246,33 @@ export default async function AdminHome() {
             icon={Users}
           />
         </div>
+
+        {/* 유입 경로(최근 7일, 0067) — 첫 진입의 referrer·utm 을 라벨 하나로 줄여
+            모은 것. 어디에 무엇을 올렸을 때 손님이 오는지 보려는 칸이다.
+            마이그 적용 전이거나 아직 기록이 없으면 빈 배열이라 미표시. */}
+        {visitSources.length > 0 && (
+          <Panel className="mt-3 p-5">
+            <p className="mb-3 text-xs text-wabi-fg-muted">
+              최근 7일 유입 경로
+            </p>
+            <ul className="space-y-2">
+              {visitSources.slice(0, 8).map((src) => (
+                <li
+                  key={src.source}
+                  className="flex items-baseline justify-between gap-3 text-sm"
+                >
+                  <span className="truncate text-wabi-fg">
+                    {sourceLabel(src.source)}
+                  </span>
+                  <span className="admin-numeric shrink-0 text-xs text-wabi-fg-muted">
+                    {src.visitors.toLocaleString("ko-KR")}명 ·{" "}
+                    {src.views.toLocaleString("ko-KR")}회
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        )}
 
         {/* 일별 방문자 추이(최근 14일) — 마이그(0056) 적용 전이면 빈 배열이라 미표시. */}
         {visitTrend.length > 0 && (
