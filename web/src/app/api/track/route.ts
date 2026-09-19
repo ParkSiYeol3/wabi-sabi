@@ -78,11 +78,18 @@ export async function POST(req: Request) {
   try {
     const day = kstDay();
     const admin = createAdminClient();
-    // 유입 라벨(0067). 사이트 안 이동이면 null 이라 유입 집계에 안 잡힌다.
-    const source = trafficSource(
-      typeof payload.r === "string" ? payload.r : null,
-      typeof payload.q === "string" ? payload.q : null,
-    );
+    // 유입 라벨(0067). 비콘은 탭에서 **처음 한 번만** r 을 담아 보낸다 — 그 뒤의
+    // 경로 이동은 r 자체가 없다. 없는 것과 빈 문자열은 뜻이 다르다:
+    //   r 없음  = 사이트 안에서 옮긴 것 → 유입 아님(null)
+    //   r = ""  = 주소 직접 입력·북마크 → direct
+    // 이 구분을 안 하면 페이지를 옮길 때마다 '직접 방문'이 쌓인다.
+    const entry = typeof payload.r === "string" || typeof payload.q === "string";
+    const source = entry
+      ? trafficSource(
+          typeof payload.r === "string" ? payload.r : null,
+          typeof payload.q === "string" ? payload.q : null,
+        )
+      : null;
     await admin
       .from("page_views")
       .insert({ visitor_id: visitorHash(ip, ua, day), path, day, source });
