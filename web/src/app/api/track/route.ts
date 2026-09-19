@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { trafficSource } from "@/lib/traffic-source";
 
 // 방문 적재(0054) — VisitBeacon 이 경로 이동마다 sendBeacon/fetch 로 path 를 POST.
 // 무인증 공개 엔드포인트라 log-error 와 같은 가드: content-type·크기·IP 레이트.
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
   if (raw.length === 0 || raw.length > 1_024)
     return new Response(null, { status: 413 });
 
-  let payload: { p?: unknown };
+  let payload: { p?: unknown; r?: unknown; q?: unknown };
   try {
     payload = JSON.parse(raw);
   } catch {
@@ -77,9 +78,14 @@ export async function POST(req: Request) {
   try {
     const day = kstDay();
     const admin = createAdminClient();
+    // 유입 라벨(0067). 사이트 안 이동이면 null 이라 유입 집계에 안 잡힌다.
+    const source = trafficSource(
+      typeof payload.r === "string" ? payload.r : null,
+      typeof payload.q === "string" ? payload.q : null,
+    );
     await admin
       .from("page_views")
-      .insert({ visitor_id: visitorHash(ip, ua, day), path, day });
+      .insert({ visitor_id: visitorHash(ip, ua, day), path, day, source });
   } catch (e) {
     console.error("[track] 적재 실패", e);
   }

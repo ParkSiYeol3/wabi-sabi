@@ -12,6 +12,8 @@ import { usePathname } from "next/navigation";
 export function VisitBeacon() {
   const pathname = usePathname();
   const last = useRef<string | null>(null);
+  // 이 탭에서 유입 정보를 이미 보냈는지 — 진입 한 번만 보낸다.
+  const sent = useRef(false);
 
   useEffect(() => {
     // 프로덕션 도메인(wasa.kr)에서만 집계 — 프리뷰 배포(*.vercel.app)·로컬은 제외.
@@ -24,7 +26,16 @@ export function VisitBeacon() {
     if (last.current === pathname) return;
     last.current = pathname;
 
-    const body = JSON.stringify({ p: pathname });
+    // 유입 경로(0067) — 어디서 왔는지는 서버가 라벨 하나로 줄여 저장한다(원본 주소·
+    // 검색어는 버린다). 첫 진입에서만 의미가 있으므로 그때만 보낸다 — 사이트 안에서
+    // 옮겨 다닐 때의 referrer 는 우리 도메인이라 유입이 아니다.
+    const first = last.current === pathname && !sent.current;
+    const body = JSON.stringify(
+      first
+        ? { p: pathname, r: document.referrer || "", q: window.location.search || "" }
+        : { p: pathname },
+    );
+    sent.current = true;
     try {
       const blob = new Blob([body], { type: "application/json" });
       if (navigator.sendBeacon?.("/api/track", blob)) return;
