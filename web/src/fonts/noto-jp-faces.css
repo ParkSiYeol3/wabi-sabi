@@ -1,0 +1,14 @@
+@font-face {
+  font-family: "NotoSerifJPSubset";
+  src: url("../fonts/NotoSerifJP-400.subset.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "NotoSerifJPSubset";
+  src: url("../fonts/NotoSerifJP-600.subset.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
