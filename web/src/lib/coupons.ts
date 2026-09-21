@@ -77,6 +77,20 @@ export function couponUsable(
   return { ok: true };
 }
 
+// 손님에게 보이는 실제 만료 — 쿠폰 정의의 기한(모두에게 같은 날)과 지갑의 기한
+// (그 사람이 받은 날 + valid_days, 0068) 중 **이른 쪽**이다. 둘 다 없으면 무기한.
+// 한 곳에서 합쳐 두면 사용 판정·표시가 같은 값을 본다.
+export function effectiveExpiry(
+  couponExpiresAt: string | null,
+  walletExpiresAt: string | null,
+): string | null {
+  if (!couponExpiresAt) return walletExpiresAt;
+  if (!walletExpiresAt) return couponExpiresAt;
+  return new Date(walletExpiresAt) < new Date(couponExpiresAt)
+    ? walletExpiresAt
+    : couponExpiresAt;
+}
+
 // 할인 요약 라벨(예: "3,000원 할인", "10% 할인", "무료배송"). 목록·선택 UI 표시용.
 export function couponLabel(coupon: Coupon): string {
   if (coupon.discount_type === "free_shipping") return "무료배송";

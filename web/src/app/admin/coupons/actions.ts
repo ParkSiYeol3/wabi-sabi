@@ -23,6 +23,7 @@ const schema = z.object({
   minOrder: z.number().int().min(0).max(10_000_000).default(0),
   maxDiscount: z.number().int().min(1).max(10_000_000).optional(),
   expiresAt: z.string().trim().optional(),
+  validDays: z.number().int().min(1).max(3650).optional(),
   maxUses: z.number().int().min(0).max(1_000_000).optional(),
   perUserLimit: z.number().int().min(1).max(100).default(1),
   autoIssueSignup: z.boolean().default(false),
@@ -51,6 +52,7 @@ export async function createCoupon(
     minOrder: num(formData.get("min_order")) ?? 0,
     maxDiscount: num(formData.get("max_discount")),
     expiresAt: String(formData.get("expires_at") || "").trim() || undefined,
+    validDays: num(formData.get("valid_days")),
     maxUses: num(formData.get("max_uses")),
     perUserLimit: num(formData.get("per_user_limit")) ?? 1,
     autoIssueSignup: formData.get("auto_issue_signup") === "on",
@@ -73,6 +75,9 @@ export async function createCoupon(
     max_discount: d.discountType === "percent" ? d.maxDiscount ?? null : null,
     // datetime-local → timestamptz(로컬 시각 그대로). 미입력이면 무기한.
     expires_at: d.expiresAt ? new Date(d.expiresAt).toISOString() : null,
+    // 발급 후 N일(0068) — 사람마다 받는 날이 다른 가입 축하 쿠폰용. 지갑에 넣는
+    // 순간 그 사람의 만료로 굳으므로, 나중에 이 값을 바꿔도 이미 받은 기한은 그대로다.
+    valid_days: d.validDays ?? null,
     max_uses: d.maxUses ?? null,
     per_user_limit: d.perUserLimit,
     auto_issue_signup: d.autoIssueSignup,

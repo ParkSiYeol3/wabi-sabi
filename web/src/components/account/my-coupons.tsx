@@ -1,5 +1,30 @@
 import { createClient } from "@/lib/supabase/server";
-import { couponLabel, COUPONS_ENABLED, type Coupon } from "@/lib/coupons";
+import {
+  couponLabel,
+  COUPONS_ENABLED,
+  effectiveExpiry,
+  type Coupon,
+} from "@/lib/coupons";
+
+type WalletRow = { expires_at: string | null; coupons: Coupon | null };
+
+// 지금 쓸 수 있는 쿠폰만. 발급 후 N일(0068) 기한을 쿠폰 만료로 합쳐 두면 화면에
+// 보이는 날짜와 실제 사용 판정이 같은 값을 본다. 기한이 지난 건 아예 내리지 않는다.
+// (렌더 중 Date.now() 를 부르면 리렌더마다 결과가 달라지므로 바깥에 둔다.)
+function usableNow(rows: WalletRow[]): Coupon[] {
+  const now = Date.now();
+  return rows
+    .map((r) =>
+      r.coupons
+        ? {
+            ...r.coupons,
+            expires_at: effectiveExpiry(r.coupons.expires_at, r.expires_at),
+          }
+        : null,
+    )
+    .filter((c): c is Coupon => !!c && c.is_active)
+    .filter((c) => !c.expires_at || new Date(c.expires_at).getTime() >= now);
+}
 
 // 마이페이지 '내 쿠폰'(0059) — 지갑의 미사용 쿠폰. RLS 로 본인 것만 조회된다.
 // 자체완결 서버 컴포넌트(마이페이지 데이터 흐름과 분리).
@@ -13,14 +38,14 @@ export async function MyCoupons() {
 
   const { data } = await supabase
     .from("user_coupons")
-    .select("used_at, coupons(*)")
+    .select("used_at, expires_at, coupons(*)")
     .eq("user_id", user.id)
     .is("used_at", null)
     .order("issued_at", { ascending: false });
 
-  const coupons = ((data ?? []) as unknown as { coupons: Coupon | null }[])
-    .map((r) => r.coupons)
-    .filter((c): c is Coupon => !!c && c.is_active);
+  const coupons = usableNow(
+    (data ?? []) as unknown as WalletRow[],
+  );
 
   return (
     <section className="mt-14">
