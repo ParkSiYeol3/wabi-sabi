@@ -15,6 +15,7 @@ import {
   couponDiscount,
   couponUsable,
   COUPONS_ENABLED,
+  effectiveExpiry,
   type Coupon,
 } from "@/lib/coupons";
 import {
@@ -115,12 +116,24 @@ export async function getMyCoupons(): Promise<Coupon[]> {
   if (!user) return [];
   const { data } = await supabase
     .from("user_coupons")
-    .select("coupons(*)")
+    .select("expires_at, coupons(*)")
     .eq("user_id", user.id)
     .is("used_at", null);
   const now = new Date();
-  return ((data ?? []) as unknown as { coupons: Coupon | null }[])
-    .map((r) => r.coupons)
+  return ((data ?? []) as unknown as {
+    expires_at: string | null;
+    coupons: Coupon | null;
+  }[])
+    // 지갑 기한(발급 후 N일, 0068)을 쿠폰의 만료로 합쳐 내보낸다 — 이후 판정·표시가
+    // 모두 이 값 하나를 본다(정의 기한과 지갑 기한 중 이른 쪽).
+    .map((r) =>
+      r.coupons
+        ? {
+            ...r.coupons,
+            expires_at: effectiveExpiry(r.coupons.expires_at, r.expires_at),
+          }
+        : null,
+    )
     .filter((c): c is Coupon => !!c)
     .filter(
       (c) =>
@@ -328,14 +341,20 @@ export async function createPendingOrder(
   if (couponId && user && COUPONS_ENABLED) {
     const { data: wallet } = await admin
       .from("user_coupons")
-      .select("id, coupons(*)")
+      .select("id, expires_at, coupons(*)")
       .eq("user_id", user.id)
       .eq("coupon_id", couponId)
       .is("used_at", null)
       .maybeSingle();
-    const coupon = (wallet?.coupons ?? null) as Coupon | null;
-    if (!wallet || !coupon)
+    const found = (wallet?.coupons ?? null) as Coupon | null;
+    if (!wallet || !found)
       return { ok: false, error: "사용할 수 없는 쿠폰입니다." };
+    // 발급 후 N일(0068) 기한을 합쳐 판정한다 — 지갑 기한이 지났으면 couponUsable 이
+    // '사용 기간이 만료된 쿠폰' 으로 막는다.
+    const coupon: Coupon = {
+      ...found,
+      expires_at: effectiveExpiry(found.expires_at, wallet.expires_at),
+    };
     // 배송비를 함께 넘긴다 — 무료배송 쿠폰(0066)은 배송비만큼 깎고, 이미 무료면 못 쓴다.
     const usable = couponUsable(coupon, subtotal, shippingFee);
     if (!usable.ok) return { ok: false, error: usable.reason };

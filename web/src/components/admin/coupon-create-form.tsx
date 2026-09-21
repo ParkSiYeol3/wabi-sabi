@@ -89,8 +89,18 @@ export function CouponCreateForm() {
       )}
 
       <label className="grid gap-1 text-xs text-wabi-fg-muted">
-        만료일시 (선택 — 없으면 무기한)
+        만료일시 (선택 — 모두에게 같은 날. 없으면 무기한)
         <input name="expires_at" type="datetime-local" className={input} />
+      </label>
+      <label className="grid gap-1 text-xs text-wabi-fg-muted">
+        발급 후 유효일수 (선택 — 받은 날부터 셈. 예: 30)
+        <input
+          name="valid_days"
+          type="number"
+          min={1}
+          placeholder="예: 30 (가입 축하 쿠폰)"
+          className={`${input} font-numeric`}
+        />
       </label>
       <label className="grid gap-1 text-xs text-wabi-fg-muted">
         총 사용 한도 (선택 — 없으면 무제한)

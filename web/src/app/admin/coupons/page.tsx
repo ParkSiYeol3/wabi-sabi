@@ -16,8 +16,17 @@ import { setCouponActive } from "./actions";
 type CouponRow = Coupon & {
   per_user_limit: number;
   auto_issue_signup: boolean;
+  valid_days: number | null;
   created_at: string;
 };
+
+// 만료 표기 — 고정 기한(모두 같은 날)과 발급 후 N일(0068)은 뜻이 달라 함께 보여 준다.
+function expiryText(c: CouponRow): string {
+  const fixed = c.expires_at ? formatDateKST(c.expires_at) : null;
+  const rel = c.valid_days ? `발급 후 ${c.valid_days}일` : null;
+  if (fixed && rel) return `${fixed} · ${rel}`;
+  return fixed ?? rel ?? "무기한";
+}
 
 export default async function AdminCouponsPage() {
   if (!adminConfigured()) {
@@ -99,7 +108,7 @@ export default async function AdminCouponsPage() {
                         {c.max_uses != null ? ` / ${c.max_uses}` : " / ∞"}
                       </td>
                       <td className="p-3 text-xs text-wabi-fg-muted">
-                        {c.expires_at ? formatDateKST(c.expires_at) : "무기한"}
+                        {expiryText(c)}
                       </td>
                       <td className="p-3">{c.auto_issue_signup ? "○" : "—"}</td>
                       <td className="p-3">
@@ -167,7 +176,7 @@ export default async function AdminCouponsPage() {
                     <div className="flex justify-between gap-2">
                       <dt className="text-wabi-fg-muted">만료</dt>
                       <dd className="text-xs text-wabi-fg-muted">
-                        {c.expires_at ? formatDateKST(c.expires_at) : "무기한"}
+                        {expiryText(c)}
                       </dd>
                     </div>
                     <div className="flex justify-between gap-2">
