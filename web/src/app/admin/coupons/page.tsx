@@ -8,7 +8,12 @@ import {
 import { SubmitButton } from "@/components/common/submit-button";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { won, formatDateKST } from "@/lib/orders";
-import { couponLabel, COUPONS_ENABLED, type Coupon } from "@/lib/coupons";
+import {
+  couponLabel,
+  COUPONS_ENABLED,
+  lastUsableIso,
+  type Coupon,
+} from "@/lib/coupons";
 import { CouponCreateForm } from "@/components/admin/coupon-create-form";
 import { CouponDeleteButton } from "@/components/admin/coupon-delete-button";
 import { setCouponActive } from "./actions";
@@ -22,7 +27,7 @@ type CouponRow = Coupon & {
 
 // 만료 표기 — 고정 기한(모두 같은 날)과 발급 후 N일(0068)은 뜻이 달라 함께 보여 준다.
 function expiryText(c: CouponRow): string {
-  const fixed = c.expires_at ? formatDateKST(c.expires_at) : null;
+  const fixed = c.expires_at ? formatDateKST(lastUsableIso(c.expires_at)) : null;
   const rel = c.valid_days ? `발급 후 ${c.valid_days}일` : null;
   if (fixed && rel) return `${fixed} · ${rel}`;
   return fixed ?? rel ?? "무기한";

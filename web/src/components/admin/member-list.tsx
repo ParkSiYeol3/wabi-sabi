@@ -1,4 +1,5 @@
 import { won, formatDateKST } from "@/lib/orders";
+import { lastUsableIso } from "@/lib/coupons";
 import { TablePanel } from "@/components/admin/ui";
 
 // 회원 목록(#665) — 모바일은 스택 카드, 데스크톱은 테이블(구매자 관리와 같은 구성).
@@ -16,6 +17,10 @@ export type MemberRow = {
   marketing: boolean | null;
   orders: number;
   amount: number;
+  // 쿠폰 현황(0069) — 지금 쓸 수 있는 장수·가장 먼저 끝나는 기한·지금까지 쓴 장수.
+  coupon_unused: number;
+  coupon_next_expiry: string | null;
+  coupon_used: number;
 };
 
 const PROVIDER_LABEL: Record<string, string> = {
@@ -38,6 +43,29 @@ function Providers({ list }: { list: string[] }) {
       ))}
     </span>
   );
+}
+
+// 쿠폰 칸 — 가진 게 있으면 장수와 기한을, 다 썼으면 쓴 장수를, 없으면 줄표.
+// "받았는데 기한이 지난" 경우는 보유에서 빠지므로(RPC) 여기선 '없음' 으로 보인다.
+function Coupons({ m }: { m: MemberRow }) {
+  if (m.coupon_unused > 0)
+    return (
+      <span className="flex flex-wrap items-baseline gap-1.5">
+        <span className="text-wabi-fg">{m.coupon_unused}장</span>
+        {m.coupon_next_expiry && (
+          <span className="font-numeric text-xs text-wabi-fg-muted">
+            ~ {formatDateKST(lastUsableIso(m.coupon_next_expiry))}
+          </span>
+        )}
+      </span>
+    );
+  if (m.coupon_used > 0)
+    return (
+      <span className="text-wabi-fg-muted">
+        사용함{m.coupon_used > 1 ? ` (${m.coupon_used}장)` : ""}
+      </span>
+    );
+  return <span className="text-wabi-fg-muted">—</span>;
 }
 
 function Badges({ m }: { m: MemberRow }) {
@@ -104,6 +132,10 @@ export function MemberList({ rows }: { rows: MemberRow[] }) {
               <dd>
                 <Marketing value={m.marketing} />
               </dd>
+              <dt className="text-wabi-fg-muted">쿠폰</dt>
+              <dd>
+                <Coupons m={m} />
+              </dd>
               <dt className="text-wabi-fg-muted">구매</dt>
               <dd className="font-numeric">
                 {m.orders > 0 ? `${m.orders}회 · ${won(m.amount)}` : "—"}
@@ -116,7 +148,7 @@ export function MemberList({ rows }: { rows: MemberRow[] }) {
       {/* 데스크톱 — 테이블 */}
       <div className="hidden sm:block">
         <TablePanel>
-          <table className="w-full min-w-180 text-sm">
+          <table className="w-full min-w-200 text-sm">
             <thead className="border-b border-wabi-border bg-wabi-subtle/50 text-left text-xs text-wabi-fg-muted">
               <tr>
                 <th className="px-4 py-3 font-medium">회원</th>
@@ -124,6 +156,7 @@ export function MemberList({ rows }: { rows: MemberRow[] }) {
                 <th className="px-4 py-3 font-medium">가입일</th>
                 <th className="px-4 py-3 font-medium">최근 로그인</th>
                 <th className="px-4 py-3 font-medium">마케팅 수신</th>
+                <th className="px-4 py-3 font-medium">쿠폰</th>
                 <th className="px-4 py-3 text-right font-medium">구매</th>
               </tr>
             </thead>
@@ -152,6 +185,9 @@ export function MemberList({ rows }: { rows: MemberRow[] }) {
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-xs">
                     <Marketing value={m.marketing} />
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-sm">
+                    <Coupons m={m} />
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right font-numeric">
                     {m.orders > 0 ? (

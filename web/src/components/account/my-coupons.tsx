@@ -3,6 +3,7 @@ import {
   couponLabel,
   COUPONS_ENABLED,
   effectiveExpiry,
+  lastUsableIso,
   type Coupon,
 } from "@/lib/coupons";
 
@@ -76,7 +77,7 @@ export async function MyCoupons() {
               </span>
               <span className="shrink-0 text-xs text-wabi-fg-muted">
                 {c.expires_at
-                  ? `~ ${new Date(c.expires_at).toLocaleDateString("ko-KR")}`
+                  ? `~ ${new Date(lastUsableIso(c.expires_at)).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" })}`
                   : "무기한"}
               </span>
             </li>

@@ -91,6 +91,14 @@ export function effectiveExpiry(
     : couponExpiresAt;
 }
 
+// 화면에 보여 줄 '마지막 사용일'(ISO). 저장된 만료는 **그 시각 이전까지**라는 뜻이고,
+// 지갑 기한(0068)은 다음 날 0시로 잡혀 있다 — 그대로 찍으면 하루 더 쓸 수 있는 것처럼
+// 보인다. 1ms 를 빼서 실제 마지막 날을 가리키게 한다(어드민이 넣은 '10/31 23:59' 같은
+// 값은 같은 날로 그대로 남는다).
+export function lastUsableIso(expiresAt: string): string {
+  return new Date(new Date(expiresAt).getTime() - 1).toISOString();
+}
+
 // 할인 요약 라벨(예: "3,000원 할인", "10% 할인", "무료배송"). 목록·선택 UI 표시용.
 export function couponLabel(coupon: Coupon): string {
   if (coupon.discount_type === "free_shipping") return "무료배송";
