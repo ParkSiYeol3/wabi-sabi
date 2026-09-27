@@ -25,6 +25,11 @@ import { RevenueChart } from "@/components/admin/revenue-chart";
 import { VisitorChart, type VisitDay } from "@/components/admin/visitor-chart";
 import { QuickActions } from "@/components/admin/quick-actions";
 import { sourceLabel } from "@/lib/traffic-source";
+import { StaffDeviceToggle } from "@/components/admin/staff-device-toggle";
+import {
+  RecentVisitors,
+  type RecentVisitor,
+} from "@/components/admin/recent-visitors";
 
 type Summary = {
   awaiting_ship: number;
@@ -74,14 +79,22 @@ async function loadDashboard() {
   const db = createAdminClient();
   // 방문 요약(0054)·추이(0056)는 마이그 push 전이면 함수가 없어 에러가 난다. 대시보드
   // 전체를 죽이지 않도록 throwOnError 없이 조회하고, 실패하면 0/빈 배열로 둔다.
-  const [visitsRes, visitTrendRes, sourcesRes] = await Promise.all([
-    db.rpc("admin_visit_summary"),
-    db.rpc("admin_visit_trend", { p_days: 14 }),
-    db.rpc("admin_visit_sources", { p_days: 7 }),
-  ]);
+  const [visitsRes, visitTrendRes, sourcesRes, peopleRes, recentVisitorsRes] =
+    await Promise.all([
+      db.rpc("admin_visit_summary"),
+      db.rpc("admin_visit_trend", { p_days: 14 }),
+      db.rpc("admin_visit_sources", { p_days: 7 }),
+      // 방문자 판별·최근 방문(0070) — 마이그 전이면 없어 빈 값으로 둔다.
+      db.rpc("admin_visit_people"),
+      db.rpc("admin_recent_visitors", { p_limit: 30 }),
+    ]);
   const visits = (visitsRes.data as VisitSummary[] | null)?.[0] ?? EMPTY_VISITS;
   const visitTrend = (visitTrendRes.data as VisitDay[] | null) ?? [];
   const visitSources = (sourcesRes.data as VisitSource[] | null) ?? [];
+  const people =
+    (peopleRes.data as { humans: number; unknown: number; bots: number }[] | null)?.[0] ??
+    null;
+  const recentVisitors = (recentVisitorsRes.data as RecentVisitor[] | null) ?? [];
 
   const [summaryRes, trendRes, lowStockRes, recentRes] = await Promise.all([
     db
@@ -118,6 +131,10 @@ async function loadDashboard() {
     visits,
     visitTrend,
     visitSources,
+    people,
+    recentVisitors,
+    // KST 오늘 — 최근 방문 목록의 "어제" 표기용(렌더 중 Date.now 금지라 여기서 계산).
+    todayKst: new Date(Date.now() + 9 * 3_600_000).toISOString().slice(0, 10),
   };
 }
 
@@ -137,7 +154,18 @@ export default async function AdminHome() {
     );
   }
 
-  const { summary: s, trend, lowStock, recent, visits, visitTrend, visitSources } =
+  const {
+    summary: s,
+    trend,
+    lowStock,
+    recent,
+    visits,
+    visitTrend,
+    visitSources,
+    people,
+    recentVisitors,
+    todayKst,
+  } =
     await loadDashboard();
 
   return (
@@ -219,12 +247,16 @@ export default async function AdminHome() {
       {/* 방문자 현황 (KST) — 자체 카운터(0054). 순방문자=visitor_id distinct,
           페이지뷰=경로 이동 수. 유입경로·기기 등 상세는 Vercel Analytics 대시보드. */}
       <section>
-        <SectionHeading>
-          방문자 현황
-          <span className="ml-2 text-xs font-normal text-wabi-fg-muted">
-            매장(어드민 제외)
-          </span>
-        </SectionHeading>
+        <div className="flex items-center justify-between gap-3">
+          <SectionHeading>
+            방문자 현황
+            <span className="ml-2 text-xs font-normal text-wabi-fg-muted">
+              매장(관리자 제외)
+            </span>
+          </SectionHeading>
+          {/* 로그아웃 상태로 둘러봐도 통계에 안 섞이게 — 기기마다 한 번(0070). */}
+          <StaffDeviceToggle />
+        </div>
         <div className="mt-3 grid grid-cols-3 gap-2.5 sm:gap-3">
           <StatTile
             label="오늘 방문자"
@@ -246,6 +278,35 @@ export default async function AdminHome() {
             icon={Users}
           />
         </div>
+
+        {/* 오늘 방문자 판별(0070) — 실제 손님이 오는지(시열님). 사람 확인 = 클릭·터치·
+            키 입력을 함 / 봇 의심 = 자동화 프로그램 표시 / 미확인 = 둘 다 아님. */}
+        {people && (
+          <p className="mt-2 break-keep text-xs text-wabi-fg-muted">
+            오늘 방문자 중{" "}
+            <b className="admin-numeric font-medium text-green-800">
+              사람 확인 {people.humans}
+            </b>{" "}
+            · 미확인 <span className="admin-numeric">{people.unknown}</span> ·{" "}
+            <span className="admin-numeric text-red-700">봇 의심 {people.bots}</span>
+            <span className="block sm:inline">
+              {" "}
+              (사람 확인 = 클릭·터치·입력을 한 방문)
+            </span>
+          </p>
+        )}
+
+        {recentVisitors.length > 0 && (
+          <Panel className="mt-3 p-5">
+            <p className="mb-1 text-xs text-wabi-fg-muted">
+              최근 방문(오늘·어제) — 한 줄이 방문자 한 명
+            </p>
+            <RecentVisitors
+              rows={recentVisitors}
+              today={todayKst}
+            />
+          </Panel>
+        )}
 
         {/* 유입 경로(최근 7일, 0067) — 첫 진입의 referrer·utm 을 라벨 하나로 줄여
             모은 것. 어디에 무엇을 올렸을 때 손님이 오는지 보려는 칸이다.

@@ -32,5 +32,12 @@ export async function GET(req: Request) {
     .delete()
     .lt("attempted_at", cutoff);
 
+  // 방문 기록(0054·0070)은 1년만 둔다 — 방문 통계 용도라 그보다 오래 둘 이유가 없다.
+  // (개인을 알아볼 수 없는 기록이지만 보관 기한을 정해 두고 지킨다.)
+  const yearAgo = new Date(Date.now() + 9 * 3_600_000 - 365 * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  await admin.from("page_views").delete().lt("day", yearAgo);
+
   return Response.json({ ok: true, cancelled: data?.length ?? 0 });
 }
