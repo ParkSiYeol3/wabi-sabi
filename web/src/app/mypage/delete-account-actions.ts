@@ -15,7 +15,8 @@ import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 //  - newsletter_subscribers 는 별도 동의라 자동 삭제되지 않음 → 탈퇴 시 같은 이메일 구독을
 //    함께 파기한다(개인정보 파기 요구의 일부).
 
-export type DeleteAccountState = { error: string } | null;
+// ok — 탈퇴 완료. 이동은 클라이언트가 한다(아래 "서버 세션 쿠키 정리" 주석 참고).
+export type DeleteAccountState = { error: string } | { ok: true } | null;
 
 // 진행 중인 주문이 있으면 탈퇴를 막는다 — 계정이 사라지면 배송·환불 문의에 대응할
 // 수단(주문 조회·취소)이 사라진다. 배송 완료·취소된 주문만 남았을 때 허용.
@@ -73,5 +74,9 @@ export async function deleteAccount(
 
   // 서버 세션 쿠키 정리 — 계정은 이미 사라졌지만 남은 쿠키가 오작동을 만든다.
   await supabase.auth.signOut();
-  redirect("/?left=1");
+  // ⚠ 여기서 redirect 하면 안 된다(#725). 서버 쿠키만 지워지고 브라우저의 로그인 상태
+  // (헤더·스토어)는 그대로라, 탈퇴 뒤에도 로그인으로 보였고 /mypage 에 가면 서버는
+  // /auth 로, /auth 는 다시 /mypage 로 보내 무한 새로고침이 났다. 완료만 알리고
+  // 브라우저가 자기 세션을 지운 뒤 문서를 새로 연다(DeleteAccountSection).
+  return { ok: true };
 }

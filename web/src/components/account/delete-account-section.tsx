@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 import {
   deleteAccount,
   type DeleteAccountState,
@@ -16,6 +17,22 @@ export function DeleteAccountSection() {
     deleteAccount,
     null,
   );
+  const done = !!state && "ok" in state;
+  const error = state && "error" in state ? state.error : null;
+
+  // 탈퇴 완료 — 브라우저 세션까지 지우고 문서를 새로 연다(#725). 페이지 이동만 하면
+  // 메모리에 남은 로그인 상태(헤더·스토어) 때문에 탈퇴 뒤에도 로그인으로 보였다.
+  useEffect(() => {
+    if (!done) return;
+    (async () => {
+      try {
+        await createClient().auth.signOut({ scope: "local" });
+      } catch {
+        // 세션이 이미 없어도 아래 새로 열기로 상태가 비워진다.
+      }
+      window.location.replace("/");
+    })();
+  }, [done]);
 
   return (
     <section className="mt-16 border-t border-wabi-border pt-8">
@@ -69,19 +86,19 @@ export function DeleteAccountSection() {
             className="mt-2 rounded-none"
           />
 
-          {state?.error && (
+          {error && (
             <p role="alert" className="mt-3 text-xs text-red-700">
-              {state.error}
+              {error}
             </p>
           )}
 
           <div className="mt-4 flex gap-2">
             <Button
               type="submit"
-              disabled={pending}
+              disabled={pending || done}
               className="rounded-none bg-red-600 hover:bg-red-700"
             >
-              {pending ? "처리 중…" : "탈퇴하기"}
+              {pending || done ? "처리 중…" : "탈퇴하기"}
             </Button>
             <Button
               type="button"

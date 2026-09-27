@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store/auth";
+import { isStaleSessionError } from "@/lib/auth-session";
 import { CONSENT_VERSIONS } from "@/lib/consent";
 import { loginGate } from "./actions";
 import { cn } from "@/lib/utils";
@@ -37,10 +38,27 @@ function AuthForm() {
       : "/";
 
   // 이미 로그인 상태면 로그인 폼 대신 목적지로 이동 (예: 장바구니→주문하기).
+  //
+  // ⚠ 브라우저 상태만 믿고 보내면 안 된다(#725). 서버는 비로그인이라 /auth 로 보냈는데
+  // (탈퇴·다른 기기 전체 로그아웃·쿠키 삭제) 브라우저는 아직 로그인으로 알고 있으면
+  // 여기서 다시 /mypage 로 보내고, 서버는 또 /auth 로 보내 끝없이 새로고침된다.
+  // 서버에 사용자를 확인한 뒤에만 보내고, 서버가 "없다"면 남은 세션을 지우고 폼을 보인다.
   const user = useAuthStore((s) => s.user);
   const authLoading = useAuthStore((s) => s.loading);
   useEffect(() => {
-    if (!authLoading && user) router.replace(redirect);
+    if (authLoading || !user) return;
+    let cancelled = false;
+    (async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (data.user) router.replace(redirect);
+      else if (isStaleSessionError(error))
+        await supabase.auth.signOut({ scope: "local" });
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading, user, redirect, router]);
 
   // 세션 만료로 튕겨온 경우 사유 안내(SessionTimeout — 미활동 30분·절대 7일).
