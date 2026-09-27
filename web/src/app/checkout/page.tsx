@@ -15,7 +15,10 @@ import { addonsTotal, GIFT_WRAP_CODE } from "@/lib/addons";
 import { shippingFeeFor, amountToFreeShipping } from "@/lib/shipping";
 import { Price } from "@/components/product/price";
 import { PostcodeButton } from "@/components/common/postcode-button";
-import { useSignupOffer } from "@/components/account/signup-offer-context";
+import {
+  useRefreshSignupOffer,
+  useSignupOffer,
+} from "@/components/account/signup-offer-context";
 import {
   createPendingOrder,
   getMyAddresses,
@@ -49,6 +52,12 @@ export default function CheckoutPage() {
   const authLoading = useAuthStore((s) => s.loading);
   // 가입 축하 쿠폰 정의(#722) — 비회원 안내용. 훅이라 아래 조건부 return 보다 위에 둔다.
   const signupOffer = useSignupOffer();
+  const refreshSignupOffer = useRefreshSignupOffer();
+  // 비회원이면 들어올 때 한 번 다시 확인한다 — 탭을 열어 둔 사이 쿠폰이 꺼졌거나
+  // 기한이 지났는데 "N원 아낄 수 있어요"를 보여 주면 가입 후 쿠폰이 없다.
+  useEffect(() => {
+    if (!authLoading && !user) void refreshSignupOffer();
+  }, [authLoading, user, refreshSignupOffer]);
   const items = useCart((s) => s.items);
   const subtotal = useCart(cartTotal);
 

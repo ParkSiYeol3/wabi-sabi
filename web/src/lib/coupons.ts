@@ -111,17 +111,35 @@ export function couponLabel(coupon: Coupon): string {
 // valid_days 는 정의에만 있는 규칙(발급 후 N일, 0068)이라 Coupon 에 더해 둔다.
 export type SignupOffer = Coupon & { valid_days: number | null };
 
+// 지금 가입하면 실제로 받아 쓸 수 있는 쿠폰인가 — 활성·자동 지급·기간·총 한도.
+// 서버 조회(캐시)와 안내 직전 재확인이 같은 판정을 쓴다. 캐시는 만료 시각을 모르므로
+// 만료 직전에 캐시된 정의가 만료 뒤에도 남을 수 있어, 보여 주기 직전에 다시 본다.
+export function signupOfferLive(
+  offer: (Coupon & { auto_issue_signup?: boolean }) | null,
+  now: Date = new Date(),
+): boolean {
+  if (!offer || !offer.is_active || offer.auto_issue_signup === false) return false;
+  if (offer.starts_at && new Date(offer.starts_at) > now) return false;
+  if (offer.expires_at && new Date(offer.expires_at) <= now) return false;
+  if (offer.max_uses != null && offer.used_count >= offer.max_uses) return false;
+  return true;
+}
+
 // 안내 문구의 조건 부분(예: "50,000원 이상 구매 시 · 발급 후 30일"). 조건을 빼고
 // "무료배송"만 쓰면 과장 광고가 된다 — 안내하는 모든 자리가 이 함수 하나를 쓴다.
+// 유효일수와 고정 기한이 둘 다 있으면 둘 다 적는다 — 먼저 오는 쪽에 끝나므로 하나만
+// 적으면 실제보다 긴 기간으로 읽힌다(effectiveExpiry 와 같은 규칙).
 export function signupOfferTerms(offer: SignupOffer): string {
   const parts: string[] = [];
   if (offer.min_order > 0)
     parts.push(`${offer.min_order.toLocaleString("ko-KR")}원 이상 구매 시`);
   if (offer.valid_days) parts.push(`발급 후 ${offer.valid_days}일`);
-  else if (offer.expires_at)
+  if (offer.expires_at)
     parts.push(
       `${new Date(lastUsableIso(offer.expires_at)).toLocaleDateString("ko-KR", {
         timeZone: "Asia/Seoul",
+        month: "long",
+        day: "numeric",
       })}까지`,
     );
   return parts.join(" · ");

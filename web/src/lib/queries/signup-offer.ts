@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
-import type { SignupOffer } from "@/lib/coupons";
+import { signupOfferLive, type SignupOffer } from "@/lib/coupons";
 
 // 가입 축하 쿠폰 정의(#722) — 가입 자동 지급(auto_issue_signup)·활성 쿠폰 하나.
 // 비로그인 손님에게 "가입하면 이 쿠폰을 드려요"를 알리는 데 쓴다. 쿠폰을 끄거나
@@ -25,16 +25,19 @@ async function loadSignupOffer(): Promise<SignupOffer | null> {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle<SignupOffer>();
-    if (!data) return null;
-    // 정의 기한이 이미 지났으면 가입해도 못 쓴다 — 안내하지 않는다.
-    if (data.expires_at && new Date(data.expires_at) <= new Date()) return null;
     return data;
   } catch {
     return null;
   }
 }
 
-export const getSignupOffer = unstable_cache(loadSignupOffer, ["signup-offer"], {
+const cachedSignupOffer = unstable_cache(loadSignupOffer, ["signup-offer"], {
   revalidate: 300,
   tags: [SIGNUP_OFFER_TAG],
 });
+
+// 캐시는 만료 시각을 모른다 — 꺼낼 때마다 지금 기준으로 다시 판정한다.
+export async function getSignupOffer(): Promise<SignupOffer | null> {
+  const offer = await cachedSignupOffer();
+  return signupOfferLive(offer) ? offer : null;
+}

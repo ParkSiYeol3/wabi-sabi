@@ -10,7 +10,10 @@ import {
   signupOfferTerms,
   type SignupOffer,
 } from "@/lib/coupons";
-import { useSignupOffer } from "@/components/account/signup-offer-context";
+import {
+  useRefreshSignupOffer,
+  useSignupOffer,
+} from "@/components/account/signup-offer-context";
 
 // 가입 축하 쿠폰 안내(#722) — 비로그인 손님에게 "가입하면 쿠폰을 드려요"를 알린다.
 // 오픈 후 신규 가입이 0명인데, 가입 혜택을 알 방법이 사이트 어디에도 없었다.
@@ -66,6 +69,7 @@ type Banner = {
 // 카드와 띠가 같은 규칙(대상·자리·지연·닫음)을 쓴다. 보여 줄 때만 값을 돌려준다.
 function useSignupOfferBanner(): Banner | null {
   const offer = useSignupOffer();
+  const refresh = useRefreshSignupOffer();
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const authLoading = useAuthStore((s) => s.loading);
@@ -78,13 +82,21 @@ function useSignupOfferBanner(): Banner | null {
 
   useEffect(() => {
     if (!eligible || dismissedRecently()) return;
-    const timer = setTimeout(() => {
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      // 띄우기 직전에 쿠폰이 지금도 유효한지 다시 확인한다 — 탭을 열어 둔 사이 꺼졌거나
+      // 기한이 지났으면 안내하지 않는다(layout 값은 페이지 이동에도 갱신되지 않는다).
+      const live = await refresh();
+      if (cancelled || !live) return;
       setVisible(true);
       // 다음 프레임에 들어오는 애니메이션(살짝 올라오며 나타남).
       requestAnimationFrame(() => setEntered(true));
     }, SHOW_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, [eligible]);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [eligible, refresh]);
 
   // 카드와 띠 중 하나를 닫으면 다른 쪽도 닫힌다(화면 폭이 바뀌어 반대쪽이 드러나도).
   useEffect(() => {
@@ -169,15 +181,18 @@ export function SignupCouponStrip() {
       aria-label="회원가입 혜택 안내"
       className={`pointer-events-auto mx-3 mb-2 flex items-center rounded-xl border border-wabi-border bg-wabi-bg/95 shadow-[0_4px_18px_rgba(0,0,0,0.10)] backdrop-blur ${motion}`}
     >
+      {/* 좁은 화면에서 잘려도 조건(최소 주문)은 남아야 한다 — 조건 없이 "무료배송"만
+          보이면 과장 안내다. 그래서 앞쪽 문구만 줄이고 조건은 줄바꿈·잘림 없이 둔다. */}
       <Link
         href={signupHref}
-        className="min-w-0 flex-1 truncate py-2.5 pl-4 text-[13px] text-wabi-fg"
+        className="flex min-w-0 flex-1 items-center gap-1 py-2.5 pl-4 text-[13px] text-wabi-fg"
       >
-        <span className="text-wabi-accent">가입 혜택</span>{" "}
-        <span className="font-medium">{label}</span>
+        <span className="min-w-0 truncate">
+          <span className="text-wabi-accent">가입 혜택</span>{" "}
+          <span className="font-medium">{label}</span>
+        </span>
         {offer.min_order > 0 && (
-          <span className="text-wabi-fg-muted">
-            {" "}
+          <span className="shrink-0 whitespace-nowrap text-wabi-fg-muted">
             · {shortWon(offer.min_order)} 이상
           </span>
         )}

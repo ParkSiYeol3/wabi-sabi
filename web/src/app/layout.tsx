@@ -164,7 +164,12 @@ export default async function RootLayout({
           화면을 채워, 긴 푸터가 헤더 밑으로 올라와 화면을 덮는 버그를 막는다.
           (기존 html.h-full→body.min-h-full 높이 체인은 로딩·CSS 적용 타이밍에
           접혀 main.flex-1 이 안 채워지는 순간이 있었다. #shop 모바일 첫 진입 버그) */}
-      <body className="flex min-h-dvh flex-col">
+      {/* data-signup-offer — 가입 쿠폰 안내가 켜진 상태인지(E2E 가 "쿠폰 없음"과
+          "안내가 깨짐"을 구분하는 데 쓴다, #722). 쿠폰 코드·금액은 싣지 않는다. */}
+      <body
+        className="flex min-h-dvh flex-col"
+        data-signup-offer={signupOffer ? "on" : "off"}
+      >
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: siteJsonLd }}
