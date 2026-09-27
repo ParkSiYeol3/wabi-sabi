@@ -12,7 +12,7 @@ export function Toast({
   duration = 6000,
   tone = "error",
 }: {
-  message: string;
+  message: React.ReactNode;
   onClose: () => void;
   duration?: number;
   tone?: "error" | "default";
@@ -42,7 +42,8 @@ export function Toast({
           shown ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0",
         ].join(" ")}
       >
-        <span className="leading-6">{message}</span>
+        {/* 한글은 기본이 글자 단위 줄바꿈이라 "들어왔어/요" 처럼 끊긴다 — 어절 단위로. */}
+        <span className="break-keep leading-6">{message}</span>
         <button
           type="button"
           onClick={onClose}

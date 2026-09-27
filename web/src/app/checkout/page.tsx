@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { loadTossPayments, ANONYMOUS } from "@tosspayments/tosspayments-sdk";
@@ -15,6 +16,10 @@ import { shippingFeeFor, amountToFreeShipping } from "@/lib/shipping";
 import { Price } from "@/components/product/price";
 import { PostcodeButton } from "@/components/common/postcode-button";
 import {
+  useRefreshSignupOffer,
+  useSignupOffer,
+} from "@/components/account/signup-offer-context";
+import {
   createPendingOrder,
   getMyAddresses,
   getMyCoupons,
@@ -24,6 +29,7 @@ import {
   couponDiscount,
   couponUsable,
   couponLabel,
+  signupOfferTerms,
   type Coupon,
 } from "@/lib/coupons";
 
@@ -44,6 +50,14 @@ export default function CheckoutPage() {
   const mounted = useMounted();
   const user = useAuthStore((s) => s.user);
   const authLoading = useAuthStore((s) => s.loading);
+  // 가입 축하 쿠폰 정의(#722) — 비회원 안내용. 훅이라 아래 조건부 return 보다 위에 둔다.
+  const signupOffer = useSignupOffer();
+  const refreshSignupOffer = useRefreshSignupOffer();
+  // 비회원이면 들어올 때 한 번 다시 확인한다 — 탭을 열어 둔 사이 쿠폰이 꺼졌거나
+  // 기한이 지났는데 "N원 아낄 수 있어요"를 보여 주면 가입 후 쿠폰이 없다.
+  useEffect(() => {
+    if (!authLoading && !user) void refreshSignupOffer();
+  }, [authLoading, user, refreshSignupOffer]);
   const items = useCart((s) => s.items);
   const subtotal = useCart(cartTotal);
 
@@ -155,6 +169,17 @@ export default function CheckoutPage() {
       : 0;
   const appliedCouponId = discount > 0 ? selectedCouponId : null;
   const total = merchandise + shipping - discount;
+
+  // 비회원 가입 안내(#722) — 가입 축하 쿠폰이 **이 주문에 실제로 쓰일 때만** 보인다.
+  // 무료배송 쿠폰이면 5만~10만원 구간(10만원↑은 원래 무료, 5만원 미만은 조건 미달).
+  // 판정·금액은 결제와 같은 함수(couponUsable·couponDiscount)라 안내와 실제가 어긋나지 않는다.
+  const signupSaving =
+    !authLoading &&
+    !user &&
+    signupOffer &&
+    couponUsable(signupOffer, merchandise, shipping).ok
+      ? couponDiscount(signupOffer, merchandise, shipping)
+      : 0;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -331,6 +356,25 @@ export default function CheckoutPage() {
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {signupOffer && signupSaving > 0 && (
+            <div className="mt-6 break-keep border border-wabi-accent/40 bg-wabi-accent/5 p-4 text-sm">
+              <p className="text-pretty text-wabi-fg">
+                회원가입하면 이 주문에서{" "}
+                <b className="font-numeric font-semibold">{won(signupSaving)}</b>을
+                아낄 수 있어요.
+              </p>
+              <p className="mt-1 text-pretty text-xs leading-5 text-wabi-fg-muted">
+                가입 축하 {couponLabel(signupOffer)} 쿠폰 · {signupOfferTerms(signupOffer)}
+              </p>
+              <Link
+                href="/auth?tab=signup&redirect=/checkout"
+                className="mt-3 inline-block text-sm text-wabi-accent underline underline-offset-4"
+              >
+                회원가입하고 쿠폰 받기
+              </Link>
             </div>
           )}
 

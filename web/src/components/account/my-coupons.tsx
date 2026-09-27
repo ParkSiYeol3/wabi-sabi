@@ -49,7 +49,7 @@ export async function MyCoupons() {
   );
 
   return (
-    <section className="mt-14">
+    <section id="coupons" className="mt-14 scroll-mt-24">
       <h2 className="text-lg font-medium">내 쿠폰</h2>
       {coupons.length === 0 ? (
         <p className="mt-4 text-sm text-wabi-fg-muted">

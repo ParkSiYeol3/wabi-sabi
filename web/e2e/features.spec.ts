@@ -10,6 +10,8 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     try {
       sessionStorage.setItem("wasa_prep_dismissed", "1");
+      // 가입 쿠폰 하단 카드(#722)도 닫아 둔다 — 카드 자체는 signup-offer.spec 이 본다.
+      localStorage.setItem("wasa_signup_offer_dismissed", String(Date.now()));
     } catch {}
   });
 });
