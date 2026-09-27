@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { trafficSource } from "@/lib/traffic-source";
+import { parseUserAgent } from "@/lib/user-agent";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 
 // 방문 적재(0054) — VisitBeacon 이 경로 이동마다 sendBeacon/fetch 로 path 를 POST.
 // 무인증 공개 엔드포인트라 log-error 와 같은 가드: content-type·크기·IP 레이트.
@@ -34,6 +36,53 @@ function kstDay(): string {
 const BOT_RE =
   /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|headless|preview|scanner|monitor|uptime|lighthouse|pagespeed|ahrefs|semrush|mj12|dotbot|petalbot|applebot|yandex|baiduspider|duckduckbot|whatsapp|telegrambot|discordbot|slackbot|twitterbot|python-requests|axios|node-fetch|\bcurl\b|wget|go-http|okhttp|wasae2e/i;
 
+// 짧은 문자열만 받는다 — 비콘 값은 무엇이든 보낼 수 있으니 길이·형식을 자른다.
+function short(v: unknown, max = 40): string | null {
+  return typeof v === "string" && v.length > 0 ? v.slice(0, max) : null;
+}
+
+// Vercel 이 IP 로 추정해 붙여 주는 지역 — 도시 이름은 URL 인코딩돼 온다(0070).
+// IP 자체는 저장하지 않는다(시열님 결정).
+function geo(req: Request) {
+  const h = (k: string) => {
+    const v = req.headers.get(k);
+    if (!v) return null;
+    try {
+      return decodeURIComponent(v).slice(0, 60);
+    } catch {
+      return v.slice(0, 60);
+    }
+  };
+  return {
+    country: h("x-vercel-ip-country"),
+    region: h("x-vercel-ip-country-region"),
+    city: h("x-vercel-ip-city"),
+  };
+}
+
+// 관리자(대표님·시열님) 방문은 매장 통계에서 뺀다(0070, 시열님 결정). 로그인 쿠키가
+// 있을 때만 서버에 확인한다 — 클라이언트도 알면 안 보내지만, 권한 정보가 늦게 붙는
+// 첫 페이지까지 확실히 거르려면 여기서 한 번 더 본다.
+async function isAdminVisit(req: Request): Promise<boolean> {
+  const cookie = req.headers.get("cookie") || "";
+  if (!/sb-[^=]*-auth-token/.test(cookie)) return false;
+  try {
+    const supabase = await createServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return false;
+    const { data } = await createAdminClient()
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle<{ role: string }>();
+    return data?.role === "admin";
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(req: Request) {
   const ct = (req.headers.get("content-type") || "")
     .split(";")[0]
@@ -58,7 +107,15 @@ export async function POST(req: Request) {
   if (raw.length === 0 || raw.length > 1_024)
     return new Response(null, { status: 413 });
 
-  let payload: { p?: unknown; r?: unknown; q?: unknown };
+  let payload: {
+    p?: unknown;
+    r?: unknown;
+    q?: unknown;
+    l?: unknown; // 브라우저 언어
+    z?: unknown; // 시간대
+    w?: unknown; // navigator.webdriver(자동화 표시)
+    e?: unknown; // 조작 신호 — 이 방문자가 클릭·터치·키 입력을 했다
+  };
   try {
     payload = JSON.parse(raw);
   } catch {
@@ -74,10 +131,24 @@ export async function POST(req: Request) {
     return new Response(null, { status: 204 });
 
   if (!adminConfigured()) return new Response(null, { status: 204 });
+  if (await isAdminVisit(req)) return new Response(null, { status: 204 });
 
   try {
     const day = kstDay();
     const admin = createAdminClient();
+    const visitor = visitorHash(ip, ua, day);
+
+    // 조작 신호 — 새 줄을 쌓지 않고, 이 방문자의 오늘 기록에 "사람이 조작함"을 표시한다.
+    if (payload.e === 1) {
+      await admin
+        .from("page_views")
+        .update({ engaged: true })
+        .eq("visitor_id", visitor)
+        .eq("day", day)
+        .eq("engaged", false);
+      return new Response(null, { status: 204 });
+    }
+
     // 유입 라벨(0067). 비콘은 탭에서 **처음 한 번만** r 을 담아 보낸다 — 그 뒤의
     // 경로 이동은 r 자체가 없다. 없는 것과 빈 문자열은 뜻이 다르다:
     //   r 없음  = 사이트 안에서 옮긴 것 → 유입 아님(null)
@@ -90,9 +161,20 @@ export async function POST(req: Request) {
           typeof payload.q === "string" ? payload.q : null,
         )
       : null;
-    await admin
-      .from("page_views")
-      .insert({ visitor_id: visitorHash(ip, ua, day), path, day, source });
+    const { device, browser, os } = parseUserAgent(ua);
+    await admin.from("page_views").insert({
+      visitor_id: visitor,
+      path,
+      day,
+      source,
+      device,
+      browser,
+      os,
+      lang: short(payload.l, 20),
+      tz: short(payload.z, 40),
+      automated: payload.w === true,
+      ...geo(req),
+    });
   } catch (e) {
     console.error("[track] 적재 실패", e);
   }
