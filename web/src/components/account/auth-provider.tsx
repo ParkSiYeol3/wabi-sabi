@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store/auth";
 import { useCart } from "@/store/cart";
 import { loadServerCart, mergeGuestCart } from "@/lib/cart-sync";
+import { isStaleSessionError } from "@/lib/auth-session";
 
 // 앱 진입 시 현재 세션을 읽고, 이후 인증 상태 변화를 Zustand 에 동기화.
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -70,9 +71,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user ?? null);
-      void syncProfile(data.user?.id);
+    // 서버에 사용자를 확인한다(로컬 세션만 믿지 않음). 단 응답이 오는 사이 로그아웃됐을
+    // 수 있다 — 자동 로그아웃(SessionTimeout)은 페이지를 열자마자 동작하기도 해서, 늦게
+    // 온 이 응답이 로그아웃을 덮어써 세션은 없는데 헤더는 로그인으로 보였다(#725).
+    // 그래서 지금 이 브라우저에 세션이 남아 있을 때만 그 사용자로 표시한다.
+    supabase.auth.getUser().then(async ({ data, error }) => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      // 서버는 "없는 사용자·끊긴 세션"이라는데 브라우저엔 세션이 남아 있다(탈퇴·다른
+      // 기기 전체 로그아웃 등) — 이 기기의 세션을 지운다(SIGNED_OUT 이 이어서 온다).
+      if (session && !data.user && isStaleSessionError(error)) {
+        await supabase.auth.signOut({ scope: "local" });
+        setUser(null);
+        void syncProfile(undefined);
+        return;
+      }
+      const current = session ? (data.user ?? null) : null;
+      setUser(current);
+      void syncProfile(current?.id);
     });
 
     const {
