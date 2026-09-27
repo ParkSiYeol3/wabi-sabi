@@ -43,10 +43,11 @@ function AuthForm() {
   // (탈퇴·다른 기기 전체 로그아웃·쿠키 삭제) 브라우저는 아직 로그인으로 알고 있으면
   // 여기서 다시 /mypage 로 보내고, 서버는 또 /auth 로 보내 끝없이 새로고침된다.
   // 서버에 사용자를 확인한 뒤에만 보내고, 서버가 "없다"면 남은 세션을 지우고 폼을 보인다.
-  const user = useAuthStore((s) => s.user);
+  // user 객체가 아니라 id 로 건다 — 토큰 갱신 등으로 객체만 바뀔 때 다시 확인하지 않게.
+  const uid = useAuthStore((s) => s.user?.id ?? null);
   const authLoading = useAuthStore((s) => s.loading);
   useEffect(() => {
-    if (authLoading || !user) return;
+    if (authLoading || !uid) return;
     let cancelled = false;
     (async () => {
       const supabase = createClient();
@@ -59,7 +60,7 @@ function AuthForm() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, user, redirect, router]);
+  }, [authLoading, uid, redirect, router]);
 
   // 세션 만료로 튕겨온 경우 사유 안내(SessionTimeout — 미활동 30분·절대 7일).
   const timedOut = params.get("reason") === "timeout";

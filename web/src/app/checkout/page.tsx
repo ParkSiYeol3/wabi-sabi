@@ -49,6 +49,11 @@ export default function CheckoutPage() {
   const router = useRouter();
   const mounted = useMounted();
   const user = useAuthStore((s) => s.user);
+  // 불러오기 effect 는 user 객체가 아니라 id 로 건다(#727). 새로고침 한 번에 user 객체가
+  // 세션 복구·로그인 이벤트·서버 확인·토큰 갱신으로 3~4번 새로 만들어지는데, 그때마다
+  // 쿠폰·배송지를 다시 부르고 앞 응답을 버렸다. 서버 액션은 한 줄로 처리되니 마지막 응답이
+  // 한참 뒤에 와서, 그 전까지 쿠폰 선택지가 비어 "나오다 말다" 했다.
+  const uid = user?.id ?? null;
   const authLoading = useAuthStore((s) => s.loading);
   // 가입 축하 쿠폰 정의(#722) — 비회원 안내용. 훅이라 아래 조건부 return 보다 위에 둔다.
   const signupOffer = useSignupOffer();
@@ -56,8 +61,8 @@ export default function CheckoutPage() {
   // 비회원이면 들어올 때 한 번 다시 확인한다 — 탭을 열어 둔 사이 쿠폰이 꺼졌거나
   // 기한이 지났는데 "N원 아낄 수 있어요"를 보여 주면 가입 후 쿠폰이 없다.
   useEffect(() => {
-    if (!authLoading && !user) void refreshSignupOffer();
-  }, [authLoading, user, refreshSignupOffer]);
+    if (!authLoading && !uid) void refreshSignupOffer();
+  }, [authLoading, uid, refreshSignupOffer]);
   const items = useCart((s) => s.items);
   const subtotal = useCart(cartTotal);
 
@@ -82,7 +87,7 @@ export default function CheckoutPage() {
 
   // 저장 배송지 로드 — 있으면 가장 최근 것을 최초 1회만 자동 채움(이후 수정 가능).
   useEffect(() => {
-    if (!user) return;
+    if (!uid) return;
     let active = true;
     getMyAddresses().then((list) => {
       if (!active) return;
@@ -95,13 +100,13 @@ export default function CheckoutPage() {
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [uid]);
 
   // 내 쿠폰 로드(로그인 시). 서버가 결제 시 다시 검증하므로 여기선 표시·선택만.
   // 로그아웃 시 목록 비우기는 렌더 시점(activeCoupons)에서 파생한다(effect 내 동기
   // setState 회피). 선택 id 가 남아도 activeCoupons 가 비면 할인은 0 이 된다.
   useEffect(() => {
-    if (!user) return;
+    if (!uid) return;
     let active = true;
     getMyCoupons().then((list) => {
       if (active) setCoupons(list);
@@ -109,7 +114,7 @@ export default function CheckoutPage() {
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [uid]);
 
   const setField =
     (key: keyof typeof EMPTY_DELIVERY) =>
