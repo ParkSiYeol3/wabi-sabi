@@ -64,6 +64,19 @@ export default function CheckoutPage() {
     if (!authLoading && !uid) void refreshSignupOffer();
   }, [authLoading, uid, refreshSignupOffer]);
   const items = useCart((s) => s.items);
+  // 로그인 상태의 장바구니는 서버가 진실이라 브라우저엔 저장하지 않는다(store/cart
+  // partialize). 그래서 새로고침 직후엔 잠깐 비어 있다가 서버 장바구니가 붙는다(bindUser).
+  // 그 전에 "비었다"고 보면 결제 화면을 열자마자 장바구니로 튕긴다(#729). 로그인 상태면
+  // 서버 장바구니가 이 사용자로 붙은 뒤에만 판단한다. 동기화가 실패해 끝내 안 붙어도
+  // 로딩에 갇히지 않게 잠시 뒤엔 판단을 재개한다.
+  const cartUserId = useCart((s) => s.userId);
+  const [cartWaitOver, setCartWaitOver] = useState(false);
+  useEffect(() => {
+    if (!uid) return;
+    const t = setTimeout(() => setCartWaitOver(true), 8000);
+    return () => clearTimeout(t);
+  }, [uid]);
+  const cartReady = !uid || cartUserId === uid || cartWaitOver;
   const subtotal = useCart(cartTotal);
 
   // 애드온은 이제 라인 단위(상세에서 선택 — #253). 결제 화면은 라인별 애드온을
@@ -80,10 +93,10 @@ export default function CheckoutPage() {
   const autoFilledRef = useRef(false);
 
   useEffect(() => {
-    if (!mounted || authLoading) return;
+    if (!mounted || authLoading || !cartReady) return;
     // 비회원도 구매 가능(대표님) — 로그인 게이트 제거. 빈 장바구니만 되돌린다.
     if (items.length === 0) router.replace("/cart");
-  }, [mounted, authLoading, items.length, router]);
+  }, [mounted, authLoading, cartReady, items.length, router]);
 
   // 저장 배송지 로드 — 있으면 가장 최근 것을 최초 1회만 자동 채움(이후 수정 가능).
   useEffect(() => {
