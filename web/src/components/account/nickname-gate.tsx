@@ -13,7 +13,8 @@ import { NICKNAME_SET_EVENT } from "@/components/account/signup-coupon-welcome";
 // 노출되지 않도록, nickname_set=false 인 사용자에게 한 번 별명을 정하게 한다. 저장 전엔
 // 닫을 수 없다(별명 확정이 목적). layout 에 마운트돼 로그인 상태를 감시.
 export function NicknameGate() {
-  const user = useAuthStore((s) => s.user);
+  // id 로 건다 — 토큰 갱신 등으로 user 객체만 바뀔 때 프로필을 다시 조회하지 않게(#727).
+  const uid = useAuthStore((s) => s.user?.id ?? null);
   const pathname = usePathname();
   // null=미확인, true=설정 필요, false=면제/완료.
   const [needed, setNeeded] = useState<boolean | null>(null);
@@ -35,7 +36,7 @@ export function NicknameGate() {
     let cancelled = false;
     const decide = async () => {
       if (
-        !user ||
+        !uid ||
         !process.env.NEXT_PUBLIC_SUPABASE_URL ||
         !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
       ) {
@@ -45,7 +46,7 @@ export function NicknameGate() {
       const { data } = await createClient()
         .from("profiles")
         .select("nickname_set")
-        .eq("id", user.id)
+        .eq("id", uid)
         .maybeSingle<{ nickname_set: boolean }>();
       if (!cancelled) setNeeded(data ? data.nickname_set === false : false);
     };
@@ -53,7 +54,7 @@ export function NicknameGate() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [uid]);
 
   // 차단형 모달이 열려 있는 동안 배경 스크롤을 잠근다(a11y — 뒤 내용이 밀려나지
   // 않게). /auth 에선 모달을 띄우지 않으므로 잠그지 않는다.
