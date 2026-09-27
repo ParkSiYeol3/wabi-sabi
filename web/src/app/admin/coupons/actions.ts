@@ -1,7 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { SIGNUP_OFFER_TAG } from "@/lib/queries/signup-offer";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { logAdminAction } from "@/lib/audit";
@@ -96,6 +97,8 @@ export async function createCoupon(
     meta: { code: d.code.toUpperCase(), type: d.discountType, value: d.discountValue },
   });
   revalidatePath("/admin/coupons");
+  // 가입 축하 쿠폰 안내(#722)는 캐시된 정의를 읽는다 — 바뀐 즉시 손님 화면에 반영.
+  updateTag(SIGNUP_OFFER_TAG);
   return { ok: true, message: `쿠폰 '${d.code.toUpperCase()}' 등록 완료` };
 }
 
@@ -123,6 +126,8 @@ export async function setCouponActive(formData: FormData) {
     meta: { is_active: active },
   });
   revalidatePath("/admin/coupons");
+  // 가입 축하 쿠폰 안내(#722)는 캐시된 정의를 읽는다 — 바뀐 즉시 손님 화면에 반영.
+  updateTag(SIGNUP_OFFER_TAG);
 }
 
 // 쿠폰 삭제(대표님 — 오입력·테스트 쿠폰 정리). 이미 사용된 쿠폰은 삭제하지 않는다:
@@ -167,5 +172,7 @@ export async function deleteCoupon(
     meta: { code: coupon.code },
   });
   revalidatePath("/admin/coupons");
+  // 가입 축하 쿠폰 안내(#722)는 캐시된 정의를 읽는다 — 바뀐 즉시 손님 화면에 반영.
+  updateTag(SIGNUP_OFFER_TAG);
   return { ok: true, message: `쿠폰 '${coupon.code}' 삭제 완료` };
 }

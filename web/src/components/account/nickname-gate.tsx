@@ -7,6 +7,7 @@ import { useAuthStore } from "@/store/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { setNickname, type NicknameResult } from "@/app/account-actions";
+import { NICKNAME_SET_EVENT } from "@/components/account/signup-coupon-welcome";
 
 // 닉네임 설정 모달(개인정보보호 — 대표님/시열님). 소셜/이메일 가입 직후 실명이 그대로
 // 노출되지 않도록, nickname_set=false 인 사용자에게 한 번 별명을 정하게 한다. 저장 전엔
@@ -20,7 +21,11 @@ export function NicknameGate() {
   const [state, action, pending] = useActionState<NicknameResult | null, FormData>(
     async (prev, formData) => {
       const result = await setNickname(prev, formData);
-      if (result.ok) setNeeded(false);
+      if (result.ok) {
+        setNeeded(false);
+        // 가입 축하 쿠폰 알림(#722)은 이 모달이 닫힌 뒤에 뜬다 — 기다리던 쪽에 알린다.
+        window.dispatchEvent(new Event(NICKNAME_SET_EVENT));
+      }
       return result;
     },
     null,

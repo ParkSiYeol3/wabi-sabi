@@ -6,6 +6,10 @@ import { SessionTimeout } from "@/components/account/session-timeout";
 import { NicknameGate } from "@/components/account/nickname-gate";
 import { LinkResultCatcher } from "@/components/account/link-result-catcher";
 import { PrepNotice } from "@/components/layout/prep-notice";
+import { SignupOfferProvider } from "@/components/account/signup-offer-context";
+import { SignupCouponCard } from "@/components/account/signup-coupon-card";
+import { SignupCouponWelcome } from "@/components/account/signup-coupon-welcome";
+import { getSignupOffer } from "@/lib/queries/signup-offer";
 import { getPrepNotice } from "@/lib/queries/content";
 import { getCategoryTree } from "@/lib/queries/categories";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -145,9 +149,11 @@ export default async function RootLayout({
   // 정식 오픈 준비중 안내(대표님) — 전역 마운트로 홈뿐 아니라 검색·링크로 상품
   // 페이지에 바로 들어온 손님도 결제 전에 안내를 본다. 캐시된 조회라 TTFB 영향 미미.
   // 카테고리 트리는 모바일 드로어의 SHOP 분류 드롭다운용(대표님) — 병렬 조회.
-  const [prepNotice, tree] = await Promise.all([
+  // 가입 축하 쿠폰(#722) — 비로그인 손님 안내(하단 카드·비회원 결제)에 쓰인다.
+  const [prepNotice, tree, signupOffer] = await Promise.all([
     getPrepNotice(),
     getCategoryTree(),
+    getSignupOffer(),
   ]);
   return (
     <html
@@ -164,28 +170,33 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: siteJsonLd }}
         />
         <AuthProvider>
-          {/* 로그인 지속시간 제한(미활동 30분·절대 7일) — 개인정보보호 정책 */}
-          <SessionTimeout />
-          {/* 가입 후 닉네임 설정 모달(실명 노출 방지) */}
-          <NicknameGate />
-          {/* 소셜 연결 실패(홈 폴백)를 감지해 마이페이지 안내로 유도 */}
-          <LinkResultCatcher />
-          {/* 정식 오픈 준비중 안내(대표님 어드민 on/off) — 어드민 경로 제외는 내부 판정 */}
-          <PrepNotice enabled={prepNotice.enabled} text={prepNotice.text} />
-          {/* 키보드 사용자용 본문 바로가기 (a11y) */}
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-wabi-fg focus:px-4 focus:py-2 focus:text-sm focus:text-white"
-          >
-            본문으로 건너뛰기
-          </a>
-          <SiteHeader tree={tree} />
-          <main id="main-content" className="flex-1">
-            {children}
-          </main>
-          <HideOnAdmin>
-            <SiteFooter />
-          </HideOnAdmin>
+          <SignupOfferProvider offer={signupOffer}>
+            {/* 로그인 지속시간 제한(미활동 30분·절대 7일) — 개인정보보호 정책 */}
+            <SessionTimeout />
+            {/* 가입 후 닉네임 설정 모달(실명 노출 방지) */}
+            <NicknameGate />
+            {/* 소셜 연결 실패(홈 폴백)를 감지해 마이페이지 안내로 유도 */}
+            <LinkResultCatcher />
+            {/* 정식 오픈 준비중 안내(대표님 어드민 on/off) — 어드민 경로 제외는 내부 판정 */}
+            <PrepNotice enabled={prepNotice.enabled} text={prepNotice.text} />
+            {/* 가입 축하 쿠폰 안내 — 비로그인 하단 카드 / 가입 직후 지급 알림(#722) */}
+            <SignupCouponCard />
+            <SignupCouponWelcome />
+            {/* 키보드 사용자용 본문 바로가기 (a11y) */}
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-wabi-fg focus:px-4 focus:py-2 focus:text-sm focus:text-white"
+            >
+              본문으로 건너뛰기
+            </a>
+            <SiteHeader tree={tree} />
+            <main id="main-content" className="flex-1">
+              {children}
+            </main>
+            <HideOnAdmin>
+              <SiteFooter />
+            </HideOnAdmin>
+          </SignupOfferProvider>
         </AuthProvider>
         {/* Vercel Web Analytics(대표님 — 방문자 수) — Pro 포함 할당량 내 실질 무료.
             beacon 은 same-origin(/_vercel/insights/*)이라 CSP 변경 불필요. 개인정보

@@ -106,3 +106,23 @@ export function couponLabel(coupon: Coupon): string {
     ? `${coupon.discount_value}% 할인`
     : `${coupon.discount_value.toLocaleString("ko-KR")}원 할인`;
 }
+
+// 가입 축하 쿠폰 안내(#722) — 가입하면 자동으로 지갑에 들어오는 쿠폰 정의 하나.
+// valid_days 는 정의에만 있는 규칙(발급 후 N일, 0068)이라 Coupon 에 더해 둔다.
+export type SignupOffer = Coupon & { valid_days: number | null };
+
+// 안내 문구의 조건 부분(예: "50,000원 이상 구매 시 · 발급 후 30일"). 조건을 빼고
+// "무료배송"만 쓰면 과장 광고가 된다 — 안내하는 모든 자리가 이 함수 하나를 쓴다.
+export function signupOfferTerms(offer: SignupOffer): string {
+  const parts: string[] = [];
+  if (offer.min_order > 0)
+    parts.push(`${offer.min_order.toLocaleString("ko-KR")}원 이상 구매 시`);
+  if (offer.valid_days) parts.push(`발급 후 ${offer.valid_days}일`);
+  else if (offer.expires_at)
+    parts.push(
+      `${new Date(lastUsableIso(offer.expires_at)).toLocaleDateString("ko-KR", {
+        timeZone: "Asia/Seoul",
+      })}까지`,
+    );
+  return parts.join(" · ");
+}
