@@ -245,7 +245,8 @@ export default async function AdminHome() {
       </section>
 
       {/* 방문자 현황 (KST) — 자체 카운터(0054). 순방문자=visitor_id distinct,
-          페이지뷰=경로 이동 수. 유입경로·기기 등 상세는 Vercel Analytics 대시보드. */}
+          페이지뷰=경로 이동 수. 숫자만 여기 두고, 그래프는 바로 아래·방문 상세는 맨 아래
+          (시열님 2026-09-28 — 방문 목록이 그래프를 화면 밖으로 밀어냈다). */}
       <section>
         <div className="flex items-center justify-between gap-3">
           <SectionHeading>
@@ -295,65 +296,27 @@ export default async function AdminHome() {
             </span>
           </p>
         )}
+      </section>
 
-        {recentVisitors.length > 0 && (
+      {/* 추이 — 매출(#239 AreaChart)·방문자(0056 막대)를 넓은 화면에선 나란히 둬
+          첫 화면 가까이에서 같이 본다. 차트만 클라이언트 컴포넌트라 recharts 번들은
+          어드민 청크에 격리된다. 방문 추이는 마이그 적용 전이면 빈 배열이라 미표시. */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <section>
+          <SectionHeading>최근 7일 매출</SectionHeading>
           <Panel className="mt-3 p-5">
-            <p className="mb-1 text-xs text-wabi-fg-muted">
-              최근 방문(오늘·어제) — 한 줄이 방문자 한 명
-            </p>
-            <RecentVisitors
-              rows={recentVisitors}
-              today={todayKst}
-            />
+            <RevenueChart trend={trend} />
           </Panel>
-        )}
-
-        {/* 유입 경로(최근 7일, 0067) — 첫 진입의 referrer·utm 을 라벨 하나로 줄여
-            모은 것. 어디에 무엇을 올렸을 때 손님이 오는지 보려는 칸이다.
-            마이그 적용 전이거나 아직 기록이 없으면 빈 배열이라 미표시. */}
-        {visitSources.length > 0 && (
-          <Panel className="mt-3 p-5">
-            <p className="mb-3 text-xs text-wabi-fg-muted">
-              최근 7일 유입 경로
-            </p>
-            <ul className="space-y-2">
-              {visitSources.slice(0, 8).map((src) => (
-                <li
-                  key={src.source}
-                  className="flex items-baseline justify-between gap-3 text-sm"
-                >
-                  <span className="truncate text-wabi-fg">
-                    {sourceLabel(src.source)}
-                  </span>
-                  <span className="admin-numeric shrink-0 text-xs text-wabi-fg-muted">
-                    {src.visitors.toLocaleString("ko-KR")}명 ·{" "}
-                    {src.views.toLocaleString("ko-KR")}회
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Panel>
-        )}
-
-        {/* 일별 방문자 추이(최근 14일) — 마이그(0056) 적용 전이면 빈 배열이라 미표시. */}
+        </section>
         {visitTrend.length > 0 && (
-          <Panel className="mt-3 p-5">
-            <p className="mb-2 text-xs text-wabi-fg-muted">
-              최근 14일 방문자 추이
-            </p>
-            <VisitorChart trend={visitTrend} />
-          </Panel>
+          <section>
+            <SectionHeading>최근 14일 방문자</SectionHeading>
+            <Panel className="mt-3 p-5">
+              <VisitorChart trend={visitTrend} />
+            </Panel>
+          </section>
         )}
-      </section>
-
-      {/* 최근 7일 매출 추이 (KST) — recharts AreaChart(#239, 진입 애니메이션).
-          차트만 클라이언트 컴포넌트라 recharts 번들은 어드민 청크에 격리된다. */}
-      <section>
-        <SectionHeading>최근 7일 매출</SectionHeading>
-        <Panel className="mt-3 p-5">
-          <RevenueChart trend={trend} />
-        </Panel>
-      </section>
+      </div>
 
       {/* 재고 주의 + 최근 주문 — 카드 숫자만으론 어떤 상품·주문인지 한 번 더 들어가야
           해서, 첫 화면에서 바로 보이게 목록을 둔다. */}
@@ -426,6 +389,52 @@ export default async function AdminHome() {
           )}
         </section>
       </div>
+
+      {/* 방문 상세 — 누가 어디서 왔는지(0070)·유입 경로(0067). 훑어보는 용도라 맨
+          아래에 두고, 목록은 5명만 펼친다(나머지는 접힘). */}
+      {(recentVisitors.length > 0 || visitSources.length > 0) && (
+        <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
+          {recentVisitors.length > 0 && (
+            <section>
+              <SectionHeading>
+                최근 방문
+                <span className="ml-2 text-xs font-normal text-wabi-fg-muted">
+                  오늘·어제, 한 줄이 한 명
+                </span>
+              </SectionHeading>
+              <Panel className="mt-3 px-5 py-2">
+                <RecentVisitors rows={recentVisitors} today={todayKst} />
+              </Panel>
+            </section>
+          )}
+
+          {/* 유입 경로(최근 7일, 0067) — 첫 진입의 referrer·utm 을 라벨 하나로 줄여
+              모은 것. 어디에 무엇을 올렸을 때 손님이 오는지 보려는 칸이다. */}
+          {visitSources.length > 0 && (
+            <section>
+              <SectionHeading>최근 7일 유입 경로</SectionHeading>
+              <Panel className="mt-3 p-5">
+                <ul className="space-y-2">
+                  {visitSources.slice(0, 8).map((src) => (
+                    <li
+                      key={src.source}
+                      className="flex items-baseline justify-between gap-3 text-sm"
+                    >
+                      <span className="truncate text-wabi-fg">
+                        {sourceLabel(src.source)}
+                      </span>
+                      <span className="admin-numeric shrink-0 text-xs text-wabi-fg-muted">
+                        {src.visitors.toLocaleString("ko-KR")}명 ·{" "}
+                        {src.views.toLocaleString("ko-KR")}회
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </Panel>
+            </section>
+          )}
+        </div>
+      )}
     </div>
   );
 }

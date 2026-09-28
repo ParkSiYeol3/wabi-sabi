@@ -63,6 +63,42 @@ function verdict(v: RecentVisitor) {
   return { label: "미확인", cls: "border-wabi-border text-wabi-fg-muted" };
 }
 
+// 대시보드에서 그래프를 밀어내지 않게(시열님 2026-09-28) 기본은 최근 5명만, 나머지는
+// 접어 둔다. 한 명 = 한 줄(좁은 화면은 두 줄).
+const SHOWN = 5;
+
+function Row({ v, today }: { v: RecentVisitor; today: string }) {
+  const vd = verdict(v);
+  const source = v.source ? sourceLabel(v.source) : "유입 정보 없음";
+  // 인스타 앱 안에서 연 방문은 브라우저·유입이 둘 다 "인스타그램" — 한 번만 쓴다.
+  const detail = [
+    ...(v.device
+      ? [DEVICE[v.device] ?? v.device, v.browser, v.os]
+      : ["기기 정보 없음"]),
+    v.tz && v.tz !== "Asia/Seoul" ? `시간대 ${v.tz}` : null,
+    source === v.browser ? null : source,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  return (
+    <li className="flex items-start gap-3 py-2 text-sm sm:items-center">
+      {/* 좁은 화면: 시각·지역 한 줄 + 기기·유입 한 줄 / 넓은 화면: 시각 칸 고정, 한 줄 */}
+      <p className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2">
+        <span className="admin-numeric shrink-0 text-xs text-wabi-fg-muted sm:w-[4.5rem]">
+          {time(v, today)}
+        </span>
+        <span className="text-wabi-fg">{place(v)}</span>
+        <span className="w-full break-keep text-xs text-wabi-fg-muted sm:w-auto">
+          {detail} · <span className="admin-numeric">{v.views}</span>페이지
+        </span>
+      </p>
+      <span className={`shrink-0 border px-2 py-0.5 text-[11px] ${vd.cls}`}>
+        {vd.label}
+      </span>
+    </li>
+  );
+}
+
 export function RecentVisitors({
   rows,
   today,
@@ -70,43 +106,30 @@ export function RecentVisitors({
   rows: RecentVisitor[];
   today: string;
 }) {
+  const shown = rows.slice(0, SHOWN);
+  const rest = rows.slice(SHOWN);
   return (
-    <ul className="divide-y divide-wabi-border">
-      {rows.map((v) => {
-        const vd = verdict(v);
-        const device = v.device
-          ? [DEVICE[v.device] ?? v.device, v.browser, v.os].filter(Boolean).join(" · ")
-          : "기기 정보 없음(이전 기록)";
-        const abroadTz = v.tz && v.tz !== "Asia/Seoul";
-        return (
-          <li
-            key={`${v.day}-${v.visitor}`}
-            className="flex items-start justify-between gap-3 py-2.5 text-sm"
-          >
-            <div className="min-w-0">
-              <p className="flex flex-wrap items-baseline gap-x-2 text-wabi-fg">
-                <span className="admin-numeric text-xs text-wabi-fg-muted">
-                  {time(v, today)}
-                </span>
-                <span>{place(v)}</span>
-              </p>
-              <p className="mt-0.5 break-keep text-xs text-wabi-fg-muted">
-                {device}
-                {abroadTz ? ` · 시간대 ${v.tz}` : ""}
-              </p>
-              <p className="mt-0.5 text-xs text-wabi-fg-muted">
-                {v.source ? sourceLabel(v.source) : "유입 정보 없음"} ·{" "}
-                <span className="admin-numeric">{v.views}</span>페이지
-              </p>
-            </div>
-            <span
-              className={`shrink-0 border px-2 py-0.5 text-[11px] ${vd.cls}`}
-            >
-              {vd.label}
+    <>
+      <ul className="divide-y divide-wabi-border">
+        {shown.map((v) => (
+          <Row key={`${v.day}-${v.visitor}`} v={v} today={today} />
+        ))}
+      </ul>
+      {rest.length > 0 && (
+        <details className="group border-t border-wabi-border">
+          <summary className="cursor-pointer list-none py-2 text-xs text-wabi-fg-muted hover:text-wabi-fg [&::-webkit-details-marker]:hidden">
+            <span className="group-open:hidden">
+              나머지 <span className="admin-numeric">{rest.length}</span>명 더 보기
             </span>
-          </li>
-        );
-      })}
-    </ul>
+            <span className="hidden group-open:inline">접기</span>
+          </summary>
+          <ul className="divide-y divide-wabi-border border-t border-wabi-border">
+            {rest.map((v) => (
+              <Row key={`${v.day}-${v.visitor}`} v={v} today={today} />
+            ))}
+          </ul>
+        </details>
+      )}
+    </>
   );
 }
