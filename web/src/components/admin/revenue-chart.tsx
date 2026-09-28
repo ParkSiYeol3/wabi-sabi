@@ -61,7 +61,7 @@ function ChartTooltip({
 
 export function RevenueChart({ trend }: { trend: TrendDay[] }) {
   return (
-    <div className="h-64 w-full">
+    <div className="h-56 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={trend} margin={{ top: 8, right: 8, bottom: 0, left: 4 }}>
           <defs>
