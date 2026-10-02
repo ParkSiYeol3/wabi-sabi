@@ -134,31 +134,33 @@ export default async function OrdersPage() {
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-3">
-                      {/* 상세로 이동 (#137) — 송장번호·배송지·전체 항목은 상세에서 */}
+                    <div className="flex items-start justify-between gap-3">
+                      {/* 상세로 이동 (#137) — 송장번호·배송지·전체 항목은 상세에서.
+                          제목은 상품명(10/3 시열님: 손님은 주문번호로 주문을 기억하지 않는다).
+                          주문번호는 문의할 때 쓰도록 날짜 줄에 작게 남긴다. */}
                       <Link
                         href={`/mypage/orders/${o.id}`}
-                        aria-label={`주문 ${o.order_number} 상세 보기`}
-                        className="font-numeric text-sm font-medium underline-offset-4 hover:underline"
+                        className="min-w-0 text-sm font-medium underline-offset-4 hover:underline"
                       >
-                        {o.order_number}
+                        {first?.product_name}
+                        {first && first.quantity > 1 ? ` ${first.quantity}개` : ""}
+                        {rest > 0 ? ` 외 ${rest}건` : ""}
                       </Link>
                       <OrderStatusBadge status={displayStatus(o)} />
                     </div>
 
                     <p className="mt-1.5 font-numeric text-xs text-wabi-fg-muted">
-                      {formatDateKST(o.ordered_at)}
+                      {formatDateKST(o.ordered_at)} 주문
                       {o.delivered_at && (
                         <> · {formatDateKST(o.delivered_at)} 수령</>
                       )}
+                      <span className="text-wabi-fg-muted/70">
+                        {" "}
+                        · 주문번호 {o.order_number}
+                      </span>
                     </p>
 
-                    <p className="mt-3 font-numeric text-sm">
-                      {first?.product_name}
-                      {first && first.quantity > 1 ? ` ${first.quantity}개` : ""}
-                      {rest > 0 ? ` 외 ${rest}건` : ""}
-                    </p>
-                    <p className="mt-1 text-sm font-medium">
+                    <p className="mt-3 text-sm font-medium">
                       <Price value={o.total_price} />
                     </p>
 

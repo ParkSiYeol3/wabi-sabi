@@ -59,7 +59,7 @@ export default async function MyPage({
   const { data: recentOrders } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, preparing_at, tracking_number, courier, ordered_at, order_items(product_name)",
+      "id, order_number, status, preparing_at, tracking_number, courier, ordered_at, order_items(product_name, products(images))",
     )
     .eq("user_id", user.id)
     .neq("status", "pending")
@@ -84,12 +84,8 @@ export default async function MyPage({
         <LogoutButton />
       </div>
 
-      {/* 주문·배송(#754). 첫 실주문 때 마이페이지에서 주문 내역·배송조회로 가는 길이
-          없었다(헤더 아이콘·모바일 메뉴뿐). */}
-      <RecentOrders orders={recentOrders ?? []} />
-
       {/* 내 정보 */}
-      <section className="mt-14">
+      <section className="mt-12">
         <h2 className="text-lg font-medium">내 정보</h2>
         <div className="mt-4 space-y-1 text-sm text-wabi-fg-muted">
           <p className="font-numeric">이메일: {profile?.email ?? user.email}</p>
@@ -104,6 +100,10 @@ export default async function MyPage({
           <MarketingConsentToggle initial={marketingConsent} />
         </div>
       </section>
+
+      {/* 주문·배송(#754). 첫 실주문 때 마이페이지에서 주문 내역·배송조회로 가는 길이
+          없었다(헤더 아이콘·모바일 메뉴뿐). 맨 위는 과하다(시열님 10/3) → 배송지 바로 위. */}
+      <RecentOrders orders={recentOrders ?? []} />
 
       {/* 배송지 */}
       <section className="mt-14">

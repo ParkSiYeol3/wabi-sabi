@@ -101,9 +101,8 @@ export default async function OrderDetailPage({
       </Link>
 
       <div className="mt-4 flex items-center justify-between gap-4">
-        <h1 className="font-numeric text-2xl font-semibold tracking-wide">
-          {order.order_number}
-        </h1>
+        {/* 제목은 "주문 상세", 주문번호는 아래 줄에 작게(10/3 시열님). 문의·비회원 조회에 쓰는 값이라 남긴다. */}
+        <h1 className="text-2xl font-semibold tracking-wide">주문 상세</h1>
         <OrderStatusBadge
           status={displayStatus(order)}
           className="text-sm"
@@ -112,6 +111,7 @@ export default async function OrderDetailPage({
       <p className="mt-2 font-numeric text-sm text-wabi-fg-muted">
         {formatDateKST(order.ordered_at)} 주문
         {order.delivered_at && ` · ${formatDateKST(order.delivered_at)} 수령`}
+        {` · 주문번호 ${order.order_number}`}
       </p>
 
       {/* 주문 항목 */}

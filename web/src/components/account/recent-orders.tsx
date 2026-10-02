@@ -1,7 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
+import { ImageIcon } from "lucide-react";
 import { TrackButton } from "@/components/account/track-button";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
-import { displayStatus, formatDateKST } from "@/lib/orders";
+import { displayStatus, KST } from "@/lib/orders";
 
 export type RecentOrder = {
   id: string;
@@ -11,14 +13,33 @@ export type RecentOrder = {
   tracking_number: string | null;
   courier: string | null;
   ordered_at: string;
-  order_items: { product_name: string }[];
+  order_items: { product_name: string; products: { images: unknown } | null }[];
 };
 
-// 마이페이지 맨 위 주문·배송(#754). 최근 주문 몇 건 + 상태, 배송 중이면 바로 조회.
-// 전체 목록·취소·리뷰는 /mypage/orders 에서.
+// "10월 2일" (올해가 아니면 연도까지). 목록에서 날짜는 언제 산 건지 떠올리는 용도라 짧게.
+function orderedOn(iso: string): string {
+  const d = new Date(iso);
+  const year = (x: Date) => x.toLocaleDateString("ko-KR", { timeZone: KST, year: "numeric" });
+  return d.toLocaleDateString("ko-KR", {
+    timeZone: KST,
+    ...(year(d) === year(new Date()) ? {} : { year: "numeric" }),
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function thumbOf(o: RecentOrder): string | null {
+  const imgs = o.order_items[0]?.products?.images;
+  return Array.isArray(imgs) && typeof imgs[0] === "string" ? imgs[0] : null;
+}
+
+// 마이페이지 주문·배송(#754). 최근 주문 몇 건 + 상태, 배송 중이면 바로 조회.
+// 손님은 주문번호(WSB…)로 주문을 기억하지 않는다(시열님 10/3) → 사진·상품명·날짜로
+// 알아보게 하고, 주문번호는 상세에만 둔다. 금액·취소·리뷰는 /mypage/orders 에서
+// (요약 칸에 금액까지 넣으면 375px 에서 줄이 넘친다).
 export function RecentOrders({ orders }: { orders: RecentOrder[] }) {
   return (
-    <section className="mt-12">
+    <section className="mt-14">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-lg font-medium">주문·배송</h2>
         <Link
@@ -35,6 +56,7 @@ export function RecentOrders({ orders }: { orders: RecentOrder[] }) {
             const first = o.order_items[0];
             const rest = o.order_items.length - 1;
             const track = o.status === "shipping" ? o.tracking_number : null;
+            const thumb = thumbOf(o);
             return (
               <li
                 key={o.id}
@@ -44,23 +66,35 @@ export function RecentOrders({ orders }: { orders: RecentOrder[] }) {
                     aria-label 은 두지 않는다(상태 배지까지 링크 이름으로 읽히게). */}
                 <Link
                   href={`/mypage/orders/${o.id}`}
-                  className="group min-w-0 flex-1 basis-52 text-sm"
+                  className="group flex min-w-0 flex-1 basis-52 items-center gap-3.5 text-sm"
                 >
-                  <span className="flex flex-wrap items-center gap-2">
-                    <span className="font-numeric font-medium underline-offset-4 group-hover:underline">
-                      {o.order_number}
-                    </span>
-                    <OrderStatusBadge status={displayStatus(o)} />
+                  <span className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden bg-wabi-muted">
+                    {thumb ? (
+                      <Image
+                        src={thumb}
+                        alt=""
+                        fill
+                        sizes="56px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <ImageIcon
+                        className="size-5 text-wabi-fg-muted/40"
+                        strokeWidth={1}
+                        aria-hidden
+                      />
+                    )}
                   </span>
-                  {/* 상품명이 길면 이름만 말줄임, 날짜는 남긴다 */}
-                  <span className="mt-1 flex min-w-0 text-wabi-fg-muted">
-                    <span className="truncate">
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium underline-offset-4 group-hover:underline">
                       {first?.product_name}
                       {rest > 0 ? ` 외 ${rest}건` : ""}
                     </span>
-                    <span className="shrink-0 whitespace-pre font-numeric">
-                      {" · "}
-                      {formatDateKST(o.ordered_at)}
+                    <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-wabi-fg-muted">
+                      <OrderStatusBadge status={displayStatus(o)} />
+                      <span className="font-numeric">
+                        {orderedOn(o.ordered_at)} 주문
+                      </span>
                     </span>
                   </span>
                 </Link>
