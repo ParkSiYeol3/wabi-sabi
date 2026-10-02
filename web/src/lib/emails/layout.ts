@@ -14,7 +14,7 @@ import { SITE_URL } from "@/lib/site-url";
 
 export const MAIL_COLOR = {
   bg: "#f3ebdd", // 크림(사이트 배경)
-  card: "#fbf7ef", // 카드 — 크림보다 한 톤 밝게
+  card: "#fbf7ef", // 카드: 크림보다 한 톤 밝게
   ink: "#423c30", // 먹빛 브라운(본문·버튼)
   muted: "#6b6353",
   faint: "#8a8170",

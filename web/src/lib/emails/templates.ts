@@ -47,7 +47,7 @@ export function orderConfirmedMail(o: {
   return {
     subject: `[${site.name}] 주문이 접수되었습니다 (${o.orderNumber})`,
     html: layout({
-      preheader: `주문번호 ${o.orderNumber} · ${won(o.total)} — 정성껏 준비해 보내드리겠습니다.`,
+      preheader: `주문번호 ${o.orderNumber} · ${won(o.total)}. 정성껏 준비해 보내드리겠습니다.`,
       title: "주문이 접수되었습니다",
       intro: "와비사비를 찾아 주셔서 감사합니다. 주문하신 상품을 정성껏 준비해 보내드리겠습니다.",
       body: `${section(
@@ -91,7 +91,7 @@ export function orderShippedMail(o: {
   return {
     subject: `[${site.name}] 상품이 발송되었습니다 (${o.orderNumber})`,
     html: layout({
-      preheader: `${COURIER.name} ${o.trackingNumber} — 버튼 하나로 배송 조회를 하실 수 있습니다.`,
+      preheader: `${COURIER.name} 송장번호 ${o.trackingNumber}. 버튼 하나로 배송을 조회하실 수 있습니다.`,
       title: "상품이 발송되었습니다",
       intro: `주문하신 상품이 ${COURIER.name}로 출발했습니다.`,
       body: `${tracking}
@@ -106,7 +106,7 @@ ${section(
   ]),
 )}
 ${note(
-  `상품을 받으신 날부터 7일 이내 교환·환불을 요청하실 수 있습니다 — ${link(`${BASE}/legal/refund`, "교환·환불 안내")}<br>${link(`${BASE}/mypage/orders`, "주문 내역 보기")}`,
+  `상품을 받으신 날부터 7일 이내 교환·환불을 요청하실 수 있습니다. ${link(`${BASE}/legal/refund`, "교환·환불 안내")}<br>${link(`${BASE}/mypage/orders`, "주문 내역 보기")}`,
 )}`,
     }),
   };
