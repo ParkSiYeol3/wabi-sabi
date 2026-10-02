@@ -139,12 +139,18 @@ export function layout(input: {
 <meta name="supported-color-schemes" content="light">
 <title>${esc(input.title)}</title>
 </head>
-<body style="margin:0;padding:0;background:${C.bg}">
+<body style="margin:0;padding:0">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${esc(input.preheader)}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.bg}" style="background:${C.bg}">
+<!-- 메일 한 장 = 폭 600px 크림 덩어리(#750). 바깥은 메일 앱 기본 배경으로 두어, PC 에서
+     축소해 봐도 크림이 창 전체로 퍼지지 않고 한 장으로 보인다. 600px 보다 좁은 휴대폰에서만
+     화면 폭에 맞춰 줄어든다(완전 고정이면 손님이 가로로 밀어 봐야 한다). -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr>
-    <td align="center" style="padding:32px 16px 40px">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;font-family:${FONT};color:${C.ink}">
+    <td align="center" style="padding:24px 0">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.bg}" style="width:100%;max-width:600px;background:${C.bg}">
+  <tr>
+    <td align="center" style="padding:32px 20px 40px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family:${FONT};color:${C.ink}">
         <tr>
           <td style="padding:0 4px 24px">
             <a href="${SITE_URL}" style="text-decoration:none;color:${C.ink}">
@@ -167,6 +173,9 @@ export function layout(input: {
             문의 ${esc(b.email)}${b.phone ? ` · ${esc(b.phone)}` : ""}
           </td>
         </tr>
+      </table>
+    </td>
+  </tr>
       </table>
     </td>
   </tr>
