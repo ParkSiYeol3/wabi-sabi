@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Price } from "@/components/product/price";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
-import { formatDateKST, trackingSearchUrl } from "@/lib/orders";
+import {
+  formatDateKST,
+  trackingSearchUrl,
+  displayStatus,
+} from "@/lib/orders";
 import { lookupGuestOrder, type GuestOrder } from "./actions";
 
 // 비회원 주문조회 — 주문번호 + 전화번호로 게스트 주문을 확인한다(계정 불필요).
@@ -88,7 +92,7 @@ export default function OrderLookupPage() {
                 {formatDateKST(order.ordered_at)} 주문
               </p>
             </div>
-            <OrderStatusBadge status={order.status} />
+            <OrderStatusBadge status={displayStatus(order)} />
           </div>
 
           <ul className="mt-6 divide-y divide-wabi-border/60">

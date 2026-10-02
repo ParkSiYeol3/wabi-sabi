@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 const STYLE: Record<string, string> = {
   pending: "border-amber-300 text-amber-800", // 결제 대기 — 조치 필요
   paid: "border-wabi-fg text-wabi-fg", // 결제 완료 — 진행 중 강조
+  preparing: "border-green-700/40 text-green-800", // 상품 준비 중(0071, 화면 전용)
   shipping: "border-blue-300 text-blue-800", // 배송 중
   delivered: "border-wabi-border text-wabi-fg-muted", // 완료 — 차분하게
   cancelled: "border-red-300 text-red-700", // 취소

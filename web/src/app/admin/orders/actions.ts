@@ -53,6 +53,37 @@ export async function setTracking(formData: FormData) {
   revalidatePath("/admin/orders");
 }
 
+// 상품 준비 중으로 (0071, 대표님 2026-10-02) — 포장을 시작했으니 손님이 마이페이지에서
+// 취소하지 못하게 한다. status 는 paid 그대로 두고 preparing_at 만 찍는다(매출·통계 무영향).
+// 결제 완료이면서 아직 준비 전인 주문만(멱등: 이미 찍혔으면 0행 → 감사로그 없음).
+export async function markPreparing(formData: FormData) {
+  const user = await requireAdmin();
+  if (!adminConfigured()) return;
+
+  const id = parseUuid(formData.get("id"));
+  if (!id) return;
+
+  const supabase = createAdminClient();
+  const preparingAt = new Date().toISOString();
+  const { data } = await supabase
+    .from("orders")
+    .update({ preparing_at: preparingAt })
+    .eq("id", id)
+    .eq("status", "paid")
+    .is("preparing_at", null)
+    .select("id");
+
+  if (!data || data.length === 0) return;
+
+  await logAdminAction(user, {
+    action: "order.mark_preparing",
+    targetTable: "orders",
+    targetId: id,
+    meta: { preparing_at: preparingAt },
+  });
+  revalidatePath("/admin/orders");
+}
+
 // 배송완료 처리 (#124) — delivered 로 가는 유일한 경로.
 // 수령일(delivered_at)은 청약철회 7일의 기산점이라 함께 기록한다(#106 교환·환불 안내).
 // 대면거래도 있으므로(site.addressNote) 송장 없이 paid 에서 바로 완료도 허용한다.

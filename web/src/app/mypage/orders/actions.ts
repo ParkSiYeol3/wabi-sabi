@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { cancelPaidOrder, type CancelResult } from "@/lib/payments";
 
-// 본인 주문 취소 — 배송 전(paid)만. 실 취소·환불은 lib/payments(RPC + 토스).
+// 본인 주문 취소 — 배송 전(paid)이면서 상품 준비 전만(0071). 실 취소·환불은 lib/payments(RPC + 토스).
 export async function cancelMyOrder(orderId: string): Promise<CancelResult> {
   if (!z.string().uuid().safeParse(orderId).success)
     return { ok: false, error: "주문 정보가 올바르지 않습니다." };
@@ -18,7 +18,7 @@ export async function cancelMyOrder(orderId: string): Promise<CancelResult> {
   // 소유 검증(RLS 로도 본인 것만 보이지만 명시 확인)
   const { data: order } = await supabase
     .from("orders")
-    .select("id, status")
+    .select("id, status, preparing_at")
     .eq("id", orderId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -30,6 +30,15 @@ export async function cancelMyOrder(orderId: string): Promise<CancelResult> {
         order.status === "cancelled"
           ? "이미 취소된 주문입니다."
           : "결제 완료(배송 전) 상태의 주문만 취소할 수 있습니다.",
+    };
+
+  // 상품 준비가 시작된 주문(0071)은 손님이 직접 취소할 수 없다 — 이미 포장 중이라
+  // 대표님과 먼저 이야기해야 한다. 관리자 취소(adminCancelOrder)는 그대로 가능.
+  if (order.preparing_at)
+    return {
+      ok: false,
+      error:
+        "상품 준비가 시작된 주문은 직접 취소할 수 없습니다. 문의 게시판으로 요청해 주세요.",
     };
 
   const result = await cancelPaidOrder(orderId);
