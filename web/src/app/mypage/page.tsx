@@ -59,7 +59,7 @@ export default async function MyPage({
   const { data: recentOrders } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, preparing_at, tracking_number, ordered_at, order_items(product_name)",
+      "id, order_number, status, preparing_at, tracking_number, courier, ordered_at, order_items(product_name)",
     )
     .eq("user_id", user.id)
     .neq("status", "pending")

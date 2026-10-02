@@ -1,4 +1,4 @@
-import { COURIER, formatDateKST, won } from "@/lib/orders";
+import { courierOf, formatDateKST, won } from "@/lib/orders";
 import { site } from "@/lib/site";
 import { SITE_URL } from "@/lib/site-url";
 import {
@@ -68,34 +68,50 @@ ${note(
   };
 }
 
+// "우체국택배로" / "CJ대한통운으로": 끝 글자에 받침(ㄹ 제외)이 있으면 "으로".
+function withRo(word: string): string {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  if (code < 0 || code > 11171) return `${word}로`;
+  const jong = code % 28;
+  return jong === 0 || jong === 8 ? `${word}로` : `${word}으로`;
+}
+
 // ── 배송 시작 ─────────────────────────────────────────────
 // 손님이 제일 먼저 하는 일 = 배송 조회. 송장번호를 복사해 검색하지 않게 버튼으로.
+// 택배사는 주문에 저장된 코드(#756). "기타"는 이름을 모르니 택배사 줄을 빼고 네이버 조회로.
 export function orderShippedMail(o: {
   orderNumber: string;
+  courier: string | null;
   trackingNumber: string;
   recipient: string;
   address: string;
   items: MailItem[];
 }): Mail {
-  const tracking = box(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;line-height:1.6">
-  <tr>
-    <td style="color:${C.faint};width:76px;padding-right:12px;white-space:nowrap">택배사</td>
-    <td style="color:${C.ink}">${esc(COURIER.name)}</td>
+  const courier = courierOf(o.courier);
+  const courierRow = courier.name
+    ? `<tr>
+    <td style="color:${C.faint};width:76px;padding-right:12px;padding-bottom:4px;white-space:nowrap">택배사</td>
+    <td style="color:${C.ink};padding-bottom:4px">${esc(courier.name)}</td>
   </tr>
-  <tr>
-    <td style="color:${C.faint};padding-right:12px;padding-top:4px;white-space:nowrap">송장번호</td>
-    <td style="color:${C.ink};padding-top:4px;font-size:16px;font-weight:600;letter-spacing:.04em">${esc(o.trackingNumber)}</td>
+  `
+    : "";
+  const tracking = box(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;line-height:1.6">
+  ${courierRow}<tr>
+    <td style="color:${C.faint};width:76px;padding-right:12px;white-space:nowrap">송장번호</td>
+    <td style="color:${C.ink};font-size:16px;font-weight:600;letter-spacing:.04em">${esc(o.trackingNumber)}</td>
   </tr>
 </table>`);
 
   return {
     subject: `[${site.name}] 상품이 발송되었습니다 (${o.orderNumber})`,
     html: layout({
-      preheader: `${COURIER.name} 송장번호 ${o.trackingNumber}. 버튼 하나로 배송을 조회하실 수 있습니다.`,
+      preheader: `${courier.name ? `${courier.name} ` : ""}송장번호 ${o.trackingNumber}. 버튼 하나로 배송을 조회하실 수 있습니다.`,
       title: "상품이 발송되었습니다",
-      intro: `주문하신 상품이 ${COURIER.name}로 출발했습니다.`,
+      intro: courier.name
+        ? `주문하신 상품이 ${withRo(courier.name)} 출발했습니다.`
+        : "주문하신 상품이 출발했습니다.",
       body: `${tracking}
-${button(COURIER.trackUrl(o.trackingNumber), "배송 조회하기")}
+${button(courier.trackUrl(o.trackingNumber), "배송 조회하기")}
 ${section("보내드린 상품", itemRows(o.items))}
 ${section(
   "받는 곳",

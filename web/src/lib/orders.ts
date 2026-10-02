@@ -33,16 +33,74 @@ export function formatDateKST(iso: string): string {
   return new Date(iso).toLocaleDateString("ko-KR", { timeZone: KST });
 }
 
-// 택배사 (#748) — 대표님은 우체국택배만 쓴다(2026-10-02 확인). 송장 칸에 택배사 선택이
-// 없으므로 메일·안내는 이 값 하나를 본다. 택배사를 늘리면 orders 에 컬럼을 추가할 것.
-// 조회는 우체국 공식 조회 페이지 직링크(숫자만 넘긴다 — 손님이 하이픈을 넣어도 동작).
-// 사이트의 배송조회 링크도 전부 이것(#754). 예전엔 택배사를 몰라 네이버 통합검색에
-// 송장번호를 넘겼는데(#240), 검색 결과에서 조회 위젯을 다시 찾아야 했고 메일과도 달랐다.
-export const COURIER = {
-  name: "우체국택배",
-  trackUrl: (invoice: string) =>
-    `https://service.epost.go.kr/trace.RetrieveDomRigiTraceList.comm?sid1=${encodeURIComponent(invoice.replace(/\D/g, ""))}`,
-} as const;
+// 택배사 (#748 → #756). 처음엔 대표님이 우체국택배만 써서 하나로 고정했는데, 다른 택배사로
+// 보내면 메일·조회 링크가 전부 우체국으로 갔다 → 주문마다 고른다(orders.courier, 0072).
+// null(0072 이전 주문)은 우체국. 코드를 늘리면 0072 의 check 제약도 같이 고친다.
+// 조회는 각 택배사 공식 조회 페이지 직링크(2026-10-03 네 곳 모두 링크의 번호로 바로 조회되는 것 확인).
+// 숫자만 넘긴다(손님이 하이픈을 넣어도 동작). 목록에 없는 택배사는 "기타": 네이버 통합검색이
+// 송장번호로 택배사를 찾아 조회 위젯을 띄운다(#240 방식).
+const digits = (invoice: string) => encodeURIComponent(invoice.replace(/\D/g, ""));
+
+type Courier = {
+  // 메일·손님 화면에 쓰는 이름. 기타는 null(이름을 모른다).
+  name: string | null;
+  // 관리자 선택지 라벨
+  label: string;
+  trackUrl: (invoice: string) => string;
+};
+
+export const COURIERS = {
+  epost: {
+    name: "우체국택배",
+    label: "우체국",
+    trackUrl: (n) =>
+      `https://service.epost.go.kr/trace.RetrieveDomRigiTraceList.comm?sid1=${digits(n)}`,
+  },
+  cj: {
+    name: "CJ대한통운",
+    label: "CJ대한통운",
+    trackUrl: (n) => `https://trace.cjlogistics.com/next/tracking.html?wblNo=${digits(n)}`,
+  },
+  hanjin: {
+    name: "한진택배",
+    label: "한진",
+    trackUrl: (n) =>
+      `https://www.hanjin.com/kor/CMS/DeliveryMgr/WaybillResult.do?mCode=MN038&schLang=KR&wblnumText2=${digits(n)}`,
+  },
+  lotte: {
+    name: "롯데택배",
+    label: "롯데",
+    trackUrl: (n) =>
+      `https://www.lotteglogis.com/home/reservation/tracking/linkView?InvNo=${digits(n)}`,
+  },
+  logen: {
+    name: "로젠택배",
+    label: "로젠",
+    trackUrl: (n) => `https://www.ilogen.com/web/personal/trace/${digits(n)}`,
+  },
+  etc: {
+    name: null,
+    label: "기타",
+    trackUrl: (n) =>
+      `https://search.naver.com/search.naver?query=${encodeURIComponent(`${n.trim()} 택배조회`)}`,
+  },
+} as const satisfies Record<string, Courier>;
+
+export type CourierCode = keyof typeof COURIERS;
+export const DEFAULT_COURIER: CourierCode = "epost";
+
+export function isCourierCode(v: unknown): v is CourierCode {
+  return typeof v === "string" && Object.hasOwn(COURIERS, v);
+}
+
+// 저장값 → 택배사. null·모르는 값은 우체국(0072 이전 주문).
+export function courierOf(code: string | null | undefined): Courier {
+  return COURIERS[isCourierCode(code) ? code : DEFAULT_COURIER];
+}
+
+export function trackingUrl(courier: string | null | undefined, invoice: string): string {
+  return courierOf(courier).trackUrl(invoice);
+}
 
 // 청약철회 기간 — 수령일부터 7일 (교환·환불 안내 #106).
 export const WITHDRAWAL_DAYS = 7;

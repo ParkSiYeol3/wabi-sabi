@@ -7,6 +7,7 @@ import { parseUuid } from "@/lib/validation";
 import { logAdminAction } from "@/lib/audit";
 import { sendOrderShippedMail } from "@/lib/emails/order-shipped";
 import { cancelPaidOrder, type CancelResult } from "@/lib/payments";
+import { DEFAULT_COURIER, isCourierCode } from "@/lib/orders";
 
 // 송장번호 입력 + 상태 배송중 전환
 export async function setTracking(formData: FormData) {
@@ -17,20 +18,24 @@ export async function setTracking(formData: FormData) {
   const tracking = String(formData.get("tracking_number") || "")
     .trim()
     .slice(0, 100);
+  // 택배사(#756). 선택지 밖 값은 기본(우체국) — DB check 제약(0072)과 같은 목록.
+  const courierRaw = formData.get("courier");
+  const courier = isCourierCode(courierRaw) ? courierRaw : DEFAULT_COURIER;
   if (!id) return;
 
   const supabase = createAdminClient();
-  // 저장 전 송장번호 — 같은 번호를 다시 저장해도 메일이 또 나가던 문제(첫 실주문 10/2,
-  // 손님에게 2통). 처음 입력됐거나 번호가 실제로 바뀐 경우에만 알린다.
+  // 저장 전 송장번호·택배사 — 같은 번호를 다시 저장해도 메일이 또 나가던 문제(첫 실주문 10/2,
+  // 손님에게 2통). 처음 입력됐거나 번호·택배사가 실제로 바뀐 경우에만 알린다.
   const { data: before } = await supabase
     .from("orders")
-    .select("tracking_number")
+    .select("tracking_number, courier")
     .eq("id", id)
-    .maybeSingle<{ tracking_number: string | null }>();
+    .maybeSingle<{ tracking_number: string | null; courier: string | null }>();
   const { data: updated } = await supabase
     .from("orders")
     .update({
       tracking_number: tracking || null,
+      courier: tracking ? courier : null,
       status: tracking ? "shipping" : "paid",
     })
     .eq("id", id)
@@ -45,7 +50,12 @@ export async function setTracking(formData: FormData) {
 
   // 배송 시작 알림 (#129) — 송장이 실제로 등록·변경된 경우에만.
   // 송장을 지우는(=배송중 해제) 경우·같은 번호 재저장엔 보내지 않는다.
-  if (tracking && tracking !== (before?.tracking_number ?? "")) {
+  // 택배사만 고쳐도 보낸다(#756): 잘못 고른 채 나간 메일을 바로잡는 메일이 된다.
+  // 0072 이전 주문은 courier 가 null = 우체국으로 비교.
+  const changed =
+    tracking !== (before?.tracking_number ?? "") ||
+    courier !== (before?.courier ?? DEFAULT_COURIER);
+  if (tracking && changed) {
     await sendOrderShippedMail(id, tracking).catch((e) =>
       console.error("[admin] 배송 알림 메일 실패 orderId=", id, e),
     );
@@ -55,7 +65,11 @@ export async function setTracking(formData: FormData) {
     action: "order.set_tracking",
     targetTable: "orders",
     targetId: id,
-    meta: { tracking_number: tracking || null, status: tracking ? "shipping" : "paid" },
+    meta: {
+      tracking_number: tracking || null,
+      courier: tracking ? courier : null,
+      status: tracking ? "shipping" : "paid",
+    },
   });
   revalidatePath("/admin/orders");
 }

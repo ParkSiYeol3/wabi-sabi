@@ -5,7 +5,7 @@ import { orderShippedMail } from "./templates";
 
 // 배송 시작 메일 (#129) — 송장이 등록돼도 고객에게 알림이 가지 않았다.
 // 어드민이 송장을 실제로 저장했을 때(처음 입력·번호 변경, #746)만 호출된다.
-// 본문은 templates.ts(#748 — 배송 조회 버튼·보낸 상품 사진·택배사).
+// 본문은 templates.ts(#748 — 배송 조회 버튼·보낸 상품 사진·택배사). 택배사는 주문에 저장된 값(#756).
 
 export async function sendOrderShippedMail(
   orderId: string,
@@ -17,11 +17,12 @@ export async function sendOrderShippedMail(
   const { data: order } = await admin
     .from("orders")
     .select(
-      "order_number, recipient, address, user_id, order_items(product_name, quantity, options, products(images))",
+      "order_number, courier, recipient, address, user_id, order_items(product_name, quantity, options, products(images))",
     )
     .eq("id", orderId)
     .maybeSingle<{
       order_number: string;
+      courier: string | null;
       recipient: string;
       address: string;
       user_id: string | null;
@@ -43,6 +44,7 @@ export async function sendOrderShippedMail(
     to,
     ...orderShippedMail({
       orderNumber: order.order_number,
+      courier: order.courier,
       trackingNumber,
       recipient: order.recipient,
       address: order.address,
