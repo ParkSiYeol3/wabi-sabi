@@ -8,7 +8,7 @@ import { Price } from "@/components/product/price";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import {
   formatDateKST,
-  trackingSearchUrl,
+  COURIER,
   displayStatus,
 } from "@/lib/orders";
 import { lookupGuestOrder, type GuestOrder } from "./actions";
@@ -154,7 +154,7 @@ export default function OrderLookupPage() {
                 <dd>
                   {order.tracking_number}{" "}
                   <a
-                    href={trackingSearchUrl(order.tracking_number)}
+                    href={COURIER.trackUrl(order.tracking_number)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="ml-1 underline underline-offset-2"

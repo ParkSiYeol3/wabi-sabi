@@ -33,18 +33,11 @@ export function formatDateKST(iso: string): string {
   return new Date(iso).toLocaleDateString("ko-KR", { timeZone: KST });
 }
 
-// 송장번호 배송조회 링크 (#240) — 어드민은 tracking_number 만 저장하고 택배사
-// 컬럼이 없다(스키마 최소). 네이버 통합검색에 송장번호를 넘기면 택배사를 자동
-// 감지해 조회 위젯을 띄우므로, 택배사 선택 없이 조회를 위임한다. 외부 링크(새 탭)라
-// CSP frame/connect-src 와 무관하다.
-export function trackingSearchUrl(invoice: string): string {
-  const q = encodeURIComponent(`${invoice.trim()} 택배조회`);
-  return `https://search.naver.com/search.naver?query=${q}`;
-}
-
 // 택배사 (#748) — 대표님은 우체국택배만 쓴다(2026-10-02 확인). 송장 칸에 택배사 선택이
 // 없으므로 메일·안내는 이 값 하나를 본다. 택배사를 늘리면 orders 에 컬럼을 추가할 것.
 // 조회는 우체국 공식 조회 페이지 직링크(숫자만 넘긴다 — 손님이 하이픈을 넣어도 동작).
+// 사이트의 배송조회 링크도 전부 이것(#754). 예전엔 택배사를 몰라 네이버 통합검색에
+// 송장번호를 넘겼는데(#240), 검색 결과에서 조회 위젯을 다시 찾아야 했고 메일과도 달랐다.
 export const COURIER = {
   name: "우체국택배",
   trackUrl: (invoice: string) =>

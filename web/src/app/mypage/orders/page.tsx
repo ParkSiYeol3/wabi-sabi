@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { ImageIcon, PenLine } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { CancelOrderButton } from "@/components/account/cancel-order-button";
+import { TrackButton } from "@/components/account/track-button";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -33,6 +34,7 @@ type Order = {
   order_number: string;
   status: string;
   preparing_at: string | null;
+  tracking_number: string | null;
   total_price: number;
   ordered_at: string;
   delivered_at: string | null;
@@ -56,7 +58,7 @@ export default async function OrdersPage() {
   const { data: orders } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, preparing_at, total_price, ordered_at, delivered_at, order_items(product_id, product_name, quantity, products(images))",
+      "id, order_number, status, preparing_at, tracking_number, total_price, ordered_at, delivered_at, order_items(product_id, product_name, quantity, products(images))",
     )
     // 미결제(pending)는 숨긴다 — 결제창을 열었다가 결제하지 않고 뒤로가면 주문이
     // pending 으로 남는데(결제 전 orderId 발급이 필요한 토스 결제창 구조), 이는
@@ -103,6 +105,7 @@ export default async function OrdersPage() {
                   ),
                 ]
               : [];
+            const track = o.status === "shipping" ? o.tracking_number : null;
             return (
               <li
                 key={o.id}
@@ -173,10 +176,13 @@ export default async function OrdersPage() {
                   </div>
                 </div>
 
-                {/* 취소는 결제 완료이면서 상품 준비 전만(0071 — 포장이 시작되면 문의로). */}
+                {/* 취소는 결제 완료이면서 상품 준비 전만(0071 — 포장이 시작되면 문의로).
+                    배송 중이면 상세에 들어가지 않고 바로 조회(#754). */}
                 {((o.status === "paid" && !o.preparing_at) ||
+                  track ||
                   reviewTargets.length > 0) && (
                   <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-wabi-border pt-4">
+                    {track && <TrackButton invoice={track} />}
                     {o.status === "paid" && !o.preparing_at && (
                       <CancelOrderButton orderId={o.id} />
                     )}
