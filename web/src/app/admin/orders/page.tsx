@@ -90,7 +90,7 @@ function ItemsList({ items }: { items: OrderItem[] }) {
                 />
               )}
             </span>
-            <span className="min-w-0">
+            <span className="min-w-0 break-keep">
               <span>
                 {it.product_name}
                 <span className="text-wabi-fg-muted"> × {it.quantity}</span>
@@ -253,7 +253,8 @@ export default async function AdminOrdersPage() {
                           {orderedAt(o.ordered_at)}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      {/* 사진이 폭을 먹어 상품명이 두세 글자씩 꺾였다(10/2) — 칸 최소 폭 */}
+                      <td className="min-w-60 px-4 py-3 align-top">
                         <ItemsList items={o.order_items} />
                       </td>
                       <td className="max-w-60 px-4 py-3 align-top">
