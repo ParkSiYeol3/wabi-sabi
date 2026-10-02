@@ -135,7 +135,7 @@ export function NaverMap({ clientId }: { clientId: string }) {
     <div
       ref={ref}
       role="img"
-      aria-label={`${site.place} 위치 지도 — ${site.roadAddress}`}
+      aria-label={`${site.place} 위치 지도: ${site.roadAddress}`}
       className="h-full w-full"
     />
   );

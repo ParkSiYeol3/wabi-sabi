@@ -234,7 +234,7 @@ export async function createProduct(
       message += ` (이미지 ${urls.length}장)`;
     }
     if (failures.length) {
-      message += ` — ⚠ 이미지 업로드 실패: ${failureText(failures)}. 목록에서 '이미지 추가'로 다시 시도하세요.`;
+      message += `. ⚠ 이미지 업로드 실패: ${failureText(failures)}. 목록에서 '이미지 추가'로 다시 시도하세요.`;
     }
   }
   await logAdminAction(user, {

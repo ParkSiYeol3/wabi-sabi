@@ -10,7 +10,7 @@ import { ADDONS, GIFT_WRAP_CODE, won } from "@/lib/addons";
 export const metadata: Metadata = {
   title: "선물 · 마음을 담은 그릇",
   description:
-    "천안 와비사비(WABI-SABI)에서 마음을 담아 선물하세요 — 손의 흔적이 담긴 그릇과 생활소품, 선물 포장·메시지 카드 안내. 소중한 분께 어울리는 선물 추천.",
+    "천안 와비사비(WABI-SABI)에서 마음을 담아 선물하세요. 손의 흔적이 담긴 그릇과 생활소품, 선물 포장·메시지 카드 안내. 소중한 분께 어울리는 선물 추천.",
 };
 
 // 선물(GIFT) — 대분류 신규 페이지(대표님). 기존 선물 포장 애드온(#253)과 연결해

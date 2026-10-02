@@ -71,7 +71,7 @@ export async function sendOrderConfirmedMail(orderId: string): Promise<void> {
   const { data: authUser } = await admin.auth.admin.getUserById(order.user_id);
   const to = authUser?.user?.email;
   if (!to) {
-    console.error("[email] 주문 확인 메일 — 수신 주소 없음 orderId=", orderId);
+    console.error("[email] 주문 확인 메일: 수신 주소 없음 orderId=", orderId);
     return;
   }
 

@@ -23,7 +23,7 @@ export default async function AdminAuditPage() {
       <>
         <PageHeader title="감사로그" />
         <EmptyState>
-          <code>SUPABASE_SERVICE_ROLE_KEY</code> 미설정 — 감사로그를 조회할 수
+          <code>SUPABASE_SERVICE_ROLE_KEY</code> 미설정: 감사로그를 조회할 수
           없습니다.
         </EmptyState>
       </>
@@ -68,7 +68,7 @@ export default async function AdminAuditPage() {
                     })}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    {r.actor_email ?? "—"}
+                    {r.actor_email ?? "-"}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap font-mono text-xs">
                     {r.action}

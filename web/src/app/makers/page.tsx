@@ -7,7 +7,7 @@ import { CtaLink } from "@/components/common/cta-link";
 export const metadata: Metadata = {
   title: "작가 · 만드는 사람들",
   description:
-    "천안 와비사비(WABI-SABI)가 곁에 두는 그릇을 빚는 작가와 공방을 소개합니다 — 손의 흔적이 담긴 도자기, 그 뒤의 사람과 시간.",
+    "천안 와비사비(WABI-SABI)가 곁에 두는 그릇을 빚는 작가와 공방을 소개합니다. 손의 흔적이 담긴 도자기, 그 뒤의 사람과 시간.",
 };
 
 // 작가 소개(MAKERS) — 대분류 예시 페이지(대표님 컨펌용, 시열님). 실제 작가 데이터가

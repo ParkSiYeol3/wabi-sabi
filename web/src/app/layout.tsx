@@ -89,7 +89,7 @@ export const metadata: Metadata = {
     // 정적 파일이라 URL 이 영원히 안 바뀐다 → 네이버 한 번 재수집하면 고정.
     // 이미지 자체는 정사각 크롭에도 여백이 남는 안전 디자인(옛 about OG 를 동결).
     images: [
-      { url: "/og.png", width: 1200, height: 630, alt: "와비사비 WABI-SABI — Living Select Shop" },
+      { url: "/og.png", width: 1200, height: 630, alt: "와비사비 WABI-SABI · Living Select Shop" },
     ],
   },
   // 트위터/X 카드 — 링크 공유 시 큰 이미지 카드로 노출.

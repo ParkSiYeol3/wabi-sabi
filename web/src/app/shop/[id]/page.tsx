@@ -41,7 +41,7 @@ export async function generateMetadata({
   if (!bundle) return { title: "상품을 찾을 수 없음", robots: NOINDEX };
   const { product } = bundle;
   // `??` 는 빈 문자열("") 설명을 통과시켜 meta description 이 비어짐(Lighthouse SEO 감점) → `||`
-  const description = product.description || `${product.name} — WABI-SABI`;
+  const description = product.description || `${product.name} | WABI-SABI`;
   return {
     title: product.name,
     description,
@@ -75,7 +75,7 @@ function productJsonLd(
     "@type": "Product",
     name: product.name,
     // meta description 과 동일 폴백 — 빈 설명이어도 리치 스니펫 description 유지
-    description: product.description || `${product.name} — WABI-SABI`,
+    description: product.description || `${product.name} | WABI-SABI`,
     image: product.images,
     brand: { "@type": "Brand", name: "WABI-SABI" },
     offers: {

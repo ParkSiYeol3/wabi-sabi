@@ -202,7 +202,7 @@ export default async function AdminContentPage() {
         <PageBlock
           id="g-home"
           label="홈"
-          note="wasa.kr 첫 화면 — 곡선 위 문구와 맨 아래 버튼."
+          note="wasa.kr 첫 화면: 곡선 위 문구와 맨 아래 버튼."
         >
           <div className="space-y-4">
             <SectionHeading>홈 철학 멘트 (곡선 위 3구절)</SectionHeading>
@@ -248,7 +248,7 @@ export default async function AdminContentPage() {
         <PageBlock
           id="g-about"
           label="About (소개)"
-          note="wasa.kr/about — 소개 문구·매장 사진·고르는 기준."
+          note="wasa.kr/about: 소개 문구·매장 사진·고르는 기준."
         >
           <div className="space-y-3">
             <SectionHeading>
@@ -341,7 +341,7 @@ export default async function AdminContentPage() {
             <ContentField
               contentKey={SHIPPING_FEE_KEY}
               label="배송비 안내"
-              hint="실제 배송비는 10만원 이상 무료·미만 3,500원으로 자동 계산됩니다. 이 칸은 안내 문구(표현)만 바꿉니다 — 금액·기준선을 바꾸려면 개발(시열님)에게 알려주세요."
+              hint="실제 배송비는 10만원 이상 무료·미만 3,500원으로 자동 계산됩니다. 이 칸은 안내 문구(표현)만 바꿉니다. 금액·기준선을 바꾸려면 개발(시열님)에게 알려주세요."
               value={shippingFee ?? DEFAULT_SHIPPING_FEE}
               rows={2}
             />
@@ -368,7 +368,7 @@ export default async function AdminContentPage() {
         <PageBlock
           id="g-global"
           label="전역 설정"
-          note="모든 페이지에 적용 — 정식 오픈 준비중 안내창."
+          note="모든 페이지에 적용: 정식 오픈 준비중 안내창."
         >
           <section className="space-y-3 rounded-lg border border-wabi-accent/40 bg-wabi-accent/5 p-4">
             <SectionHeading>정식 오픈 준비중 안내</SectionHeading>

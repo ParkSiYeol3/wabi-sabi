@@ -65,7 +65,7 @@ export function MomentForm({ products }: { products: MomentProductTag[] }) {
         {count > 0 && (
           <span className="font-numeric text-xs text-wabi-fg-muted">
             {count}장 선택됨
-            {count > MAX_IMAGES ? ` — ${MAX_IMAGES}장까지만 올라갑니다` : ""}
+            {count > MAX_IMAGES ? ` (${MAX_IMAGES}장까지만 올라갑니다)` : ""}
           </span>
         )}
       </label>

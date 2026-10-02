@@ -106,7 +106,7 @@ export default async function AdminCouponsPage() {
                       </td>
                       <td className="p-3 tabular-nums">{couponLabel(c)}</td>
                       <td className="p-3 tabular-nums">
-                        {c.min_order > 0 ? won(c.min_order) : "—"}
+                        {c.min_order > 0 ? won(c.min_order) : "-"}
                       </td>
                       <td className="p-3 tabular-nums">
                         {c.used_count}
@@ -115,7 +115,7 @@ export default async function AdminCouponsPage() {
                       <td className="p-3 text-xs text-wabi-fg-muted">
                         {expiryText(c)}
                       </td>
-                      <td className="p-3">{c.auto_issue_signup ? "○" : "—"}</td>
+                      <td className="p-3">{c.auto_issue_signup ? "○" : "-"}</td>
                       <td className="p-3">
                         <div className="flex items-center gap-2">
                           <form action={setCouponActive} className="flex items-center gap-2">
@@ -168,7 +168,7 @@ export default async function AdminCouponsPage() {
                     <div className="flex justify-between gap-2">
                       <dt className="text-wabi-fg-muted">최소주문</dt>
                       <dd className="tabular-nums">
-                        {c.min_order > 0 ? won(c.min_order) : "—"}
+                        {c.min_order > 0 ? won(c.min_order) : "-"}
                       </dd>
                     </div>
                     <div className="flex justify-between gap-2">
@@ -186,7 +186,7 @@ export default async function AdminCouponsPage() {
                     </div>
                     <div className="flex justify-between gap-2">
                       <dt className="text-wabi-fg-muted">가입지급</dt>
-                      <dd>{c.auto_issue_signup ? "○" : "—"}</dd>
+                      <dd>{c.auto_issue_signup ? "○" : "-"}</dd>
                     </div>
                   </dl>
 

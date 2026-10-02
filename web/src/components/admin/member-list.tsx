@@ -33,7 +33,7 @@ const chip =
   "rounded-full border border-wabi-border px-2 py-0.5 text-[10px] text-wabi-fg-muted";
 
 function Providers({ list }: { list: string[] }) {
-  if (list.length === 0) return <span className="text-wabi-fg-muted">—</span>;
+  if (list.length === 0) return <span className="text-wabi-fg-muted">-</span>;
   return (
     <span className="flex flex-wrap gap-1">
       {list.map((p) => (
@@ -65,7 +65,7 @@ function Coupons({ m }: { m: MemberRow }) {
         사용함{m.coupon_used > 1 ? ` (${m.coupon_used}장)` : ""}
       </span>
     );
-  return <span className="text-wabi-fg-muted">—</span>;
+  return <span className="text-wabi-fg-muted">-</span>;
 }
 
 function Badges({ m }: { m: MemberRow }) {
@@ -111,7 +111,7 @@ export function MemberList({ rows }: { rows: MemberRow[] }) {
                   {m.name || "(닉네임 없음)"}
                 </p>
                 <p className="truncate text-xs text-wabi-fg-muted">
-                  {m.email ?? "—"}
+                  {m.email ?? "-"}
                 </p>
               </div>
               <span className="flex shrink-0 flex-col items-end gap-1">
@@ -126,7 +126,7 @@ export function MemberList({ rows }: { rows: MemberRow[] }) {
               </dd>
               <dt className="text-wabi-fg-muted">최근 로그인</dt>
               <dd className="font-numeric">
-                {m.last_sign_in_at ? formatDateKST(m.last_sign_in_at) : "—"}
+                {m.last_sign_in_at ? formatDateKST(m.last_sign_in_at) : "-"}
               </dd>
               <dt className="text-wabi-fg-muted">마케팅 수신</dt>
               <dd>
@@ -138,7 +138,7 @@ export function MemberList({ rows }: { rows: MemberRow[] }) {
               </dd>
               <dt className="text-wabi-fg-muted">구매</dt>
               <dd className="font-numeric">
-                {m.orders > 0 ? `${m.orders}회 · ${won(m.amount)}` : "—"}
+                {m.orders > 0 ? `${m.orders}회 · ${won(m.amount)}` : "-"}
               </dd>
             </dl>
           </li>
@@ -171,7 +171,7 @@ export function MemberList({ rows }: { rows: MemberRow[] }) {
                       <Badges m={m} />
                     </span>
                     <span className="block truncate text-xs text-wabi-fg-muted">
-                      {m.email ?? "—"}
+                      {m.email ?? "-"}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -181,7 +181,7 @@ export function MemberList({ rows }: { rows: MemberRow[] }) {
                     {formatDateKST(m.joined_at)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 font-numeric text-wabi-fg-muted">
-                    {m.last_sign_in_at ? formatDateKST(m.last_sign_in_at) : "—"}
+                    {m.last_sign_in_at ? formatDateKST(m.last_sign_in_at) : "-"}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-xs">
                     <Marketing value={m.marketing} />
@@ -198,7 +198,7 @@ export function MemberList({ rows }: { rows: MemberRow[] }) {
                         </span>
                       </>
                     ) : (
-                      <span className="text-wabi-fg-muted">—</span>
+                      <span className="text-wabi-fg-muted">-</span>
                     )}
                   </td>
                 </tr>

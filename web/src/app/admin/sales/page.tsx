@@ -39,7 +39,7 @@ function ItemsCell({ items }: { items: OrderItem[] | null }) {
   const list = (items ?? []).filter(
     (i): i is OrderItem & { product_name: string } => Boolean(i.product_name),
   );
-  if (list.length === 0) return <span>—</span>;
+  if (list.length === 0) return <span>-</span>;
   if (list.length === 1) return <span>{list[0].product_name}</span>;
   return (
     <details className="group">
