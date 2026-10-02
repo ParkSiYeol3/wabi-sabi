@@ -39,10 +39,11 @@ export function RecentOrders({ orders }: { orders: RecentOrder[] }) {
                 key={o.id}
                 className="flex flex-wrap items-center gap-x-4 gap-y-3 py-4"
               >
+                {/* basis-52: 좁은 화면(확대 포함)에선 버튼이 아래 줄로 내려간다.
+                    aria-label 은 두지 않는다(상태 배지까지 링크 이름으로 읽히게). */}
                 <Link
                   href={`/mypage/orders/${o.id}`}
-                  aria-label={`주문 ${o.order_number} 상세 보기`}
-                  className="group min-w-0 flex-1 text-sm"
+                  className="group min-w-0 flex-1 basis-52 text-sm"
                 >
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="font-numeric font-medium underline-offset-4 group-hover:underline">
