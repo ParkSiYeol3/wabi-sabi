@@ -5,7 +5,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import {
   won,
   formatDateKST,
-  trackingSearchUrl,
+  COURIER,
   displayStatus,
   KST,
 } from "@/lib/orders";
@@ -179,7 +179,7 @@ function TrackingForm({ o }: { o: Order }) {
       </SubmitButton>
       {o.tracking_number && (
         <a
-          href={trackingSearchUrl(o.tracking_number)}
+          href={COURIER.trackUrl(o.tracking_number)}
           target="_blank"
           rel="noopener noreferrer"
           className="shrink-0 text-xs text-wabi-fg-muted underline-offset-2 transition-colors hover:text-wabi-fg hover:underline"

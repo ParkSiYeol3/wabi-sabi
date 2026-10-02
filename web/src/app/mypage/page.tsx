@@ -10,6 +10,10 @@ import { AddressAddForm } from "@/components/account/address-add-form";
 import { LinkedAccounts } from "@/components/account/linked-accounts";
 import { MyCoupons } from "@/components/account/my-coupons";
 import { MarketingConsentToggle } from "@/components/account/marketing-consent-toggle";
+import {
+  RecentOrders,
+  type RecentOrder,
+} from "@/components/account/recent-orders";
 import { getMarketingConsent } from "@/lib/queries/consent";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -51,6 +55,18 @@ export default async function MyPage({
     .order("created_at", { ascending: false })
     .returns<Address[]>();
 
+  // 최근 주문 3건(#754). 미결제(pending)는 주문 내역과 같은 기준으로 숨긴다.
+  const { data: recentOrders } = await supabase
+    .from("orders")
+    .select(
+      "id, order_number, status, preparing_at, tracking_number, ordered_at, order_items(product_name)",
+    )
+    .eq("user_id", user.id)
+    .neq("status", "pending")
+    .order("ordered_at", { ascending: false })
+    .limit(3)
+    .returns<RecentOrder[]>();
+
   // 마케팅 수신 동의 현재 상태(#671) — 이력의 최신 행. 기록이 없으면 미동의.
   const marketingConsent = await getMarketingConsent(user.id);
 
@@ -68,8 +84,12 @@ export default async function MyPage({
         <LogoutButton />
       </div>
 
+      {/* 주문·배송(#754). 첫 실주문 때 마이페이지에서 주문 내역·배송조회로 가는 길이
+          없었다(헤더 아이콘·모바일 메뉴뿐). */}
+      <RecentOrders orders={recentOrders ?? []} />
+
       {/* 내 정보 */}
-      <section className="mt-12">
+      <section className="mt-14">
         <h2 className="text-lg font-medium">내 정보</h2>
         <div className="mt-4 space-y-1 text-sm text-wabi-fg-muted">
           <p className="font-numeric">이메일: {profile?.email ?? user.email}</p>
