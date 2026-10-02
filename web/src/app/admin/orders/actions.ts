@@ -20,6 +20,13 @@ export async function setTracking(formData: FormData) {
   if (!id) return;
 
   const supabase = createAdminClient();
+  // 저장 전 송장번호 — 같은 번호를 다시 저장해도 메일이 또 나가던 문제(첫 실주문 10/2,
+  // 손님에게 2통). 처음 입력됐거나 번호가 실제로 바뀐 경우에만 알린다.
+  const { data: before } = await supabase
+    .from("orders")
+    .select("tracking_number")
+    .eq("id", id)
+    .maybeSingle<{ tracking_number: string | null }>();
   const { data: updated } = await supabase
     .from("orders")
     .update({
@@ -36,9 +43,9 @@ export async function setTracking(formData: FormData) {
   // "바꾼 적 없는 변경"이 기록돼 감사 기록 자체를 못 믿게 된다.
   if (!updated || updated.length === 0) return;
 
-  // 배송 시작 알림 (#129) — 송장이 실제로 등록된 경우에만.
-  // 송장을 지우는(=배송중 해제) 경우엔 보내지 않는다.
-  if (tracking) {
+  // 배송 시작 알림 (#129) — 송장이 실제로 등록·변경된 경우에만.
+  // 송장을 지우는(=배송중 해제) 경우·같은 번호 재저장엔 보내지 않는다.
+  if (tracking && tracking !== (before?.tracking_number ?? "")) {
     await sendOrderShippedMail(id, tracking).catch((e) =>
       console.error("[admin] 배송 알림 메일 실패 orderId=", id, e),
     );
