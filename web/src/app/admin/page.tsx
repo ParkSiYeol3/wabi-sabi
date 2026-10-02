@@ -11,7 +11,7 @@ import {
   Eye,
 } from "lucide-react";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
-import { won, formatDateKST } from "@/lib/orders";
+import { won, formatDateKST, displayStatus } from "@/lib/orders";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { LOW_STOCK_THRESHOLD } from "@/lib/inventory";
 import {
@@ -66,6 +66,7 @@ type RecentOrder = {
   id: string;
   recipient: string;
   status: string;
+  preparing_at: string | null;
   total_price: number;
   ordered_at: string;
 };
@@ -117,7 +118,7 @@ async function loadDashboard() {
       .returns<LowStockRow[]>(),
     db
       .from("orders")
-      .select("id, recipient, status, total_price, ordered_at")
+      .select("id, recipient, status, preparing_at, total_price, ordered_at")
       .order("ordered_at", { ascending: false })
       .limit(5)
       .throwOnError()
@@ -370,7 +371,7 @@ export default async function AdminHome() {
                       className="flex items-center justify-between gap-4 p-4 text-sm transition-colors hover:bg-wabi-muted/50"
                     >
                       <span className="flex min-w-0 items-center gap-2">
-                        <OrderStatusBadge status={o.status} />
+                        <OrderStatusBadge status={displayStatus(o)} />
                         <span className="truncate">{o.recipient}</span>
                       </span>
                       <span className="shrink-0 text-right">

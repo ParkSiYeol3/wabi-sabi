@@ -9,6 +9,7 @@ import {
   formatDateKST,
   withdrawalDeadlineKST,
   trackingSearchUrl,
+  displayStatus,
 } from "@/lib/orders";
 import { PenLine } from "lucide-react";
 import { Price } from "@/components/product/price";
@@ -26,6 +27,7 @@ type Detail = {
   id: string;
   order_number: string;
   status: string;
+  preparing_at: string | null;
   total_price: number;
   shipping_fee: number;
   recipient: string;
@@ -65,7 +67,7 @@ export default async function OrderDetailPage({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, total_price, shipping_fee, recipient, phone, address, delivery_memo, tracking_number, ordered_at, delivered_at, order_items(product_id, product_name, quantity, price, addons, options), gift_options(message)",
+      "id, order_number, status, preparing_at, total_price, shipping_fee, recipient, phone, address, delivery_memo, tracking_number, ordered_at, delivered_at, order_items(product_id, product_name, quantity, price, addons, options), gift_options(message)",
     )
     .eq("id", orderId)
     .maybeSingle<Detail>();
@@ -100,7 +102,10 @@ export default async function OrderDetailPage({
         <h1 className="font-numeric text-2xl font-semibold tracking-wide">
           {order.order_number}
         </h1>
-        <OrderStatusBadge status={order.status} className="text-sm" />
+        <OrderStatusBadge
+          status={displayStatus(order)}
+          className="text-sm"
+        />
       </div>
       <p className="mt-2 font-numeric text-sm text-wabi-fg-muted">
         {formatDateKST(order.ordered_at)} 주문
@@ -227,11 +232,23 @@ export default async function OrderDetailPage({
         </p>
       )}
 
-      {/* 배송 전(paid) 주문만 취소 가능 (#57) */}
-      {order.status === "paid" && (
+      {/* 배송 전(paid)이면서 상품 준비 전인 주문만 취소 가능 (#57, 0071) */}
+      {order.status === "paid" && !order.preparing_at && (
         <div className="mt-8 border-t border-wabi-border pt-6">
           <CancelOrderButton orderId={order.id} />
         </div>
+      )}
+      {order.status === "paid" && order.preparing_at && (
+        <p className="mt-8 border-t border-wabi-border pt-6 text-sm break-keep text-wabi-fg-muted">
+          상품 준비가 시작되어 직접 취소할 수 없어요. 취소가 필요하면{" "}
+          <Link
+            href="/inquiry"
+            className="underline underline-offset-2 hover:text-wabi-fg"
+          >
+            문의 게시판
+          </Link>
+          으로 알려주세요.
+        </p>
       )}
     </Container>
   );

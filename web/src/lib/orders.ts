@@ -2,10 +2,21 @@
 export const ORDER_STATUS: Record<string, string> = {
   pending: "결제 대기",
   paid: "결제 완료",
+  // 화면 전용(0071) — DB status 는 paid 그대로, preparing_at 이 있으면 이 라벨.
+  preparing: "상품 준비 중",
   shipping: "배송 중",
   delivered: "배송 완료",
   cancelled: "주문 취소",
 };
+
+// 화면에 보일 상태 — 결제 완료 뒤 대표님이 준비를 시작했으면(preparing_at) "상품 준비 중".
+// 매출·통계는 DB status(paid)로 계속 센다(0071 주석 참고).
+export function displayStatus(o: {
+  status: string;
+  preparing_at?: string | null;
+}): string {
+  return o.status === "paid" && o.preparing_at ? "preparing" : o.status;
+}
 
 export function statusLabel(status: string): string {
   return ORDER_STATUS[status] ?? status;
