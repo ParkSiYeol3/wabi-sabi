@@ -42,6 +42,15 @@ export function trackingSearchUrl(invoice: string): string {
   return `https://search.naver.com/search.naver?query=${q}`;
 }
 
+// 택배사 (#748) — 대표님은 우체국택배만 쓴다(2026-10-02 확인). 송장 칸에 택배사 선택이
+// 없으므로 메일·안내는 이 값 하나를 본다. 택배사를 늘리면 orders 에 컬럼을 추가할 것.
+// 조회는 우체국 공식 조회 페이지 직링크(숫자만 넘긴다 — 손님이 하이픈을 넣어도 동작).
+export const COURIER = {
+  name: "우체국택배",
+  trackUrl: (invoice: string) =>
+    `https://service.epost.go.kr/trace.RetrieveDomRigiTraceList.comm?sid1=${encodeURIComponent(invoice.replace(/\D/g, ""))}`,
+} as const;
+
 // 청약철회 기간 — 수령일부터 7일 (교환·환불 안내 #106).
 export const WITHDRAWAL_DAYS = 7;
 

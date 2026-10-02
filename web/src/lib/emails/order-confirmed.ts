@@ -1,8 +1,8 @@
-import { escapeHtml, sendMail } from "@/lib/email";
+import { sendMail } from "@/lib/email";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
-import { formatDateKST, won } from "@/lib/orders";
-import { site, business } from "@/lib/site";
-import { SITE_URL } from "@/lib/site-url";
+import { won } from "@/lib/orders";
+import { firstImage } from "./layout";
+import { orderConfirmedMail } from "./templates";
 
 // 주문 확인 메일 (#129) — 결제 완료 후 고객에게 아무 통지도 가지 않던 문제.
 // 전자상거래법 §13 은 계약 내용에 관한 서면(전자문서 포함) 교부를 요구한다.
@@ -26,86 +26,31 @@ type Row = {
     addons: { code: string; name: string; price: number }[] | null;
     // 커스텀 옵션 스냅샷(색상·모양 등, 0048). 대표님이 어떤 걸 보낼지 안다.
     options: { name: string; value: string }[] | null;
+    // 상품 사진(#748). 상품이 삭제됐으면 null.
+    products: { images: unknown } | null;
   }[];
 };
 
-const BASE = SITE_URL;
-
-function html(o: Row): string {
-  const items = o.order_items
-    .map((i) => {
-      // 커스텀 옵션(색상·모양 등) — 상품 아래 서브라인으로. 대표님이 발송 시 참고.
-      const optionRow =
-        i.options && i.options.length > 0
-          ? `<tr>
-          <td colspan="2" style="padding:2px 0 4px 14px;border-bottom:1px solid #f2f2f2;color:#8a847c;font-size:13px">${escapeHtml(
-            i.options.map((o) => `${o.name}: ${o.value}`).join(" · "),
-          )}</td>
-        </tr>`
-          : "";
-      // 애드온(선물 포장·쇼핑백)은 상품 아래 들여쓴 서브라인으로 각각 표기.
-      const addonRows = (i.addons ?? [])
-        .map(
-          (a) =>
-            `<tr>
-          <td style="padding:4px 0 4px 14px;border-bottom:1px solid #f2f2f2;color:#8a847c;font-size:13px">+ ${escapeHtml(a.name)}</td>
-          <td style="padding:4px 0;border-bottom:1px solid #f2f2f2;text-align:right;color:#8a847c;font-size:13px">${won(a.price)}</td>
-        </tr>`,
-        )
-        .join("");
-      return `<tr>
-          <td style="padding:8px 0;border-bottom:1px solid #eee">${escapeHtml(i.product_name)} × ${i.quantity}</td>
-          <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">${won(i.price * i.quantity)}</td>
-        </tr>${optionRow}${addonRows}`;
-    })
-    .join("");
-
-  return `
-  <div style="font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;max-width:560px;margin:0 auto;color:#2b2926">
-    <h1 style="font-size:18px;letter-spacing:.08em">${escapeHtml(site.name)}</h1>
-    <p style="font-size:15px">주문이 정상적으로 접수되었습니다.</p>
-
-    <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:24px">
-      <tr>
-        <td style="padding:8px 0;color:#6f6a63">주문번호</td>
-        <td style="padding:8px 0;text-align:right">${escapeHtml(o.order_number)}</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 0;color:#6f6a63">주문일시</td>
-        <td style="padding:8px 0;text-align:right">${formatDateKST(o.ordered_at)}</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 0;color:#6f6a63">받는 분</td>
-        <td style="padding:8px 0;text-align:right">${escapeHtml(o.recipient)}</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 0;color:#6f6a63">배송지</td>
-        <td style="padding:8px 0;text-align:right">${escapeHtml(o.address)}</td>
-      </tr>
-    </table>
-
-    <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:24px;border-top:1px solid #2b2926">
-      ${items}
-      <tr>
-        <td style="padding:8px 0;color:#6f6a63">배송비</td>
-        <td style="padding:8px 0;text-align:right;color:#6f6a63">${o.shipping_fee > 0 ? won(o.shipping_fee) : "무료"}</td>
-      </tr>
-      <tr>
-        <td style="padding:12px 0;font-weight:600;border-top:1px solid #eee">결제 금액</td>
-        <td style="padding:12px 0;text-align:right;font-weight:600;border-top:1px solid #eee">${won(o.total_price)}</td>
-      </tr>
-    </table>
-
-    <p style="margin-top:28px">
-      <a href="${BASE}/mypage/orders" style="color:#2b2926">주문 내역 보기</a>
-    </p>
-
-    <p style="margin-top:28px;font-size:12px;color:#8a847c;line-height:1.8">
-      도자기·유리 등 일부 기물은 소재 특성상 색상·질감·크기에 개체별 미세한 차이가 있을 수 있습니다(하자 아님).<br>
-      교환·환불은 <a href="${BASE}/legal/refund" style="color:#8a847c">교환·환불 안내</a>를 참고해 주세요.<br>
-      문의: ${escapeHtml(business.email)}
-    </p>
-  </div>`;
+// 본문은 templates.ts(#748). 옵션·애드온은 상품 아래 작은 줄로, 금액은 상품가×수량.
+function mail(o: Row) {
+  return orderConfirmedMail({
+    orderNumber: o.order_number,
+    orderedAt: o.ordered_at,
+    recipient: o.recipient,
+    address: o.address,
+    shippingFee: o.shipping_fee,
+    total: o.total_price,
+    items: o.order_items.map((i) => ({
+      name: i.product_name,
+      quantity: i.quantity,
+      image: firstImage(i.products?.images),
+      price: won(i.price * i.quantity),
+      details: [
+        ...(i.options ?? []).map((op) => `${op.name}: ${op.value}`),
+        ...(i.addons ?? []).map((ad) => `+ ${ad.name} ${won(ad.price)}`),
+      ],
+    })),
+  });
 }
 
 export async function sendOrderConfirmedMail(orderId: string): Promise<void> {
@@ -115,7 +60,7 @@ export async function sendOrderConfirmedMail(orderId: string): Promise<void> {
   const { data: order } = await admin
     .from("orders")
     .select(
-      "order_number, total_price, shipping_fee, recipient, address, ordered_at, user_id, order_items(product_name, quantity, price, addons, options)",
+      "order_number, total_price, shipping_fee, recipient, address, ordered_at, user_id, order_items(product_name, quantity, price, addons, options, products(images))",
     )
     .eq("id", orderId)
     .maybeSingle<Row>();
@@ -130,9 +75,5 @@ export async function sendOrderConfirmedMail(orderId: string): Promise<void> {
     return;
   }
 
-  await sendMail({
-    to,
-    subject: `[${site.name}] 주문이 접수되었습니다 (${order.order_number})`,
-    html: html(order),
-  });
+  await sendMail({ to, ...mail(order) });
 }

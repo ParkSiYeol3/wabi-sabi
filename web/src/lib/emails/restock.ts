@@ -1,13 +1,12 @@
-import { escapeHtml, sendMail } from "@/lib/email";
+import { sendMail } from "@/lib/email";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
-import { site, business } from "@/lib/site";
-import { SITE_URL } from "@/lib/site-url";
+import { firstImage } from "./layout";
+import { restockMail } from "./templates";
 
 // 재입고 알림 메일 (#166) — 어드민이 재고를 0 → 양수로 바꿨을 때만 호출된다.
 // 1회성: 발송한 구독은 삭제해 중복 통지를 막는다(재고가 다시 떨어지면 재구독).
 // 발송 실패가 재고 저장을 되돌리지 않는다(fail-open) — 메일은 부가 기능.
-
-const BASE = SITE_URL;
+// 본문은 templates.ts(#748 — 상품 사진 포함).
 
 export async function sendRestockMails(productId: string): Promise<void> {
   if (!adminConfigured()) return;
@@ -15,9 +14,9 @@ export async function sendRestockMails(productId: string): Promise<void> {
 
   const { data: product } = await admin
     .from("products")
-    .select("name")
+    .select("name, images")
     .eq("id", productId)
-    .maybeSingle<{ name: string }>();
+    .maybeSingle<{ name: string; images: unknown }>();
   if (!product) return;
 
   const { data: subs } = await admin
@@ -38,22 +37,11 @@ export async function sendRestockMails(productId: string): Promise<void> {
       // sendMail 은 실패 시 false — 반환값을 봐야 실패한 구독을 지우지 않는다.
       const sent = await sendMail({
         to,
-        subject: `[${site.name}] ${product.name} 재입고 알림`,
-        html: `
-        <div style="font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;max-width:560px;margin:0 auto;color:#2b2926">
-          <h1 style="font-size:18px;letter-spacing:.08em">${escapeHtml(site.name)}</h1>
-          <p style="font-size:15px">기다리시던 <strong>${escapeHtml(product.name)}</strong> 이(가) 재입고되었습니다.</p>
-          <p style="font-size:14px;color:#6f6a63">수량이 한정되어 있어 조기 품절될 수 있습니다.</p>
-
-          <p style="margin-top:28px">
-            <a href="${BASE}/shop/${productId}" style="display:inline-block;background:#3b3733;color:#fff;padding:12px 24px;text-decoration:none;font-size:14px">상품 보러 가기</a>
-          </p>
-
-          <p style="margin-top:28px;font-size:12px;color:#8a847c;line-height:1.8">
-            이 메일은 재입고 알림을 신청하신 분께 1회 발송됩니다.<br>
-            문의: ${escapeHtml(business.email)}
-          </p>
-        </div>`,
+        ...restockMail({
+          productId,
+          name: product.name,
+          image: firstImage(product.images),
+        }),
       });
       if (sent) sentIds.push(sub.id);
     } catch (e) {
