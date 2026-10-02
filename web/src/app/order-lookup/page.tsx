@@ -8,7 +8,8 @@ import { Price } from "@/components/product/price";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import {
   formatDateKST,
-  COURIER,
+  courierOf,
+  trackingUrl,
   displayStatus,
 } from "@/lib/orders";
 import { lookupGuestOrder, type GuestOrder } from "./actions";
@@ -152,9 +153,10 @@ export default function OrderLookupPage() {
               <div className="flex gap-3">
                 <dt className="w-20 shrink-0 text-wabi-fg-muted">송장번호</dt>
                 <dd>
+                  {courierOf(order.courier).name}{" "}
                   {order.tracking_number}{" "}
                   <a
-                    href={COURIER.trackUrl(order.tracking_number)}
+                    href={trackingUrl(order.courier, order.tracking_number)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="ml-1 underline underline-offset-2"

@@ -9,6 +9,7 @@ export type RecentOrder = {
   status: string;
   preparing_at: string | null;
   tracking_number: string | null;
+  courier: string | null;
   ordered_at: string;
   order_items: { product_name: string }[];
 };
@@ -63,7 +64,7 @@ export function RecentOrders({ orders }: { orders: RecentOrder[] }) {
                     </span>
                   </span>
                 </Link>
-                {track && <TrackButton invoice={track} />}
+                {track && <TrackButton courier={o.courier} invoice={track} />}
               </li>
             );
           })}

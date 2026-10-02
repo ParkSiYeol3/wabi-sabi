@@ -35,6 +35,7 @@ type Order = {
   status: string;
   preparing_at: string | null;
   tracking_number: string | null;
+  courier: string | null;
   total_price: number;
   ordered_at: string;
   delivered_at: string | null;
@@ -58,7 +59,7 @@ export default async function OrdersPage() {
   const { data: orders } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, preparing_at, tracking_number, total_price, ordered_at, delivered_at, order_items(product_id, product_name, quantity, products(images))",
+      "id, order_number, status, preparing_at, tracking_number, courier, total_price, ordered_at, delivered_at, order_items(product_id, product_name, quantity, products(images))",
     )
     // 미결제(pending)는 숨긴다 — 결제창을 열었다가 결제하지 않고 뒤로가면 주문이
     // pending 으로 남는데(결제 전 orderId 발급이 필요한 토스 결제창 구조), 이는
@@ -182,7 +183,7 @@ export default async function OrdersPage() {
                   track ||
                   reviewTargets.length > 0) && (
                   <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-wabi-border pt-4">
-                    {track && <TrackButton invoice={track} />}
+                    {track && <TrackButton courier={o.courier} invoice={track} />}
                     {o.status === "paid" && !o.preparing_at && (
                       <CancelOrderButton orderId={o.id} />
                     )}
