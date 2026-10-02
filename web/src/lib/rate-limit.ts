@@ -109,7 +109,7 @@ export async function rateLimit(
       ? await redisLimit(key, limit, windowSec)
       : await supabaseLimit(key, limit, windowSec);
   } catch (err) {
-    console.error(`[rate-limit] ${backend} 실패 — 인메모리로 폴백`, err);
+    console.error(`[rate-limit] ${backend} 실패: 인메모리로 폴백`, err);
     return memoryLimit(key, limit, windowSec);
   }
 }

@@ -83,7 +83,7 @@ export async function confirmPayment(
     if (!cancel.ok)
       // 주문은 cancelled 인데 환불 실패 — 토스 대시보드에서 수동 취소 필요
       console.error(
-        `[payments] 재고부족 자동취소 실패 — 수동 환불 필요 orderId=${orderId} paymentKey=${paymentKey}`,
+        `[payments] 재고부족 자동취소 실패: 수동 환불 필요 orderId=${orderId} paymentKey=${paymentKey}`,
       );
     return {
       ok: false,
@@ -149,7 +149,7 @@ export async function cancelPaidOrder(
   });
   if (!lookup.ok) {
     console.error(
-      `[payments] 주문 취소 후 결제 조회 실패 — 수동 환불 확인 필요 orderId=${orderId}`,
+      `[payments] 주문 취소 후 결제 조회 실패: 수동 환불 확인 필요 orderId=${orderId}`,
     );
     return {
       ok: false,
@@ -167,7 +167,7 @@ export async function cancelPaidOrder(
       const body = await cancel.json().catch(() => ({}));
       if (body.code !== "ALREADY_CANCELED_PAYMENT") {
         console.error(
-          `[payments] 주문 취소 후 환불 실패 — 수동 환불 필요 orderId=${orderId} paymentKey=${payment.paymentKey}`,
+          `[payments] 주문 취소 후 환불 실패: 수동 환불 필요 orderId=${orderId} paymentKey=${payment.paymentKey}`,
         );
         return {
           ok: false,

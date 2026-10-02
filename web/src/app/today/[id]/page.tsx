@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const title = m.body ? m.body.slice(0, 30) : `${m.author_name}의 순간`;
   return {
     title,
-    description: m.body ?? "오늘의 와비사비 — 손님들의 일상 속 그릇 이야기.",
+    description: m.body ?? "오늘의 와비사비. 손님들의 일상 속 그릇 이야기.",
     openGraph: { images: m.image_urls?.length ? m.image_urls : [m.image_url] },
   };
 }

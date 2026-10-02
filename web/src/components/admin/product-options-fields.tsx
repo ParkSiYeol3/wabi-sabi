@@ -223,7 +223,7 @@ export function ProductOptionsFields({
               {/* 3줄: 선택지(전폭 — 모바일에서 안 잘리게) */}
               <input
                 aria-label={`옵션 ${i + 1} 선택지`}
-                placeholder="선택지 — 쉼표로 구분 (예: 아이보리, 블루)"
+                placeholder="선택지: 쉼표로 구분 (예: 아이보리, 블루)"
                 value={r.values}
                 onChange={(e) => setRow(i, { values: e.target.value })}
                 className="w-full border border-wabi-border bg-transparent px-3 py-2 text-sm outline-none focus:border-wabi-fg"

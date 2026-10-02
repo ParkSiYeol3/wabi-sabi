@@ -231,7 +231,7 @@ async function loadPrepNotice(): Promise<PrepNotice> {
       text: map[PREP_NOTICE_TEXT_KEY]?.trim() || DEFAULT_PREP_NOTICE_TEXT,
     };
   } catch (e) {
-    console.error("[prep-notice] 조회 실패 — 안내 생략", e);
+    console.error("[prep-notice] 조회 실패: 안내 생략", e);
     return off;
   }
 }

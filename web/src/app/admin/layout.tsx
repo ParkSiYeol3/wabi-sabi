@@ -22,7 +22,7 @@ export default async function AdminLayout({
             <p className="mb-6 flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50/50 p-3 text-xs text-amber-800">
               <TriangleAlert className="mt-0.5 size-4 shrink-0" />
               <span>
-                <code>SUPABASE_SERVICE_ROLE_KEY</code> 미설정 — 쓰기 작업(생성/수정/삭제)과
+                <code>SUPABASE_SERVICE_ROLE_KEY</code> 미설정: 쓰기 작업(생성/수정/삭제)과
                 대시보드 요약 조회는 .env.local에 service_role 키를 넣어야 동작합니다.
               </span>
             </p>

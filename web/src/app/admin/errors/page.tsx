@@ -22,7 +22,7 @@ export default async function AdminErrorsPage() {
       <>
         <PageHeader title="에러 로그" />
         <EmptyState>
-          <code>SUPABASE_SERVICE_ROLE_KEY</code> 미설정 — 에러 로그를 조회할 수
+          <code>SUPABASE_SERVICE_ROLE_KEY</code> 미설정: 에러 로그를 조회할 수
           없습니다.
         </EmptyState>
       </>
@@ -68,11 +68,11 @@ export default async function AdminErrorsPage() {
                     })}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-xs">
-                    {r.url ?? "—"}
+                    {r.url ?? "-"}
                   </td>
-                  <td className="px-4 py-3 text-xs">{r.message ?? "—"}</td>
+                  <td className="px-4 py-3 text-xs">{r.message ?? "-"}</td>
                   <td className="px-4 py-3 whitespace-nowrap font-mono text-xs text-wabi-fg-muted">
-                    {r.digest ?? "—"}
+                    {r.digest ?? "-"}
                   </td>
                 </tr>
               ))}

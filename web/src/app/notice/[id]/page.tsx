@@ -13,7 +13,7 @@ export async function generateMetadata({
   const { id } = await params;
   const notice = await getNotice(id);
   if (!notice) return { title: "공지를 찾을 수 없음", robots: NOINDEX };
-  return { title: notice.title, description: `WABI-SABI 공지 — ${notice.title}` };
+  return { title: notice.title, description: `WABI-SABI 공지: ${notice.title}` };
 }
 
 export default async function NoticeDetailPage({

@@ -23,7 +23,7 @@ import {
 export const metadata: Metadata = {
   title: "오늘의 와비사비",
   description:
-    "와비사비의 기물이 일상에서 어떻게 쓰이는지 — 오늘의 식탁, 좋아하는 음식, 작은 레시피를 나누는 공간입니다.",
+    "와비사비의 기물이 일상에서 어떻게 쓰이는지, 오늘의 식탁과 좋아하는 음식, 작은 레시피를 나누는 공간입니다.",
 };
 
 export default async function TodayPage() {

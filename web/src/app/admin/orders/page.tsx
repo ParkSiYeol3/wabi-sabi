@@ -285,7 +285,7 @@ export default async function AdminOrdersPage() {
                             </SubmitButton>
                           </form>
                         ) : (
-                          <span className="text-xs text-wabi-fg-muted">—</span>
+                          <span className="text-xs text-wabi-fg-muted">-</span>
                         )}
                       </td>
                       {/* 취소·환불(배송 전 paid만) + 기록 삭제(모든 상태). 취소는

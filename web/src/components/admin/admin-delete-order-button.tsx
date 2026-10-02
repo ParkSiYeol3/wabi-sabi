@@ -82,7 +82,7 @@ export function AdminDeleteOrderButton({
             </h2>
             <p className="mt-2 text-sm leading-6 text-wabi-fg-muted">
               주문 기록이 <b className="text-wabi-fg">영구 삭제</b>됩니다. 되돌릴 수
-              없어요. 결제·환불과는 무관하게 기록만 지웁니다 — 결제된 주문은 먼저
+              없어요. 결제·환불과는 무관하게 기록만 지웁니다. 결제된 주문은 먼저
               <b className="text-wabi-fg"> 취소(환불)</b> 후 삭제하세요.
             </p>
             <div className="mt-6 flex justify-end gap-2">

@@ -24,7 +24,7 @@ export async function sendMail(input: {
   html: string;
 }): Promise<boolean> {
   if (!mailConfigured()) {
-    console.warn("[email] RESEND_API_KEY 미설정 — 발송 건너뜀:", input.subject);
+    console.warn("[email] RESEND_API_KEY 미설정: 발송 건너뜀:", input.subject);
     return false;
   }
 

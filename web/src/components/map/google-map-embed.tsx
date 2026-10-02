@@ -8,7 +8,7 @@ export function GoogleMapEmbed() {
   return (
     <iframe
       src={`https://maps.google.com/maps?q=${q}&z=17&hl=ko&output=embed`}
-      title={`${site.place} 위치 지도 — ${site.roadAddress}`}
+      title={`${site.place} 위치 지도: ${site.roadAddress}`}
       loading="lazy"
       referrerPolicy="no-referrer-when-downgrade"
       className="h-full w-full border-0"

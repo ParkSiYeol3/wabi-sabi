@@ -17,23 +17,23 @@ export default function PrivacyPage() {
       <Article heading="1. 수집하는 개인정보 항목">
         <ul className="ml-4 list-disc space-y-1">
           <li>
-            <strong className="text-wabi-fg">회원가입</strong> — 이메일 주소,
+            <strong className="text-wabi-fg">회원가입</strong>: 이메일 주소,
             비밀번호, 이름. 소셜 로그인(카카오·구글) 이용 시 해당 서비스가 제공하는
             계정 식별자와 이메일
           </li>
           <li>
-            <strong className="text-wabi-fg">주문·배송</strong> — 수령인 이름,
+            <strong className="text-wabi-fg">주문·배송</strong>: 수령인 이름,
             연락처, 배송지 주소, 배송 요청사항, 주문 내역
           </li>
           <li>
-            <strong className="text-wabi-fg">결제</strong> — 결제 수단 및 결제
+            <strong className="text-wabi-fg">결제</strong>: 결제 수단 및 결제
             승인 정보. <strong className="text-wabi-fg">카드번호 등 결제
             수단의 상세 정보는 결제대행사(토스페이먼츠)가 처리하며 회사는 보관하지
             않습니다.</strong>
           </li>
           <li>
-            <strong className="text-wabi-fg">서비스 이용 과정에서 자동 수집</strong>{" "}
-            — 접속 브라우저 정보(User-Agent), 오류 발생 시 오류 메시지와 해당 페이지
+            <strong className="text-wabi-fg">서비스 이용 과정에서 자동 수집</strong>:{" "}
+            접속 브라우저 정보(User-Agent), 오류 발생 시 오류 메시지와 해당 페이지
             주소(서비스 안정성 개선 목적)
           </li>
         </ul>
@@ -54,9 +54,9 @@ export default function PrivacyPage() {
           정보는 정해진 기간 동안 보관합니다.
         </p>
         <ul className="ml-4 list-disc space-y-1">
-          <li>계약 또는 청약철회 등에 관한 기록 — 5년 (전자상거래법)</li>
-          <li>대금결제 및 재화 등의 공급에 관한 기록 — 5년 (전자상거래법)</li>
-          <li>소비자의 불만 또는 분쟁처리에 관한 기록 — 3년 (전자상거래법)</li>
+          <li>계약 또는 청약철회 등에 관한 기록: 5년 (전자상거래법)</li>
+          <li>대금결제 및 재화 등의 공급에 관한 기록: 5년 (전자상거래법)</li>
+          <li>소비자의 불만 또는 분쟁처리에 관한 기록: 3년 (전자상거래법)</li>
         </ul>
       </Article>
 
@@ -64,15 +64,15 @@ export default function PrivacyPage() {
         <p>회사는 서비스 제공을 위해 아래와 같이 개인정보 처리를 위탁합니다.</p>
         <ul className="ml-4 list-disc space-y-1">
           <li>
-            <strong className="text-wabi-fg">토스페이먼츠</strong> — 결제 처리 및
+            <strong className="text-wabi-fg">토스페이먼츠</strong>: 결제 처리 및
             결제 도용 방지
           </li>
           <li>
-            <strong className="text-wabi-fg">Supabase</strong> — 회원 인증 및
+            <strong className="text-wabi-fg">Supabase</strong>: 회원 인증 및
             데이터베이스 운영 (데이터 보관)
           </li>
           <li>
-            <strong className="text-wabi-fg">Vercel</strong> — 웹사이트 호스팅 및
+            <strong className="text-wabi-fg">Vercel</strong>: 웹사이트 호스팅 및
             서버 운영
           </li>
         </ul>
@@ -103,7 +103,7 @@ export default function PrivacyPage() {
         <ul className="ml-4 list-disc space-y-1">
           <li>비밀번호는 복호화가 불가능한 방식으로 암호화하여 저장</li>
           <li>전 구간 HTTPS 암호화 통신 및 보안 헤더 적용</li>
-          <li>데이터베이스 접근 권한 제한 — 본인 데이터만 조회 가능하도록 통제</li>
+          <li>데이터베이스 접근 권한 제한: 본인 데이터만 조회 가능하도록 통제</li>
           <li>관리자 작업 이력 기록 및 접근 권한 최소화</li>
         </ul>
       </Article>
