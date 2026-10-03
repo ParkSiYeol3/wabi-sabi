@@ -26,6 +26,7 @@ import { VisitorChart, type VisitDay } from "@/components/admin/visitor-chart";
 import { QuickActions } from "@/components/admin/quick-actions";
 import { sourceLabel } from "@/lib/traffic-source";
 import { StaffDeviceToggle } from "@/components/admin/staff-device-toggle";
+import { instagramTokenStatus, type InstagramTokenStatus } from "@/lib/instagram-token";
 import {
   RecentVisitors,
   type RecentVisitor,
@@ -80,7 +81,7 @@ async function loadDashboard() {
   const db = createAdminClient();
   // 방문 요약(0054)·추이(0056)는 마이그 push 전이면 함수가 없어 에러가 난다. 대시보드
   // 전체를 죽이지 않도록 throwOnError 없이 조회하고, 실패하면 0/빈 배열로 둔다.
-  const [visitsRes, visitTrendRes, sourcesRes, peopleRes, recentVisitorsRes] =
+  const [visitsRes, visitTrendRes, sourcesRes, peopleRes, recentVisitorsRes, instagram] =
     await Promise.all([
       db.rpc("admin_visit_summary"),
       db.rpc("admin_visit_trend", { p_days: 14 }),
@@ -88,6 +89,8 @@ async function loadDashboard() {
       // 방문자 판별·최근 방문(0070) — 마이그 전이면 없어 빈 값으로 둔다.
       db.rpc("admin_visit_people"),
       db.rpc("admin_recent_visitors", { p_limit: 30 }),
+      // 인스타 토큰 자동 갱신 상태(#775). 문제 있을 때만 경고 한 줄.
+      instagramTokenStatus(),
     ]);
   const visits = (visitsRes.data as VisitSummary[] | null)?.[0] ?? EMPTY_VISITS;
   const visitTrend = (visitTrendRes.data as VisitDay[] | null) ?? [];
@@ -134,6 +137,7 @@ async function loadDashboard() {
     visitSources,
     people,
     recentVisitors,
+    instagram,
     // KST 오늘 — 최근 방문 목록의 "어제" 표기용(렌더 중 Date.now 금지라 여기서 계산).
     todayKst: new Date(Date.now() + 9 * 3_600_000).toISOString().slice(0, 10),
   };
@@ -165,6 +169,7 @@ export default async function AdminHome() {
     visitSources,
     people,
     recentVisitors,
+    instagram,
     todayKst,
   } =
     await loadDashboard();
@@ -179,6 +184,8 @@ export default async function AdminHome() {
       {/* 바로가기(대표님) — 대시보드에서 사이드바 없이 자주 쓰는 섹션으로 원탭 이동.
           admin 진입 시 대시보드가 먼저 보이되(운영 현황), 이동은 빠르게. */}
       <QuickActions />
+
+      <InstagramTokenNotice status={instagram} />
 
       {/* 처리 대기 — 모바일도 한눈에(2열 컴팩트, 대표님) */}
       <section>
@@ -437,5 +444,23 @@ export default async function AdminHome() {
         </div>
       )}
     </div>
+  );
+}
+
+// 홈 인스타 피드 토큰 경고(#775). 크론이 매일 자동 갱신하므로 평소엔 아무것도 안 그린다.
+// 대표님도 보는 화면이라 할 일(시열님께 알리기)까지 적는다.
+function InstagramTokenNotice({ status }: { status: InstagramTokenStatus }) {
+  if (status.kind === "ok") return null;
+  const text =
+    status.kind === "failing"
+      ? `홈 인스타그램 피드 연결 자동 갱신이 ${formatDateKST(status.since)}부터 실패하고 있습니다.`
+      : status.daysLeft < 0
+        ? "홈 인스타그램 피드 연결이 만료되었습니다."
+        : `홈 인스타그램 피드 연결이 ${status.daysLeft}일 후 만료됩니다.`;
+  return (
+    <p className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50/50 p-3 text-xs text-amber-800">
+      <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+      <span>{text} 시열님께 알려 주세요.</span>
+    </p>
   );
 }

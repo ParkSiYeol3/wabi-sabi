@@ -1,7 +1,10 @@
+import { getInstagramToken } from "@/lib/instagram-token";
+
 // WSB-020~022: 인스타그램 피드 — IG Graph API 서버 fetch.
-// INSTAGRAM_ACCESS_TOKEN(장기 토큰, 60일 만료) 미설정·호출 실패 시 null 반환
+// 토큰(장기, 60일 만료) 미설정·호출 실패 시 null 반환
 // → 컴포넌트가 기존 플레이스홀더 그리드로 폴백하므로 페이지는 항상 정상 렌더.
-// 토큰 발급: Meta 개발자 앱 > Instagram API > 장기 액세스 토큰 (env.example 참고)
+// 토큰 발급: Meta 개발자 앱 > Instagram API > 장기 액세스 토큰 (env.example 참고).
+// 토큰은 크론이 자동 갱신해 DB 에 둔다(#775, lib/instagram-token). 환경변수는 씨앗·폴백.
 
 export type InstagramPost = {
   id: string;
@@ -24,7 +27,7 @@ const FIELDS = "id,media_type,media_url,thumbnail_url,permalink,caption";
 export async function fetchInstagramPosts(
   limit = 6,
 ): Promise<InstagramPost[] | null> {
-  const token = process.env.INSTAGRAM_ACCESS_TOKEN;
+  const token = await getInstagramToken();
   if (!token) return null;
 
   try {
