@@ -178,6 +178,7 @@ export default async function OrderDetailPage({
                       {canReview && href && it.product_id && (
                         <ReviewLink
                           productId={it.product_id}
+                          productName={it.product_name}
                           done={reviewed.has(it.product_id)}
                         />
                       )}
@@ -325,7 +326,16 @@ function ItemThumb({ src }: { src: string | null }) {
 
 // 리뷰 버튼(#765) — 안 쓴 상품은 채운 버튼, 이미 쓴 상품은 외곽선 "리뷰 확인".
 // 상품 상세의 리뷰 섹션으로 바로(#reviews, ScrollToHash 가 사이트 안 이동도 맞춘다).
-function ReviewLink({ productId, done }: { productId: string; done: boolean }) {
+// 스크린리더용 상품명(sr-only): 여러 상품 주문에서 "리뷰 쓰기"만 반복되면 구분이 안 된다.
+function ReviewLink({
+  productId,
+  productName,
+  done,
+}: {
+  productId: string;
+  productName: string;
+  done: boolean;
+}) {
   return (
     <Link
       href={`/shop/${productId}#reviews`}
@@ -336,6 +346,7 @@ function ReviewLink({ productId, done }: { productId: string; done: boolean }) {
       }`}
     >
       <PenLine className="size-3.5" strokeWidth={1.8} aria-hidden />
+      <span className="sr-only">{productName} </span>
       {done ? "리뷰 확인" : "리뷰 쓰기"}
     </Link>
   );
