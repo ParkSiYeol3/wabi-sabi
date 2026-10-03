@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { rateLimit } from "@/lib/rate-limit";
+import { notifyNewInquiry } from "@/lib/emails/shop-alerts";
 
 // 입력 스키마 (Zod 3차) — 공개 엔드포인트, 초대형 문자열 차단.
 const inquirySchema = z.object({
@@ -32,12 +33,14 @@ export async function createInquiry(formData: FormData) {
   const { ok } = await rateLimit(`inquiry:${user.id}`, 5, 3_600);
   if (!ok) redirect("/inquiry/new?error=rate");
 
-  await supabase.from("inquiries").insert({
+  const { error } = await supabase.from("inquiries").insert({
     user_id: user.id,
     title,
     body,
     is_secret: isSecret,
   });
+  // 대표님께 새 문의 알림(#785). 저장에 성공한 때만.
+  if (!error) await notifyNewInquiry({ title, isSecret });
   revalidatePath("/inquiry");
   redirect("/inquiry");
 }

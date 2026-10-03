@@ -1,5 +1,6 @@
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { sendOrderConfirmedMail } from "@/lib/emails/order-confirmed";
+import { notifyNewOrder } from "@/lib/emails/shop-alerts";
 import { notifyRefundFailed, sendOrderCancelledMail } from "@/lib/emails/order-cancelled";
 import type { CancelCause } from "@/lib/emails/templates";
 
@@ -120,7 +121,12 @@ export async function confirmPayment(
     await sendOrderConfirmedMail(orderId).catch((e) =>
       console.error("[payments] 주문 확인 메일 실패 orderId=", orderId, e),
     );
+    // 대표님께 새 주문 알림(#785). 같은 최초 1회 조건.
+    await notifyNewOrder(orderId).catch((e) =>
+      console.error("[payments] 새 주문 알림 실패 orderId=", orderId, e),
+    );
   }
+
 
   return { ok: true };
 }
