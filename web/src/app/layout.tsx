@@ -176,7 +176,7 @@ export default async function RootLayout({
         />
         <AuthProvider>
           <SignupOfferProvider offer={signupOffer}>
-            {/* 로그인 지속시간 제한(미활동 30분·절대 7일) — 개인정보보호 정책 */}
+            {/* 로그인 지속시간 제한(미활동 1시간·절대 7일) — 개인정보보호 정책 */}
             <SessionTimeout />
             {/* 가입 후 닉네임 설정 모달(실명 노출 방지) */}
             <NicknameGate />
