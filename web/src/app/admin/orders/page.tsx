@@ -215,20 +215,20 @@ export default async function AdminOrdersPage() {
         <EmptyState>주문이 없습니다.</EmptyState>
       ) : (
         <>
-          {/* 데스크톱(md↑) — 표. 좁은 화면에선 카드로 대체(아래). */}
-          <div className="hidden md:block">
+          {/* 넓은 화면(xl↑) — 표. 그보다 좁으면 카드(아래). 표가 8칸(1306px)일 때는
+              어떤 폭에서도 들어갈 자리(최대 1086px)보다 넓어 오른쪽 버튼이 가로 스크롤
+              밖으로 밀리고 좁게 눌려 글자가 세로로 쪼개졌다(#781). 6칸으로 줄였다. */}
+          <div className="hidden xl:block">
             <TablePanel>
-              <table className="w-full min-w-200 text-sm">
+              <table className="w-full text-sm">
                 <thead className="border-b border-wabi-border bg-wabi-subtle/50 text-left text-xs text-wabi-fg-muted">
                   <tr>
-                    <th className="px-4 py-3 font-medium">주문번호</th>
+                    <th className="px-4 py-3 font-medium">주문·상태</th>
                     <th className="px-4 py-3 font-medium">상품</th>
                     <th className="px-4 py-3 font-medium">받는분·배송지</th>
                     <th className="px-4 py-3 font-medium">금액</th>
-                    <th className="px-4 py-3 font-medium">상태</th>
-                    <th className="px-4 py-3 font-medium">송장번호</th>
-                    <th className="px-4 py-3 font-medium">배송완료</th>
-                    <th className="px-4 py-3 font-medium">취소·삭제</th>
+                    <th className="px-4 py-3 font-medium">송장</th>
+                    <th className="px-4 py-3 font-medium">처리</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-wabi-border">
@@ -239,27 +239,29 @@ export default async function AdminOrdersPage() {
                     >
                       <td className="px-4 py-3 align-top tabular-nums">
                         <span className="font-medium">{o.order_number}</span>
-                        <span className="block text-xs text-wabi-fg-muted">
+                        <span className="mb-2 block text-xs text-wabi-fg-muted">
                           {orderedAt(o.ordered_at)}
                         </span>
+                        <StatusCell o={o} />
                       </td>
                       {/* 사진이 폭을 먹어 상품명이 두세 글자씩 꺾였다(10/2) — 칸 최소 폭 */}
-                      <td className="min-w-60 px-4 py-3 align-top">
+                      <td className="min-w-56 px-4 py-3 align-top">
                         <ItemsList items={o.order_items} />
                       </td>
-                      <td className="max-w-60 px-4 py-3 align-top">
+                      <td className="max-w-48 px-4 py-3 align-top">
                         <ShipTo o={o} />
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap tabular-nums">
+                      <td className="px-4 py-3 align-top whitespace-nowrap tabular-nums">
                         {won(o.total_price)}
                       </td>
                       <td className="px-4 py-3 align-top">
-                        <StatusCell o={o} />
+                        <TrackingForm order={o} stacked />
                       </td>
-                      <td className="px-4 py-3">
-                        <TrackingForm order={o} />
-                      </td>
-                      <td className="px-4 py-3">
+                      {/* 처리: 배송완료 → 취소·환불(배송 전 paid만) → 기록 삭제(모든 상태).
+                          세로로 쌓고 버튼은 한 줄 고정. 취소는 RPC 가 paid 만 받아 그 외엔
+                          숨긴다. 삭제는 결제와 무관하게 기록만 지운다(대표님). */}
+                      <td className="w-40 px-4 py-3 align-top">
+                        <div className="flex flex-col items-start gap-1.5">
                         {o.delivered_at ? (
                           <span className="text-xs text-wabi-fg-muted">
                             {formatDateKST(o.delivered_at)} 수령
@@ -275,15 +277,7 @@ export default async function AdminOrdersPage() {
                               배송완료 처리
                             </SubmitButton>
                           </form>
-                        ) : (
-                          <span className="text-xs text-wabi-fg-muted">-</span>
-                        )}
-                      </td>
-                      {/* 취소·환불(배송 전 paid만) + 기록 삭제(모든 상태). 취소는
-                          RPC 가 paid 만 받아 그 외엔 숨긴다. 삭제는 결제와 무관하게
-                          기록만 지운다(테스트 데이터 정리·대표님). */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="flex flex-col items-start gap-1.5">
+                        ) : null}
                           {o.status === "paid" && (
                             <AdminCancelOrderButton
                               orderId={o.id}
@@ -305,7 +299,7 @@ export default async function AdminOrdersPage() {
 
           {/* 모바일(md 미만) — 카드. 표의 오른쪽 열(상태·송장·배송완료·취소)이
               가로스크롤 밖으로 밀려 안 보이던 문제 해결. 액션은 세로로 쌓아 터치. */}
-          <ul className="space-y-3 md:hidden">
+          <ul className="grid gap-3 lg:grid-cols-2 lg:items-start xl:hidden">
             {orders.map((o) => (
               <li
                 key={o.id}

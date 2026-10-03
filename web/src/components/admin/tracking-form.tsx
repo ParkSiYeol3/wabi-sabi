@@ -5,9 +5,12 @@ import { COURIERS, DEFAULT_COURIER, trackingUrl } from "@/lib/orders";
 // 송장 입력 폼 — 표 셀·모바일 카드 공용(모바일은 입력칸이 남는 폭을 채운다).
 // 택배사(#756)는 송장 앞에서 고른다. 기본 우체국(대표님 평소). 저장하는 순간 배송 메일이
 // 나가므로 택배사를 먼저 맞추게 번호 칸 앞에 둔다.
+// stacked: 표 칸용. 택배사·번호 한 줄, 저장·조회는 아래 줄(한 줄이면 표가 너무 넓어진다, #781).
 export function TrackingForm({
   order: o,
+  stacked = false,
 }: {
+  stacked?: boolean;
   order: {
     id: string;
     order_number: string;
@@ -16,7 +19,10 @@ export function TrackingForm({
   };
 }) {
   return (
-    <form action={setTracking} className="flex items-center gap-1.5">
+    <form
+      action={setTracking}
+      className={stacked ? "flex w-56 flex-wrap items-center gap-1.5" : "flex items-center gap-1.5"}
+    >
       <input type="hidden" name="id" value={o.id} />
       <select
         name="courier"
@@ -35,7 +41,7 @@ export function TrackingForm({
         defaultValue={o.tracking_number ?? ""}
         aria-label={`주문 ${o.order_number} 송장번호`}
         placeholder="송장번호"
-        className="w-36 min-w-0 flex-1 rounded-lg border border-wabi-border bg-wabi-bg/60 px-2.5 py-1.5 text-sm outline-none transition-colors focus:border-wabi-fg sm:flex-none"
+        className={`${stacked ? "w-36 flex-none" : "w-36 min-w-0 flex-1 sm:flex-none"} rounded-lg border border-wabi-border bg-wabi-bg/60 px-2.5 py-1.5 text-sm outline-none transition-colors focus:border-wabi-fg`}
       />
       <SubmitButton
         pendingText="저장 중…"
