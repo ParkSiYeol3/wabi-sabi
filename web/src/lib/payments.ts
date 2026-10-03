@@ -1,5 +1,7 @@
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { sendOrderConfirmedMail } from "@/lib/emails/order-confirmed";
+import { notifyRefundFailed, sendOrderCancelledMail } from "@/lib/emails/order-cancelled";
+import type { CancelCause } from "@/lib/emails/templates";
 
 // 결제 확정 공용 로직 — success 페이지·토스 웹훅이 함께 사용.
 // 원칙: 클라이언트가 준 금액 불신. 승인 금액은 서버 DB(orders.total_price) 기준.
@@ -80,11 +82,19 @@ export async function confirmPayment(
       headers: { Authorization: tossAuth(), "Content-Type": "application/json" },
       body: JSON.stringify({ cancelReason: "재고 부족 자동 취소" }),
     });
-    if (!cancel.ok)
+    if (!cancel.ok) {
       // 주문은 cancelled 인데 환불 실패 — 토스 대시보드에서 수동 취소 필요
       console.error(
         `[payments] 재고부족 자동취소 실패: 수동 환불 필요 orderId=${orderId} paymentKey=${paymentKey}`,
       );
+      await notifyRefundFailed(orderId, "재고 부족 자동 취소 중 환불 실패");
+    } else {
+      // 취소·환불 안내(#780). 같은 주문의 재확정 시도는 RPC 가 not_pending 을 돌려줘
+      // 여기 다시 오지 않는다(최초 1회).
+      await sendOrderCancelledMail(orderId, "out_of_stock").catch((e) =>
+        console.error("[payments] 취소 메일 실패 orderId=", orderId, e),
+      );
+    }
     return {
       ok: false,
       final: true,
@@ -122,9 +132,11 @@ export type CancelResult = { ok: boolean; error?: string };
 // 환불을 먼저 하면 배송 처리와 경합 시 "배송됐는데 환불" 가능(0011 주석 참고).
 // 멱등: cancelled 주문 재호출 시 토스 취소만 재확인 → 환불 실패 재시도 가능.
 // reason 은 토스 취소 사유(상점관리자·결제내역에 남음) — 손님 취소/관리자 취소 구분.
+// cause 는 손님에게 보내는 취소 안내 메일(#780)의 문구 구분.
 export async function cancelPaidOrder(
   orderId: string,
   reason = "고객 주문 취소",
+  cause: CancelCause = "customer",
 ): Promise<CancelResult> {
   if (!process.env.TOSS_SECRET_KEY)
     return { ok: false, error: "토스 시크릿 키 미설정" };
@@ -151,12 +163,16 @@ export async function cancelPaidOrder(
     console.error(
       `[payments] 주문 취소 후 결제 조회 실패: 수동 환불 확인 필요 orderId=${orderId}`,
     );
+    await notifyRefundFailed(orderId, `결제 조회 실패(HTTP ${lookup.status})`);
     return {
       ok: false,
       error: "취소는 접수되었으나 환불 확인에 실패했습니다. 문의해 주세요.",
     };
   }
   const payment = await lookup.json();
+  // 취소 안내 메일(#780)은 처음 취소됐을 때, 또는 재시도에서 이번에 실제로 환불됐을 때만.
+  // 이미 취소·환불까지 끝난 주문을 다시 부르면(멱등 재호출) 보내지 않는다.
+  let refundedNow = false;
   if (payment.status !== "CANCELED") {
     const cancel = await fetch(`${TOSS_API}/${payment.paymentKey}/cancel`, {
       method: "POST",
@@ -169,12 +185,21 @@ export async function cancelPaidOrder(
         console.error(
           `[payments] 주문 취소 후 환불 실패: 수동 환불 필요 orderId=${orderId} paymentKey=${payment.paymentKey}`,
         );
+        await notifyRefundFailed(orderId, `토스 환불 실패(${body.code ?? cancel.status})`);
         return {
           ok: false,
           error: "취소는 접수되었으나 환불 처리에 실패했습니다. 문의해 주세요.",
         };
       }
+    } else {
+      refundedNow = true;
     }
+  }
+
+  if (result !== "already_cancelled" || refundedNow) {
+    await sendOrderCancelledMail(orderId, cause).catch((e) =>
+      console.error("[payments] 취소 메일 실패 orderId=", orderId, e),
+    );
   }
 
   return { ok: true };
