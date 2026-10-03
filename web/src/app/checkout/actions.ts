@@ -1,5 +1,6 @@
 "use server";
 
+import { privacyV2Active } from "@/lib/legal";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
@@ -68,6 +69,8 @@ const deliverySchema = z.object({
   address: z.string().trim().min(1).max(200),
   detail: z.string().trim().max(100).optional(),
   memo: z.string().trim().max(200).optional(),
+  // 비회원 이메일(선택, #787). 빈 문자열은 "입력 안 함". 회원은 계정 이메일을 쓰므로 무시.
+  email: z.union([z.literal(""), z.string().trim().toLowerCase().max(254).email()]).optional(),
 });
 // 선물 메시지(#253) — 애드온은 이제 라인 단위(cartLineSchema.addons)라, 결제
 // 화면은 주문당 1개인 선물 메시지·보내는 분만 받는다(선물 포장 라인이 있을 때).
@@ -177,7 +180,9 @@ export async function createPendingOrder(
       error:
         deliveryParsed.error.issues[0]?.message === "전화번호 형식이 올바르지 않습니다."
           ? "전화번호 형식이 올바르지 않습니다."
-          : "배송지를 올바르게 입력해 주세요.",
+          : deliveryParsed.error.issues[0]?.path[0] === "email"
+            ? "이메일 주소 형식이 올바르지 않습니다."
+            : "배송지를 올바르게 입력해 주세요.",
     };
   const giftParsed = giftMessageSchema.safeParse(giftInput);
   if (!giftParsed.success)
@@ -385,6 +390,10 @@ export async function createPendingOrder(
       phone: delivery.phone,
       address: fullAddress,
       delivery_memo: delivery.memo || null,
+      // 비회원 안내 메일 주소(#787). 처리방침 개정 시행 전에는 받지 않는다(수집 항목 추가는
+      // 7일 전 공지 약속). 회원은 계정 이메일로 보내므로 저장하지 않는다.
+      guest_email:
+        !user && privacyV2Active() && delivery.email ? delivery.email : null,
     })
     .select("id")
     .single();
