@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/refresh-instagram",
       "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron/check-deliveries",
+      "schedule": "17 0-13 * * *"
     }
   ],
   "regions": [

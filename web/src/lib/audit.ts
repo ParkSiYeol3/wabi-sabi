@@ -31,3 +31,20 @@ export async function logAdminAction(
     console.error("[audit] 기록 실패", input.action, e);
   }
 }
+
+// 사람이 아닌 자동 처리(크론 등)의 기록(#791). actor_id 는 비우고 actor_email 에 출처를 남긴다.
+export async function logSystemAction(source: string, input: AuditInput): Promise<void> {
+  if (!adminConfigured()) return;
+  try {
+    await createAdminClient().from("admin_audit_log").insert({
+      actor_id: null,
+      actor_email: `system:${source}`,
+      action: input.action,
+      target_table: input.targetTable ?? null,
+      target_id: input.targetId ?? null,
+      meta: input.meta ?? null,
+    });
+  } catch (e) {
+    console.error("[audit] 기록 실패", input.action, e);
+  }
+}
