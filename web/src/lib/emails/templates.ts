@@ -189,7 +189,7 @@ export function orderDeliveredMail(o: {
   const review = o.reviewHref
     ? `${section(
         "리뷰 부탁드려요",
-        `<p style="margin:0;font-size:14px;line-height:1.7;color:${C.muted};word-break:keep-all">직접 써 보신 이야기는 그릇을 고르는 다른 분들께 큰 도움이 됩니다. 사진 한 장, 한 줄이어도 좋습니다.</p>`,
+        `<p style="margin:0;font-size:14px;line-height:1.7;color:${C.muted};word-break:keep-all">직접 써 보신 이야기는 그릇을 고르는 다른 분들께 큰 도움이 됩니다. 별점과 짧은 한 줄이면 충분합니다.</p>`,
       )}
 ${button(o.reviewHref, "리뷰 남기기")}`
     : "";
