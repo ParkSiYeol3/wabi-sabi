@@ -48,9 +48,11 @@ export function AdminDeleteOrderButton({
         type="button"
         onClick={() => setConfirmOpen(true)}
         disabled={pending}
-        className={`${fullWidth ? "w-full justify-center py-2.5" : ""} inline-flex cursor-pointer items-center gap-1 rounded-lg border border-wabi-border px-2.5 py-1.5 text-xs text-wabi-fg-muted transition-colors hover:border-red-700 hover:text-red-700 disabled:opacity-60`}
+        // nowrap·shrink-0: 좁은 표 칸에서 글자가 한 자씩 세로로 쪼개지고 아이콘이
+        // 찌그러지던 것(10/4 시열님). 칸이 좁아도 버튼은 한 줄 그대로.
+        className={`${fullWidth ? "w-full py-2.5" : "py-1.5"} inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-wabi-border px-3 text-xs whitespace-nowrap text-wabi-fg-muted transition-colors hover:border-red-700 hover:text-red-700 disabled:opacity-60`}
       >
-        <Trash2 className="size-3.5" aria-hidden />
+        <Trash2 className="size-3.5 shrink-0" aria-hidden />
         {pending ? "삭제 중…" : "기록 삭제"}
       </button>
       {error && <p className="mt-1 text-xs text-red-700">{error}</p>}
