@@ -3,7 +3,7 @@ import Image from "next/image";
 import { ImageIcon } from "lucide-react";
 import { TrackButton } from "@/components/account/track-button";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
-import { displayStatus, KST } from "@/lib/orders";
+import { byLineAmount, displayStatus, KST } from "@/lib/orders";
 
 export type RecentOrder = {
   id: string;
@@ -13,7 +13,12 @@ export type RecentOrder = {
   tracking_number: string | null;
   courier: string | null;
   ordered_at: string;
-  order_items: { product_name: string; products: { images: unknown } | null }[];
+  order_items: {
+    product_name: string;
+    price: number;
+    quantity: number;
+    products: { images: unknown } | null;
+  }[];
 };
 
 // "10월 2일" (올해가 아니면 연도까지). 목록에서 날짜는 언제 산 건지 떠올리는 용도라 짧게.
@@ -28,14 +33,16 @@ function orderedOn(iso: string): string {
   });
 }
 
-function thumbOf(o: RecentOrder): string | null {
-  const imgs = o.order_items[0]?.products?.images;
+function thumbOf(item?: RecentOrder["order_items"][number]): string | null {
+  const imgs = item?.products?.images;
   return Array.isArray(imgs) && typeof imgs[0] === "string" ? imgs[0] : null;
 }
 
 // 마이페이지 주문·배송(#754). 최근 주문 몇 건 + 상태, 배송 중이면 바로 조회.
 // 손님은 주문번호(WSB…)로 주문을 기억하지 않는다(시열님 10/3) → 사진·상품명·날짜로
-// 알아보게 하고, 주문번호는 상세에만 둔다. 금액·취소·리뷰는 /mypage/orders 에서
+// 알아보게 하고, 주문번호는 상세에만 둔다. 여러 상품이면 대표(금액 큰 것) 사진 1장 +
+// 모서리 "+N", 이름은 "대표 외 N건"(#761, 요약 칸이라 한 주문 = 한 줄).
+// 상품별 목록은 /mypage/orders. 금액·취소·리뷰는 /mypage/orders 에서
 // (요약 칸에 금액까지 넣으면 375px 에서 줄이 넘친다).
 export function RecentOrders({ orders }: { orders: RecentOrder[] }) {
   return (
@@ -53,10 +60,10 @@ export function RecentOrders({ orders }: { orders: RecentOrder[] }) {
       {orders.length > 0 ? (
         <ul className="mt-4 divide-y divide-wabi-border border-y border-wabi-border">
           {orders.map((o) => {
-            const first = o.order_items[0];
+            const first = byLineAmount(o.order_items)[0];
             const rest = o.order_items.length - 1;
             const track = o.status === "shipping" ? o.tracking_number : null;
-            const thumb = thumbOf(o);
+            const thumb = thumbOf(first);
             return (
               <li
                 key={o.id}
@@ -84,11 +91,19 @@ export function RecentOrders({ orders }: { orders: RecentOrder[] }) {
                         aria-hidden
                       />
                     )}
+                    {rest > 0 && (
+                      <span aria-hidden className="absolute right-0 bottom-0 bg-wabi-fg/80 px-1.5 py-0.5 font-numeric text-[11px] leading-none text-wabi-bg">
+                        +{rest}
+                      </span>
+                    )}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium underline-offset-4 group-hover:underline">
-                      {first?.product_name}
-                      {rest > 0 ? ` 외 ${rest}건` : ""}
+                    {/* 이름이 길면 이름만 말줄임, "외 N건"은 남긴다 */}
+                    <span className="flex min-w-0 font-medium underline-offset-4 group-hover:underline">
+                      <span className="truncate">{first?.product_name}</span>
+                      {rest > 0 && (
+                        <span className="shrink-0 whitespace-pre"> 외 {rest}건</span>
+                      )}
                     </span>
                     <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-wabi-fg-muted">
                       <OrderStatusBadge status={displayStatus(o)} />
