@@ -4,6 +4,7 @@ import {
   MessageCircle,
   Flag,
   PackageX,
+  PackageCheck,
   TriangleAlert,
   ShoppingBag,
   Banknote,
@@ -11,7 +12,7 @@ import {
   Eye,
 } from "lucide-react";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
-import { won, formatDateKST, displayStatus } from "@/lib/orders";
+import { won, formatDateKST, displayStatus, DELIVERY_CHECK_DAYS } from "@/lib/orders";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { LOW_STOCK_THRESHOLD } from "@/lib/inventory";
 import {
@@ -81,6 +82,9 @@ async function loadDashboard() {
   const db = createAdminClient();
   // 방문 요약(0054)·추이(0056)는 마이그 push 전이면 함수가 없어 에러가 난다. 대시보드
   // 전체를 죽이지 않도록 throwOnError 없이 조회하고, 실패하면 0/빈 배열로 둔다.
+  // 배송완료 확인(#778): 배송 중인데 발송 후 DELIVERY_CHECK_DAYS 지난 주문. shipped_at
+  // 이 없으면(0074 이전) 주문 시각 기준.
+  const checkCutoff = new Date(Date.now() - DELIVERY_CHECK_DAYS * 86_400_000).toISOString();
   const [visitsRes, visitTrendRes, sourcesRes, peopleRes, recentVisitorsRes, instagram] =
     await Promise.all([
       db.rpc("admin_visit_summary"),
@@ -100,7 +104,7 @@ async function loadDashboard() {
     null;
   const recentVisitors = (recentVisitorsRes.data as RecentVisitor[] | null) ?? [];
 
-  const [summaryRes, trendRes, lowStockRes, recentRes] = await Promise.all([
+  const [summaryRes, trendRes, lowStockRes, recentRes, deliveryCheckRes] = await Promise.all([
     db
       .rpc("admin_dashboard_summary", {
         low_stock_threshold: LOW_STOCK_THRESHOLD,
@@ -126,6 +130,13 @@ async function loadDashboard() {
       .limit(5)
       .throwOnError()
       .returns<RecentOrder[]>(),
+    // 실패를 0건으로 숨기지 않는다(필수 조회와 같이 에러 경계로).
+    db
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "shipping")
+      .or(`shipped_at.lt."${checkCutoff}",and(shipped_at.is.null,ordered_at.lt."${checkCutoff}")`)
+      .throwOnError(),
   ]);
   return {
     summary: summaryRes.data as Summary,
@@ -138,6 +149,7 @@ async function loadDashboard() {
     people,
     recentVisitors,
     instagram,
+    deliveryCheck: deliveryCheckRes.count ?? 0,
     // KST 오늘 — 최근 방문 목록의 "어제" 표기용(렌더 중 Date.now 금지라 여기서 계산).
     todayKst: new Date(Date.now() + 9 * 3_600_000).toISOString().slice(0, 10),
   };
@@ -170,6 +182,7 @@ export default async function AdminHome() {
     people,
     recentVisitors,
     instagram,
+    deliveryCheck,
     todayKst,
   } =
     await loadDashboard();
@@ -190,13 +203,20 @@ export default async function AdminHome() {
       {/* 처리 대기 — 모바일도 한눈에(2열 컴팩트, 대표님) */}
       <section>
         <SectionHeading>처리 대기</SectionHeading>
-        <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
+        <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
           <StatTile
             href="/admin/orders"
             label="발송 대기"
             value={s.awaiting_ship}
             icon={Truck}
             tone="alert"
+          />
+          <StatTile
+            href="/admin/orders"
+            label="배송완료 확인"
+            value={deliveryCheck}
+            icon={PackageCheck}
+            tone="warn"
           />
           <StatTile
             href="/admin/inquiries"

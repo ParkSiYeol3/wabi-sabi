@@ -37,6 +37,7 @@ export async function setTracking(formData: FormData) {
       tracking_number: tracking || null,
       courier: tracking ? courier : null,
       status: tracking ? "shipping" : "paid",
+      // 발송 시각(shipped_at)은 DB 트리거가 같은 UPDATE 안에서 정한다(0075, #778).
     })
     .eq("id", id)
     // 배송완료된 주문의 송장을 고치다 상태가 shipping 으로 되돌아가면 수령일과

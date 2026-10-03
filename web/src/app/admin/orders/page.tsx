@@ -7,6 +7,8 @@ import {
   formatDateKST,
   displayStatus,
   KST,
+  daysSinceShipped,
+  DELIVERY_CHECK_DAYS,
 } from "@/lib/orders";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { PageHeader, TablePanel, EmptyState } from "@/components/admin/ui";
@@ -40,6 +42,7 @@ type Order = {
   ordered_at: string;
   tracking_number: string | null;
   courier: string | null;
+  shipped_at: string | null;
   delivered_at: string | null;
   // 발송 시 무엇을·어떤 옵션(색상 등)으로 보낼지 대표님이 바로 보게(0048).
   order_items: OrderItem[];
@@ -47,6 +50,31 @@ type Order = {
 
 // 배송완료로 넘길 수 있는 상태 (#124) — 취소·미결제 주문은 대상이 아니다.
 const CAN_DELIVER = ["paid", "shipping"];
+
+// 배송완료 확인 알림(#778): 발송 후 DELIVERY_CHECK_DAYS 지나도 배송 중이면 버튼 위에 한 줄.
+// 배송완료는 누르기 전엔 바뀌지 않아(손님 화면·청약철회 기산점) 잊으면 계속 배송 중이다.
+function DeliveryCheckHint({ o, nowMs }: { o: Order; nowMs: number }) {
+  if (o.status !== "shipping") return null;
+  const days = daysSinceShipped(o, nowMs);
+  if (days < DELIVERY_CHECK_DAYS) return null;
+  return (
+    <p className="text-xs font-medium text-amber-800">
+      발송 {days}일 지남 · 도착했으면 눌러 주세요
+    </p>
+  );
+}
+
+async function loadOrders() {
+  const { data } = await createAdminClient()
+    .from("orders")
+    .select(
+      "id, order_number, status, total_price, recipient, phone, address, delivery_memo, preparing_at, ordered_at, tracking_number, courier, shipped_at, delivered_at, order_items(product_id, product_name, quantity, options, addons, products(images))",
+    )
+    .order("ordered_at", { ascending: false })
+    .returns<Order[]>();
+  // 경과 일수 기준 시각(렌더 중 Date.now 는 순수성 규칙 위반이라 여기서).
+  return { orders: data, nowMs: Date.now() };
+}
 
 function thumbOf(it: OrderItem): string | null {
   const imgs = it.products?.images;
@@ -174,15 +202,8 @@ export default async function AdminOrdersPage() {
     );
   }
 
-  const db = createAdminClient();
   await createClient(); // 가드(레이아웃)에서 인증 확인됨
-  const { data: orders } = await db
-    .from("orders")
-    .select(
-      "id, order_number, status, total_price, recipient, phone, address, delivery_memo, preparing_at, ordered_at, tracking_number, courier, delivered_at, order_items(product_id, product_name, quantity, options, addons, products(images))",
-    )
-    .order("ordered_at", { ascending: false })
-    .returns<Order[]>();
+  const { orders, nowMs } = await loadOrders();
 
   return (
     <>
@@ -244,7 +265,8 @@ export default async function AdminOrdersPage() {
                             {formatDateKST(o.delivered_at)} 수령
                           </span>
                         ) : CAN_DELIVER.includes(o.status) ? (
-                          <form action={markDelivered}>
+                          <form action={markDelivered} className="flex flex-col items-start gap-1.5">
+                            <DeliveryCheckHint o={o} nowMs={nowMs} />
                             <input type="hidden" name="id" value={o.id} />
                             <SubmitButton
                               pendingText="처리 중…"
@@ -334,7 +356,8 @@ export default async function AdminOrdersPage() {
                       {formatDateKST(o.delivered_at)} 수령 완료
                     </p>
                   ) : CAN_DELIVER.includes(o.status) ? (
-                    <form action={markDelivered}>
+                    <form action={markDelivered} className="space-y-1.5">
+                      <DeliveryCheckHint o={o} nowMs={nowMs} />
                       <input type="hidden" name="id" value={o.id} />
                       <SubmitButton
                         pendingText="처리 중…"
