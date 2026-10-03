@@ -1,18 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
 import { Container } from "@/components/layout/container";
 import { CancelOrderButton } from "@/components/account/cancel-order-button";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { createClient } from "@/lib/supabase/server";
 import {
+  byLineAmount,
   formatDateKST,
   withdrawalDeadlineKST,
   courierOf,
   trackingUrl,
   displayStatus,
 } from "@/lib/orders";
-import { PenLine } from "lucide-react";
+import { ImageIcon, PenLine } from "lucide-react";
 import { Price } from "@/components/product/price";
 import { parseUuid } from "@/lib/validation";
 
@@ -47,6 +49,9 @@ type Detail = {
     price: number;
     addons: { code: string; name: string; price: number }[] | null;
     options: { name: string; value: string }[] | null;
+    // 사진·상품 링크(#763). products RLS 는 판매 중(is_active)만 보여 줘서 판매 중지·삭제
+    // 상품은 null → 플레이스홀더 + 링크 없는 이름.
+    products: { images: unknown } | null;
   }[];
   gift_options: { message: string | null }[];
 };
@@ -69,7 +74,7 @@ export default async function OrderDetailPage({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, preparing_at, total_price, shipping_fee, recipient, phone, address, delivery_memo, tracking_number, courier, ordered_at, delivered_at, order_items(product_id, product_name, quantity, price, addons, options), gift_options(message)",
+      "id, order_number, status, preparing_at, total_price, shipping_fee, recipient, phone, address, delivery_memo, tracking_number, courier, ordered_at, delivered_at, order_items(product_id, product_name, quantity, price, addons, options, products(images)), gift_options(message)",
     )
     .eq("id", orderId)
     .maybeSingle<Detail>();
@@ -118,44 +123,80 @@ export default async function OrderDetailPage({
       <section className="mt-10">
         <h2 className="text-base font-medium">주문 상품</h2>
         <ul className="mt-4 divide-y divide-wabi-border border-y border-wabi-border text-sm">
-          {order.order_items.map((it, i) => {
+          {byLineAmount(order.order_items).map((it, i) => {
             const lineAddons = it.addons ?? [];
             const lineOptions = it.options ?? [];
             const addonSum = lineAddons.reduce((s, a) => s + a.price, 0);
-            return (
-              <li key={i} className="py-3">
-                <div className="flex items-center justify-between gap-4">
-                  <span>
-                    {it.product_name}
-                    {it.quantity > 1 && (
-                      <span className="font-numeric text-wabi-fg-muted">
-                        {" "}
-                        × {it.quantity}
-                      </span>
-                    )}
+            const imgs = it.products?.images;
+            const thumb =
+              Array.isArray(imgs) && typeof imgs[0] === "string" ? imgs[0] : null;
+            // 판매 중인 상품만 링크(판매 중지·삭제는 상품 페이지가 없다).
+            const href = it.product_id && it.products ? `/shop/${it.product_id}` : null;
+            const name = (
+              <>
+                {it.product_name}
+                {it.quantity > 1 && (
+                  <span className="font-numeric text-wabi-fg-muted">
+                    {" "}
+                    × {it.quantity}
                   </span>
-                  <Price value={it.price * it.quantity + addonSum} />
-                </div>
-                {lineOptions.length > 0 && (
-                  <p className="mt-1 text-xs text-wabi-fg-muted">
-                    {lineOptions.map((o) => `${o.name}: ${o.value}`).join(" · ")}
-                  </p>
                 )}
-                {lineAddons.length > 0 && (
-                  <p className="mt-1 text-xs text-wabi-fg-muted">
-                    + {lineAddons.map((a) => a.name).join(", ")}
-                  </p>
-                )}
-                {/* 리뷰 작성(대표님) — 결제된 주문의 살아있는 상품만. */}
-                {canReview && it.product_id && (
+              </>
+            );
+            return (
+              <li key={i} className="flex gap-3.5 py-3">
+                {href ? (
                   <Link
-                    href={`/shop/${it.product_id}#reviews`}
-                    className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg border border-wabi-border px-3 py-1.5 text-xs font-medium text-wabi-fg transition-colors hover:border-wabi-fg hover:bg-wabi-muted"
+                    href={href}
+                    tabIndex={-1}
+                    aria-hidden
+                    className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden bg-wabi-muted"
                   >
-                    <PenLine className="size-3.5" strokeWidth={1.8} aria-hidden />
-                    {reviewed.has(it.product_id) ? "리뷰 확인" : "리뷰 쓰기"}
+                    <ItemThumb src={thumb} />
                   </Link>
+                ) : (
+                  <span className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden bg-wabi-muted">
+                    <ItemThumb src={thumb} />
+                  </span>
                 )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-4">
+                    {href ? (
+                      <Link
+                        href={href}
+                        className="break-keep underline-offset-4 hover:underline"
+                      >
+                        {name}
+                      </Link>
+                    ) : (
+                      <span className="break-keep">{name}</span>
+                    )}
+                    <span className="shrink-0">
+                      <Price value={it.price * it.quantity + addonSum} />
+                    </span>
+                  </div>
+                  {lineOptions.length > 0 && (
+                    <p className="mt-1 text-xs text-wabi-fg-muted">
+                      {lineOptions.map((o) => `${o.name}: ${o.value}`).join(" · ")}
+                    </p>
+                  )}
+                  {lineAddons.length > 0 && (
+                    <p className="mt-1 text-xs text-wabi-fg-muted">
+                      + {lineAddons.map((a) => a.name).join(", ")}
+                    </p>
+                  )}
+                  {/* 리뷰 작성(대표님) — 결제된 주문의 살아있는 상품만. 판매 중지 상품도
+                      상품 페이지가 없어 제외(#763, href 가 있을 때만). */}
+                  {canReview && href && it.product_id && (
+                    <Link
+                      href={`/shop/${it.product_id}#reviews`}
+                      className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg border border-wabi-border px-3 py-1.5 text-xs font-medium text-wabi-fg transition-colors hover:border-wabi-fg hover:bg-wabi-muted"
+                    >
+                      <PenLine className="size-3.5" strokeWidth={1.8} aria-hidden />
+                      {reviewed.has(it.product_id) ? "리뷰 확인" : "리뷰 쓰기"}
+                    </Link>
+                  )}
+                </div>
               </li>
             );
           })}
@@ -273,5 +314,14 @@ function Row({
       <dt className="w-24 shrink-0 text-wabi-fg-muted">{label}</dt>
       <dd className={mono ? "font-mono" : "font-numeric"}>{value}</dd>
     </div>
+  );
+}
+
+// 주문 상품 사진(#763) — 56px, 없으면 플레이스홀더.
+function ItemThumb({ src }: { src: string | null }) {
+  return src ? (
+    <Image src={src} alt="" fill sizes="56px" className="object-cover" />
+  ) : (
+    <ImageIcon className="size-5 text-wabi-fg-muted/40" strokeWidth={1} aria-hidden />
   );
 }
