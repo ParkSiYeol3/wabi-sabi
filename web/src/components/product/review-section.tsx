@@ -8,6 +8,7 @@ import {
   hasPurchased,
 } from "@/lib/queries/reviews";
 import { createReview, deleteReview } from "@/app/shop/[id]/review-actions";
+import { ScrollToHash } from "@/components/product/scroll-to-hash";
 
 // 상품 상세 리뷰 섹션. currentUserId 있으면 작성 폼 노출(없으면 로그인 유도).
 export async function ReviewSection({
@@ -29,8 +30,9 @@ export async function ReviewSection({
 
   return (
     // id — 주문 내역의 "리뷰 쓰기" 버튼이 이 섹션으로 바로 점프(대표님). 헤더 높이만큼
-    // scroll-mt 로 여백.
+    // scroll-mt 로 여백. 사이트 안 이동에서도 맞추는 건 ScrollToHash(#765).
     <section id="reviews" className="mt-20 scroll-mt-24">
+      <ScrollToHash id="reviews" />
       <div className="flex items-center gap-3">
         <h2 className="text-lg font-medium">리뷰</h2>
         {stats.count > 0 && (
