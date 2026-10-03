@@ -2,6 +2,7 @@ import { sendMail } from "@/lib/email";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { won } from "@/lib/orders";
 import { firstImage } from "./layout";
+import { orderRecipientEmail } from "./recipient";
 import { orderConfirmedMail } from "./templates";
 
 // 주문 확인 메일 (#129) — 결제 완료 후 고객에게 아무 통지도 가지 않던 문제.
@@ -18,6 +19,7 @@ type Row = {
   address: string;
   ordered_at: string;
   user_id: string | null;
+  guest_email: string | null;
   order_items: {
     product_name: string;
     quantity: number;
@@ -60,20 +62,17 @@ export async function sendOrderConfirmedMail(orderId: string): Promise<void> {
   const { data: order } = await admin
     .from("orders")
     .select(
-      "order_number, total_price, shipping_fee, recipient, address, ordered_at, user_id, order_items(product_name, quantity, price, addons, options, products(images))",
+      "order_number, total_price, shipping_fee, recipient, address, ordered_at, user_id, guest_email, order_items(product_name, quantity, price, addons, options, products(images))",
     )
     .eq("id", orderId)
     .maybeSingle<Row>();
 
-  if (!order || !order.user_id) return;
+  if (!order) return;
 
-  // 수신 주소는 계정 이메일 — 주문 폼에는 이메일 입력이 없다(로그인 필수 흐름).
-  const { data: authUser } = await admin.auth.admin.getUserById(order.user_id);
-  const to = authUser?.user?.email;
-  if (!to) {
-    console.error("[email] 주문 확인 메일: 수신 주소 없음 orderId=", orderId);
-    return;
-  }
+  // 받는 주소: 회원 = 계정 이메일, 비회원 = 결제 때 선택으로 남긴 이메일(#787).
+  // 비회원이 이메일을 비웠으면 보내지 않는다(주문 조회는 주문번호·연락처로).
+  const to = await orderRecipientEmail(admin, order);
+  if (!to) return;
 
   await sendMail({ to, ...mail(order) });
 }

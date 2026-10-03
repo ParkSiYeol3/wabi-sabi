@@ -13,6 +13,7 @@ type Row = {
   order_number: string;
   total_price: number;
   user_id: string | null;
+  guest_email: string | null;
   order_items: {
     product_name: string;
     quantity: number;
@@ -30,7 +31,7 @@ export async function sendOrderCancelledMail(
   const { data: order } = await admin
     .from("orders")
     .select(
-      "order_number, total_price, user_id, order_items(product_name, quantity, options, products(images))",
+      "order_number, total_price, user_id, guest_email, order_items(product_name, quantity, options, products(images))",
     )
     .eq("id", orderId)
     .maybeSingle<Row>();

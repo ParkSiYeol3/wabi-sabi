@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
 import { LegalPage, Article } from "@/components/layout/legal-layout";
 import { business } from "@/lib/site";
+import { privacyV2Active } from "@/lib/legal";
 
 export const metadata: Metadata = { title: "개인정보처리방침" };
+
+// 개정판(#787)은 시행 시각(lib/legal PRIVACY_V2_FROM)부터 보인다. 정적 페이지라 1시간마다
+// 다시 그려 시행 시각을 넘기면 저절로 바뀐다(재배포 불필요).
+export const revalidate = 3600;
 
 // ⚠ 초안 — 대표님 확인 및 필요 시 법률 검토 후 확정할 것 (#106).
 // 수집 항목·위탁사는 실제 구현 기준으로 작성했다(추측 금지):
@@ -12,18 +17,25 @@ export const metadata: Metadata = { title: "개인정보처리방침" };
 //  - 로그: client_error_log(에러 메시지·URL·User-Agent), admin_audit_logs
 // 항목이 바뀌면 이 문서도 함께 고칠 것.
 export default function PrivacyPage() {
+  // 2026-10-12 개정: 비회원 이메일(선택)·방문 기록·메일 발송 위탁·소식 받기 동의.
+  const v2 = privacyV2Active();
   return (
-    <LegalPage title="개인정보처리방침" effectiveDate="2026년 7월 13일">
+    <LegalPage
+      title="개인정보처리방침"
+      effectiveDate={v2 ? "2026년 10월 12일" : "2026년 7월 13일"}
+    >
       <Article heading="1. 수집하는 개인정보 항목">
         <ul className="ml-4 list-disc space-y-1">
           <li>
             <strong className="text-wabi-fg">회원가입</strong>: 이메일 주소,
             비밀번호, 이름. 소셜 로그인(카카오·구글) 이용 시 해당 서비스가 제공하는
-            계정 식별자와 이메일
+            계정 식별자와 이메일{v2 && ". 소식 받기(마케팅 정보 수신) 동의 여부와 그 일시"}
           </li>
           <li>
             <strong className="text-wabi-fg">주문·배송</strong>: 수령인 이름,
             연락처, 배송지 주소, 배송 요청사항, 주문 내역
+            {v2 &&
+              ". 비회원 주문 시 이메일 주소(선택, 입력한 경우 주문·발송·취소·배송 완료 안내 메일 발송에만 사용)"}
           </li>
           <li>
             <strong className="text-wabi-fg">결제</strong>: 결제 수단 및 결제
@@ -36,6 +48,15 @@ export default function PrivacyPage() {
             접속 브라우저 정보(User-Agent), 오류 발생 시 오류 메시지와 해당 페이지
             주소(서비스 안정성 개선 목적)
           </li>
+          {v2 && (
+            <li>
+              <strong className="text-wabi-fg">방문 기록</strong>: 방문한 페이지,
+              유입 경로(검색·SNS 등 짧은 구분), 기기 종류·브라우저·운영체제 이름,
+              언어·시간대, 접속 IP 로 추정한 국가·지역, 화면 조작 여부, 브라우저에
+              저장되는 임의의 방문자 식별값. <strong className="text-wabi-fg">IP 주소
+              자체와 브라우저 정보 원문은 저장하지 않습니다.</strong>
+            </li>
+          )}
         </ul>
       </Article>
 
@@ -45,6 +66,8 @@ export default function PrivacyPage() {
           <li>상품 주문·결제·배송 및 청약철회·환불 처리</li>
           <li>문의 응대, 리뷰 등 게시판 서비스 운영</li>
           <li>부정 이용 방지 및 서비스 오류 개선</li>
+          {v2 && <li>방문 통계 분석 및 서비스 개선</li>}
+          {v2 && <li>소식 받기에 동의한 경우에 한해 새 소식·혜택 안내</li>}
         </ul>
       </Article>
 
@@ -57,6 +80,7 @@ export default function PrivacyPage() {
           <li>계약 또는 청약철회 등에 관한 기록: 5년 (전자상거래법)</li>
           <li>대금결제 및 재화 등의 공급에 관한 기록: 5년 (전자상거래법)</li>
           <li>소비자의 불만 또는 분쟁처리에 관한 기록: 3년 (전자상거래법)</li>
+          {v2 && <li>방문 기록: 수집일로부터 1년 후 파기</li>}
         </ul>
       </Article>
 
@@ -75,10 +99,16 @@ export default function PrivacyPage() {
             <strong className="text-wabi-fg">Vercel</strong>: 웹사이트 호스팅 및
             서버 운영
           </li>
+          {v2 && (
+            <li>
+              <strong className="text-wabi-fg">Resend</strong>: 주문·발송·취소·배송
+              완료·문의 답변 등 안내 메일 발송
+            </li>
+          )}
         </ul>
         <p>
-          Supabase·Vercel 은 국외에 서버를 두고 있어 개인정보가 국외로 이전될 수
-          있습니다. 이전 항목은 위 &ldquo;1. 수집하는 개인정보 항목&rdquo;과 같으며,
+          {v2 ? "Supabase·Vercel·Resend" : "Supabase·Vercel"} 은 국외에 서버를 두고
+          있어 개인정보가 국외로 이전될 수 있습니다. 이전 항목은 위 &ldquo;1. 수집하는 개인정보 항목&rdquo;과 같으며,
           서비스 제공 목적 달성 시까지 보관됩니다.
         </p>
       </Article>

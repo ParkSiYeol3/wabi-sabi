@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useCart, cartTotal } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { useMounted } from "@/hooks/use-mounted";
+import { privacyV2Active } from "@/lib/legal";
 import { won } from "@/lib/orders";
 import { addonsTotal, GIFT_WRAP_CODE } from "@/lib/addons";
 import { shippingFeeFor, amountToFreeShipping } from "@/lib/shipping";
@@ -40,6 +41,8 @@ const EMPTY_DELIVERY = {
   address: "",
   detail: "",
   memo: "",
+  // 비회원 안내 메일 주소(선택, #787). 회원은 계정 이메일을 쓴다.
+  email: "",
 };
 
 const CLIENT_KEY = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY;
@@ -166,6 +169,9 @@ export default function CheckoutPage() {
       </Container>
     );
   }
+  // 렌더 가드 뒤라 브라우저에서만 계산된다(서버 HTML 과 어긋나지 않음).
+  const guestEmailOn = !user && privacyV2Active();
+
 
   const addonSum = items.reduce((n, i) => n + addonsTotal(i.addons), 0);
   // 배송비 — 서버(actions)와 동일 정책으로 미리보기. 확정 금액은 서버가 재계산.
@@ -242,7 +248,7 @@ export default function CheckoutPage() {
         orderName: res.orderName,
         successUrl: `${window.location.origin}/checkout/success`,
         failUrl: `${window.location.origin}/checkout/fail`,
-        customerEmail: user?.email ?? undefined,
+        customerEmail: user?.email ?? ((guestEmailOn && delivery.email.trim()) || undefined),
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "결제 요청 실패");
@@ -294,6 +300,27 @@ export default function CheckoutPage() {
               <Input name="address" required aria-label="주소" placeholder="주소" className="rounded-none font-numeric" value={delivery.address} onChange={setField("address")} />
               <Input name="detail" aria-label="상세주소" placeholder="상세주소" className="rounded-none font-numeric sm:col-span-2" value={delivery.detail} onChange={setField("detail")} />
               <Input name="memo" aria-label="배송 메모" placeholder="배송 메모 (선택)" className="rounded-none sm:col-span-2" value={delivery.memo} onChange={setField("memo")} />
+              {/* 비회원 이메일(선택, #787): 주문 확인·발송·배송 완료 안내 메일을 받을 곳.
+                  처리방침 개정 시행(10/12) 전에는 보이지 않는다(수집 항목 추가는 7일 전 공지). */}
+              {guestEmailOn && (
+                <div className="sm:col-span-2">
+                  <Input
+                    name="email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    aria-label="이메일 (선택)"
+                    aria-describedby="guest-email-help"
+                    placeholder="이메일 (선택)"
+                    className="rounded-none font-numeric"
+                    value={delivery.email}
+                    onChange={setField("email")}
+                  />
+                  <p id="guest-email-help" className="mt-1.5 text-xs text-wabi-fg-muted break-keep">
+                    적어 주시면 주문 확인, 발송, 배송 완료 안내를 메일로 보내 드립니다.
+                  </p>
+                </div>
+              )}
             </div>
           </section>
 

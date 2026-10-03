@@ -1,6 +1,7 @@
 import { sendMail } from "@/lib/email";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { firstImage } from "./layout";
+import { orderRecipientEmail } from "./recipient";
 import { orderShippedMail } from "./templates";
 
 // 배송 시작 메일 (#129) — 송장이 등록돼도 고객에게 알림이 가지 않았다.
@@ -17,7 +18,7 @@ export async function sendOrderShippedMail(
   const { data: order } = await admin
     .from("orders")
     .select(
-      "order_number, courier, recipient, address, user_id, order_items(product_name, quantity, options, products(images))",
+      "order_number, courier, recipient, address, user_id, guest_email, order_items(product_name, quantity, options, products(images))",
     )
     .eq("id", orderId)
     .maybeSingle<{
@@ -26,6 +27,7 @@ export async function sendOrderShippedMail(
       recipient: string;
       address: string;
       user_id: string | null;
+      guest_email: string | null;
       order_items: {
         product_name: string;
         quantity: number;
@@ -34,10 +36,10 @@ export async function sendOrderShippedMail(
       }[];
     }>();
 
-  if (!order || !order.user_id) return;
+  if (!order) return;
 
-  const { data: authUser } = await admin.auth.admin.getUserById(order.user_id);
-  const to = authUser?.user?.email;
+  // 회원 = 계정 이메일, 비회원 = 선택 이메일(#787). 없으면 보내지 않는다.
+  const to = await orderRecipientEmail(admin, order);
   if (!to) return;
 
   await sendMail({
