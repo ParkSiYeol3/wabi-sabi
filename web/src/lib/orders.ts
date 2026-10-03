@@ -109,6 +109,18 @@ export function byLineAmount<T extends { price: number; quantity: number }>(item
 }
 
 // 청약철회 기간 — 수령일부터 7일 (교환·환불 안내 #106).
+// 배송완료 확인 알림(#778): 발송 후 이 일수가 지나도 배송 중이면 관리자에게 알린다.
+// 택배는 보통 1~2일이면 도착한다. 배송완료는 관리자가 눌러야만 바뀌어 잊기 쉽다.
+export const DELIVERY_CHECK_DAYS = 3;
+
+// 발송 후 지난 일수. shipped_at 이 없으면(0074 이전·송장 없이 배송 중) 주문 시각으로 본다.
+export function daysSinceShipped(
+  o: { shipped_at?: string | null; ordered_at: string },
+  nowMs: number,
+): number {
+  return Math.floor((nowMs - Date.parse(o.shipped_at ?? o.ordered_at)) / 86_400_000);
+}
+
 export const WITHDRAWAL_DAYS = 7;
 
 export function withdrawalDeadlineKST(deliveredAt: string): string {

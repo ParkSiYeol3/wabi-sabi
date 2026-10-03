@@ -37,6 +37,13 @@ export async function setTracking(formData: FormData) {
       tracking_number: tracking || null,
       courier: tracking ? courier : null,
       status: tracking ? "shipping" : "paid",
+      // 발송 시각(0074, #778): 송장을 처음 넣을 때만 기록, 지우면 비운다. 번호·택배사
+      // 정정은 이미 발송된 것이라 시각을 유지한다(배송완료 확인 알림의 기준).
+      ...(!tracking
+        ? { shipped_at: null }
+        : !before?.tracking_number
+          ? { shipped_at: new Date().toISOString() }
+          : {}),
     })
     .eq("id", id)
     // 배송완료된 주문의 송장을 고치다 상태가 shipping 으로 되돌아가면 수령일과
