@@ -62,7 +62,7 @@ function AuthForm() {
     };
   }, [authLoading, uid, redirect, router]);
 
-  // 세션 만료로 튕겨온 경우 사유 안내(SessionTimeout — 미활동 30분·절대 7일).
+  // 세션 만료로 튕겨온 경우 사유 안내(SessionTimeout — 미활동 1시간·절대 7일).
   const timedOut = params.get("reason") === "timeout";
   const timeoutKind = params.get("kind");
 
@@ -207,7 +207,7 @@ function AuthForm() {
         >
           {timeoutKind === "max"
             ? "보안을 위해 로그인 후 7일이 지나 자동 로그아웃되었습니다. 다시 로그인해 주세요."
-            : "30분간 활동이 없어 자동 로그아웃되었습니다. 다시 로그인해 주세요."}
+            : "1시간 동안 활동이 없어 자동 로그아웃되었습니다. 다시 로그인해 주세요."}
         </p>
       )}
       <div className="grid grid-cols-2 border-b border-wabi-border">
