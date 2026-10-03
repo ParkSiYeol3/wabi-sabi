@@ -4,6 +4,7 @@ import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
 import { Container } from "@/components/layout/container";
 import { CancelOrderButton } from "@/components/account/cancel-order-button";
+import { ReviewLink, reviewLines } from "@/components/account/review-link";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -14,7 +15,7 @@ import {
   trackingUrl,
   displayStatus,
 } from "@/lib/orders";
-import { ImageIcon, PenLine } from "lucide-react";
+import { ImageIcon } from "lucide-react";
 import { Price } from "@/components/product/price";
 import { parseUuid } from "@/lib/validation";
 
@@ -95,6 +96,8 @@ export default async function OrderDetailPage({
         .returns<{ product_id: string }[]>()
     : { data: null };
   const reviewed = new Set((myReviews ?? []).map((r) => r.product_id));
+  const items = byLineAmount(order.order_items);
+  const reviewAt = canReview ? reviewLines(items) : new Set<typeof items[number]>();
 
   return (
     <Container className="py-16">
@@ -123,7 +126,7 @@ export default async function OrderDetailPage({
       <section className="mt-10">
         <h2 className="text-base font-medium">주문 상품</h2>
         <ul className="mt-4 divide-y divide-wabi-border border-y border-wabi-border text-sm">
-          {byLineAmount(order.order_items).map((it, i) => {
+          {items.map((it, i) => {
             const lineAddons = it.addons ?? [];
             const lineOptions = it.options ?? [];
             const addonSum = lineAddons.reduce((s, a) => s + a.price, 0);
@@ -172,10 +175,10 @@ export default async function OrderDetailPage({
                       <span className="break-keep">{name}</span>
                     )}
                     {/* 금액 + 리뷰 버튼을 오른쪽 한 칸에(#765, 상품명 아래 작은 외곽선 버튼은
-                        눈에 안 띄었다). 리뷰는 결제된 주문의 판매 중 상품만(href 있을 때). */}
+                        눈에 안 띄었다). 리뷰는 결제된 주문의 판매 중 상품만, 상품당 한 번. */}
                     <div className="flex shrink-0 flex-col items-end gap-2">
                       <Price value={it.price * it.quantity + addonSum} />
-                      {canReview && href && it.product_id && (
+                      {reviewAt.has(it) && it.product_id && (
                         <ReviewLink
                           productId={it.product_id}
                           productName={it.product_name}
@@ -321,33 +324,5 @@ function ItemThumb({ src }: { src: string | null }) {
     <Image src={src} alt="" fill sizes="56px" className="object-cover" />
   ) : (
     <ImageIcon className="size-5 text-wabi-fg-muted/40" strokeWidth={1} aria-hidden />
-  );
-}
-
-// 리뷰 버튼(#765) — 안 쓴 상품은 채운 버튼, 이미 쓴 상품은 외곽선 "리뷰 확인".
-// 상품 상세의 리뷰 섹션으로 바로(#reviews, ScrollToHash 가 사이트 안 이동도 맞춘다).
-// 스크린리더용 상품명(sr-only): 여러 상품 주문에서 "리뷰 쓰기"만 반복되면 구분이 안 된다.
-function ReviewLink({
-  productId,
-  productName,
-  done,
-}: {
-  productId: string;
-  productName: string;
-  done: boolean;
-}) {
-  return (
-    <Link
-      href={`/shop/${productId}#reviews`}
-      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
-        done
-          ? "border border-wabi-border text-wabi-fg hover:border-wabi-fg hover:bg-wabi-muted"
-          : "border border-transparent bg-wabi-fg text-wabi-bg hover:bg-wabi-fg/85"
-      }`}
-    >
-      <PenLine className="size-3.5" strokeWidth={1.8} aria-hidden />
-      <span className="sr-only">{productName} </span>
-      {done ? "리뷰 확인" : "리뷰 쓰기"}
-    </Link>
   );
 }
