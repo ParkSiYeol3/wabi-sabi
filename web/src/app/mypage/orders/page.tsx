@@ -9,6 +9,7 @@ import { TrackButton } from "@/components/account/track-button";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { createClient } from "@/lib/supabase/server";
 import {
+  byLineAmount,
   formatDateKST,
   withdrawalDeadlineKST,
   displayStatus,
@@ -21,7 +22,9 @@ type OrderItem = {
   // 리뷰 링크용 상품 id. 상품이 삭제되면 null(0001) — 이때 리뷰 대상이 사라져 버튼 생략.
   product_id: string | null;
   product_name: string;
+  price: number;
   quantity: number;
+  options: { name: string; value: string }[] | null;
   // 상품이 삭제되면 order_items.product_id 가 null 이 되므로(0001) 조인 결과도 null.
   products: { images: unknown } | null;
 };
@@ -42,7 +45,7 @@ type Order = {
   order_items: OrderItem[];
 };
 
-// 주문 대표 썸네일 — 첫 항목의 첫 이미지. 없으면 플레이스홀더.
+// 상품 썸네일 — 상품의 첫 이미지. 없으면(상품 삭제 등) 플레이스홀더.
 function firstImage(item?: OrderItem): string | null {
   const imgs = item?.products?.images;
   return Array.isArray(imgs) && typeof imgs[0] === "string" ? imgs[0] : null;
@@ -59,7 +62,7 @@ export default async function OrdersPage() {
   const { data: orders } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, preparing_at, tracking_number, courier, total_price, ordered_at, delivered_at, order_items(product_id, product_name, quantity, products(images))",
+      "id, order_number, status, preparing_at, tracking_number, courier, total_price, ordered_at, delivered_at, order_items(product_id, product_name, price, quantity, options, products(images))",
     )
     // 미결제(pending)는 숨긴다 — 결제창을 열었다가 결제하지 않고 뒤로가면 주문이
     // pending 으로 남는데(결제 전 orderId 발급이 필요한 토스 결제창 구조), 이는
@@ -89,10 +92,11 @@ export default async function OrdersPage() {
       ) : (
         <ul className="mt-10 space-y-4">
           {orders.map((o) => {
-            const first = o.order_items[0];
-            const rest = o.order_items.length - 1;
-            const thumb = firstImage(first);
-
+            // 상품은 한 줄에 하나(#761, 카페24 기본 주문조회·쿠팡 방식). 금액 큰 순,
+            // 3개까지 펼치고 나머지는 접는다(주문 하나가 화면을 다 차지하지 않게).
+            const items = byLineAmount(o.order_items);
+            const shown = items.slice(0, ITEMS_SHOWN);
+            const hidden = items.slice(ITEMS_SHOWN);
             // 리뷰 대상 — 결제된 주문의 (삭제 안 된) 상품을 중복 제거. 여러 상품이면
             // 상세로 보내 상품별로 고르게 하고, 한 상품이면 바로 그 상품 리뷰로 점프.
             const reviewTargets: [string, string][] = REVIEWABLE_STATUSES.includes(
@@ -110,74 +114,76 @@ export default async function OrdersPage() {
             return (
               <li
                 key={o.id}
-                className="border border-wabi-border p-5 transition-colors hover:border-wabi-fg"
+                className="border border-wabi-border p-5"
               >
-                <div className="flex items-start gap-4">
-                  {/* 대표 썸네일 — 어떤 주문인지 한눈에 */}
-                  <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden bg-wabi-muted">
-                    {thumb ? (
-                      <Image
-                        src={thumb}
-                        alt=""
-                        aria-hidden
-                        fill
-                        sizes="80px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <ImageIcon
-                        className="size-6 text-wabi-fg-muted/40"
-                        strokeWidth={1}
-                        aria-hidden
-                      />
-                    )}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-3">
-                      {/* 상세로 이동 (#137) — 송장번호·배송지·전체 항목은 상세에서.
-                          제목은 상품명(10/3 시열님: 손님은 주문번호로 주문을 기억하지 않는다).
-                          주문번호는 문의할 때 쓰도록 날짜 줄에 작게 남긴다. */}
-                      <Link
-                        href={`/mypage/orders/${o.id}`}
-                        className="min-w-0 text-sm font-medium underline-offset-4 hover:underline"
-                      >
-                        {first?.product_name}
-                        {first && first.quantity > 1 ? ` ${first.quantity}개` : ""}
-                        {rest > 0 ? ` 외 ${rest}건` : ""}
-                      </Link>
-                      <OrderStatusBadge status={displayStatus(o)} />
-                    </div>
-
-                    <p className="mt-1.5 font-numeric text-xs text-wabi-fg-muted">
-                      {formatDateKST(o.ordered_at)} 주문
-                      {o.delivered_at && (
-                        <> · {formatDateKST(o.delivered_at)} 수령</>
-                      )}
-                      <span className="text-wabi-fg-muted/70">
-                        {" "}
-                        · 주문번호 {o.order_number}
+                {/* 머리: 언제 산 주문인지 + 상태. 주문번호는 문의할 때 쓰도록 작게(10/3 시열님:
+                    손님은 주문번호로 주문을 기억하지 않는다). 송장·배송지·옵션 전체는 상세에서(#137). */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-2 text-sm">
+                      <span className="font-numeric font-medium">
+                        {formatDateKST(o.ordered_at)} 주문
                       </span>
+                      <OrderStatusBadge status={displayStatus(o)} />
                     </p>
-
-                    <p className="mt-3 text-sm font-medium">
-                      <Price value={o.total_price} />
+                    <p className="mt-1 font-numeric text-xs text-wabi-fg-muted">
+                      주문번호 {o.order_number}
+                      {o.delivered_at && (
+                        <span className="whitespace-nowrap">
+                          {" "}
+                          · {formatDateKST(o.delivered_at)} 수령
+                        </span>
+                      )}
                     </p>
-
-                    {o.delivered_at && (
-                      <p className="mt-3 font-numeric text-xs text-wabi-fg-muted">
-                        교환·환불 요청은{" "}
-                        {withdrawalDeadlineKST(o.delivered_at)}까지 가능합니다.{" "}
-                        <Link
-                          href="/legal/refund"
-                          className="underline hover:text-wabi-fg"
-                        >
-                          교환·환불 안내
-                        </Link>
-                      </p>
-                    )}
                   </div>
+                  <Link
+                    href={`/mypage/orders/${o.id}`}
+                    className="shrink-0 py-1 text-xs text-wabi-fg-muted underline-offset-4 transition-colors hover:text-wabi-fg hover:underline"
+                  >
+                    주문 상세<span className="sr-only"> ({formatDateKST(o.ordered_at)} 주문)</span> →
+                  </Link>
                 </div>
+
+                <ul className="mt-4 divide-y divide-wabi-border border-y border-wabi-border">
+                  {shown.map((it, i) => (
+                    <ItemRow key={i} item={it} />
+                  ))}
+                </ul>
+                {hidden.length > 0 && (
+                  <details className="group border-b border-wabi-border">
+                    <summary className="cursor-pointer list-none py-2.5 text-xs text-wabi-fg-muted hover:text-wabi-fg [&::-webkit-details-marker]:hidden">
+                      <span className="group-open:hidden">
+                        상품 <span className="font-numeric">{hidden.length}</span>개 더 보기
+                      </span>
+                      <span className="hidden group-open:inline">접기</span>
+                    </summary>
+                    <ul className="divide-y divide-wabi-border border-t border-wabi-border">
+                      {hidden.map((it, i) => (
+                        <ItemRow key={i} item={it} />
+                      ))}
+                    </ul>
+                  </details>
+                )}
+
+                <p className="mt-3 flex items-baseline justify-between gap-3 text-sm">
+                  <span className="text-wabi-fg-muted">결제 금액</span>
+                  <span className="font-medium">
+                    <Price value={o.total_price} />
+                  </span>
+                </p>
+
+                {o.delivered_at && (
+                  <p className="mt-3 font-numeric text-xs text-wabi-fg-muted">
+                    교환·환불 요청은{" "}
+                    {withdrawalDeadlineKST(o.delivered_at)}까지 가능합니다.{" "}
+                    <Link
+                      href="/legal/refund"
+                      className="underline hover:text-wabi-fg"
+                    >
+                      교환·환불 안내
+                    </Link>
+                  </p>
+                )}
 
                 {/* 취소는 결제 완료이면서 상품 준비 전만(0071 — 포장이 시작되면 문의로).
                     배송 중이면 상세에 들어가지 않고 바로 조회(#754). */}
@@ -204,6 +210,43 @@ export default async function OrdersPage() {
         </ul>
       )}
     </Container>
+  );
+}
+
+const ITEMS_SHOWN = 3;
+
+// 주문 카드 안 상품 한 줄 — 사진 + 이름 + 옵션 + 수량.
+function ItemRow({ item }: { item: OrderItem }) {
+  const thumb = firstImage(item);
+  const options = (item.options ?? []).map((op) => `${op.name}: ${op.value}`);
+  return (
+    <li className="flex items-center gap-3.5 py-3">
+      <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden bg-wabi-muted">
+        {thumb ? (
+          <Image
+            src={thumb}
+            alt=""
+            aria-hidden
+            fill
+            sizes="56px"
+            className="object-cover"
+          />
+        ) : (
+          <ImageIcon
+            className="size-5 text-wabi-fg-muted/40"
+            strokeWidth={1}
+            aria-hidden
+          />
+        )}
+      </div>
+      <div className="min-w-0 flex-1 text-sm">
+        <p className="break-keep">{item.product_name}</p>
+        <p className="mt-0.5 font-numeric text-xs text-wabi-fg-muted">
+          {options.length > 0 && <>{options.join(" · ")} · </>}
+          {item.quantity}개
+        </p>
+      </div>
+    </li>
   );
 }
 
