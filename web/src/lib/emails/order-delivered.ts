@@ -12,6 +12,7 @@ type Row = {
   order_number: string;
   delivered_at: string | null;
   user_id: string | null;
+  guest_email: string | null;
   order_items: {
     product_id: string | null;
     product_name: string;
@@ -45,7 +46,7 @@ export async function sendOrderDeliveredMail(orderId: string): Promise<void> {
   const { data: order } = await admin
     .from("orders")
     .select(
-      "order_number, delivered_at, user_id, order_items(product_id, product_name, quantity, options, products(images, is_active))",
+      "order_number, delivered_at, user_id, guest_email, order_items(product_id, product_name, quantity, options, products(images, is_active))",
     )
     .eq("id", orderId)
     .maybeSingle<Row>();
