@@ -47,7 +47,7 @@ export function AdminCancelOrderButton({
         type="button"
         onClick={() => setConfirmOpen(true)}
         disabled={pending}
-        className={`${fullWidth ? "w-full justify-center py-2.5" : ""} cursor-pointer rounded-lg border border-wabi-border px-2.5 py-1.5 text-xs text-wabi-fg-muted transition-colors hover:border-red-700 hover:text-red-700 disabled:opacity-60`}
+        className={`${fullWidth ? "w-full py-2.5" : "py-1.5"} inline-flex cursor-pointer items-center justify-center rounded-lg border border-wabi-border px-3 text-xs whitespace-nowrap text-wabi-fg-muted transition-colors hover:border-red-700 hover:text-red-700 disabled:opacity-60`}
       >
         {pending ? "취소 처리 중…" : "주문 취소"}
       </button>

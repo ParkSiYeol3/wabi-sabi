@@ -282,7 +282,7 @@ export default async function AdminOrdersPage() {
                       {/* 취소·환불(배송 전 paid만) + 기록 삭제(모든 상태). 취소는
                           RPC 가 paid 만 받아 그 외엔 숨긴다. 삭제는 결제와 무관하게
                           기록만 지운다(테스트 데이터 정리·대표님). */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 whitespace-nowrap">
                         <div className="flex flex-col items-start gap-1.5">
                           {o.status === "paid" && (
                             <AdminCancelOrderButton
