@@ -6,6 +6,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { parseUuid } from "@/lib/validation";
 import { logAdminAction } from "@/lib/audit";
 import { sendOrderShippedMail } from "@/lib/emails/order-shipped";
+import { sendOrderDeliveredMail } from "@/lib/emails/order-delivered";
 import { cancelPaidOrder, type CancelResult } from "@/lib/payments";
 import { DEFAULT_COURIER, isCourierCode } from "@/lib/orders";
 
@@ -127,6 +128,11 @@ export async function markDelivered(formData: FormData) {
     .select("id");
 
   if (!data || data.length === 0) return; // 대상 아님 — 감사로그도 남기지 않는다
+
+  // 손님에게 배송 완료 + 리뷰 요청 메일(#783). 위 조건부 update 가 실제로 바꾼 때만이라 1회.
+  await sendOrderDeliveredMail(id).catch((e) =>
+    console.error("[admin] 배송완료 메일 실패 orderId=", id, e),
+  );
 
   await logAdminAction(user, {
     action: "order.mark_delivered",
