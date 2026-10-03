@@ -1,4 +1,4 @@
-import { courierOf, formatDateKST, won } from "@/lib/orders";
+import { courierOf, formatDateKST, won, withdrawalDeadlineKST } from "@/lib/orders";
 import { site } from "@/lib/site";
 import { SITE_URL } from "@/lib/site-url";
 import {
@@ -168,6 +168,43 @@ ${section("취소된 상품", itemRows(o.items))}
 ${section("주문 정보", infoRows([["주문번호", o.orderNumber]]))}
 ${note(
   `카드 결제는 카드사에 따라 환불이 반영되기까지 영업일 기준 3~7일이 걸릴 수 있습니다.<br>궁금하신 점은 ${link(`${BASE}/inquiry`, "문의 게시판")}이나 인스타그램 DM으로 남겨 주세요.`,
+)}`,
+    }),
+  };
+}
+
+// ── 배송 완료 + 리뷰 요청 ──────────────────────────────────
+// 관리자가 배송완료를 처리한 때 1회(#783). 거래 안내(수령 확인·교환·환불 기한)가 본문이고
+// 리뷰는 보상 없는 부탁 한 줄 + 버튼. reviewHref 가 없으면(비회원: 리뷰는 로그인 필요)
+// 리뷰 부분을 빼고 거래 안내만 보낸다.
+export function orderDeliveredMail(o: {
+  orderNumber: string;
+  deliveredAt: string;
+  items: MailItem[];
+  reviewHref: string | null;
+}): Mail {
+  const deadline = withdrawalDeadlineKST(o.deliveredAt);
+  const due = box(`<p style="margin:0;font-size:12px;color:${C.faint}">교환·환불 요청 기한</p>
+<p style="margin:4px 0 0;font-size:15px;font-weight:600;color:${C.ink}">${esc(deadline)}까지</p>`);
+  const review = o.reviewHref
+    ? `${section(
+        "리뷰 부탁드려요",
+        `<p style="margin:0;font-size:14px;line-height:1.7;color:${C.muted};word-break:keep-all">직접 써 보신 이야기는 그릇을 고르는 다른 분들께 큰 도움이 됩니다. 별점과 짧은 한 줄이면 충분합니다.</p>`,
+      )}
+${button(o.reviewHref, "리뷰 남기기")}`
+    : "";
+
+  return {
+    subject: `[${site.name}] 상품을 잘 받으셨나요? (${o.orderNumber})`,
+    html: layout({
+      preheader: `배송이 완료되었습니다. 교환·환불은 ${deadline}까지 요청하실 수 있습니다.`,
+      title: "상품을 잘 받으셨나요?",
+      intro: "주문하신 상품이 배송 완료되었습니다. 받아 보신 그릇이 오래 곁에 머물기를 바랍니다.",
+      body: `${due}
+${section("받으신 상품", itemRows(o.items))}
+${review}
+${note(
+  `상품에 문제가 있거나 받지 못하셨다면 ${link(`${BASE}/inquiry`, "문의 게시판")}이나 인스타그램 DM으로 알려 주세요. ${link(`${BASE}/legal/refund`, "교환·환불 안내")}<br>주문번호 ${esc(o.orderNumber)}`,
 )}`,
     }),
   };
