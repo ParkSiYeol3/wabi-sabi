@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { ImageIcon, PenLine } from "lucide-react";
+import { ImageIcon } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { CancelOrderButton } from "@/components/account/cancel-order-button";
+import { ReviewLink, reviewLines } from "@/components/account/review-link";
 import { TrackButton } from "@/components/account/track-button";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { createClient } from "@/lib/supabase/server";
@@ -26,6 +27,7 @@ type OrderItem = {
   quantity: number;
   options: { name: string; value: string }[] | null;
   // 상품이 삭제되면 order_items.product_id 가 null 이 되므로(0001) 조인 결과도 null.
+  // 판매 중지도 null(products 공개 읽기 = is_active). 이때 리뷰 버튼을 달지 않는다.
   products: { images: unknown } | null;
 };
 
@@ -97,19 +99,22 @@ export default async function OrdersPage() {
             const items = byLineAmount(o.order_items);
             const shown = items.slice(0, ITEMS_SHOWN);
             const hidden = items.slice(ITEMS_SHOWN);
-            // 리뷰 대상 — 결제된 주문의 (삭제 안 된) 상품을 중복 제거. 여러 상품이면
-            // 상세로 보내 상품별로 고르게 하고, 한 상품이면 바로 그 상품 리뷰로 점프.
-            const reviewTargets: [string, string][] = REVIEWABLE_STATUSES.includes(
-              o.status,
-            )
-              ? [
-                  ...new Map(
-                    o.order_items
-                      .filter((it) => it.product_id)
-                      .map((it) => [it.product_id as string, it.product_name]),
-                  ),
-                ]
-              : [];
+            // 리뷰 버튼은 상품 줄마다(#770). 주문 단위 버튼은 여러 상품이면 어느 상품인지
+            // 몰라 주문 상세로 보냈다. 결제된 주문의 판매 중 상품, 상품당 한 번.
+            const reviewAt = REVIEWABLE_STATUSES.includes(o.status)
+              ? reviewLines(items)
+              : new Set<OrderItem>();
+            const row = (it: OrderItem, i: number) => (
+              <ItemRow
+                key={i}
+                item={it}
+                review={
+                  reviewAt.has(it) && it.product_id
+                    ? { done: reviewed.has(it.product_id) }
+                    : null
+                }
+              />
+            );
             const track = o.status === "shipping" ? o.tracking_number : null;
             return (
               <li
@@ -145,9 +150,7 @@ export default async function OrdersPage() {
                 </div>
 
                 <ul className="mt-4 divide-y divide-wabi-border border-y border-wabi-border">
-                  {shown.map((it, i) => (
-                    <ItemRow key={i} item={it} />
-                  ))}
+                  {shown.map(row)}
                 </ul>
                 {hidden.length > 0 && (
                   <details className="group border-b border-wabi-border">
@@ -158,9 +161,7 @@ export default async function OrdersPage() {
                       <span className="hidden group-open:inline">접기</span>
                     </summary>
                     <ul className="divide-y divide-wabi-border border-t border-wabi-border">
-                      {hidden.map((it, i) => (
-                        <ItemRow key={i} item={it} />
-                      ))}
+                      {hidden.map(row)}
                     </ul>
                   </details>
                 )}
@@ -187,20 +188,11 @@ export default async function OrdersPage() {
 
                 {/* 취소는 결제 완료이면서 상품 준비 전만(0071 — 포장이 시작되면 문의로).
                     배송 중이면 상세에 들어가지 않고 바로 조회(#754). */}
-                {((o.status === "paid" && !o.preparing_at) ||
-                  track ||
-                  reviewTargets.length > 0) && (
+                {((o.status === "paid" && !o.preparing_at) || track) && (
                   <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-wabi-border pt-4">
                     {track && <TrackButton courier={o.courier} invoice={track} />}
                     {o.status === "paid" && !o.preparing_at && (
                       <CancelOrderButton orderId={o.id} />
-                    )}
-                    {reviewTargets.length > 0 && (
-                      <ReviewButton
-                        orderId={o.id}
-                        targets={reviewTargets}
-                        reviewed={reviewed}
-                      />
                     )}
                   </div>
                 )}
@@ -215,8 +207,14 @@ export default async function OrdersPage() {
 
 const ITEMS_SHOWN = 3;
 
-// 주문 카드 안 상품 한 줄 — 사진 + 이름 + 옵션 + 수량.
-function ItemRow({ item }: { item: OrderItem }) {
+// 주문 카드 안 상품 한 줄: 사진 + 이름 + 옵션 + 수량 (+ 리뷰 버튼).
+function ItemRow({
+  item,
+  review,
+}: {
+  item: OrderItem;
+  review: { done: boolean } | null;
+}) {
   const thumb = firstImage(item);
   const options = (item.options ?? []).map((op) => `${op.name}: ${op.value}`);
   return (
@@ -246,32 +244,13 @@ function ItemRow({ item }: { item: OrderItem }) {
           {item.quantity}개
         </p>
       </div>
+      {review && item.product_id && (
+        <ReviewLink
+          productId={item.product_id}
+          productName={item.product_name}
+          done={review.done}
+        />
+      )}
     </li>
-  );
-}
-
-// 주문 내역 → 리뷰 작성 유도(대표님). 한 상품이면 그 상품 상세의 리뷰 섹션으로 바로,
-// 여러 상품이면 주문 상세로 보내 상품별 버튼에서 고르게 한다. 대상 상품을 모두 이미
-// 리뷰했으면 "리뷰 확인"으로 라벨만 바꾼다(상품 페이지가 이미 작성 상태를 보여줌).
-function ReviewButton({
-  orderId,
-  targets,
-  reviewed,
-}: {
-  orderId: string;
-  targets: [string, string][];
-  reviewed: Set<string>;
-}) {
-  const single = targets.length === 1;
-  const allReviewed = targets.every(([pid]) => reviewed.has(pid));
-  const href = single ? `/shop/${targets[0][0]}#reviews` : `/mypage/orders/${orderId}`;
-  return (
-    <Link
-      href={href}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-wabi-border px-3.5 py-2 text-xs font-medium text-wabi-fg transition-colors hover:border-wabi-fg hover:bg-wabi-muted"
-    >
-      <PenLine className="size-3.5" strokeWidth={1.8} aria-hidden />
-      {allReviewed ? "리뷰 확인" : "리뷰 쓰기"}
-    </Link>
   );
 }
