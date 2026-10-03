@@ -85,7 +85,7 @@ async function loadDashboard() {
   // 배송완료 확인(#778): 배송 중인데 발송 후 DELIVERY_CHECK_DAYS 지난 주문. shipped_at
   // 이 없으면(0074 이전) 주문 시각 기준.
   const checkCutoff = new Date(Date.now() - DELIVERY_CHECK_DAYS * 86_400_000).toISOString();
-  const [visitsRes, visitTrendRes, sourcesRes, peopleRes, recentVisitorsRes, instagram, deliveryCheckRes] =
+  const [visitsRes, visitTrendRes, sourcesRes, peopleRes, recentVisitorsRes, instagram] =
     await Promise.all([
       db.rpc("admin_visit_summary"),
       db.rpc("admin_visit_trend", { p_days: 14 }),
@@ -95,11 +95,6 @@ async function loadDashboard() {
       db.rpc("admin_recent_visitors", { p_limit: 30 }),
       // 인스타 토큰 자동 갱신 상태(#775). 문제 있을 때만 경고 한 줄.
       instagramTokenStatus(),
-      db
-        .from("orders")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "shipping")
-        .or(`shipped_at.lt."${checkCutoff}",and(shipped_at.is.null,ordered_at.lt."${checkCutoff}")`),
     ]);
   const visits = (visitsRes.data as VisitSummary[] | null)?.[0] ?? EMPTY_VISITS;
   const visitTrend = (visitTrendRes.data as VisitDay[] | null) ?? [];
@@ -109,7 +104,7 @@ async function loadDashboard() {
     null;
   const recentVisitors = (recentVisitorsRes.data as RecentVisitor[] | null) ?? [];
 
-  const [summaryRes, trendRes, lowStockRes, recentRes] = await Promise.all([
+  const [summaryRes, trendRes, lowStockRes, recentRes, deliveryCheckRes] = await Promise.all([
     db
       .rpc("admin_dashboard_summary", {
         low_stock_threshold: LOW_STOCK_THRESHOLD,
@@ -135,6 +130,13 @@ async function loadDashboard() {
       .limit(5)
       .throwOnError()
       .returns<RecentOrder[]>(),
+    // 실패를 0건으로 숨기지 않는다(필수 조회와 같이 에러 경계로).
+    db
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "shipping")
+      .or(`shipped_at.lt."${checkCutoff}",and(shipped_at.is.null,ordered_at.lt."${checkCutoff}")`)
+      .throwOnError(),
   ]);
   return {
     summary: summaryRes.data as Summary,
