@@ -171,9 +171,17 @@ export default async function OrderDetailPage({
                     ) : (
                       <span className="break-keep">{name}</span>
                     )}
-                    <span className="shrink-0">
+                    {/* 금액 + 리뷰 버튼을 오른쪽 한 칸에(#765, 상품명 아래 작은 외곽선 버튼은
+                        눈에 안 띄었다). 리뷰는 결제된 주문의 판매 중 상품만(href 있을 때). */}
+                    <div className="flex shrink-0 flex-col items-end gap-2">
                       <Price value={it.price * it.quantity + addonSum} />
-                    </span>
+                      {canReview && href && it.product_id && (
+                        <ReviewLink
+                          productId={it.product_id}
+                          done={reviewed.has(it.product_id)}
+                        />
+                      )}
+                    </div>
                   </div>
                   {lineOptions.length > 0 && (
                     <p className="mt-1 text-xs text-wabi-fg-muted">
@@ -184,17 +192,6 @@ export default async function OrderDetailPage({
                     <p className="mt-1 text-xs text-wabi-fg-muted">
                       + {lineAddons.map((a) => a.name).join(", ")}
                     </p>
-                  )}
-                  {/* 리뷰 작성(대표님) — 결제된 주문의 살아있는 상품만. 판매 중지 상품도
-                      상품 페이지가 없어 제외(#763, href 가 있을 때만). */}
-                  {canReview && href && it.product_id && (
-                    <Link
-                      href={`/shop/${it.product_id}#reviews`}
-                      className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg border border-wabi-border px-3 py-1.5 text-xs font-medium text-wabi-fg transition-colors hover:border-wabi-fg hover:bg-wabi-muted"
-                    >
-                      <PenLine className="size-3.5" strokeWidth={1.8} aria-hidden />
-                      {reviewed.has(it.product_id) ? "리뷰 확인" : "리뷰 쓰기"}
-                    </Link>
                   )}
                 </div>
               </li>
@@ -323,5 +320,23 @@ function ItemThumb({ src }: { src: string | null }) {
     <Image src={src} alt="" fill sizes="56px" className="object-cover" />
   ) : (
     <ImageIcon className="size-5 text-wabi-fg-muted/40" strokeWidth={1} aria-hidden />
+  );
+}
+
+// 리뷰 버튼(#765) — 안 쓴 상품은 채운 버튼, 이미 쓴 상품은 외곽선 "리뷰 확인".
+// 상품 상세의 리뷰 섹션으로 바로(#reviews, ScrollToHash 가 사이트 안 이동도 맞춘다).
+function ReviewLink({ productId, done }: { productId: string; done: boolean }) {
+  return (
+    <Link
+      href={`/shop/${productId}#reviews`}
+      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
+        done
+          ? "border border-wabi-border text-wabi-fg hover:border-wabi-fg hover:bg-wabi-muted"
+          : "border border-transparent bg-wabi-fg text-wabi-bg hover:bg-wabi-fg/85"
+      }`}
+    >
+      <PenLine className="size-3.5" strokeWidth={1.8} aria-hidden />
+      {done ? "리뷰 확인" : "리뷰 쓰기"}
+    </Link>
   );
 }
