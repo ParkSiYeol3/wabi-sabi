@@ -128,6 +128,73 @@ ${note(
   };
 }
 
+// ── 주문 취소·환불 ─────────────────────────────────────────
+// 손님 취소·관리자 취소·결제 중 재고 소진 자동 취소(#780). 관리자 취소는 손님 요청(DM 등)
+// 일 수도 있어 "판매자 사정"이라고 단정하지 않는다.
+export type CancelCause = "customer" | "admin" | "out_of_stock";
+
+const CANCEL_INTRO: Record<CancelCause, string> = {
+  customer: "요청하신 주문 취소가 완료되었습니다. 결제하신 금액은 전액 환불됩니다.",
+  admin: "주문이 취소되어 결제하신 금액을 전액 환불해 드립니다. 취소 사유가 궁금하시면 문의해 주세요.",
+  out_of_stock:
+    "결제하시는 사이 상품 재고가 모두 소진되어 주문이 취소되었습니다. 불편을 드려 죄송합니다. 결제하신 금액은 전액 환불됩니다.",
+};
+
+export function orderCancelledMail(o: {
+  orderNumber: string;
+  cause: CancelCause;
+  refundAmount: number;
+  items: MailItem[];
+}): Mail {
+  const refund = box(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;line-height:1.6">
+  <tr>
+    <td style="color:${C.faint};width:76px;padding-right:12px;padding-bottom:4px;white-space:nowrap">환불 금액</td>
+    <td style="color:${C.ink};font-size:16px;font-weight:600;padding-bottom:4px">${won(o.refundAmount)}</td>
+  </tr>
+  <tr>
+    <td style="color:${C.faint};width:76px;padding-right:12px;white-space:nowrap">환불 수단</td>
+    <td style="color:${C.ink}">결제하신 수단으로 전액</td>
+  </tr>
+</table>`);
+
+  return {
+    subject: `[${site.name}] 주문이 취소되었습니다 (${o.orderNumber})`,
+    html: layout({
+      preheader: `주문번호 ${o.orderNumber} · ${won(o.refundAmount)} 전액 환불.`,
+      title: "주문이 취소되었습니다",
+      intro: CANCEL_INTRO[o.cause],
+      body: `${refund}
+${section("취소된 상품", itemRows(o.items))}
+${section("주문 정보", infoRows([["주문번호", o.orderNumber]]))}
+${note(
+  `카드 결제는 카드사에 따라 환불이 반영되기까지 영업일 기준 3~7일이 걸릴 수 있습니다.<br>궁금하신 점은 ${link(`${BASE}/inquiry`, "문의 게시판")}이나 인스타그램 DM으로 남겨 주세요.`,
+)}`,
+    }),
+  };
+}
+
+// ── 대표님 알림(가게용) ───────────────────────────────────
+// 손님이 아니라 가게 메일함으로 가는 운영 알림(#780 환불 실패, 새 주문·새 문의).
+// 짧게: 무슨 일인지 + 바로 가는 버튼. 개인정보는 최소(받는 분 이름 정도).
+export function shopAlertMail(a: {
+  subject: string;
+  title: string;
+  intro: string;
+  rows?: [label: string, value: string][];
+  action: { href: string; label: string };
+}): Mail {
+  return {
+    subject: `[${site.name} 관리] ${a.subject}`,
+    html: layout({
+      preheader: a.intro,
+      title: a.title,
+      intro: a.intro,
+      body: `${a.rows?.length ? section("내용", infoRows(a.rows)) : ""}
+${button(a.action.href, a.action.label)}`,
+    }),
+  };
+}
+
 // ── 문의 답변 ─────────────────────────────────────────────
 // 답변 본문은 싣지 않는다 — 비밀글이 메일로 새는 경로를 만들지 않는다(#133).
 export function inquiryAnsweredMail(i: { inquiryId: string; title: string }): Mail {

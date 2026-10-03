@@ -148,7 +148,7 @@ export async function adminCancelOrder(orderId: string): Promise<CancelResult> {
   const id = parseUuid(orderId);
   if (!id) return { ok: false, error: "주문 정보가 올바르지 않습니다." };
 
-  const result = await cancelPaidOrder(id, "관리자 취소");
+  const result = await cancelPaidOrder(id, "관리자 취소", "admin");
   if (result.ok) {
     await logAdminAction(user, {
       action: "order.cancel",
