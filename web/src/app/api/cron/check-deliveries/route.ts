@@ -13,8 +13,12 @@ import { logSystemAction } from "@/lib/audit";
 
 type Run = { checked?: number; delivered?: number; errors?: string[]; skipped?: string };
 
+// 오류 문구는 바깥(우체국 응답·예외)에서 온다. 혹시 섞여 든 송장(긴 숫자)·키(긴 토큰)는 지운다.
+const scrub = (s: string) =>
+  s.replace(/\d{10,}/g, "[번호]").replace(/[A-Za-z0-9%+/=]{24,}/g, "[키]");
+
 async function recordRun(run: Run) {
-  const errors = [...new Set(run.errors ?? [])];
+  const errors = [...new Set((run.errors ?? []).map(scrub))];
   const { error } = await createAdminClient()
     .from("delivery_check_status")
     .upsert({
@@ -51,6 +55,7 @@ export async function GET(req: Request) {
     .limit(50)
     .returns<{ id: string; tracking_number: string }[]>();
   if (error) {
+    console.error("[check-deliveries] 주문 조회 실패, 이번 실행 중단:", error.message);
     await recordRun({ errors: [`주문 조회 실패: ${error.message}`] });
     return Response.json({ ok: false, error: error.message }, { status: 500 });
   }
@@ -76,7 +81,7 @@ export async function GET(req: Request) {
     }
   }
   // 오류 문구엔 송장·키가 들어가지 않는다(returnCode·errMsg·HTTP 상태만).
-  if (errors.length) console.error("[check-deliveries] 조회 실패", [...new Set(errors)]);
+  if (errors.length) console.error("[check-deliveries] 조회 실패", [...new Set(errors.map(scrub))]);
   const checked = orders?.length ?? 0;
   console.log(`[check-deliveries] 조회 ${checked}건, 배송완료 ${delivered}건, 실패 ${errors.length}건`);
   await recordRun({ checked, delivered, errors });
