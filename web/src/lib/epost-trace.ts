@@ -12,7 +12,8 @@ const ENDPOINT =
   "http://openapi.epost.go.kr/trace/retrieveLongitudinalService/retrieveLongitudinalService/getLongitudinalDomesticList";
 
 export type EpostTrace =
-  | { kind: "delivered"; deliveredAt: string }
+  // approx: 배달 시각을 읽지 못해 확인 시각으로 처리했을 때, 우체국이 준 날짜·시각 원문(로그용)
+  | { kind: "delivered"; deliveredAt: string; approx?: string }
   | { kind: "in_transit"; last: string | null }
   | { kind: "error"; message: string };
 
@@ -43,14 +44,20 @@ const tags = (xml: string, name: string): string[] =>
 const isDelivered = (s: string | null | undefined) =>
   (s ?? "").replace(/\s+/g, "").startsWith("배달완료");
 
-// "2026.10.05" + "14:03" → KST ISO. 형식이 다르면 null.
+// 날짜 + 시각 → KST ISO. 못 읽으면 null.
+// 처음엔 문서대로 "2026.10.05" + "14:03" 만 읽었는데, 10/6 첫 실주문에서 배달완료 기록의
+// 날짜를 못 읽어 배송 중으로 되돌아갔다(#803). 구분자와 자릿수에 기대지 않는다:
+// 2026.10.06 · 2026-10-06 · 20261006 · 2026.10.6, 11:36 · 1136 · 11:36:00.
 function kstIso(date: string | null, time: string | null): string | null {
-  const d = date?.match(/^(\d{4})\.(\d{2})\.(\d{2})$/);
+  const d = date?.match(/(\d{4})\D?(\d{1,2})\D?(\d{1,2})/);
   if (!d) return null;
-  const t = time?.match(/^(\d{1,2}):(\d{2})$/);
+  const [y, mo, da] = [d[1], d[2].padStart(2, "0"), d[3].padStart(2, "0")];
+  if (+mo < 1 || +mo > 12 || +da < 1 || +da > 31) return null;
+  const t = time?.replace(/\s/g, "").match(/^(\d{1,2}):?(\d{2})/);
   const hh = t ? t[1].padStart(2, "0") : "12";
   const mm = t ? t[2] : "00";
-  return new Date(`${d[1]}-${d[2]}-${d[3]}T${hh}:${mm}:00+09:00`).toISOString();
+  const ms = Date.parse(`${y}-${mo}-${da}T${hh}:${mm}:00+09:00`);
+  return Number.isNaN(ms) ? null : new Date(ms).toISOString();
 }
 
 // 응답 XML 해석(테스트를 위해 따로 뺐다).
@@ -69,6 +76,10 @@ export function parseEpostTrace(xml: string): EpostTrace {
       (doneIdx >= 0 ? kstIso(dates[doneIdx] ?? null, times[doneIdx] ?? null) : null) ??
       kstIso(tag(xml, "dlvyDe"), null);
     if (at) return { kind: "delivered", deliveredAt: at };
+    // 배달완료인데 시각을 못 읽었다. 배송 중으로 두면 영영 안 바뀌므로 확인 시각으로 처리하고
+    // 원문을 남긴다(실제보다 최대 1시간 늦게 기록, 청약철회 기산은 손님에게 불리하지 않다).
+    const raw = doneIdx >= 0 ? `${dates[doneIdx] ?? ""} ${times[doneIdx] ?? ""}` : (tag(xml, "dlvyDe") ?? "");
+    return { kind: "delivered", deliveredAt: new Date().toISOString(), approx: raw.trim() || "없음" };
   }
   return { kind: "in_transit", last: steps.at(-1) ?? null };
 }
