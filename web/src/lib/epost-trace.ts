@@ -28,12 +28,20 @@ export function epostConfigured(): boolean {
   return serviceKey() !== null;
 }
 
+// 값이 CDATA 로 감싸여 와도 같은 값으로 읽는다.
+const inner = (raw: string) => raw.trim().replace(/^<!\[CDATA\[([\s\S]*)\]\]>$/, "$1").trim();
 const tag = (xml: string, name: string): string | null => {
   const m = xml.match(new RegExp(`<${name}>([\\s\\S]*?)</${name}>`));
-  return m ? m[1].trim() : null;
+  return m ? inner(m[1]) : null;
 };
 const tags = (xml: string, name: string): string[] =>
-  [...xml.matchAll(new RegExp(`<${name}>([\\s\\S]*?)</${name}>`, "g"))].map((m) => m[1].trim());
+  [...xml.matchAll(new RegExp(`<${name}>([\\s\\S]*?)</${name}>`, "g"))].map((m) => inner(m[1]));
+
+// 배달완료 판정. 처리현황은 "배달완료 ( 배달 )"·"배달완료(수령희망장소배달-...)"처럼 꼬리가
+// 붙어 온다. 정확히 "배달완료"와 같을 때만 보던 탓에 첫 실주문(10/6 11:36 배달)을 배송 중으로
+// 읽었다(#800). 공백을 빼고 앞머리로 본다.
+const isDelivered = (s: string | null | undefined) =>
+  (s ?? "").replace(/\s+/g, "").startsWith("배달완료");
 
 // "2026.10.05" + "14:03" → KST ISO. 형식이 다르면 null.
 function kstIso(date: string | null, time: string | null): string | null {
@@ -54,8 +62,8 @@ export function parseEpostTrace(xml: string): EpostTrace {
   const times = tags(xml, "dlvyTime");
   const steps = tags(xml, "processSttus");
   // 배달완료 기록의 날짜·시각이 실제 수령 시각. 없으면 상단 배달일자(시각 모름 → 정오).
-  const doneIdx = steps.lastIndexOf("배달완료");
-  const delivered = tag(xml, "dlvySttus") === "배달완료" || doneIdx >= 0;
+  const doneIdx = steps.findLastIndex(isDelivered);
+  const delivered = isDelivered(tag(xml, "dlvySttus")) || doneIdx >= 0;
   if (delivered) {
     const at =
       (doneIdx >= 0 ? kstIso(dates[doneIdx] ?? null, times[doneIdx] ?? null) : null) ??

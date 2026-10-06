@@ -62,6 +62,9 @@ export async function GET(req: Request) {
 
   let delivered = 0;
   const errors: string[] = [];
+  // 배송 중으로 읽은 주문의 마지막 처리현황(예 "배달준비"). 우체국이 실제로 주는 문구를
+  // 로그로 보려고(#800). 처리현황엔 송장·이름이 없다.
+  const pending: string[] = [];
   // 한 번에 몇 건이라 순서대로(우체국 API 에 동시 요청을 몰지 않는다).
   for (const o of orders ?? []) {
     const trace = await fetchEpostTrace(o.tracking_number);
@@ -69,7 +72,10 @@ export async function GET(req: Request) {
       errors.push(trace.message);
       continue;
     }
-    if (trace.kind !== "delivered") continue;
+    if (trace.kind !== "delivered") {
+      pending.push(trace.last ?? "기록 없음");
+      continue;
+    }
     if (await completeDelivery(o.id, trace.deliveredAt)) {
       delivered++;
       await logSystemAction("epost-trace", {
@@ -83,7 +89,10 @@ export async function GET(req: Request) {
   // 오류 문구엔 송장·키가 들어가지 않는다(returnCode·errMsg·HTTP 상태만).
   if (errors.length) console.error("[check-deliveries] 조회 실패", [...new Set(errors.map(scrub))]);
   const checked = orders?.length ?? 0;
-  console.log(`[check-deliveries] 조회 ${checked}건, 배송완료 ${delivered}건, 실패 ${errors.length}건`);
+  console.log(
+    `[check-deliveries] 조회 ${checked}건, 배송완료 ${delivered}건, 실패 ${errors.length}건` +
+      (pending.length ? `, 배송 중 마지막 상태: ${[...new Set(pending.map(scrub))].join(" / ")}` : ""),
+  );
   await recordRun({ checked, delivered, errors });
   return Response.json({ ok: true, checked, delivered, errors: errors.length });
 }
