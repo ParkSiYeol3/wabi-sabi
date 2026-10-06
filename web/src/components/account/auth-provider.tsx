@@ -41,6 +41,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select("role, avatar_url")
         .eq("id", userId)
         .maybeSingle();
+      // 조회하는 사이 로그아웃(자동 로그아웃 포함)·계정 전환이 있었으면 버린다. 늦게 온
+      // 응답이 로그아웃 뒤에 isAdmin 을 되살려 헤더에 Admin 링크가 남았다(#798).
+      if (useAuthStore.getState().user?.id !== userId) return;
       setAdmin(data?.role === "admin");
       setAvatarUrl((data?.avatar_url as string | null) ?? null);
     };

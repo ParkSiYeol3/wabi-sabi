@@ -21,12 +21,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAdmin: false,
   avatarUrl: null,
   loading: true,
-  // 로그아웃(user=null) 시 어드민 플래그·아바타도 초기화.
+  // 로그아웃(user=null) 시 어드민 플래그·아바타도 초기화. 다른 계정으로 바뀔 때도
+  // 이전 계정의 값을 들고 가지 않는다(profiles 조회가 끝나기 전까지 Admin 링크가 남음, #798).
+  // 같은 계정(토큰 갱신 등)이면 그대로 둔다.
   setUser: (user) =>
-    set(
-      user
-        ? { user, loading: false }
-        : { user: null, isAdmin: false, avatarUrl: null, loading: false },
+    set((s) =>
+      !user
+        ? { user: null, isAdmin: false, avatarUrl: null, loading: false }
+        : user.id === s.user?.id
+          ? { user, loading: false }
+          : { user, isAdmin: false, avatarUrl: null, loading: false },
     ),
   setAdmin: (isAdmin) => set({ isAdmin }),
   setAvatarUrl: (avatarUrl) => set({ avatarUrl }),
