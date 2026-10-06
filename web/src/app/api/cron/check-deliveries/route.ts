@@ -76,13 +76,15 @@ export async function GET(req: Request) {
       pending.push(trace.last ?? "기록 없음");
       continue;
     }
+    if (trace.approx)
+      console.warn(`[check-deliveries] 배달 시각 형식 모름(${scrub(trace.approx)}): 확인 시각으로 처리`);
     if (await completeDelivery(o.id, trace.deliveredAt)) {
       delivered++;
       await logSystemAction("epost-trace", {
         action: "order.mark_delivered",
         targetTable: "orders",
         targetId: o.id,
-        meta: { status: "delivered", delivered_at: trace.deliveredAt, by: "auto" },
+        meta: { status: "delivered", delivered_at: trace.deliveredAt, by: "auto", approx: trace.approx ?? null },
       });
     }
   }
