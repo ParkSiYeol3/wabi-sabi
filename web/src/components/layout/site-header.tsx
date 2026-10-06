@@ -53,7 +53,8 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
   // avatarUrl 은 AuthProvider 가 profiles 에서 읽어 채운다.
   const storedAvatar = useAuthStore((s) => s.avatarUrl);
   const accountHref = mounted && user ? "/mypage" : "/auth";
-  const showAdmin = mounted && isAdmin;
+  // 로그인 상태일 때만. isAdmin 은 profiles 조회 결과라 user 보다 늦게 바뀔 수 있다(#798).
+  const showAdmin = mounted && !!user && isAdmin;
   const avatarUrl = mounted && user ? storedAvatar : null;
 
   // 홈은 곡선만으로 시작하는 무드 페이지(#197 대표님 피드백) — 상단바 자체를 없앤다.
