@@ -28,11 +28,15 @@ export async function GET(req: Request) {
       return Response.json({ ok: false, error: "주문 id 형식이 아닙니다" }, { status: 400 });
     if (!adminConfigured())
       return Response.json({ ok: false, error: "서버 키 없음" }, { status: 503 });
-    const { data } = await createAdminClient()
+    const { data, error } = await createAdminClient()
       .from("orders")
       .select("status, courier, tracking_number")
       .eq("id", id)
       .maybeSingle<{ status: string; courier: string | null; tracking_number: string | null }>();
+    if (error) {
+      console.error("[epost-trace] 주문 조회 실패", error.message);
+      return Response.json({ ok: false, error: "주문 조회 실패" }, { status: 500 });
+    }
     if (!data?.tracking_number)
       return Response.json({ ok: false, error: "송장이 없는 주문" }, { status: 404 });
     courier = data.courier;

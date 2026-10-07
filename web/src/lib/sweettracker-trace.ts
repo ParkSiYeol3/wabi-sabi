@@ -85,12 +85,13 @@ export async function fetchSweetTrace(
       cache: "no-store",
       signal: AbortSignal.timeout(10_000),
     });
-    const text = await res.text();
+    let json: unknown;
     try {
-      return parseSweetTracker(JSON.parse(text));
+      json = JSON.parse(await res.text());
     } catch {
       return { kind: "error", message: `HTTP ${res.status}` };
     }
+    return parseSweetTracker(json);
   } catch (e) {
     return { kind: "error", message: e instanceof Error ? e.message : "network error" };
   }
