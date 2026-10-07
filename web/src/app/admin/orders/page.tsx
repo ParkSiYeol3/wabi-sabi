@@ -9,6 +9,7 @@ import {
   KST,
   daysSinceShipped,
   DELIVERY_CHECK_DAYS,
+  courierOf,
 } from "@/lib/orders";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { PageHeader, TablePanel, EmptyState } from "@/components/admin/ui";
@@ -17,6 +18,7 @@ import { AdminCancelOrderButton } from "@/components/admin/admin-cancel-order-bu
 import { AdminDeleteOrderButton } from "@/components/admin/admin-delete-order-button";
 import { markDelivered, markPreparing } from "./actions";
 import { EpostCheckButton } from "@/components/admin/epost-check-button";
+import { traceSource } from "@/lib/courier-trace";
 import { TrackingForm } from "@/components/admin/tracking-form";
 
 type OrderItem = {
@@ -51,9 +53,10 @@ type Order = {
 
 // 배송완료로 넘길 수 있는 상태 (#124) — 취소·미결제 주문은 대상이 아니다.
 const CAN_DELIVER = ["paid", "shipping"];
-// 우체국 조회 버튼(#815): 우체국(0072 이전 null 포함) 송장이 있는 배송 중 주문.
+// 택배 조회 버튼(#815·#818): 자동 조회되는 택배사(우체국, 키가 있으면 CJ·한진·롯데·로젠)의
+// 송장이 있는 배송 중 주문.
 const canCheckEpost = (o: Order) =>
-  o.status === "shipping" && !!o.tracking_number && (!o.courier || o.courier === "epost");
+  o.status === "shipping" && !!o.tracking_number && traceSource(o.courier) !== null;
 
 // 배송완료 확인 알림(#778): 발송 후 DELIVERY_CHECK_DAYS 지나도 배송 중이면 버튼 위에 한 줄.
 // 배송완료는 누르기 전엔 바뀌지 않아(손님 화면·청약철회 기산점) 잊으면 계속 배송 중이다.
@@ -283,7 +286,7 @@ export default async function AdminOrdersPage() {
                           </form>
                         ) : null}
                           {!o.delivered_at && canCheckEpost(o) && (
-                            <EpostCheckButton orderId={o.id} />
+                            <EpostCheckButton orderId={o.id} label={courierOf(o.courier).label} />
                           )}
                           {o.status === "paid" && (
                             <AdminCancelOrderButton
@@ -369,7 +372,7 @@ export default async function AdminOrdersPage() {
                     </form>
                   ) : null}
                   {!o.delivered_at && canCheckEpost(o) && (
-                    <EpostCheckButton orderId={o.id} fullWidth />
+                    <EpostCheckButton orderId={o.id} label={courierOf(o.courier).label} fullWidth />
                   )}
 
                   {o.status === "paid" && (
