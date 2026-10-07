@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 // Shop 으로 돌아가기(대표님). variant:
 //  · subtle — 상품 상세 상단에 "보일 듯 안 보일 듯" 흐린 텍스트 링크.
-//  · button — 월간 기물·오늘의 와비사비에서 Shop 전체로 돌아가는 버튼(모바일).
+//  · button — 오늘의 와비사비에서 Shop 전체로 돌아가는 버튼(모바일).
 export function BackToShop({
   variant = "subtle",
   className,
