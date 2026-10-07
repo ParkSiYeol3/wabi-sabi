@@ -9,7 +9,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store/auth";
 import { isStaleSessionError } from "@/lib/auth-session";
-import { CONSENT_VERSIONS } from "@/lib/consent";
+import { CONSENT_VERSIONS, privacyConsentVersion } from "@/lib/consent";
 import { loginGate } from "./actions";
 import { cn } from "@/lib/utils";
 
@@ -164,7 +164,7 @@ function AuthForm() {
               name,
               // 동의 이력 — 트리거(handle_new_user)가 user_consents 에 항목별 기록.
               consent_terms_version: CONSENT_VERSIONS.terms,
-              consent_privacy_version: CONSENT_VERSIONS.privacy,
+              consent_privacy_version: privacyConsentVersion(),
               consent_marketing: agreeMarketing,
             },
             // 이메일 확인이 켜진 경우, 확인 링크가 우리 콜백으로 돌아와 세션을
