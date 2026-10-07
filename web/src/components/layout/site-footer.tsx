@@ -57,7 +57,7 @@ export async function SiteFooter() {
   const ftc = ftcUrl();
   const tree = await getCategoryTree();
 
-  // 상품 열: 전체 상품 → 대분류들. (월간 그릇은 오프라인 매장 전용 전환으로 제거 — 대표님)
+  // 상품 열: 전체 상품 → 대분류들. (월간 기물은 오프라인 매장 전용 전환으로 제거 — 대표님)
   const shopLinks: FooterLink[] = [
     { label: "전체 상품", href: "/shop" },
     ...tree.map((c) => ({ label: c.ko, href: `/shop?category=${c.slug}` })),

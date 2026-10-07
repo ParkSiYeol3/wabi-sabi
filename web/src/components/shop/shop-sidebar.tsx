@@ -104,7 +104,7 @@ export function ShopSidebar({
           ))}
         </div>
       )}
-      {/* 월간 그릇·오늘의 와비사비는 상단 특색 필(FeaturedShortcuts)로 승격돼
+      {/* 월간 기물·오늘의 와비사비는 상단 특색 필(FeaturedShortcuts)로 승격돼
           중복이라 사이드바에서 제거(대표님). */}
     </nav>
   );
