@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { CONSENT_VERSIONS } from "@/lib/consent";
+import { recordSignupConsentOnce } from "@/lib/consent-record";
 
 // 닉네임 설정(개인정보보호) — 가입 후 표시 이름을 실명 대신 별명으로. profiles.name
 // 을 갱신하고 nickname_set=true 로 표시해 모달이 다시 뜨지 않게 한다. RLS(update own)로
@@ -104,4 +105,20 @@ export async function setMarketingConsent(
     message: agreed ? "좋은 소식 보내드리겠습니다." : "해제되었습니다.",
     agreed,
   };
+}
+
+// 로그인 직후 가입 동의 이력 보강(#813). 카카오 로그인이 /auth/callback 대신 홈(?code=)으로
+// 돌아오면(Supabase 허용 목록에 사이트 주소가 없을 때) 브라우저가 세션을 만들어 콜백의 기록이
+// 돌지 않았다. AuthProvider 가 SIGNED_IN 때 부른다. SIGNED_IN 은 탭 복귀 등에서도 오므로,
+// 서버가 확인한 마지막 로그인이 방금(10분 이내)일 때만 남긴다. 그 로그인이 동의 시점이다.
+const LOGIN_WINDOW_MS = 10 * 60 * 1000;
+
+export async function recordLoginConsent(): Promise<void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.last_sign_in_at) return;
+  if (Date.now() - Date.parse(user.last_sign_in_at) > LOGIN_WINDOW_MS) return;
+  await recordSignupConsentOnce(user.id);
 }
