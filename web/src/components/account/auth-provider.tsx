@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/auth";
 import { useCart } from "@/store/cart";
 import { loadServerCart, mergeGuestCart } from "@/lib/cart-sync";
 import { isStaleSessionError } from "@/lib/auth-session";
+import { recordLoginConsent } from "@/app/account-actions";
 
 // 앱 진입 시 현재 세션을 읽고, 이후 인증 상태 변화를 Zustand 에 동기화.
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -14,6 +15,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const setAvatarUrl = useAuthStore((s) => s.setAvatarUrl);
   // 장바구니 바인딩 상태 — 중복 병합(수량 두 배) 방지용.
   const boundUserRef = useRef<string | null>(null);
+  // 가입 동의 보강을 이 페이지에서 이미 부른 사용자(#813). SIGNED_IN 이 탭 복귀 때도 와서.
+  const consentCheckedRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Supabase 미설정이면 스킵 (셋업 전 dev 동작 보장)
@@ -101,6 +104,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       void syncProfile(session?.user?.id);
       void syncCart(event, session?.user?.id);
+      // 로그인 직후 동의 이력 보강(콜백을 못 거친 소셜 로그인, #813). 판단은 서버가 한다.
+      const uid = session?.user?.id;
+      if (event === "SIGNED_IN" && uid && consentCheckedRef.current !== uid) {
+        consentCheckedRef.current = uid;
+        void recordLoginConsent().catch(() => {});
+      }
     });
 
     return () => subscription.unsubscribe();
