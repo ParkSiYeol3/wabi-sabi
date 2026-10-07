@@ -16,6 +16,8 @@ export type EpostTrace =
   | { kind: "delivered"; deliveredAt: string; approx?: string }
   | { kind: "in_transit"; last: string | null }
   | { kind: "error"; message: string };
+// 택배사와 무관한 조회 결과(스마트택배도 같은 모양으로 돌려준다, #818).
+export type ShipmentTrace = EpostTrace;
 
 // 서비스키는 포털의 "Decoding" 값을 넣는다. 실수로 Encoding 값(%2B 등)을 넣었으면 한 번 풀어
 // 쓴다(URLSearchParams 가 다시 인코딩하므로 이중 인코딩이 되면 "등록되지 않은 서비스키").
@@ -48,7 +50,7 @@ const isDelivered = (s: string | null | undefined) =>
 // 처음엔 문서대로 "2026.10.05" + "14:03" 만 읽었는데, 10/6 첫 실주문에서 배달완료 기록의
 // 날짜를 못 읽어 배송 중으로 되돌아갔다(#803). 구분자와 자릿수에 기대지 않는다:
 // 2026.10.06 · 2026-10-06 · 20261006 · 2026.10.6, 11:36 · 1136 · 11:36:00.
-function kstIso(date: string | null, time: string | null): string | null {
+export function kstIso(date: string | null, time: string | null): string | null {
   const d = date?.match(/(\d{4})\D?(\d{1,2})\D?(\d{1,2})/);
   if (!d) return null;
   const [y, mo, da] = [d[1], d[2].padStart(2, "0"), d[3].padStart(2, "0")];

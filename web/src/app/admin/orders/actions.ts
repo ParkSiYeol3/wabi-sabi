@@ -7,7 +7,7 @@ import { parseUuid } from "@/lib/validation";
 import { logAdminAction } from "@/lib/audit";
 import { sendOrderShippedMail } from "@/lib/emails/order-shipped";
 import { completeDelivery } from "@/lib/delivery";
-import { epostConfigured, fetchEpostTrace } from "@/lib/epost-trace";
+import { traceShipment, traceSource } from "@/lib/courier-trace";
 import { cancelPaidOrder, type CancelResult } from "@/lib/payments";
 import { DEFAULT_COURIER, isCourierCode } from "@/lib/orders";
 
@@ -131,9 +131,9 @@ export async function markDelivered(formData: FormData) {
   revalidatePath("/admin/orders");
 }
 
-// 우체국 조회(#815): 관리자가 주문 하나를 지금 우체국에 물어본다. 크론(매시 17분)을 기다리지
-// 않고, 배달완료면 크론과 같은 completeDelivery 로 실제 배달 시각에 배송완료 처리한다
-// (배송완료 처리 버튼은 누른 시각으로 남는다). 결과는 대표님이 읽을 문장으로 돌려준다.
+// 택배 조회(#815, 다른 택배사 #818): 관리자가 주문 하나를 지금 택배사에 물어본다. 크론(매시
+// 17분)을 기다리지 않고, 배달완료면 크론과 같은 completeDelivery 로 실제 배달 시각에 배송완료
+// 처리한다(배송완료 처리 버튼은 누른 시각으로 남는다). 결과는 대표님이 읽을 문장으로 돌려준다.
 export type EpostCheckResult =
   | { ok: true; delivered: boolean; text: string }
   | { ok: false; error: string };
@@ -147,10 +147,9 @@ const kstMinute = (iso: string) =>
     minute: "2-digit",
   });
 
-export async function checkEpostNow(orderId: string): Promise<EpostCheckResult> {
+export async function checkTrackingNow(orderId: string): Promise<EpostCheckResult> {
   const user = await requireAdmin();
   if (!adminConfigured()) return { ok: false, error: "서버 키 미설정" };
-  if (!epostConfigured()) return { ok: false, error: "우체국 조회 키가 없습니다" };
   const id = parseUuid(orderId);
   if (!id) return { ok: false, error: "잘못된 주문입니다" };
 
@@ -160,11 +159,11 @@ export async function checkEpostNow(orderId: string): Promise<EpostCheckResult> 
     .eq("id", id)
     .maybeSingle<{ tracking_number: string | null; courier: string | null }>();
   if (!order?.tracking_number) return { ok: false, error: "송장번호가 없습니다" };
-  if (order.courier && order.courier !== "epost")
-    return { ok: false, error: "우체국 송장만 조회할 수 있습니다" };
+  const source = traceSource(order.courier);
+  if (!source) return { ok: false, error: "이 택배사는 자동 조회를 지원하지 않습니다" };
 
-  const trace = await fetchEpostTrace(order.tracking_number);
-  if (trace.kind === "error") return { ok: false, error: `우체국 조회 실패: ${trace.message}` };
+  const trace = await traceShipment(order.courier, order.tracking_number);
+  if (trace.kind === "error") return { ok: false, error: `조회 실패: ${trace.message}` };
   if (trace.kind === "in_transit")
     return { ok: true, delivered: false, text: `아직 배송 중 · ${trace.last ?? "기록 없음"}` };
 
@@ -177,7 +176,7 @@ export async function checkEpostNow(orderId: string): Promise<EpostCheckResult> 
       meta: {
         status: "delivered",
         delivered_at: trace.deliveredAt,
-        by: "epost-check",
+        by: source === "epost" ? "epost-check" : "sweettracker-check",
         approx: trace.approx ?? null,
       },
     });
