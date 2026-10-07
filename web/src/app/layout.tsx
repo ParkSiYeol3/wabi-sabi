@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/components/account/auth-provider";
 import { SessionTimeout } from "@/components/account/session-timeout";
@@ -30,12 +30,25 @@ import { business } from "@/lib/site";
 // 마루부리는 next/font 대신 globals.css 의 @font-face 로 싣는다(#699) — next/font 는
 // 한 번의 호출 안에서 파일마다 다른 unicode-range 를 줄 수 없어, 큰 한글 글꼴을
 // 조각내 필요한 것만 받게 할 수 없다. 변수는 app/fonts.css 가 정의한다.
-const cormorant = Cormorant_Garamond({
+// Cormorant 도 저장소에 둔다(#821). next/font/google 은 빌드 때 Google Fonts 에서 CSS 를
+// 받아오는데, 확장자 없는 글꼴 주소(…?kit=…&skey=…)가 오면 Turbopack 이 쿼리의 & 를 쪼개
+// 빌드가 깨졌다(10/8 캐시 없는 재배포). 가변 글꼴이라 굵기는 한 파일, latin 만(OFL, 같은 폴더).
+const cormorant = localFont({
   variable: "--font-cormorant",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
   display: "swap",
+  adjustFontFallback: "Times New Roman",
+  src: [
+    {
+      path: "../fonts/cormorant/CormorantGaramond-normal-latin.woff2",
+      weight: "400 600",
+      style: "normal",
+    },
+    {
+      path: "../fonts/cormorant/CormorantGaramond-italic-latin.woff2",
+      weight: "400 600",
+      style: "italic",
+    },
+  ],
 });
 // 메뉴(내비) 산세리프는 globals.css 의 --font-pretendard(시스템 산세리프 스택)로 둔다.
 // 과거 Noto Sans KR(next/font/google)을 썼으나 Google 이 subset woff2 를 갱신·삭제해
