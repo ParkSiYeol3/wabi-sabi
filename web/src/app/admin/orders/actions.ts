@@ -7,6 +7,7 @@ import { parseUuid } from "@/lib/validation";
 import { logAdminAction } from "@/lib/audit";
 import { sendOrderShippedMail } from "@/lib/emails/order-shipped";
 import { completeDelivery } from "@/lib/delivery";
+import { epostConfigured, fetchEpostTrace } from "@/lib/epost-trace";
 import { cancelPaidOrder, type CancelResult } from "@/lib/payments";
 import { DEFAULT_COURIER, isCourierCode } from "@/lib/orders";
 
@@ -128,6 +129,66 @@ export async function markDelivered(formData: FormData) {
     meta: { status: "delivered", delivered_at: deliveredAt },
   });
   revalidatePath("/admin/orders");
+}
+
+// 우체국 조회(#815): 관리자가 주문 하나를 지금 우체국에 물어본다. 크론(매시 17분)을 기다리지
+// 않고, 배달완료면 크론과 같은 completeDelivery 로 실제 배달 시각에 배송완료 처리한다
+// (배송완료 처리 버튼은 누른 시각으로 남는다). 결과는 대표님이 읽을 문장으로 돌려준다.
+export type EpostCheckResult =
+  | { ok: true; delivered: boolean; text: string }
+  | { ok: false; error: string };
+
+const kstMinute = (iso: string) =>
+  new Date(iso).toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+export async function checkEpostNow(orderId: string): Promise<EpostCheckResult> {
+  const user = await requireAdmin();
+  if (!adminConfigured()) return { ok: false, error: "서버 키 미설정" };
+  if (!epostConfigured()) return { ok: false, error: "우체국 조회 키가 없습니다" };
+  const id = parseUuid(orderId);
+  if (!id) return { ok: false, error: "잘못된 주문입니다" };
+
+  const { data: order } = await createAdminClient()
+    .from("orders")
+    .select("tracking_number, courier")
+    .eq("id", id)
+    .maybeSingle<{ tracking_number: string | null; courier: string | null }>();
+  if (!order?.tracking_number) return { ok: false, error: "송장번호가 없습니다" };
+  if (order.courier && order.courier !== "epost")
+    return { ok: false, error: "우체국 송장만 조회할 수 있습니다" };
+
+  const trace = await fetchEpostTrace(order.tracking_number);
+  if (trace.kind === "error") return { ok: false, error: `우체국 조회 실패: ${trace.message}` };
+  if (trace.kind === "in_transit")
+    return { ok: true, delivered: false, text: `아직 배송 중 · ${trace.last ?? "기록 없음"}` };
+
+  const done = await completeDelivery(id, trace.deliveredAt);
+  if (done) {
+    await logAdminAction(user, {
+      action: "order.mark_delivered",
+      targetTable: "orders",
+      targetId: id,
+      meta: {
+        status: "delivered",
+        delivered_at: trace.deliveredAt,
+        by: "epost-check",
+        approx: trace.approx ?? null,
+      },
+    });
+    revalidatePath("/admin/orders");
+  }
+  const at = kstMinute(trace.deliveredAt);
+  return {
+    ok: true,
+    delivered: true,
+    text: done ? `${at} 배달완료 · 배송완료로 처리했어요` : `${at} 배달완료`,
+  };
 }
 
 // 관리자 주문 취소 (#어드민취소) — 배송 전(paid) 주문 전액 취소·환불.

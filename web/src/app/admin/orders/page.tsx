@@ -16,6 +16,7 @@ import { SubmitButton } from "@/components/common/submit-button";
 import { AdminCancelOrderButton } from "@/components/admin/admin-cancel-order-button";
 import { AdminDeleteOrderButton } from "@/components/admin/admin-delete-order-button";
 import { markDelivered, markPreparing } from "./actions";
+import { EpostCheckButton } from "@/components/admin/epost-check-button";
 import { TrackingForm } from "@/components/admin/tracking-form";
 
 type OrderItem = {
@@ -50,6 +51,9 @@ type Order = {
 
 // 배송완료로 넘길 수 있는 상태 (#124) — 취소·미결제 주문은 대상이 아니다.
 const CAN_DELIVER = ["paid", "shipping"];
+// 우체국 조회 버튼(#815): 우체국(0072 이전 null 포함) 송장이 있는 배송 중 주문.
+const canCheckEpost = (o: Order) =>
+  o.status === "shipping" && !!o.tracking_number && (!o.courier || o.courier === "epost");
 
 // 배송완료 확인 알림(#778): 발송 후 DELIVERY_CHECK_DAYS 지나도 배송 중이면 버튼 위에 한 줄.
 // 배송완료는 누르기 전엔 바뀌지 않아(손님 화면·청약철회 기산점) 잊으면 계속 배송 중이다.
@@ -278,6 +282,9 @@ export default async function AdminOrdersPage() {
                             </SubmitButton>
                           </form>
                         ) : null}
+                          {!o.delivered_at && canCheckEpost(o) && (
+                            <EpostCheckButton orderId={o.id} />
+                          )}
                           {o.status === "paid" && (
                             <AdminCancelOrderButton
                               orderId={o.id}
@@ -361,6 +368,9 @@ export default async function AdminOrdersPage() {
                       </SubmitButton>
                     </form>
                   ) : null}
+                  {!o.delivered_at && canCheckEpost(o) && (
+                    <EpostCheckButton orderId={o.id} fullWidth />
+                  )}
 
                   {o.status === "paid" && (
                     <AdminCancelOrderButton
