@@ -616,7 +616,7 @@ export async function replaceProductImage(
   return { ok: true, message: "사진을 교체했습니다." };
 }
 
-// (toggleMonthly 제거 — 월간 그릇이 오프라인 매장 전용으로 전환돼 온라인 지정 불필요. 대표님)
+// (toggleMonthly 제거 — 월간 기물이 오프라인 매장 전용으로 전환돼 온라인 지정 불필요. 대표님)
 
 export async function updateStock(formData: FormData) {
   const user = await requireAdmin();
