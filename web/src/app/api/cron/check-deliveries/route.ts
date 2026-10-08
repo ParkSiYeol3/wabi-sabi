@@ -38,6 +38,9 @@ async function recordRun(run: Run) {
   if (error) console.error("[check-deliveries] 실행 기록 실패", error.message);
 }
 
+// 한 번 실행에 택배사 조회를 부르는 최대 건수(조회 API 에 몰지 않는다).
+const TRACE_LIMIT = 50;
+
 type ShippingOrder = {
   id: string;
   tracking_number: string | null;
@@ -57,13 +60,15 @@ export async function GET(req: Request) {
   if (keyless)
     console.warn("[check-deliveries] 조회 키 없음(EPOST_SERVICE_KEY·SWEETTRACKER_API_KEY): 10일 경과만 처리");
 
-  // 10일 경과 처리 때문에 택배사·송장과 상관없이 배송 중 주문 전체를 본다.
+  // 10일 경과 처리 때문에 택배사·송장과 상관없이 배송 중 주문 전체를 본다. 읽기는 넉넉히,
+  // 택배사 조회 호출만 TRACE_LIMIT 으로 묶는다. 조회 대상이 계속 배송 중이어도 뒤에 있는
+  // 10일 경과 주문이 밀리지 않게(조회 건수 제한과 읽는 범위를 분리).
   const { data: orders, error } = await createAdminClient()
     .from("orders")
     .select("id, tracking_number, courier, shipped_at, ordered_at")
     .eq("status", "shipping")
-    .order("shipped_at", { ascending: true })
-    .limit(50)
+    .order("shipped_at", { ascending: true, nullsFirst: true })
+    .limit(500)
     .returns<ShippingOrder[]>();
   if (error) {
     console.error("[check-deliveries] 주문 조회 실패, 이번 실행 중단:", error.message);
@@ -87,7 +92,8 @@ export async function GET(req: Request) {
     const source = invoice ? traceSource(o.courier) : null;
     if (source && invoice) {
       // 홀수 시각엔 조회도 10일 경과 처리도 하지 않고 다음 짝수 시각 조회를 기다린다.
-      if (source === "sweettracker" && !evenHour) continue;
+      // 이번 실행의 조회 한도를 넘은 주문도 결과를 모르니 다음 실행으로 미룬다.
+      if ((source === "sweettracker" && !evenHour) || checked >= TRACE_LIMIT) continue;
       checked++;
       const trace = await traceShipment(o.courier, invoice);
       if (trace.kind === "delivered") {
