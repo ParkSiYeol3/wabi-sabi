@@ -121,6 +121,11 @@ export function daysSinceShipped(
   return Math.floor((nowMs - Date.parse(o.shipped_at ?? o.ordered_at)) / 86_400_000);
 }
 
+// 발송 후 이 일수가 지나도 배송 중이면 배송 확인 크론이 배송완료로 바꾼다(#823).
+// 택배사 조회로 확인할 수 없는 주문(기타 택배사·조회 키 없음·조회 실패)만. 조회가 "배송 중"
+// 이라 답하면 분실·반송일 수 있어 두고 관리자가 본다. 쇼핑몰 플랫폼들의 시간 기준 안전망과 같다.
+export const AUTO_DELIVER_DAYS = 10;
+
 export const WITHDRAWAL_DAYS = 7;
 
 export function withdrawalDeadlineKST(deliveredAt: string): string {

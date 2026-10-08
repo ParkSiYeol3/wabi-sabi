@@ -9,6 +9,7 @@ import {
   KST,
   daysSinceShipped,
   DELIVERY_CHECK_DAYS,
+  AUTO_DELIVER_DAYS,
   courierOf,
 } from "@/lib/orders";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
@@ -59,15 +60,21 @@ const canCheckEpost = (o: Order) =>
   o.status === "shipping" && !!o.tracking_number && traceSource(o.courier) !== null;
 
 // 배송완료 확인 알림(#778): 발송 후 DELIVERY_CHECK_DAYS 지나도 배송 중이면 버튼 위에 한 줄.
-// 배송완료는 누르기 전엔 바뀌지 않아(손님 화면·청약철회 기산점) 잊으면 계속 배송 중이다.
+// 자동 조회되는 주문은 배달완료가 뜨면 바뀌고, 아니면 발송 AUTO_DELIVER_DAYS 째 크론이
+// 바꾼다(#823). 그 전까진 누르기 전엔 배송 중이다(손님 화면·청약철회 기산점).
 function DeliveryCheckHint({ o, nowMs }: { o: Order; nowMs: number }) {
   if (o.status !== "shipping") return null;
   const days = daysSinceShipped(o, nowMs);
   if (days < DELIVERY_CHECK_DAYS) return null;
   return (
-    <p className="text-xs font-medium text-amber-800">
-      발송 {days}일 지남 · 도착했으면 눌러 주세요
-    </p>
+    <>
+      <p className="text-xs font-medium text-amber-800">
+        발송 {days}일 지남 · 도착했으면 눌러 주세요
+      </p>
+      {!canCheckEpost(o) && (
+        <p className="text-xs text-wabi-fg-muted">발송 {AUTO_DELIVER_DAYS}일째 자동 완료</p>
+      )}
+    </>
   );
 }
 
