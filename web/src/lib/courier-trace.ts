@@ -4,7 +4,7 @@ import { fetchSweetTrace, isSweetCourier, sweetConfigured } from "@/lib/sweettra
 
 // 택배사별 배송조회 한 곳(#818). 크론·관리자 조회 버튼·점검 주소가 같이 쓴다.
 //   우체국(0072 이전 null 포함) → 우체국 공공 API, CJ·한진·롯데·로젠 → 스마트택배 API.
-//   기타·키 없음 → 자동 조회 안 함(발송 3일 알림이 대신, #779).
+//   기타·키 없음 → 자동 조회 안 함(발송 3일 알림 #779, 10일 경과 자동 배송완료 #823).
 
 export type TraceSource = "epost" | "sweettracker";
 
