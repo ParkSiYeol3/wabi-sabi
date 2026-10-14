@@ -44,16 +44,23 @@ export function Reveal({
   className,
   variant = "up",
   delay = 0,
+  eager = false,
 }: {
   children: ReactNode;
   className?: string;
   variant?: RevealVariant;
   delay?: RevealDelay;
+  // 첫 화면(above the fold)용(#830). 서버 HTML 부터 보이게 심고 등장은 CSS 애니메이션
+  // (globals.css .reveal-intro)이 맡는다. 기본값이면 서버 HTML 에 opacity-0 으로 심겨
+  // JS 가 도착해야만 보여, 느린 망에서 첫 화면·LCP 가 JS 를 기다린다(홈 #698 과 같은 문제).
+  // eager 는 variant·delay 와 상관없이 '위로 떠오르며 나타남' 한 가지로 등장한다.
+  eager?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
+  const [shown, setShown] = useState(eager);
 
   useEffect(() => {
+    if (eager) return;
     const el = ref.current;
     if (!el) return;
     const io = new IntersectionObserver(
@@ -67,7 +74,7 @@ export function Reveal({
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [eager]);
 
   const v = VARIANTS[variant];
 
@@ -78,7 +85,7 @@ export function Reveal({
       className={cn(
         "transition-all duration-700 ease-out will-change-[opacity,transform] motion-reduce:translate-x-0! motion-reduce:translate-y-0! motion-reduce:scale-100! motion-reduce:opacity-100! motion-reduce:blur-none! motion-reduce:transition-none",
         shown ? v.shown : v.hidden,
-        DELAY[delay],
+        eager ? "reveal-intro" : DELAY[delay],
         className,
       )}
     >

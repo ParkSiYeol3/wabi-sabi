@@ -249,3 +249,27 @@
     animation: none;
   }
 }
+
+/* 첫 화면 Reveal(eager, #830) — 서버 HTML 부터 보이게 심고 등장만 CSS 로.
+   JS 를 기다리지 않으니 느린 망에서도 첫 화면·LCP 가 비지 않는다. 움직임은 기본
+   Reveal(up: translate-y-10 → 0, 0.7초 ease-out)과 같다. */
+@keyframes wabi-reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(2.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal-intro {
+  animation: wabi-reveal-in 0.7s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-intro {
+    animation: none;
+  }
+}

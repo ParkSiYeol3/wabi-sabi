@@ -129,7 +129,8 @@ export default async function AboutPage() {
         {/* 특색 대분류(대표님) — 헤더 구분선에 거의 붙게 상단 여백 최소화 */}
         <FeaturedShortcuts className="mb-10 max-w-md" />
         <div className="grid gap-16 md:grid-cols-2 md:items-center">
-          <Reveal>
+          {/* 첫 화면이라 eager: JS 없이도 보이게(#830, LCP) */}
+          <Reveal eager>
             {/* 히어로 제거로 이 헤딩이 페이지 h1 (SEO·접근성) */}
             <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
               わび-さび
@@ -145,14 +146,16 @@ export default async function AboutPage() {
             </div>
           </Reveal>
 
-          {/* 매장 사진 — 어드민에서 업로드(대표님). 없으면 로고 마크 폴백 */}
-          <Reveal delay={100}>
+          {/* 매장 사진 — 어드민에서 업로드(대표님). 없으면 로고 마크 폴백.
+              모바일 LCP 요소라 eager + 지연 로딩 끔(#830). */}
+          <Reveal eager>
             {aboutImage ? (
               <div className="relative aspect-square overflow-hidden bg-wabi-subtle">
                 <Image
                   src={aboutImage}
                   alt="와비사비 매장"
                   fill
+                  loading="eager"
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"
                 />
