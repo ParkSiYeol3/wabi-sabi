@@ -52,8 +52,8 @@ export const legalNav = [
 // 내비 — HOME·SHOP·SHOWROOM·NOTICE·Q&A (대표님 페이지 분류 확정).
 //  · HOME=나선형 여정(/), SHOP=전체 상품(/shop), SHOWROOM=오시는 길+브랜드 소개
 //    (/about), NOTICE=공지사항(/notice), Q&A=문의(/inquiry).
-//  · GIFT·MAKERS 는 nav 에서 제외(대표님 분류에서 빠짐) — 페이지(/gift·/makers)는
-//    남겨 두어 필요 시 되살린다.
+//  · GIFT·MAKERS 는 대표님 분류에서 빠졌다. 페이지(/gift·/makers)도 2026-10-15 삭제(#833,
+//    주소로 들어가지면 안 된다). 되살릴 땐 git 이력(#366·#368)에서.
 export const nav = [
   { label: "HOME", href: "/" },
   { label: "SHOP", href: "/shop" },
@@ -96,7 +96,7 @@ export const categoryTree: readonly CategoryNode[] = [
       { slug: "accessory", ko: "액세서리", en: "Accessory" },
       { slug: "life", ko: "생활 소품", en: "Life" },
       { slug: "craft", ko: "공예", en: "Craft" },
-      // 선물 소분류 제거 — GIFT 대분류(/gift)로 대체(대표님). DB 는 0045 로 숨김.
+      // 선물 소분류 제거(대표님). DB 는 0045 로 숨김. 대신 만들었던 /gift 페이지도 삭제(#833).
     ],
   },
 ] as const;
