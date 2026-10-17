@@ -15,8 +15,11 @@ export function formatPhone(raw: string): string {
     return d.length === 10
       ? join("02", d.slice(2, 6), d.slice(6))
       : join("02", d.slice(2, 5), d.slice(5));
-  // 안심번호 — 0507-1234-5678 (050x 는 4자리 국번)
-  if (/^050\d{9}$/.test(d)) return join(d.slice(0, 4), d.slice(4, 8), d.slice(8));
+  // 안심번호 — 050x 는 4자리 국번. 0507-1234-5678(12자리) / 0504-085-9928(11자리)
+  if (/^050\d{8,9}$/.test(d))
+    return d.length === 12
+      ? join(d.slice(0, 4), d.slice(4, 8), d.slice(8))
+      : join(d.slice(0, 4), d.slice(4, 7), d.slice(7));
   // 지역번호·070 — 041-123-4567 / 070-1234-5678
   if (/^0\d{2}\d{7,8}$/.test(d))
     return d.length === 11
