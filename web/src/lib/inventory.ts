@@ -8,6 +8,11 @@ export const LOW_STOCK_THRESHOLD = 5;
 // 검증·결제확정 RPC(마이그 0079)가 같은 값을 쓴다. 바꿀 땐 RPC 도 함께.
 export const STORE_RESERVE = 0;
 
+// 상품 등록 시 재고 기본값(대표님 2026-10-17 #842). 0 이면 재고를 깜빡한 상품이
+// 등록 즉시 품절로 올라갔다. 크게 잡으면 없는 물건이 팔려 부분취소가 생기므로 1.
+// 옵션 값별 재고도 새 값은 이 수량으로 채워 둔다.
+export const DEFAULT_NEW_STOCK = 1;
+
 // 온라인 판매 가능 수량 = 실재고 − 예약분(음수 방지).
 export function availableStock(stock: number): number {
   return Math.max(0, stock - STORE_RESERVE);

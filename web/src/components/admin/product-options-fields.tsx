@@ -5,6 +5,7 @@ import { Plus, X } from "lucide-react";
 import { ADDONS, ADDON_CODES, ADDONS_ENABLED, won } from "@/lib/addons";
 import type { OptionGroup } from "@/lib/product-options";
 import { cn } from "@/lib/utils";
+import { DEFAULT_NEW_STOCK } from "@/lib/inventory";
 
 // 상품 등록·수정 폼의 "옵션 + 추가옵션" 입력 묶음 (0048, 대표님).
 //  ① 커스텀 옵션(색상·모양 등) — 그룹마다 [옵션 이름 + 선택지들(쉼표 구분)]. 손님이
@@ -94,9 +95,12 @@ export function ProductOptionsFields({
       ? JSON.stringify({
           group: stockRow.name.trim(),
           stocks: Object.fromEntries(
+            // 손대지 않은 새 값은 기본 수량(DEFAULT_NEW_STOCK, #842). 지운 칸("")은 0.
             splitValues(stockRow.values).map((v) => [
               v,
-              Math.max(0, Math.floor(Number(stocks[v]) || 0)),
+              stocks[v] === undefined
+                ? DEFAULT_NEW_STOCK
+                : Math.max(0, Math.floor(Number(stocks[v]) || 0)),
             ]),
           ),
           prices: Object.fromEntries(
@@ -255,7 +259,7 @@ export function ProductOptionsFields({
                               type="number"
                               min={0}
                               inputMode="numeric"
-                              value={stocks[v] ?? ""}
+                              value={stocks[v] ?? String(DEFAULT_NEW_STOCK)}
                               onChange={(e) => setStock(v, e.target.value)}
                               placeholder="0"
                               aria-label={`${v} 재고 수량`}
