@@ -3,7 +3,7 @@ import Image from "next/image";
 import { ImageIcon } from "lucide-react";
 import { TrackButton } from "@/components/account/track-button";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
-import { byLineAmount, displayStatus, KST } from "@/lib/orders";
+import { activeLines, byLineAmount, displayStatus, KST } from "@/lib/orders";
 
 export type RecentOrder = {
   id: string;
@@ -60,8 +60,10 @@ export function RecentOrders({ orders }: { orders: RecentOrder[] }) {
       {orders.length > 0 ? (
         <ul className="mt-4 divide-y divide-wabi-border border-y border-wabi-border">
           {orders.map((o) => {
-            const first = byLineAmount(o.order_items)[0];
-            const rest = o.order_items.length - 1;
+            // 품절 취소(#844)로 0개가 된 줄은 요약에서 뺀다.
+            const lines = activeLines(o.order_items);
+            const first = byLineAmount(lines)[0];
+            const rest = lines.length - 1;
             const track = o.status === "shipping" ? o.tracking_number : null;
             const thumb = thumbOf(first);
             return (

@@ -17,6 +17,10 @@ import { PageHeader, TablePanel, EmptyState } from "@/components/admin/ui";
 import { SubmitButton } from "@/components/common/submit-button";
 import { AdminCancelOrderButton } from "@/components/admin/admin-cancel-order-button";
 import { AdminDeleteOrderButton } from "@/components/admin/admin-delete-order-button";
+import {
+  AdminPartialCancelButton,
+  AdminRetryRefundButton,
+} from "@/components/admin/admin-partial-cancel-button";
 import { markDelivered, markPreparing } from "./actions";
 import { EpostCheckButton } from "@/components/admin/epost-check-button";
 import { traceSource } from "@/lib/courier-trace";
@@ -24,9 +28,13 @@ import { TrackingForm } from "@/components/admin/tracking-form";
 import { formatPhone } from "@/lib/phone";
 
 type OrderItem = {
+  id: string;
   product_id: string | null;
   product_name: string;
+  price: number;
+  // 남은 수량. 품절 취소(#844)된 수량은 cancelled_quantity 에.
   quantity: number;
+  cancelled_quantity: number;
   options: { name: string; value: string }[] | null;
   addons: { code: string; name: string; price: number }[] | null;
   // 어떤 그릇인지 사진으로(대표님 2026-10-02) — 상품 대표 사진. 삭제된 상품이면 null.
@@ -49,8 +57,20 @@ type Order = {
   courier: string | null;
   shipped_at: string | null;
   delivered_at: string | null;
+  // 품절 취소(#844)로 환불한 누계. total_price 는 남은 결제 금액.
+  refunded_amount: number;
   // 발송 시 무엇을·어떤 옵션(색상 등)으로 보낼지 대표님이 바로 보게(0048).
   order_items: OrderItem[];
+  // 품절 취소 기록 — refunded_at 이 비면 토스 환불 미확인(다시 시도 버튼).
+  order_partial_cancels: PartialCancel[];
+};
+
+type PartialCancel = {
+  id: string;
+  product_name: string;
+  quantity: number;
+  amount: number;
+  refunded_at: string | null;
 };
 
 // 배송완료로 넘길 수 있는 상태 (#124) — 취소·미결제 주문은 대상이 아니다.
@@ -83,7 +103,7 @@ async function loadOrders() {
   const { data } = await createAdminClient()
     .from("orders")
     .select(
-      "id, order_number, status, total_price, recipient, phone, address, delivery_memo, preparing_at, ordered_at, tracking_number, courier, shipped_at, delivered_at, order_items(product_id, product_name, quantity, options, addons, products(images))",
+      "id, order_number, status, total_price, recipient, phone, address, delivery_memo, preparing_at, ordered_at, tracking_number, courier, shipped_at, delivered_at, refunded_amount, order_items(id, product_id, product_name, price, quantity, cancelled_quantity, options, addons, products(images)), order_partial_cancels(id, product_name, quantity, amount, refunded_at)",
     )
     .order("ordered_at", { ascending: false })
     .returns<Order[]>();
@@ -109,11 +129,16 @@ function orderedAt(iso: string): string {
 }
 
 // 발송 품목 — 사진 + 상품명 ×수량 + 고른 옵션(색상 등)·추가옵션. 표·카드 공용.
-function ItemsList({ items }: { items: OrderItem[] }) {
+// 결제 완료(배송 전) 주문은 줄마다 '품절 취소'(#844). 주문에 상품이 1개는 남아야 해서
+// 취소 가능 수량은 (주문 전체 남은 수량 − 1)까지. 전부 취소된 줄은 지운 줄로 남긴다.
+function ItemsList({ o }: { o: Order }) {
+  const items = o.order_items ?? [];
+  const totalUnits = items.reduce((n, it) => n + it.quantity, 0);
   return (
     <ul className="space-y-2">
-      {(items ?? []).map((it, i) => {
+      {items.map((it, i) => {
         const thumb = thumbOf(it);
+        const maxCancel = Math.min(it.quantity, totalUnits - 1);
         return (
           <li key={i} className="flex items-start gap-2.5 leading-tight">
             <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-wabi-muted">
@@ -134,11 +159,16 @@ function ItemsList({ items }: { items: OrderItem[] }) {
                 />
               )}
             </span>
-            <span className="min-w-0 break-keep">
-              <span>
+            <div className="min-w-0 break-keep">
+              <span className={it.quantity === 0 ? "text-wabi-fg-muted line-through" : undefined}>
                 {it.product_name}
-                <span className="text-wabi-fg-muted"> × {it.quantity}</span>
+                <span className="text-wabi-fg-muted"> × {it.quantity || it.cancelled_quantity}</span>
               </span>
+              {it.cancelled_quantity > 0 && (
+                <span className="block text-xs text-red-700">
+                  품절 취소 {it.cancelled_quantity}개
+                </span>
+              )}
               {it.options && it.options.length > 0 && (
                 <span className="block text-xs text-wabi-accent">
                   {it.options
@@ -151,11 +181,44 @@ function ItemsList({ items }: { items: OrderItem[] }) {
                   + {it.addons.map((a) => a.name).join(", ")}
                 </span>
               )}
-            </span>
+              {o.status === "paid" && maxCancel >= 1 && (
+                <AdminPartialCancelButton
+                  orderId={o.id}
+                  orderNumber={o.order_number}
+                  itemId={it.id}
+                  productName={it.product_name}
+                  unitPrice={it.price}
+                  quantity={it.quantity}
+                  addonTotal={(it.addons ?? []).reduce((n, a) => n + a.price, 0)}
+                  maxCancel={maxCancel}
+                />
+              )}
+            </div>
           </li>
         );
       })}
     </ul>
+  );
+}
+
+// 품절 취소 환불(#844) — 누계, 그리고 토스 환불이 확인되지 않은 기록마다 '다시 시도'.
+function RefundInfo({ o }: { o: Order }) {
+  const pending = (o.order_partial_cancels ?? []).filter((c) => !c.refunded_at);
+  if (o.refunded_amount <= 0 && pending.length === 0) return null;
+  return (
+    <div className="mt-1 space-y-1.5 text-xs whitespace-normal">
+      {o.refunded_amount > 0 && (
+        <p className="text-red-700">품절 취소 −{won(o.refunded_amount)}</p>
+      )}
+      {pending.map((c) => (
+        <div key={c.id} className="space-y-1">
+          <p className="text-amber-800">
+            {c.product_name} × {c.quantity} 환불 미확인
+          </p>
+          <AdminRetryRefundButton cancelId={c.id} label={won(c.amount)} />
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -224,7 +287,7 @@ export default async function AdminOrdersPage() {
     <>
       <PageHeader
         title="주문 관리"
-        description="상품 준비 중(손님 취소 막기)·송장 입력·배송완료·취소(배송 전 전액 환불)·기록 삭제. 최신 주문 순."
+        description="상품 준비 중(손님 취소 막기)·품절 취소(배송 전, 그 상품 금액만 환불)·송장 입력·배송완료·취소(배송 전 전액 환불)·기록 삭제. 최신 주문 순."
       />
       {!orders || orders.length === 0 ? (
         <EmptyState>주문이 없습니다.</EmptyState>
@@ -261,13 +324,14 @@ export default async function AdminOrdersPage() {
                       </td>
                       {/* 사진이 폭을 먹어 상품명이 두세 글자씩 꺾였다(10/2) — 칸 최소 폭 */}
                       <td className="min-w-56 px-4 py-3 align-top">
-                        <ItemsList items={o.order_items} />
+                        <ItemsList o={o} />
                       </td>
                       <td className="max-w-48 px-4 py-3 align-top">
                         <ShipTo o={o} />
                       </td>
                       <td className="px-4 py-3 align-top whitespace-nowrap lining-nums tabular-nums">
                         {won(o.total_price)}
+                        <RefundInfo o={o} />
                       </td>
                       <td className="px-4 py-3 align-top">
                         <TrackingForm order={o} stacked />
@@ -334,7 +398,7 @@ export default async function AdminOrdersPage() {
                 </div>
 
                 <div className="mt-3 text-sm">
-                  <ItemsList items={o.order_items} />
+                  <ItemsList o={o} />
                 </div>
 
                 <div className="mt-3 border-t border-wabi-border pt-3">
@@ -344,7 +408,10 @@ export default async function AdminOrdersPage() {
                 <dl className="mt-2 space-y-1 text-sm">
                   <div className="flex justify-between gap-2">
                     <dt className="text-wabi-fg-muted">금액</dt>
-                    <dd className="lining-nums tabular-nums">{won(o.total_price)}</dd>
+                    <dd className="text-right lining-nums tabular-nums">
+                      {won(o.total_price)}
+                      <RefundInfo o={o} />
+                    </dd>
                   </div>
                 </dl>
 

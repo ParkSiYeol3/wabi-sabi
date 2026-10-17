@@ -8,6 +8,7 @@ import { ReviewLink, reviewLines } from "@/components/account/review-link";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { createClient } from "@/lib/supabase/server";
 import {
+  activeLines,
   byLineAmount,
   formatDateKST,
   withdrawalDeadlineKST,
@@ -34,6 +35,8 @@ type Detail = {
   status: string;
   preparing_at: string | null;
   total_price: number;
+  // 품절 취소(#844)로 환불한 누계. total_price 는 환불 뒤 남은 결제 금액.
+  refunded_amount: number;
   shipping_fee: number;
   recipient: string;
   phone: string;
@@ -47,7 +50,9 @@ type Detail = {
     // 리뷰 링크용 상품 id. 상품 삭제 시 null(0001) → 리뷰 버튼 생략.
     product_id: string | null;
     product_name: string;
+    // 남은 수량. 품절 취소(#844)된 수량은 cancelled_quantity 에.
     quantity: number;
+    cancelled_quantity: number;
     price: number;
     addons: { code: string; name: string; price: number }[] | null;
     options: { name: string; value: string }[] | null;
@@ -76,7 +81,7 @@ export default async function OrderDetailPage({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, preparing_at, total_price, shipping_fee, recipient, phone, address, delivery_memo, tracking_number, courier, ordered_at, delivered_at, order_items(product_id, product_name, quantity, price, addons, options, products(images)), gift_options(message)",
+      "id, order_number, status, preparing_at, total_price, refunded_amount, shipping_fee, recipient, phone, address, delivery_memo, tracking_number, courier, ordered_at, delivered_at, order_items(product_id, product_name, quantity, cancelled_quantity, price, addons, options, products(images)), gift_options(message)",
     )
     .eq("id", orderId)
     .maybeSingle<Detail>();
@@ -98,7 +103,10 @@ export default async function OrderDetailPage({
     : { data: null };
   const reviewed = new Set((myReviews ?? []).map((r) => r.product_id));
   const items = byLineAmount(order.order_items);
-  const reviewAt = canReview ? reviewLines(items) : new Set<typeof items[number]>();
+  // 전부 품절 취소(#844)된 줄은 구매가 아니라 리뷰 버튼을 달지 않는다.
+  const reviewAt = canReview
+    ? reviewLines(activeLines(items))
+    : new Set<typeof items[number]>();
 
   return (
     <Container className="py-16">
@@ -136,16 +144,18 @@ export default async function OrderDetailPage({
               Array.isArray(imgs) && typeof imgs[0] === "string" ? imgs[0] : null;
             // 판매 중인 상품만 링크(판매 중지·삭제는 상품 페이지가 없다).
             const href = it.product_id && it.products ? `/shop/${it.product_id}` : null;
+            // 전부 품절 취소(#844)된 줄은 지운 줄로, 금액 대신 '품절 취소'.
+            const gone = it.quantity === 0;
             const name = (
-              <>
+              <span className={gone ? "text-wabi-fg-muted line-through" : undefined}>
                 {it.product_name}
-                {it.quantity > 1 && (
+                {(gone ? it.cancelled_quantity : it.quantity) > 1 && (
                   <span className="font-numeric text-wabi-fg-muted">
                     {" "}
-                    × {it.quantity}
+                    × {gone ? it.cancelled_quantity : it.quantity}
                   </span>
                 )}
-              </>
+              </span>
             );
             return (
               <li key={i} className="flex gap-3.5 py-3">
@@ -178,7 +188,11 @@ export default async function OrderDetailPage({
                     {/* 금액 + 리뷰 버튼을 오른쪽 한 칸에(#765, 상품명 아래 작은 외곽선 버튼은
                         눈에 안 띄었다). 리뷰는 결제된 주문의 판매 중 상품만, 상품당 한 번. */}
                     <div className="flex shrink-0 flex-col items-end gap-2">
-                      <Price value={it.price * it.quantity + addonSum} />
+                      {gone ? (
+                        <span className="text-xs text-red-700">품절 취소</span>
+                      ) : (
+                        <Price value={it.price * it.quantity + addonSum} />
+                      )}
                       {reviewAt.has(it) && it.product_id && (
                         <ReviewLink
                           productId={it.product_id}
@@ -198,6 +212,11 @@ export default async function OrderDetailPage({
                       + {lineAddons.map((a) => a.name).join(", ")}
                     </p>
                   )}
+                  {it.cancelled_quantity > 0 && (
+                    <p className="mt-1 text-xs text-red-700">
+                      품절로 {it.cancelled_quantity}개 취소 · 환불됨
+                    </p>
+                  )}
                 </div>
               </li>
             );
@@ -211,6 +230,14 @@ export default async function OrderDetailPage({
             <span>무료</span>
           )}
         </p>
+        {order.refunded_amount > 0 && (
+          <p className="mt-2 flex items-center justify-between text-sm text-wabi-fg-muted">
+            <span>품절 취소 환불</span>
+            <span className="font-numeric">
+              −{order.refunded_amount.toLocaleString("ko-KR")}원
+            </span>
+          </p>
+        )}
         <p className="mt-2 flex items-center justify-between text-sm font-medium">
           <span>결제 금액</span>
           <Price value={order.total_price} />

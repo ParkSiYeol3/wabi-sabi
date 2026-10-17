@@ -17,6 +17,8 @@ const schema = z.object({
 export type GuestOrderItem = {
   product_name: string;
   quantity: number;
+  // 품절 취소(#844)된 수량. quantity 는 남은 수량.
+  cancelled_quantity: number;
   price: number;
   addons: { code: string; name: string; price: number }[] | null;
 };
@@ -25,6 +27,8 @@ export type GuestOrder = {
   status: string;
   preparing_at: string | null;
   total_price: number;
+  // 품절 취소(#844)로 환불한 누계. total_price 는 환불 뒤 남은 결제 금액.
+  refunded_amount: number;
   shipping_fee: number;
   recipient: string;
   address: string;
@@ -74,7 +78,7 @@ export async function lookupGuestOrder(input: {
   const { data: order } = await admin
     .from("orders")
     .select(
-      "order_number, status, preparing_at, total_price, shipping_fee, recipient, address, ordered_at, delivered_at, delivery_memo, tracking_number, courier, order_items(product_name, quantity, price, addons)",
+      "order_number, status, preparing_at, total_price, refunded_amount, shipping_fee, recipient, address, ordered_at, delivered_at, delivery_memo, tracking_number, courier, order_items(product_name, quantity, cancelled_quantity, price, addons)",
     )
     .eq("order_number", orderNumber)
     .eq("phone", phone)

@@ -173,6 +173,47 @@ ${note(
   };
 }
 
+// ── 부분취소(품절) 안내 ──────────────────────────────────
+// 관리자가 품절 상품만 취소하고 그 금액을 환불한 때(#844). 토스 환불이 확인된 뒤 1회.
+// 배송비·쿠폰은 그대로라(대표님 정책) 남은 결제 금액도 함께 알린다.
+export function orderPartialCancelledMail(o: {
+  orderNumber: string;
+  refundAmount: number;
+  remainingAmount: number;
+  items: MailItem[];
+}): Mail {
+  const refund = box(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;line-height:1.6">
+  <tr>
+    <td style="color:${C.faint};width:76px;padding-right:12px;padding-bottom:4px;white-space:nowrap">환불 금액</td>
+    <td style="color:${C.ink};font-size:16px;font-weight:600;padding-bottom:4px">${won(o.refundAmount)}</td>
+  </tr>
+  <tr>
+    <td style="color:${C.faint};width:76px;padding-right:12px;padding-bottom:4px;white-space:nowrap">환불 수단</td>
+    <td style="color:${C.ink};padding-bottom:4px">결제하신 수단으로</td>
+  </tr>
+  <tr>
+    <td style="color:${C.faint};width:76px;padding-right:12px;white-space:nowrap">남은 결제</td>
+    <td style="color:${C.ink}">${won(o.remainingAmount)}</td>
+  </tr>
+</table>`);
+
+  return {
+    subject: `[${site.name}] 주문하신 상품 중 일부가 취소되었습니다 (${o.orderNumber})`,
+    html: layout({
+      preheader: `주문번호 ${o.orderNumber} · 품절 상품 ${won(o.refundAmount)} 환불.`,
+      title: "일부 상품이 취소되었습니다",
+      intro:
+        "주문하신 상품 중 일부가 품절되어 해당 상품을 취소하고 금액을 환불해 드립니다. 나머지 상품은 준비되는 대로 보내 드리겠습니다. 불편을 드려 죄송합니다.",
+      body: `${refund}
+${section("취소된 상품", itemRows(o.items))}
+${section("주문 정보", infoRows([["주문번호", o.orderNumber]]))}
+${note(
+  `카드 결제는 카드사에 따라 환불이 반영되기까지 영업일 기준 3~7일이 걸릴 수 있습니다.<br>궁금하신 점은 ${link(`${BASE}/inquiry`, "문의 게시판")}이나 인스타그램 DM으로 남겨 주세요.`,
+)}`,
+    }),
+  };
+}
+
 // ── 배송 완료 + 리뷰 요청 ──────────────────────────────────
 // 관리자가 배송완료를 처리한 때 1회(#783). 거래 안내(수령 확인·교환·환불 기한)가 본문이고
 // 리뷰는 보상 없는 부탁 한 줄 + 버튼. reviewHref 가 없으면(비회원: 리뷰는 로그인 필요)
