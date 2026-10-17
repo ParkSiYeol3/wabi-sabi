@@ -12,6 +12,7 @@ type ProductRow = {
   price: number;
   stock: number;
   sold_out: boolean;
+  same_day: boolean;
   images: unknown;
   categories: { slug: string; name_en: string } | null;
 };
@@ -40,6 +41,8 @@ export interface ProductDetail {
   stock: number;
   // 강제 품절(대표님) — 재고와 무관하게 품절 처리. soldOut = stock<=0 || sold_out.
   sold_out: boolean;
+  // 당일발송 표시(대표님 #838). 품절이면 화면에서 숨긴다.
+  same_day: boolean;
   description: string | null;
   material: string | null;
   size: string | null;
@@ -115,8 +118,8 @@ export async function getProducts({
     .from("products")
     .select(
       filterByCategory
-        ? "id, name, price, stock, sold_out, images, categories!inner(slug, name_en)"
-        : "id, name, price, stock, sold_out, images, categories(slug, name_en)",
+        ? "id, name, price, stock, sold_out, same_day, images, categories!inner(slug, name_en)"
+        : "id, name, price, stock, sold_out, same_day, images, categories(slug, name_en)",
     )
     .eq("is_active", true);
 
@@ -138,6 +141,7 @@ export async function getProducts({
     price: p.price,
     stock: p.stock,
     sold_out: p.sold_out,
+    same_day: p.same_day,
     image: firstImage(p.images),
     image2: secondImage(p.images),
     category: p.categories?.name_en,
@@ -176,7 +180,7 @@ async function loadShopBrowse(
 
   let query = db
     .from("products")
-    .select(`id, name, price, stock, sold_out, images, ${join}`)
+    .select(`id, name, price, stock, sold_out, same_day, images, ${join}`)
     .eq("is_active", true);
 
   // 대분류 slug 는 하위 소분류까지 확장해 매칭한다(#193 2계층 트리, 0036 DB 판).
@@ -194,6 +198,7 @@ async function loadShopBrowse(
     price: p.price,
     stock: p.stock,
     sold_out: p.sold_out,
+    same_day: p.same_day,
     image: firstImage(p.images),
     image2: secondImage(p.images),
     category: p.categories?.name_en,

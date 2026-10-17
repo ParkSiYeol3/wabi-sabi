@@ -710,6 +710,40 @@ export async function setSaleStatus(formData: FormData) {
   revalidatePath(`/shop/${id}`); // 상세 캐시(#181) 무효화 — 상태 즉시 반영
 }
 
+// 당일발송 표시(대표님 #838) — 재고·판매 상태와 무관하게 켜고 끈다. 켜진 상품은 손님
+// 상품 카드·상세에 '당일발송' 도장이 붙는다(품절이면 화면에서 숨김).
+export async function setSameDay(formData: FormData) {
+  const user = await requireAdmin();
+  if (!adminConfigured()) return;
+
+  const id = parseUuid(formData.get("id"));
+  const value = formData.get("same_day");
+  if (!id || (value !== "on" && value !== "off")) return;
+
+  const sameDay = value === "on";
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("products")
+    .update({ same_day: sameDay })
+    .eq("id", id);
+  if (error) {
+    console.error("[admin] 당일발송 저장 실패", id, error);
+    return;
+  }
+  await logAdminAction(user, {
+    action: "product.set_same_day",
+    targetTable: "products",
+    targetId: id,
+    meta: { same_day: sameDay },
+  });
+  revalidatePath("/admin/products");
+  revalidatePath("/");
+  revalidatePath("/shop"); // 상품 목록 탐색 캐시(#185) 무효화
+  // 상세 캐시(#181) 무효화 — 이 상품은 다른 상품 상세의 '관련 상품' 카드에도 뜨므로
+  // 이 상품 경로만이 아니라 상세 전체를 비운다(CodeRabbit #839).
+  revalidatePath("/shop/[id]", "page");
+}
+
 export async function deleteProduct(formData: FormData) {
   const user = await requireAdmin();
   if (!adminConfigured()) return;

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ImageIcon } from "lucide-react";
 import { won } from "@/lib/orders";
 import { isLowStock, isStockSoldOut } from "@/lib/inventory";
+import { SameDayBadge } from "@/components/product/same-day-badge";
 
 type Product = {
   id: string;
@@ -11,6 +12,7 @@ type Product = {
   stock: number;
   is_active: boolean;
   sold_out: boolean;
+  same_day: boolean;
   images: string[] | null;
 };
 
@@ -57,7 +59,11 @@ export function ProductGridCard({ product: p }: { product: Product }) {
       </div>
 
       <div className="space-y-1 p-3">
-        <p className="truncate text-sm font-medium text-wabi-fg">{p.name}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="truncate text-sm font-medium text-wabi-fg">{p.name}</p>
+          {/* 당일발송 켜진 상품(#838) — 손님 화면과 같은 도장. */}
+          {p.same_day && <SameDayBadge />}
+        </div>
         <p className="flex items-center gap-1.5 text-sm font-semibold tabular-nums text-wabi-fg">
           {won(p.price)}
           {!soldOut && isLowStock(p.stock) && (
