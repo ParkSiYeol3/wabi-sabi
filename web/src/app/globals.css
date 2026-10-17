@@ -217,7 +217,10 @@
      oldstyle(3·5·7·9 가 처지는 형태)이라, 가격·날짜에 쓰는 .font-numeric 과
      같은 화면에서 숫자 모양이 갈렸다. 여기서 라이닝으로 통일한다.
      폼 컨트롤은 font-variant-numeric 을 자동 상속하지 않아 명시 지정.
-     자릿수 폭 고정(tabular)은 정렬이 필요한 .font-numeric·.admin-numeric 만 유지. */
+     자릿수 폭 고정(tabular)은 정렬이 필요한 .font-numeric·.admin-numeric 만 유지.
+     ⚠ Tailwind `tabular-nums` 를 단독으로 쓰면 font-variant-numeric 을 그것 하나로
+     덮어써 라이닝이 빠지고 처지는 숫자꼴로 돌아간다(#840). 항상
+     `lining-nums tabular-nums` 로 함께 쓴다. */
   body,
   input,
   textarea,

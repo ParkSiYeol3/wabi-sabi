@@ -104,11 +104,11 @@ export default async function AdminCouponsPage() {
                           </span>
                         )}
                       </td>
-                      <td className="p-3 tabular-nums">{couponLabel(c)}</td>
-                      <td className="p-3 tabular-nums">
+                      <td className="p-3 lining-nums tabular-nums">{couponLabel(c)}</td>
+                      <td className="p-3 lining-nums tabular-nums">
                         {c.min_order > 0 ? won(c.min_order) : "-"}
                       </td>
-                      <td className="p-3 tabular-nums">
+                      <td className="p-3 lining-nums tabular-nums">
                         {c.used_count}
                         {c.max_uses != null ? ` / ${c.max_uses}` : " / ∞"}
                       </td>
@@ -159,7 +159,7 @@ export default async function AdminCouponsPage() {
                         </span>
                       )}
                     </div>
-                    <span className="shrink-0 tabular-nums text-sm text-wabi-accent">
+                    <span className="shrink-0 lining-nums tabular-nums text-sm text-wabi-accent">
                       {couponLabel(c)}
                     </span>
                   </div>
@@ -167,13 +167,13 @@ export default async function AdminCouponsPage() {
                   <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 text-sm">
                     <div className="flex justify-between gap-2">
                       <dt className="text-wabi-fg-muted">최소주문</dt>
-                      <dd className="tabular-nums">
+                      <dd className="lining-nums tabular-nums">
                         {c.min_order > 0 ? won(c.min_order) : "-"}
                       </dd>
                     </div>
                     <div className="flex justify-between gap-2">
                       <dt className="text-wabi-fg-muted">사용/한도</dt>
-                      <dd className="tabular-nums">
+                      <dd className="lining-nums tabular-nums">
                         {c.used_count}
                         {c.max_uses != null ? ` / ${c.max_uses}` : " / ∞"}
                       </dd>
