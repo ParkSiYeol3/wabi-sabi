@@ -711,7 +711,7 @@ export async function setSaleStatus(formData: FormData) {
 }
 
 // 당일발송 표시(대표님 #838) — 재고·판매 상태와 무관하게 켜고 끈다. 켜진 상품은 손님
-// 상품 카드·상세에 '당일발송' 도장이 붙는다(품절이면 화면에서 숨김).
+// 상품 카드·상세에 '당일발송' 뱃지가 붙는다(품절이면 화면에서 숨김).
 export async function setSameDay(formData: FormData) {
   const user = await requireAdmin();
   if (!adminConfigured()) return;

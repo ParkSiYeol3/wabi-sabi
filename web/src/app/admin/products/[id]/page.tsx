@@ -244,7 +244,7 @@ export default async function AdminProductEditPage({
             })}
           </div>
           <p className="mt-3 text-xs leading-relaxed text-wabi-fg-muted">
-            <b>표시</b>를 누르면 손님 상품 목록·상세에 ‘당일발송’ 도장이 붙습니다.
+            <b>표시</b>를 누르면 손님 상품 목록·상세에 ‘당일발송’ 표시가 붙습니다.
             재고·품절과 상관없이 켜고 끌 수 있고, 품절인 동안에는 손님 화면에서
             숨겨집니다.
           </p>
