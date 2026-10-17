@@ -38,7 +38,6 @@
   --wabi-border: #d7cfc1; /* 크림 위 잉크 16% */
   --wabi-accent: #423c30; /* 버튼 (잉크와 동일) */
   --wabi-footer: #241f17; /* 푸터 (브랜드 최심색 다크브라운) */
-  --wabi-seal: #9c4330; /* 인주색 도장(당일발송 뱃지 #838) — 크림 위 대비 5.4:1 */
 }
 
 .dark {
@@ -96,7 +95,6 @@
   --color-wabi-border: var(--wabi-border);
   --color-wabi-accent: var(--wabi-accent);
   --color-wabi-footer: var(--wabi-footer);
-  --color-wabi-seal: var(--wabi-seal);
 
   /* 붓 명조 통일(대표님) — 라틴=Cormorant, 한글=마루부리 Light(얇은 붓 명조),
      가나=Noto Serif JP. 스택 순서로 글자별 담당. 토큰 이름은 호환 위해 유지. */

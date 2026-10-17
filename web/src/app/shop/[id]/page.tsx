@@ -286,7 +286,7 @@ export default async function ProductDetailPage({
 
         {/* 정보 — 히어로에만. sticky 아님(첫 사진과 함께 스크롤). */}
         <div>
-          {/* 카테고리 줄 — 오른쪽 끝에 당일발송 도장(대표님 #838). 목록 카드와 같은 자리.
+          {/* 카테고리 줄 — 오른쪽 끝에 당일발송 뱃지(대표님 #838). 목록 카드와 같은 자리.
               품절이면 살 수 없으니 숨긴다. */}
           {(product.category || (product.same_day && !soldOut)) && (
             <div className="flex items-center justify-between gap-2">

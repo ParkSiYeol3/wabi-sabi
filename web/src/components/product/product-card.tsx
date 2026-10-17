@@ -66,7 +66,7 @@ export function ProductCard({
           />
         )}
       </div>
-      {/* 카테고리 줄 — 오른쪽 끝에 당일발송 도장(대표님 #838, 이름 줄을 밀지 않게). */}
+      {/* 카테고리 줄 — 오른쪽 끝에 당일발송 뱃지(대표님 #838, 이름 줄을 밀지 않게). */}
       {(product.category || sameDay) && (
         <div className="mt-2.5 flex items-center justify-between gap-2">
           {product.category && (

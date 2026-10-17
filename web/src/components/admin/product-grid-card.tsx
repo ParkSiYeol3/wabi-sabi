@@ -61,7 +61,7 @@ export function ProductGridCard({ product: p }: { product: Product }) {
       <div className="space-y-1 p-3">
         <div className="flex items-center gap-1.5">
           <p className="truncate text-sm font-medium text-wabi-fg">{p.name}</p>
-          {/* 당일발송 켜진 상품(#838) — 손님 화면과 같은 도장. */}
+          {/* 당일발송 켜진 상품(#838) — 손님 화면과 같은 뱃지. */}
           {p.same_day && <SameDayBadge />}
         </div>
         <p className="flex items-center gap-1.5 text-sm font-semibold tabular-nums text-wabi-fg">
