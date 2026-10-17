@@ -18,6 +18,7 @@ import { getMarketingConsent } from "@/lib/queries/consent";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addAddress, deleteAddress } from "./actions";
+import { formatPhone } from "@/lib/phone";
 
 export const metadata: Metadata = { title: "마이페이지" };
 
@@ -117,7 +118,7 @@ export default async function MyPage({
                   <p className="font-medium">
                     {a.recipient}{" "}
                     <span className="font-numeric text-wabi-fg-muted">
-                      {a.phone}
+                      {formatPhone(a.phone)}
                     </span>
                   </p>
                   <p className="mt-1 font-numeric text-wabi-fg-muted">

@@ -121,7 +121,7 @@ function SummaryCard({
     <div className={`rounded-xl border ${ring} bg-wabi-bg/50 p-5`}>
       <p className="text-sm font-medium text-wabi-fg">{label}</p>
       <p className="mt-0.5 text-xs text-wabi-fg-muted">{hint}</p>
-      <p className={`mt-3 text-2xl font-semibold tabular-nums ${amount}`}>
+      <p className={`mt-3 text-2xl font-semibold lining-nums tabular-nums ${amount}`}>
         {won(revenue)}
       </p>
       <p className="mt-1 font-numeric text-sm text-wabi-fg-muted">
@@ -303,7 +303,7 @@ export default async function AdminSalesPage({
             </span>
             <span className="text-sm">
               <span className="text-wabi-fg-muted">합계 </span>
-              <b className="text-lg tabular-nums text-wabi-fg">
+              <b className="text-lg lining-nums tabular-nums text-wabi-fg">
                 {won(settleRevenue)}
               </b>
               <span className="ml-2 font-numeric text-wabi-fg-muted">

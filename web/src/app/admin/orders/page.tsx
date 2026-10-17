@@ -21,6 +21,7 @@ import { markDelivered, markPreparing } from "./actions";
 import { EpostCheckButton } from "@/components/admin/epost-check-button";
 import { traceSource } from "@/lib/courier-trace";
 import { TrackingForm } from "@/components/admin/tracking-form";
+import { formatPhone } from "@/lib/phone";
 
 type OrderItem = {
   product_id: string | null;
@@ -166,9 +167,9 @@ function ShipTo({ o }: { o: Order }) {
         {o.recipient}
         <a
           href={`tel:${o.phone.replace(/[^0-9+]/g, "")}`}
-          className="ml-2 text-xs text-wabi-fg-muted tabular-nums underline-offset-2 hover:text-wabi-fg hover:underline"
+          className="ml-2 text-xs text-wabi-fg-muted lining-nums tabular-nums underline-offset-2 hover:text-wabi-fg hover:underline"
         >
-          {o.phone}
+          {formatPhone(o.phone)}
         </a>
       </p>
       <p className="break-keep text-wabi-fg">{o.address}</p>
@@ -251,7 +252,7 @@ export default async function AdminOrdersPage() {
                       key={o.id}
                       className="transition-colors hover:bg-wabi-muted/40"
                     >
-                      <td className="px-4 py-3 align-top tabular-nums">
+                      <td className="px-4 py-3 align-top lining-nums tabular-nums">
                         <span className="font-medium">{o.order_number}</span>
                         <span className="mb-2 block text-xs text-wabi-fg-muted">
                           {orderedAt(o.ordered_at)}
@@ -265,7 +266,7 @@ export default async function AdminOrdersPage() {
                       <td className="max-w-48 px-4 py-3 align-top">
                         <ShipTo o={o} />
                       </td>
-                      <td className="px-4 py-3 align-top whitespace-nowrap tabular-nums">
+                      <td className="px-4 py-3 align-top whitespace-nowrap lining-nums tabular-nums">
                         {won(o.total_price)}
                       </td>
                       <td className="px-4 py-3 align-top">
@@ -323,7 +324,7 @@ export default async function AdminOrdersPage() {
                 className="rounded-xl border border-wabi-border bg-wabi-bg p-4 shadow-sm"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="tabular-nums">
+                  <span className="lining-nums tabular-nums">
                     <span className="font-medium">{o.order_number}</span>
                     <span className="ml-2 text-xs text-wabi-fg-muted">
                       {orderedAt(o.ordered_at)}
@@ -343,7 +344,7 @@ export default async function AdminOrdersPage() {
                 <dl className="mt-2 space-y-1 text-sm">
                   <div className="flex justify-between gap-2">
                     <dt className="text-wabi-fg-muted">금액</dt>
-                    <dd className="tabular-nums">{won(o.total_price)}</dd>
+                    <dd className="lining-nums tabular-nums">{won(o.total_price)}</dd>
                   </div>
                 </dl>
 

@@ -132,7 +132,7 @@ export function StatTile({
       </div>
       <p
         className={cn(
-          "mt-1.5 text-xl font-semibold tabular-nums sm:mt-2 sm:text-2xl",
+          "mt-1.5 text-xl font-semibold lining-nums tabular-nums sm:mt-2 sm:text-2xl",
           valueColor,
         )}
       >

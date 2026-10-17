@@ -368,8 +368,8 @@ export default async function AdminHome() {
                       <span
                         className={
                           p.stock === 0
-                            ? "shrink-0 font-medium text-red-700 tabular-nums"
-                            : "shrink-0 font-medium text-amber-800 tabular-nums"
+                            ? "shrink-0 font-medium text-red-700 lining-nums tabular-nums"
+                            : "shrink-0 font-medium text-amber-800 lining-nums tabular-nums"
                         }
                       >
                         {p.stock === 0 ? "품절" : `${p.stock}개`}
@@ -402,7 +402,7 @@ export default async function AdminHome() {
                         <span className="truncate">{o.recipient}</span>
                       </span>
                       <span className="shrink-0 text-right">
-                        <span className="block tabular-nums">
+                        <span className="block lining-nums tabular-nums">
                           {won(o.total_price)}
                         </span>
                         <span className="block text-xs text-wabi-fg-muted">

@@ -68,7 +68,7 @@ export function ShopPagination({
             href={linkFor(it)}
             aria-current={it === page ? "page" : undefined}
             className={cn(
-              "inline-flex size-9 items-center justify-center rounded-md border text-sm tabular-nums transition-colors",
+              "inline-flex size-9 items-center justify-center rounded-md border text-sm lining-nums tabular-nums transition-colors",
               it === page
                 ? "border-wabi-fg bg-wabi-fg text-white"
                 : "border-wabi-border text-wabi-fg-muted hover:border-wabi-fg hover:text-wabi-fg",

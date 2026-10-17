@@ -18,6 +18,7 @@ import {
 import { ImageIcon } from "lucide-react";
 import { Price } from "@/components/product/price";
 import { parseUuid } from "@/lib/validation";
+import { formatPhone } from "@/lib/phone";
 
 export const metadata: Metadata = { title: "주문 상세" };
 
@@ -221,7 +222,7 @@ export default async function OrderDetailPage({
         <h2 className="text-base font-medium">배송 정보</h2>
         <dl className="mt-4 space-y-2 text-sm">
           <Row label="받는 분" value={order.recipient} />
-          <Row label="연락처" value={order.phone} />
+          <Row label="연락처" value={formatPhone(order.phone)} />
           <Row label="배송지" value={order.address} />
           {order.delivery_memo && (
             <Row label="배송 요청" value={order.delivery_memo} />
