@@ -14,8 +14,10 @@ export function SameDayBadge({
   return (
     <span
       className={cn(
-        "inline-block shrink-0 bg-wabi-accent leading-none tracking-[0.08em] whitespace-nowrap text-white",
-        size === "sm" ? "px-1.5 py-1 text-[10px]" : "px-2 py-1.5 text-xs",
+        "inline-block shrink-0 bg-wabi-accent leading-none tracking-[0.04em] whitespace-nowrap text-white",
+        // 시열님(10/18): 카드에서 너무 튄다 → 한 단계 작게. 글자 10px 아래는 한글이 뭉개져
+        // 여백·자간만 줄였다.
+        size === "sm" ? "px-1 py-0.5 text-[10px]" : "px-1.5 py-1 text-[11px]",
         className,
       )}
     >
