@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { DEFAULT_NEW_STOCK } from "@/lib/inventory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createProduct } from "@/app/admin/products/actions";
@@ -22,7 +23,7 @@ type Category = { id: string; name_ko: string; name_en: string };
 export function ProductCreateForm({ categories }: { categories: Category[] }) {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [stock, setStock] = useState("0");
+  const [stock, setStock] = useState(String(DEFAULT_NEW_STOCK));
   const [categoryId, setCategoryId] = useState("");
   const [description, setDescription] = useState("");
   // 스펙 피커(원산지·소재·사이즈·주의)·이미지 피커는 내부 상태라 성공 후 초기화하려면
@@ -38,7 +39,7 @@ export function ProductCreateForm({ categories }: { categories: Category[] }) {
       if (result.ok) {
         setName("");
         setPrice("");
-        setStock("0");
+        setStock(String(DEFAULT_NEW_STOCK));
         setCategoryId("");
         setDescription("");
         setPickerKey((k) => k + 1);
