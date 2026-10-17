@@ -263,7 +263,7 @@ export async function createPendingOrder(
   // 재고 검증 — 줄이 아니라 **상품(옵션 관리 상품은 옵션 값)별로 수량을 합산**해
   // 한 번에 본다(#677). 같은 상품을 옵션만 바꿔 여러 줄로 담을 수 있게 되면서,
   // 줄마다 stock ≥ qty 만 보면 재고 3개짜리를 2줄×2개=4개로 살 수 있다.
-  // 판매 가능 수량 = 실재고 − 매장 예약분(대표님: 재고 1개는 매장에 남긴다).
+  // 판매 가능 수량 = 실재고 − 매장 예약분(STORE_RESERVE, 지금은 0 — #836).
   const wantByProduct = new Map<string, number>();
   const wantByOptionValue = new Map<string, number>();
   for (const line of lines) {

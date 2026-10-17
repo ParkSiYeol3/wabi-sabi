@@ -196,8 +196,8 @@ export default async function ProductDetailPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  // 품절 표시 판단(대표님 3상태) — 판매 가능 수량 0(재고 1개 남으면 품절, 매장
-  // 비치용 예약) 또는 강제 품절(sold_out). 비공개는 이미 is_active 필터로 이
+  // 품절 표시 판단(대표님 3상태) — 판매 가능 수량 0(재고 0개면 품절, #836) 또는
+  // 강제 품절(sold_out). 비공개는 이미 is_active 필터로 이
   // 페이지에 도달하지 못한다(404).
   const soldOut = isStockSoldOut(product.stock) || product.sold_out;
   // 값별 가격(0061)이 하나라도 있으면 표시 가격은 '최저가~'가 된다.

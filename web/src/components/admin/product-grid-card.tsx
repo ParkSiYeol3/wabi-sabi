@@ -19,7 +19,7 @@ type Product = {
 // 수정 페이지에서. 여기선 대표 이미지·이름·가격·상태 뱃지만 간결하게.
 export function ProductGridCard({ product: p }: { product: Product }) {
   const cover = p.images?.[0] ?? null;
-  // 강제 품절(sold_out) 또는 판매 가능 수량 0(재고 1개 남으면 품절, 매장 예약분)
+  // 강제 품절(sold_out) 또는 판매 가능 수량 0(재고 0개면 품절, #836)
   // 이면 품절 표시(대표님 3상태). 어드민도 손님과 같은 품절 기준을 보여준다.
   const soldOut = isStockSoldOut(p.stock) || p.sold_out;
 
