@@ -24,7 +24,8 @@ import {
   DEFAULT_SHIPPING_INFO,
   SHIPPING_FEE_KEY,
   DEFAULT_SHIPPING_FEE,
-  SAME_DAY_NOTICE,
+  SAME_DAY_NOTICE_THIS,
+  SAME_DAY_NOTICE_GENERAL,
   SAME_DAY_NOTE,
 } from "@/lib/queries/content";
 import { cn } from "@/lib/utils";
@@ -389,12 +390,16 @@ export default async function ProductDetailPage({
             <p className="font-medium text-wabi-fg">배송 안내</p>
             <div className="mt-3 space-y-2 font-numeric text-wabi-fg">
               <p className="whitespace-pre-line">{shippingInfo}</p>
-              {/* 당일발송 안내(대표님 2026-10-18) — 상품과 무관하게 늘 보인다(어떤 상품이
-                  해당하는지는 목록·상세의 같은 뱃지로 알 수 있다). */}
+              {/* 당일발송 안내(대표님 2026-10-18) — 모든 상품에 보이되, 당일발송 상품이면
+                  뱃지와 "이 상품은", 아니면 뱃지 없이 일반 안내(해당 상품처럼 읽히지 않게). */}
               <div>
-                <p>
-                  <SameDayBadge className="align-[1px]" /> {SAME_DAY_NOTICE}
-                </p>
+                {product.same_day && !soldOut ? (
+                  <p>
+                    <SameDayBadge className="align-[1px]" /> {SAME_DAY_NOTICE_THIS}
+                  </p>
+                ) : (
+                  <p>{SAME_DAY_NOTICE_GENERAL}</p>
+                )}
                 <p className="mt-1 text-xs text-wabi-fg-muted">{SAME_DAY_NOTE}</p>
               </div>
               <p className="whitespace-pre-line">{shippingFee}</p>

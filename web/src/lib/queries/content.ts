@@ -70,7 +70,10 @@ export const DEFAULT_SHIPPING_INFO =
 // 당일발송 안내(대표님 2026-10-18) — 배송 안내 안에 한 줄 + 주석 한 줄. 마감 시각은
 // 대표님이 정한 값이라 바꿀 땐 여기만. 주말·공휴일 제외는 위 배송 안내 문구가 이미 말한다.
 export const SAME_DAY_CUTOFF = "오후 2시";
-export const SAME_DAY_NOTICE = `상품은 ${SAME_DAY_CUTOFF} 이전 결제 완료 시 당일 발송됩니다.`;
+// 당일발송 상품 상세에선 뱃지 + "이 상품은", 그 외 상품에선 뱃지 없이 일반 안내(CodeRabbit
+// #850: 뱃지만 두면 당일발송이 아닌 상품도 해당하는 것처럼 읽힌다).
+export const SAME_DAY_NOTICE_THIS = `이 상품은 ${SAME_DAY_CUTOFF} 이전 결제 완료 시 당일 발송됩니다.`;
+export const SAME_DAY_NOTICE_GENERAL = `당일발송 표시 상품은 ${SAME_DAY_CUTOFF} 이전 결제 완료 시 당일 발송됩니다.`;
 export const SAME_DAY_NOTE =
   "※ 당일발송이 표시된 상품에 한해 적용되며, 주문 상황에 따라 달라질 수 있습니다.";
 
