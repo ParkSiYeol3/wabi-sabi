@@ -1,7 +1,12 @@
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { sendOrderConfirmedMail } from "@/lib/emails/order-confirmed";
 import { notifyNewOrder } from "@/lib/emails/shop-alerts";
-import { notifyRefundFailed, sendOrderCancelledMail } from "@/lib/emails/order-cancelled";
+import {
+  notifyPartialRefundFailed,
+  notifyRefundFailed,
+  sendOrderCancelledMail,
+  sendPartialCancelMail,
+} from "@/lib/emails/order-cancelled";
 import type { CancelCause } from "@/lib/emails/templates";
 
 // 결제 확정 공용 로직 — success 페이지·토스 웹훅이 함께 사용.
@@ -209,4 +214,206 @@ export async function cancelPaidOrder(
   }
 
   return { ok: true };
+}
+
+// ── 부분취소(품절) ───────────────────────────────────────────
+// 대표님 정책(#844): 취소한 상품 금액만 환불하고 배송비·쿠폰은 그대로. 배송 전(paid)만.
+// 순서: ① 토스 결제 조회(부분취소 가능·잔액 일치, DB 를 건드리기 전) → ② RPC(잠금 하
+// 수량·금액 감소·재고 복원·기록) → ③ 토스 cancelAmount 환불 → 환불 시각·손님 메일.
+// 전체 취소와 같은 이유로 DB 먼저, 환불 나중(배송 처리와의 경합). ③이 실패하면 기록은
+// 환불 전으로 남고 대표님께 알림이 가며, 관리자 화면 '환불 다시 시도'가 ③만 다시 한다.
+
+export const PARTIAL_CANCEL_REASON = "품절로 인한 부분취소";
+// 토스 호출 제한 시간. 환불 선점(claim_partial_refund)이 1분이라 그보다 충분히 짧게.
+const TOSS_TIMEOUT_MS = 20_000;
+
+const PARTIAL_ERRORS: Record<string, string> = {
+  not_found: "주문을 찾을 수 없습니다.",
+  not_cancellable: "배송 전(결제 완료) 주문만 부분취소할 수 있습니다.",
+  item_not_found: "취소할 상품을 찾을 수 없습니다.",
+  invalid_quantity: "취소 수량이 올바르지 않습니다.",
+  use_full_cancel: "이 상품을 빼면 남는 상품이 없어요. 주문 취소(전액 환불)를 이용해 주세요.",
+  zero_amount: "환불할 금액이 없는 상품입니다.",
+  exceeds_paid:
+    "할인 때문에 환불액이 남은 결제 금액보다 커요. 주문 취소(전액 환불)를 이용해 주세요.",
+};
+
+type TossCancel = { cancelAmount: number; cancelReason?: string; cancelStatus?: string };
+type TossPayment = {
+  paymentKey: string;
+  status: string;
+  totalAmount: number;
+  balanceAmount: number;
+  isPartialCancelable?: boolean;
+  cancels?: TossCancel[] | null;
+};
+
+async function lookupPayment(orderId: string): Promise<TossPayment | null> {
+  const res = await fetch(`${TOSS_API}/orders/${orderId}`, {
+    headers: { Authorization: tossAuth() },
+    signal: AbortSignal.timeout(TOSS_TIMEOUT_MS),
+  }).catch(() => null);
+  if (!res?.ok) return null;
+  return (await res.json()) as TossPayment;
+}
+
+// 토스 취소 내역에서 이 기록을 찾는 표식. cancelReason 끝에 붙인다(상점관리자에도 보임).
+const refundTag = (cancelId: string) => `[${cancelId.slice(0, 8)}]`;
+
+export type PartialCancelResult = { ok: boolean; error?: string; amount?: number };
+
+export async function partialCancelOrderItem(
+  orderId: string,
+  itemId: string,
+  quantity: number,
+): Promise<PartialCancelResult> {
+  if (!process.env.TOSS_SECRET_KEY)
+    return { ok: false, error: "토스 시크릿 키 미설정" };
+  if (!adminConfigured()) return { ok: false, error: "서버 키 미설정" };
+
+  const admin = createAdminClient();
+  const { data: order } = await admin
+    .from("orders")
+    .select("status, total_price")
+    .eq("id", orderId)
+    .maybeSingle<{ status: string; total_price: number }>();
+  if (!order) return { ok: false, error: PARTIAL_ERRORS.not_found };
+  if (order.status !== "paid") return { ok: false, error: PARTIAL_ERRORS.not_cancellable };
+
+  // ① 토스 쪽이 부분취소를 받을 수 있는지, 잔액이 사이트 금액과 같은지 먼저 본다.
+  //    상점관리자에서 따로 취소한 내역이 있으면 잔액이 달라 여기서 멈춘다(이중 환불 방지).
+  const payment = await lookupPayment(orderId);
+  if (!payment)
+    return { ok: false, error: "결제 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요." };
+  if (payment.status !== "DONE" && payment.status !== "PARTIAL_CANCELED")
+    return { ok: false, error: `부분취소할 수 없는 결제 상태입니다(${payment.status}).` };
+  if (payment.isPartialCancelable === false)
+    return {
+      ok: false,
+      error: "이 결제 수단은 부분취소가 안 됩니다. 주문 취소(전액 환불)를 이용해 주세요.",
+    };
+  if (payment.balanceAmount !== order.total_price) {
+    console.error(
+      `[payments] 부분취소 중단: 토스 잔액과 주문 금액 불일치 orderId=${orderId} balance=${payment.balanceAmount} total=${order.total_price}`,
+    );
+    return {
+      ok: false,
+      error:
+        "토스 결제 잔액과 사이트 주문 금액이 달라요. 상점관리자에서 직접 취소한 내역이 있는지 확인해 주세요.",
+    };
+  }
+
+  // ② 잠금 하 검증·수량/금액 감소·재고 복원·기록.
+  const { data, error } = await admin.rpc("partial_cancel_order_item", {
+    p_order_id: orderId,
+    p_item_id: itemId,
+    p_quantity: quantity,
+    p_reason: PARTIAL_CANCEL_REASON,
+  });
+  const res = data as { result: string; cancel_id?: string; amount?: number } | null;
+  if (error || !res) return { ok: false, error: "부분취소에 실패했습니다." };
+  if (res.result !== "cancelled" || !res.cancel_id || !res.amount)
+    return { ok: false, error: PARTIAL_ERRORS[res.result] ?? "부분취소에 실패했습니다." };
+
+  // ③ 토스 환불.
+  const refund = await refundPartialCancel(res.cancel_id);
+  if (!refund.ok)
+    return {
+      ok: false,
+      amount: res.amount,
+      error:
+        refund.error ??
+        "취소는 처리됐지만 환불에 실패했습니다. 주문 관리에서 '환불 다시 시도'를 눌러 주세요.",
+    };
+  return { ok: true, amount: res.amount };
+}
+
+// 부분취소 기록 하나의 토스 환불(최초·재시도 공용). 절대 더 많이 환불하지 않는 쪽으로:
+//   · 선점(claim) — 1분 안의 겹친 시도는 건너뜀
+//   · 토스 취소 내역에 이 기록 표식이 있으면 이미 환불된 것 → 기록만 맞춘다
+//   · 토스가 이미 돌려준 총액이 사이트 누계(refunded_amount) 이상이면 더 줄 것이 없다
+//     (그 사이 전체 취소됐거나 상점관리자에서 직접 환불한 경우)
+//   · 아직 돌려줄 금액보다 이 기록이 크면 자동 환불을 멈추고 대표님께 확인 요청
+export async function refundPartialCancel(
+  cancelId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  if (!process.env.TOSS_SECRET_KEY) return { ok: false, error: "토스 시크릿 키 미설정" };
+  if (!adminConfigured()) return { ok: false, error: "서버 키 미설정" };
+  const admin = createAdminClient();
+
+  const { data: claimed } = await admin.rpc("claim_partial_refund", {
+    p_cancel_id: cancelId,
+  });
+  const c = (claimed as { order_id: string; amount: number; reason: string; attempted_at: string }[] | null)?.[0];
+  if (!c) {
+    const { data: row } = await admin
+      .from("order_partial_cancels")
+      .select("refunded_at")
+      .eq("id", cancelId)
+      .maybeSingle<{ refunded_at: string | null }>();
+    if (row?.refunded_at) return { ok: true };
+    return { ok: false, error: "다른 환불 시도가 진행 중이에요. 1분 뒤 다시 눌러 주세요." };
+  }
+
+  const fail = async (why: string, error?: string) => {
+    console.error(`[payments] 부분취소 환불 실패 cancelId=${cancelId} orderId=${c.order_id} ${why}`);
+    await notifyPartialRefundFailed(cancelId, why);
+    return { ok: false, error };
+  };
+  // 환불 확인 — 처음 찍힐 때만 손님 메일(이미 전체 취소된 주문이면 취소 메일이 갔으니 생략).
+  const markRefunded = async (mail: boolean) => {
+    const { data: marked } = await admin
+      .from("order_partial_cancels")
+      .update({ refunded_at: new Date().toISOString() })
+      .eq("id", cancelId)
+      .is("refunded_at", null)
+      .select("id");
+    if (mail && marked && marked.length > 0)
+      await sendPartialCancelMail(cancelId).catch((e) =>
+        console.error("[payments] 부분취소 메일 실패 cancelId=", cancelId, e),
+      );
+    return { ok: true };
+  };
+
+  const { data: order } = await admin
+    .from("orders")
+    .select("status, refunded_amount")
+    .eq("id", c.order_id)
+    .maybeSingle<{ status: string; refunded_amount: number }>();
+  if (!order) return fail("주문 없음", "주문을 찾을 수 없습니다.");
+
+  const payment = await lookupPayment(c.order_id);
+  if (!payment) return fail("결제 조회 실패");
+
+  const tag = refundTag(cancelId);
+  const tagged = (payment.cancels ?? []).some(
+    (x) => x.cancelStatus === "DONE" && String(x.cancelReason ?? "").includes(tag),
+  );
+  const tossRefunded = payment.totalAmount - payment.balanceAmount;
+  if (tagged || tossRefunded >= order.refunded_amount)
+    return markRefunded(order.status !== "cancelled");
+
+  const owed = order.refunded_amount - tossRefunded;
+  if (c.amount > owed)
+    return fail(
+      `토스 환불 내역과 맞지 않음(돌려줄 금액 ${owed}원 < 이 기록 ${c.amount}원)`,
+      "토스 환불 내역과 맞지 않아 자동 환불을 멈췄어요. 상점관리자에서 이 주문의 취소 내역을 확인해 주세요.",
+    );
+
+  const cancel = await fetch(`${TOSS_API}/${payment.paymentKey}/cancel`, {
+    method: "POST",
+    headers: {
+      Authorization: tossAuth(),
+      "Content-Type": "application/json",
+      // 같은 시도의 네트워크 재전송이 두 번 환불되지 않게. 시도마다 새 키(선점 시각).
+      "Idempotency-Key": `${cancelId}-${Date.parse(c.attempted_at)}`,
+    },
+    body: JSON.stringify({ cancelReason: `${c.reason} ${tag}`, cancelAmount: c.amount }),
+    signal: AbortSignal.timeout(TOSS_TIMEOUT_MS),
+  }).catch(() => null);
+  if (!cancel?.ok) {
+    const body = cancel ? await cancel.json().catch(() => ({})) : {};
+    return fail(`토스 환불 실패(${(body as { code?: string }).code ?? cancel?.status ?? "응답 없음"})`);
+  }
+  return markRefunded(true);
 }
