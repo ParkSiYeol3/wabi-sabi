@@ -211,8 +211,14 @@ export default async function AdminProductEditPage({
           </p>
 
           {/* 당일발송 표시(대표님 #838) — 판매 상태·재고와 별개로 켜고 끈다. */}
-          <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-wabi-border pt-4">
-            <span className="mr-1 text-sm text-wabi-fg-muted">당일발송</span>
+          <div
+            role="group"
+            aria-labelledby="same-day-label"
+            className="mt-5 flex flex-wrap items-center gap-2 border-t border-wabi-border pt-4"
+          >
+            <span id="same-day-label" className="mr-1 text-sm text-wabi-fg-muted">
+              당일발송
+            </span>
             {(
               [
                 { value: "on", label: "표시" },
@@ -225,6 +231,7 @@ export default async function AdminProductEditPage({
                   <input type="hidden" name="id" value={row.id} />
                   <input type="hidden" name="same_day" value={o.value} />
                   <SubmitButton
+                    aria-pressed={active}
                     pendingText="변경 중…"
                     className={adminAction({
                       tone: active ? "solid" : "outline",

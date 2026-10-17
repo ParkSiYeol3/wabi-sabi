@@ -739,7 +739,9 @@ export async function setSameDay(formData: FormData) {
   revalidatePath("/admin/products");
   revalidatePath("/");
   revalidatePath("/shop"); // 상품 목록 탐색 캐시(#185) 무효화
-  revalidatePath(`/shop/${id}`); // 상세 캐시(#181) 무효화
+  // 상세 캐시(#181) 무효화 — 이 상품은 다른 상품 상세의 '관련 상품' 카드에도 뜨므로
+  // 이 상품 경로만이 아니라 상세 전체를 비운다(CodeRabbit #839).
+  revalidatePath("/shop/[id]", "page");
 }
 
 export async function deleteProduct(formData: FormData) {
