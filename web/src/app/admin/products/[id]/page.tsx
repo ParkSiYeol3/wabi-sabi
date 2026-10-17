@@ -12,6 +12,7 @@ import { SubmitButton } from "@/components/common/submit-button";
 import {
   updateStock,
   setSaleStatus,
+  setSameDay,
   deleteProduct,
 } from "@/app/admin/products/actions";
 import { parseOptionGroups } from "@/lib/product-options";
@@ -30,6 +31,7 @@ type ProductRow = Omit<
   stock_option: string | null;
   is_active: boolean;
   sold_out: boolean;
+  same_day: boolean;
   images: string[] | null;
 };
 
@@ -49,7 +51,7 @@ export default async function AdminProductEditPage({
       db
         .from("products")
         .select(
-          "id, name, price, category_id, description, material, size, care, origin, options, enabled_addons, stock, stock_option, is_active, sold_out, images",
+          "id, name, price, category_id, description, material, size, care, origin, options, enabled_addons, stock, stock_option, is_active, sold_out, same_day, images",
         )
         .eq("id", id)
         .maybeSingle<ProductRow>(),
@@ -206,6 +208,38 @@ export default async function AdminProductEditPage({
             완전히 감춰짐(관리 목록엔 그대로 남아 판매 기록 확인 가능). <b>품절</b>:
             노출은 하되 ‘Out of Stock’으로 표시되고 구매 불가(저장된 재고 수량은 그대로
             보존). 재고가 0개가 되면 자동으로 품절 처리됩니다.
+          </p>
+
+          {/* 당일발송 표시(대표님 #838) — 판매 상태·재고와 별개로 켜고 끈다. */}
+          <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-wabi-border pt-4">
+            <span className="mr-1 text-sm text-wabi-fg-muted">당일발송</span>
+            {(
+              [
+                { value: "on", label: "표시" },
+                { value: "off", label: "표시 안 함" },
+              ] as const
+            ).map((o) => {
+              const active = (o.value === "on") === row.same_day;
+              return (
+                <form key={o.value} action={setSameDay}>
+                  <input type="hidden" name="id" value={row.id} />
+                  <input type="hidden" name="same_day" value={o.value} />
+                  <SubmitButton
+                    pendingText="변경 중…"
+                    className={adminAction({
+                      tone: active ? "solid" : "outline",
+                    })}
+                  >
+                    {o.label}
+                  </SubmitButton>
+                </form>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-wabi-fg-muted">
+            <b>표시</b>를 누르면 손님 상품 목록·상세에 ‘당일발송’ 도장이 붙습니다.
+            재고·품절과 상관없이 켜고 끌 수 있고, 품절인 동안에는 손님 화면에서
+            숨겨집니다.
           </p>
         </Panel>
 

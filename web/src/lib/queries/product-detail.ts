@@ -38,6 +38,7 @@ type DetailRow = {
   price: number;
   stock: number;
   sold_out: boolean;
+  same_day: boolean;
   description: string | null;
   material: string | null;
   size: string | null;
@@ -57,7 +58,7 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
   const { data } = await db
     .from("products")
     .select(
-      "id, name, price, stock, sold_out, description, material, size, care, origin, images, options, stock_option, enabled_addons, category_id, categories(slug, name_en, name_ko)",
+      "id, name, price, stock, sold_out, same_day, description, material, size, care, origin, images, options, stock_option, enabled_addons, category_id, categories(slug, name_en, name_ko)",
     )
     .eq("id", id)
     .eq("is_active", true)
@@ -70,6 +71,7 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
     price: data.price,
     stock: data.stock,
     sold_out: data.sold_out,
+    same_day: data.same_day,
     description: data.description,
     material: data.material,
     size: data.size,
@@ -130,7 +132,7 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
     data.category_id
       ? db
           .from("products")
-          .select("id, name, price, stock, sold_out, images, categories(name_en)")
+          .select("id, name, price, stock, sold_out, same_day, images, categories(name_en)")
           .eq("is_active", true)
           .eq("category_id", data.category_id)
           .neq("id", id)
@@ -147,6 +149,7 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
       price: number;
       stock: number;
       sold_out: boolean;
+      same_day: boolean;
       images: unknown;
       categories: { name_en: string } | null;
     }[]
@@ -156,6 +159,7 @@ async function load(id: string): Promise<ProductDetailBundle | null> {
     price: p.price,
     stock: p.stock,
     sold_out: p.sold_out,
+    same_day: p.same_day,
     image: firstImage(p.images),
     image2: secondImage(p.images),
     category: p.categories?.name_en,

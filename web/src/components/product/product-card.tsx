@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ImageIcon } from "lucide-react";
 import { CardImage } from "@/components/product/card-image";
 import { Price } from "@/components/product/price";
+import { SameDayBadge } from "@/components/product/same-day-badge";
 import { isStockSoldOut } from "@/lib/inventory";
 
 export interface ProductCardData {
@@ -17,6 +18,8 @@ export interface ProductCardData {
   stock?: number;
   // 강제 품절(대표님) — 재고 수량과 무관하게 품절 표시. 재고 0 과 OR 로 합쳐 판단.
   sold_out?: boolean;
+  // 당일발송 표시(대표님 #838) — 재고와 무관하게 관리자가 켠다. 품절이면 숨긴다.
+  same_day?: boolean;
 }
 
 export function ProductCard({
@@ -35,6 +38,8 @@ export function ProductCard({
   const soldOut =
     (product.stock !== undefined && isStockSoldOut(product.stock)) ||
     product.sold_out === true;
+  // 품절이면 살 수 없으니 당일발송 뱃지는 숨긴다.
+  const sameDay = product.same_day === true && !soldOut;
 
   return (
     <Link href={href} className="group block">
@@ -61,10 +66,14 @@ export function ProductCard({
           />
         )}
       </div>
-      {product.category && (
-        <p className="mt-2.5 text-[11px] text-wabi-fg-muted">
-          {product.category}
-        </p>
+      {/* 카테고리 줄 — 오른쪽 끝에 당일발송 도장(대표님 #838, 이름 줄을 밀지 않게). */}
+      {(product.category || sameDay) && (
+        <div className="mt-2.5 flex items-center justify-between gap-2">
+          {product.category && (
+            <p className="text-[11px] text-wabi-fg-muted">{product.category}</p>
+          )}
+          {sameDay && <SameDayBadge className="ml-auto" />}
+        </div>
       )}
       <p className="mt-1 text-[13px]">{product.name}</p>
       {/* 가격(대표님 — 카드 글씨 전체적으로 작게). 숫자 Cormorant, "원" 작고 흐린 접미(Price) */}

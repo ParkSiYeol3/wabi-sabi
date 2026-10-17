@@ -27,6 +27,7 @@ import {
 } from "@/lib/queries/content";
 import { enabledAddons } from "@/lib/addons";
 import { isStockSoldOut } from "@/lib/inventory";
+import { SameDayBadge } from "@/components/product/same-day-badge";
 import { createClient } from "@/lib/supabase/server";
 import { SITE_URL } from "@/lib/site-url";
 import { BASE_SHIPPING_FEE } from "@/lib/shipping";
@@ -285,13 +286,22 @@ export default async function ProductDetailPage({
 
         {/* 정보 — 히어로에만. sticky 아님(첫 사진과 함께 스크롤). */}
         <div>
-          {product.category && (
-            <Link
-              href={`/shop?category=${product.category.slug}`}
-              className="text-xs text-wabi-fg-muted hover:text-wabi-fg"
-            >
-              {product.category.name_en}
-            </Link>
+          {/* 카테고리 줄 — 오른쪽 끝에 당일발송 도장(대표님 #838). 목록 카드와 같은 자리.
+              품절이면 살 수 없으니 숨긴다. */}
+          {(product.category || (product.same_day && !soldOut)) && (
+            <div className="flex items-center justify-between gap-2">
+              {product.category && (
+                <Link
+                  href={`/shop?category=${product.category.slug}`}
+                  className="text-xs text-wabi-fg-muted hover:text-wabi-fg"
+                >
+                  {product.category.name_en}
+                </Link>
+              )}
+              {product.same_day && !soldOut && (
+                <SameDayBadge size="md" className="ml-auto" />
+              )}
+            </div>
           )}
           <div className="mt-2 flex items-start justify-between gap-4">
             <h1 className="text-2xl font-semibold">{product.name}</h1>
