@@ -8,7 +8,13 @@ import { logAdminAction } from "@/lib/audit";
 import { sendOrderShippedMail } from "@/lib/emails/order-shipped";
 import { completeDelivery } from "@/lib/delivery";
 import { traceShipment, traceSource } from "@/lib/courier-trace";
-import { cancelPaidOrder, type CancelResult } from "@/lib/payments";
+import {
+  cancelPaidOrder,
+  partialCancelOrderItem,
+  refundPartialCancel,
+  type CancelResult,
+  type PartialCancelResult,
+} from "@/lib/payments";
 import { DEFAULT_COURIER, isCourierCode } from "@/lib/orders";
 
 // 송장번호 입력 + 상태 배송중 전환
@@ -212,6 +218,57 @@ export async function adminCancelOrder(orderId: string): Promise<CancelResult> {
     });
     revalidatePath("/admin/orders");
   }
+  return result;
+}
+
+// 관리자 부분취소(#844) — 품절 상품 줄만 취소하고 그 금액만 환불(배송비·쿠폰 그대로).
+// 배송 전(paid)만. 실환불이 걸려 클라이언트 확인 모달 뒤에 호출한다. 검증·환불 순서는
+// lib/payments partialCancelOrderItem 참고.
+export async function adminPartialCancel(
+  orderId: string,
+  itemId: string,
+  quantity: number,
+): Promise<PartialCancelResult> {
+  const user = await requireAdmin();
+  if (!adminConfigured()) return { ok: false, error: "서버 키 미설정" };
+
+  const id = parseUuid(orderId);
+  const item = parseUuid(itemId);
+  if (!id || !item || !Number.isInteger(quantity) || quantity < 1)
+    return { ok: false, error: "취소 정보가 올바르지 않습니다." };
+
+  const result = await partialCancelOrderItem(id, item, quantity);
+  // 환불 실패여도 취소(수량·재고)는 처리됐으면 기록을 남긴다(amount 가 있으면 처리됨).
+  if (result.ok || result.amount) {
+    await logAdminAction(user, {
+      action: "order.partial_cancel",
+      targetTable: "orders",
+      targetId: id,
+      meta: { item, quantity, amount: result.amount, refunded: result.ok },
+    });
+    revalidatePath("/admin/orders");
+  }
+  return result;
+}
+
+// 부분취소 환불 다시 시도(#844) — 취소는 됐는데 토스 환불이 안 된 기록. 이미 환불된 건
+// 기록만 맞추고, 더 돌려줄 금액이 없으면 환불하지 않는다(refundPartialCancel).
+export async function adminRetryPartialRefund(
+  cancelId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const user = await requireAdmin();
+  if (!adminConfigured()) return { ok: false, error: "서버 키 미설정" };
+  const id = parseUuid(cancelId);
+  if (!id) return { ok: false, error: "기록이 올바르지 않습니다." };
+
+  const result = await refundPartialCancel(id);
+  await logAdminAction(user, {
+    action: "order.partial_refund_retry",
+    targetTable: "order_partial_cancels",
+    targetId: id,
+    meta: { ok: result.ok },
+  });
+  revalidatePath("/admin/orders");
   return result;
 }
 
