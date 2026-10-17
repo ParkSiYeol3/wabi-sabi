@@ -3,6 +3,7 @@ import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { firstImage } from "./layout";
 import { orderRecipientEmail } from "./recipient";
 import { orderShippedMail } from "./templates";
+import { activeLines } from "@/lib/orders";
 
 // 배송 시작 메일 (#129) — 송장이 등록돼도 고객에게 알림이 가지 않았다.
 // 어드민이 송장을 실제로 저장했을 때(처음 입력·번호 변경, #746)만 호출된다.
@@ -50,7 +51,7 @@ export async function sendOrderShippedMail(
       trackingNumber,
       recipient: order.recipient,
       address: order.address,
-      items: (order.order_items ?? []).map((it) => ({
+      items: activeLines(order.order_items ?? []).map((it) => ({
         name: it.product_name,
         quantity: it.quantity,
         image: firstImage(it.products?.images),

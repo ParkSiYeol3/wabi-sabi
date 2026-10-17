@@ -4,6 +4,7 @@ import { SITE_URL } from "@/lib/site-url";
 import { firstImage } from "./layout";
 import { orderRecipientEmail } from "./recipient";
 import { orderDeliveredMail } from "./templates";
+import { activeLines } from "@/lib/orders";
 
 // 배송 완료 + 리뷰 요청(#783). 관리자 배송완료 처리(markDelivered)가 실제로 상태를
 // 바꾼 때만 호출된다(이미 완료된 주문은 0행이라 여기 오지 않는다 → 1회).
@@ -29,7 +30,7 @@ function reviewHref(o: Row): string | null {
   if (!o.user_id) return null;
   const ids = [
     ...new Set(
-      o.order_items
+      activeLines(o.order_items)
         .filter((it) => it.product_id && it.products?.is_active)
         .map((it) => it.product_id as string),
     ),
@@ -61,7 +62,7 @@ export async function sendOrderDeliveredMail(orderId: string): Promise<void> {
       orderNumber: order.order_number,
       deliveredAt: order.delivered_at,
       reviewHref: reviewHref(order),
-      items: order.order_items.map((it) => ({
+      items: activeLines(order.order_items).map((it) => ({
         name: it.product_name,
         quantity: it.quantity,
         image: firstImage(it.products?.images),

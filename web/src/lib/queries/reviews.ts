@@ -121,6 +121,8 @@ export async function hasPurchased(productId: string): Promise<boolean> {
     .eq("product_id", productId)
     .eq("orders.user_id", user.id)
     .in("orders.status", PURCHASED_STATUSES)
+    // 품절 취소(#844)로 전부 취소된 줄은 구매가 아니다(RLS 0081 과 같은 기준).
+    .gt("quantity", 0)
     .limit(1);
 
   if (error) {
