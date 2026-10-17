@@ -24,7 +24,11 @@ import {
   DEFAULT_SHIPPING_INFO,
   SHIPPING_FEE_KEY,
   DEFAULT_SHIPPING_FEE,
+  SAME_DAY_NOTICE_THIS,
+  SAME_DAY_NOTICE_GENERAL,
+  SAME_DAY_NOTE,
 } from "@/lib/queries/content";
+import { cn } from "@/lib/utils";
 import { enabledAddons } from "@/lib/addons";
 import { isStockSoldOut } from "@/lib/inventory";
 import { SameDayBadge } from "@/components/product/same-day-badge";
@@ -375,10 +379,29 @@ export default async function ProductDetailPage({
           {/* 배송 안내 (토스 심사 보완요청 ① — 배송기간 명시). 문구는 대표님이
               어드민에서 편집(SHIPPING_INFO_KEY), 미저장 시 기본값 폴백. 줄바꿈 보존.
               대표님 요청(2026-08-20): 접이식 대신 항상 펼쳐 글자가 바로 보이게. */}
-          <div className="mt-8 border-t border-wabi-border pt-4 text-sm">
+          {/* 스펙 표 바로 아래면 표의 다음 줄처럼 같은 간격으로 붙인다(대표님 2026-10-18:
+              주의사항 아래 여백이 44px 로 표 줄 간격 24px 보다 훨씬 벌어져 보였다). */}
+          <div
+            className={cn(
+              "border-t border-wabi-border text-sm",
+              specs.length > 0 ? "pt-3" : "mt-8 pt-4",
+            )}
+          >
             <p className="font-medium text-wabi-fg">배송 안내</p>
             <div className="mt-3 space-y-2 font-numeric text-wabi-fg">
               <p className="whitespace-pre-line">{shippingInfo}</p>
+              {/* 당일발송 안내(대표님 2026-10-18) — 모든 상품에 보이되, 당일발송 상품이면
+                  뱃지와 "이 상품은", 아니면 뱃지 없이 일반 안내(해당 상품처럼 읽히지 않게). */}
+              <div>
+                {product.same_day && !soldOut ? (
+                  <p>
+                    <SameDayBadge className="align-[1px]" /> {SAME_DAY_NOTICE_THIS}
+                  </p>
+                ) : (
+                  <p>{SAME_DAY_NOTICE_GENERAL}</p>
+                )}
+                <p className="mt-1 text-xs text-wabi-fg-muted">{SAME_DAY_NOTE}</p>
+              </div>
               <p className="whitespace-pre-line">{shippingFee}</p>
             </div>
           </div>
