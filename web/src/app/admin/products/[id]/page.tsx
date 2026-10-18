@@ -8,6 +8,7 @@ import {
   type ProductEditValues,
 } from "@/components/admin/product-edit-form";
 import { ProductImageManager } from "@/components/admin/product-image-manager";
+import { ConfirmAction } from "@/components/admin/confirm-action";
 import { SubmitButton } from "@/components/common/submit-button";
 import {
   updateStock,
@@ -265,15 +266,24 @@ export default async function AdminProductEditPage({
             삭제하면 되돌릴 수 없습니다. 잠시 감추려면 위의 &lsquo;공개중 →
             비공개&rsquo;를 사용하세요.
           </p>
-          <form action={deleteProduct} className="mt-3">
-            <input type="hidden" name="id" value={row.id} />
-            <SubmitButton
+          {/* 바로 지워지지 않게 확인 창(대표님 2026-10-18, 사진 삭제와 함께). */}
+          <div className="mt-3">
+            <ConfirmAction
+              action={deleteProduct}
+              fields={{ id: row.id }}
+              title={`‘${row.name}’ 상품을 삭제할까요?`}
+              description={
+                <>
+                  상품이 <b className="text-wabi-fg">영구 삭제</b>되고 되돌릴 수 없어요.
+                  잠시 감추려면 위의 ‘비공개’를 쓰세요.
+                </>
+              }
+              confirmLabel="상품 삭제"
               pendingText="삭제 중…"
-              className={adminAction({ tone: "danger" })}
-            >
-              상품 삭제
-            </SubmitButton>
-          </form>
+              trigger="상품 삭제"
+              triggerClassName={adminAction({ tone: "danger" })}
+            />
+          </div>
         </Panel>
       </div>
     </>
