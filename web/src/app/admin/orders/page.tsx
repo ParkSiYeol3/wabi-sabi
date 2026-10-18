@@ -108,6 +108,20 @@ function orderedAt(iso: string): string {
   });
 }
 
+// 수량 — 포장할 때 놓치지 않게 크고 진하게(대표님 2026-10-18: 흐린 작은 "× 2"가 잘 안
+// 보였다). 2개 이상은 먹색 칸으로 한 번 더 강조한다(1개가 대부분이라 여러 개가 튀어야 한다).
+function QtyMark({ n }: { n: number }) {
+  return n >= 2 ? (
+    <span className="ml-1.5 inline-block bg-wabi-accent px-1.5 py-0.5 align-[1px] text-sm leading-none font-semibold whitespace-nowrap text-white">
+      × {n}
+    </span>
+  ) : (
+    <span className="ml-1.5 text-sm font-semibold whitespace-nowrap text-wabi-fg">
+      × {n}
+    </span>
+  );
+}
+
 // 발송 품목 — 사진 + 상품명 ×수량 + 고른 옵션(색상 등)·추가옵션. 표·카드 공용.
 function ItemsList({ items }: { items: OrderItem[] }) {
   return (
@@ -137,7 +151,7 @@ function ItemsList({ items }: { items: OrderItem[] }) {
             <span className="min-w-0 break-keep">
               <span>
                 {it.product_name}
-                <span className="text-wabi-fg-muted"> × {it.quantity}</span>
+                <QtyMark n={it.quantity} />
               </span>
               {it.options && it.options.length > 0 && (
                 <span className="block text-xs text-wabi-accent">
