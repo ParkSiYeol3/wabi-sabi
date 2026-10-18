@@ -26,6 +26,7 @@ import { EpostCheckButton } from "@/components/admin/epost-check-button";
 import { traceSource } from "@/lib/courier-trace";
 import { TrackingForm } from "@/components/admin/tracking-form";
 import { formatPhone } from "@/lib/phone";
+import { backfillPaymentMethods } from "@/lib/payments";
 
 type OrderItem = {
   id: string;
@@ -59,6 +60,11 @@ type Order = {
   delivered_at: string | null;
   // 품절 취소(#844)로 환불한 누계. total_price 는 남은 결제 금액.
   refunded_amount: number;
+  // 결제 방법·쿠폰을 한 번에(대표님 2026-10-18). payment_method 는 0082 표시 문구.
+  payment_method: string | null;
+  shipping_fee: number;
+  discount: number;
+  coupons: { code: string } | null;
   // 발송 시 무엇을·어떤 옵션(색상 등)으로 보낼지 대표님이 바로 보게(0048).
   order_items: OrderItem[];
   // 품절 취소 기록 — refunded_at 이 비면 토스 환불 미확인(다시 시도 버튼).
@@ -103,10 +109,20 @@ async function loadOrders() {
   const { data } = await createAdminClient()
     .from("orders")
     .select(
-      "id, order_number, status, total_price, recipient, phone, address, delivery_memo, preparing_at, ordered_at, tracking_number, courier, shipped_at, delivered_at, refunded_amount, order_items(id, product_id, product_name, price, quantity, cancelled_quantity, options, addons, products(images)), order_partial_cancels(id, product_name, quantity, amount, refunded_at)",
+      "id, order_number, status, total_price, recipient, phone, address, delivery_memo, preparing_at, ordered_at, tracking_number, courier, shipped_at, delivered_at, refunded_amount, payment_method, shipping_fee, discount, coupons(code), order_items(id, product_id, product_name, price, quantity, cancelled_quantity, options, addons, products(images)), order_partial_cancels(id, product_name, quantity, amount, refunded_at)",
     )
     .order("ordered_at", { ascending: false })
     .returns<Order[]>();
+  // 결제 수단이 비어 있는 결제된 주문(0082 이전)은 토스 조회로 한 번 채운다. 이후엔 저장값.
+  if (data) {
+    const missing = data
+      .filter((o) => !o.payment_method && o.status !== "pending")
+      .map((o) => o.id);
+    if (missing.length > 0) {
+      const filled = await backfillPaymentMethods(missing);
+      for (const o of data) if (filled[o.id]) o.payment_method = filled[o.id];
+    }
+  }
   // 경과 일수 기준 시각(렌더 중 Date.now 는 순수성 규칙 위반이라 여기서).
   return { orders: data, nowMs: Date.now() };
 }
@@ -217,6 +233,26 @@ function ItemsList({ o }: { o: Order }) {
         );
       })}
     </ul>
+  );
+}
+
+// 결제 방법·쿠폰·배송비(대표님 2026-10-18) — 금액 아래 작은 줄로 한 번에. 결제 수단은
+// 결제 확정 때 저장(0082), 그 전 주문은 첫 조회 때 토스에서 채운다.
+function PaymentInfo({ o }: { o: Order }) {
+  return (
+    <div className="mt-1 space-y-0.5 text-xs whitespace-normal text-wabi-fg-muted">
+      <p>
+        {o.payment_method ?? (o.status === "pending" ? "결제 전" : "결제 수단 확인 중")}
+      </p>
+      {o.discount > 0 ? (
+        <p className="font-medium text-wabi-fg">
+          쿠폰{o.coupons?.code ? ` ${o.coupons.code}` : ""} −{won(o.discount)}
+        </p>
+      ) : (
+        <p>쿠폰 없음</p>
+      )}
+      <p>배송비 {o.shipping_fee > 0 ? won(o.shipping_fee) : "무료"}</p>
+    </div>
   );
 }
 
@@ -350,6 +386,7 @@ export default async function AdminOrdersPage() {
                       </td>
                       <td className="px-4 py-3 align-top whitespace-nowrap lining-nums tabular-nums">
                         {won(o.total_price)}
+                        <PaymentInfo o={o} />
                         <RefundInfo o={o} />
                       </td>
                       <td className="px-4 py-3 align-top">
@@ -429,6 +466,7 @@ export default async function AdminOrdersPage() {
                     <dt className="text-wabi-fg-muted">금액</dt>
                     <dd className="text-right lining-nums tabular-nums">
                       {won(o.total_price)}
+                      <PaymentInfo o={o} />
                       <RefundInfo o={o} />
                     </dd>
                   </div>
