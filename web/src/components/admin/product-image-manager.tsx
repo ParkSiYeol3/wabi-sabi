@@ -7,6 +7,7 @@ import { SubmitButton } from "@/components/common/submit-button";
 import { ProductImageAdder } from "@/components/admin/product-image-adder";
 import { ProductImageEditButton } from "@/components/admin/product-image-edit-button";
 import { SortableImageGrid } from "@/components/admin/sortable-image-grid";
+import { ConfirmAction } from "@/components/admin/confirm-action";
 import {
   removeProductImage,
   removeProductImages,
@@ -185,17 +186,27 @@ export function ProductImageManager({
                     <GripVertical className="size-3.5" aria-hidden />
                   </span>
                 )}
-                <form action={removeProductImage}>
-                  <input type="hidden" name="id" value={productId} />
-                  <input type="hidden" name="url" value={url} />
-                  <SubmitButton
-                    pendingText="…"
-                    aria-label="이미지 삭제"
-                    className="absolute -right-1.5 -top-1.5 flex size-6 cursor-pointer items-center justify-center rounded-full bg-red-600 text-white shadow-sm transition-colors hover:bg-red-700"
-                  >
-                    <X className="size-3.5" aria-hidden />
-                  </SubmitButton>
-                </form>
+                {/* 한 장 삭제 — 잘못 눌러도 바로 지워지지 않게 확인 창(대표님 2026-10-18). */}
+                <ConfirmAction
+                  action={removeProductImage}
+                  fields={{ id: productId, url }}
+                  title={`${i === 0 ? "대표" : `상세${i}`} 사진을 삭제할까요?`}
+                  preview={
+                    <Image
+                      src={url}
+                      alt=""
+                      width={96}
+                      height={96}
+                      className="size-24 rounded-lg object-cover"
+                    />
+                  }
+                  description="삭제하면 되돌릴 수 없어요. 다시 쓰려면 사진을 새로 올려야 합니다."
+                  confirmLabel="삭제"
+                  pendingText="삭제 중…"
+                  trigger={<X className="size-3.5" aria-hidden />}
+                  triggerLabel="이미지 삭제"
+                  triggerClassName="absolute -right-1.5 -top-1.5 flex size-6 cursor-pointer items-center justify-center rounded-full bg-red-600 text-white shadow-sm transition-colors hover:bg-red-700"
+                />
               </span>
               {/* 대표로 지정 — 첫 장이 아니면 노출. 원클릭으로 맨 앞으로. */}
               {i !== 0 && (
