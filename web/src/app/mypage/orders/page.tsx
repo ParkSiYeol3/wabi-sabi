@@ -10,6 +10,7 @@ import { TrackButton } from "@/components/account/track-button";
 import { OrderStatusBadge } from "@/components/common/order-status-badge";
 import { createClient } from "@/lib/supabase/server";
 import {
+  activeLines,
   byLineAmount,
   formatDateKST,
   withdrawalDeadlineKST,
@@ -42,6 +43,8 @@ type Order = {
   tracking_number: string | null;
   courier: string | null;
   total_price: number;
+  // 품절 취소(#844)로 환불한 누계 — 있으면 결제 금액 옆에 한 줄.
+  refunded_amount: number;
   ordered_at: string;
   delivered_at: string | null;
   order_items: OrderItem[];
@@ -64,7 +67,7 @@ export default async function OrdersPage() {
   const { data: orders } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, preparing_at, tracking_number, courier, total_price, ordered_at, delivered_at, order_items(product_id, product_name, price, quantity, options, products(images))",
+      "id, order_number, status, preparing_at, tracking_number, courier, total_price, refunded_amount, ordered_at, delivered_at, order_items(product_id, product_name, price, quantity, options, products(images))",
     )
     // 미결제(pending)는 숨긴다 — 결제창을 열었다가 결제하지 않고 뒤로가면 주문이
     // pending 으로 남는데(결제 전 orderId 발급이 필요한 토스 결제창 구조), 이는
@@ -96,7 +99,8 @@ export default async function OrdersPage() {
           {orders.map((o) => {
             // 상품은 한 줄에 하나(#761, 카페24 기본 주문조회·쿠팡 방식). 금액 큰 순,
             // 3개까지 펼치고 나머지는 접는다(주문 하나가 화면을 다 차지하지 않게).
-            const items = byLineAmount(o.order_items);
+            // 품절 취소(#844)로 0개가 된 줄은 목록에서 뺀다(주문 상세에선 보여 준다).
+            const items = byLineAmount(activeLines(o.order_items));
             const shown = items.slice(0, ITEMS_SHOWN);
             const hidden = items.slice(ITEMS_SHOWN);
             // 리뷰 버튼은 상품 줄마다(#770). 주문 단위 버튼은 여러 상품이면 어느 상품인지
@@ -172,6 +176,15 @@ export default async function OrdersPage() {
                     <Price value={o.total_price} />
                   </span>
                 </p>
+                {o.refunded_amount > 0 && (
+                  <p className="mt-1 text-right text-xs text-red-700">
+                    품절 취소로{" "}
+                    <span className="font-numeric">
+                      {o.refunded_amount.toLocaleString("ko-KR")}원
+                    </span>{" "}
+                    환불됨
+                  </p>
+                )}
 
                 {o.delivered_at && (
                   <p className="mt-3 font-numeric text-xs text-wabi-fg-muted">

@@ -102,6 +102,12 @@ export function trackingUrl(courier: string | null | undefined, invoice: string)
   return courierOf(courier).trackUrl(invoice);
 }
 
+// 부분취소(#844)로 수량이 0 이 된 줄을 뺀 실제 주문 상품 — 목록 요약·메일용. 주문 상세는
+// 취소된 줄도 '품절 취소'로 보여 주므로 이걸 쓰지 않는다.
+export function activeLines<T extends { quantity: number }>(items: T[]): T[] {
+  return items.filter((it) => it.quantity > 0);
+}
+
 // 주문 상품 표시 순서(#761). order_items 엔 담은 순서가 저장되지 않아 DB 가 돌려주는
 // 순서가 매번 같다는 보장이 없다 → 금액(단가×수량) 큰 순. 요약의 대표 상품도 이 순서의 첫 번째.
 export function byLineAmount<T extends { price: number; quantity: number }>(items: T[]): T[] {

@@ -100,18 +100,26 @@ export default function OrderLookupPage() {
             {order.order_items.map((it, i) => (
               <li key={i} className="py-3">
                 <div className="flex items-baseline justify-between gap-4">
-                  <span className="text-sm">
-                    {it.product_name} × {it.quantity}
+                  {/* 전부 품절 취소(#844)된 줄은 지운 줄로, 남은 수량이 있으면 그대로. */}
+                  <span className={it.quantity === 0 ? "text-sm text-wabi-fg-muted line-through" : "text-sm"}>
+                    {it.product_name} × {it.quantity || it.cancelled_quantity}
                   </span>
-                  <Price
-                    value={it.price * it.quantity}
-                    className="text-sm text-wabi-fg-muted"
-                  />
+                  {it.quantity > 0 && (
+                    <Price
+                      value={it.price * it.quantity}
+                      className="text-sm text-wabi-fg-muted"
+                    />
+                  )}
                 </div>
+                {it.cancelled_quantity > 0 && (
+                  <p className="mt-1 text-xs text-red-700">
+                    품절 취소 {it.cancelled_quantity}개 · 환불됨
+                  </p>
+                )}
                 {(it.addons ?? []).map((a) => (
                   <div
                     key={a.code}
-                    className="mt-1 flex items-baseline justify-between gap-4 pl-3 text-xs text-wabi-fg-muted"
+                    className={`mt-1 flex items-baseline justify-between gap-4 pl-3 text-xs text-wabi-fg-muted${it.quantity === 0 ? " line-through" : ""}`}
                   >
                     <span>+ {a.name}</span>
                     <Price value={a.price} className="text-xs" />
@@ -129,6 +137,12 @@ export default function OrderLookupPage() {
               <span>무료</span>
             )}
           </div>
+          {order.refunded_amount > 0 && (
+            <div className="mt-2 flex items-center justify-between text-sm text-wabi-fg-muted">
+              <span>품절 취소 환불</span>
+              <span className="font-numeric">−{order.refunded_amount.toLocaleString("ko-KR")}원</span>
+            </div>
+          )}
           <div className="mt-2 flex items-center justify-between">
             <span className="text-sm font-medium">결제금액</span>
             <Price value={order.total_price} className="text-base font-semibold" />
