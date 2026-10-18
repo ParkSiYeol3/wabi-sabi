@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { NOINDEX } from "@/lib/seo";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, Truck } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductGallery } from "@/components/product/product-gallery";
@@ -205,6 +205,8 @@ export default async function ProductDetailPage({
   // 강제 품절(sold_out). 비공개는 이미 is_active 필터로 이
   // 페이지에 도달하지 못한다(404).
   const soldOut = isStockSoldOut(product.stock) || product.sold_out;
+  // 당일발송 표시(대표님 #838) — 품절이면 살 수 없으니 숨긴다. 카테고리 줄·배송 안내 공용.
+  const sameDay = product.same_day && !soldOut;
   // 값별 가격(0061)이 하나라도 있으면 표시 가격은 '최저가~'가 된다.
   const hasVariantPrices =
     Object.keys(product.variantPrices ?? {}).length > 0;
@@ -292,7 +294,7 @@ export default async function ProductDetailPage({
         <div>
           {/* 카테고리 줄 — 오른쪽 끝에 당일발송 뱃지(대표님 #838). 목록 카드와 같은 자리.
               품절이면 살 수 없으니 숨긴다. */}
-          {(product.category || (product.same_day && !soldOut)) && (
+          {(product.category || sameDay) && (
             <div className="flex items-center justify-between gap-2">
               {product.category && (
                 <Link
@@ -302,7 +304,7 @@ export default async function ProductDetailPage({
                   {product.category.name_en}
                 </Link>
               )}
-              {product.same_day && !soldOut && (
+              {sameDay && (
                 <SameDayBadge size="md" className="ml-auto" />
               )}
             </div>
@@ -390,19 +392,23 @@ export default async function ProductDetailPage({
             <p className="font-medium text-wabi-fg">배송 안내</p>
             <div className="mt-3 space-y-2 font-numeric text-wabi-fg">
               <p className="whitespace-pre-line">{shippingInfo}</p>
-              {/* 당일발송 안내(대표님 2026-10-18) — 모든 상품에 보이되, 당일발송 상품이면
-                  뱃지와 "이 상품은", 아니면 뱃지 없이 일반 안내(해당 상품처럼 읽히지 않게). */}
-              <div>
-                {product.same_day && !soldOut ? (
-                  <p>
-                    <SameDayBadge className="align-[1px]" /> {SAME_DAY_NOTICE_THIS}
-                  </p>
-                ) : (
-                  <p>{SAME_DAY_NOTICE_GENERAL}</p>
-                )}
-                <p className="mt-1 text-xs text-wabi-fg-muted">{SAME_DAY_NOTE}</p>
-              </div>
               <p className="whitespace-pre-line">{shippingFee}</p>
+            </div>
+
+            {/* 당일발송 안내(대표님 2026-10-18) — 배송 문단에 붙어 있으니 묻혀서(시열님)
+                테두리·옅은 바탕의 따로 된 칸으로. 모든 상품에 보이되 당일발송 상품이면
+                뱃지와 "이 상품은", 아니면 일반 안내(해당 상품처럼 읽히지 않게, #850). */}
+            <div className="mt-4 border border-wabi-border bg-wabi-subtle/70 px-4 py-3.5 font-numeric">
+              <p className="flex items-center gap-2 font-medium text-wabi-fg">
+                <Truck className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
+                당일발송
+              </p>
+              <p className="mt-1.5 text-wabi-fg">
+                {sameDay ? SAME_DAY_NOTICE_THIS : SAME_DAY_NOTICE_GENERAL}
+              </p>
+              <p className="mt-3 border-t border-wabi-border pt-2.5 text-xs leading-relaxed text-wabi-fg-muted">
+                {SAME_DAY_NOTE}
+              </p>
             </div>
           </div>
 
