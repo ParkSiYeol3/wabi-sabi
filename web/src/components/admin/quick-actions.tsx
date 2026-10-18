@@ -3,12 +3,13 @@ import { ADMIN_NAV, type AdminNavItem } from "./nav";
 
 // 대시보드 바로가기(대표님 — 사이드바 드로어를 열지 않고 대시보드에서 한 번에 이동).
 // admin 진입 → 대시보드(운영 현황) → 여기서 원탭으로 자주 쓰는 섹션으로. 자주 쓰는
-// 6개만: 상품·주문·매출·오늘의 와비사비·문의·리뷰. 라벨·아이콘은 사이드바 nav 재사용.
+// 6개만: 상품·주문·매출·회원 관리·문의·리뷰. 라벨·아이콘은 사이드바 nav 재사용.
+// (오늘의 와비사비 → 회원 관리, 대표님 2026-10-18. 오늘의 와비사비는 사이드바에 그대로.)
 const QUICK_HREFS = [
   "/admin/products",
   "/admin/orders",
   "/admin/sales",
-  "/admin/moments",
+  "/admin/members",
   "/admin/inquiries",
   "/admin/reviews",
 ] as const;
