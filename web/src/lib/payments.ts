@@ -19,6 +19,63 @@ function tossAuth(): string {
   return `Basic ${Buffer.from(`${process.env.TOSS_SECRET_KEY}:`).toString("base64")}`;
 }
 
+// 결제 수단 표시 문구(대표님 2026-10-18, 주문 관리) — 토스 Payment 객체에서. 간편결제면
+// 제공사 이름(카카오페이·토스페이 등), 카드면 신용/체크, 할부면 개월 수. 모르면 null.
+type TossMethodInfo = {
+  method?: string | null;
+  easyPay?: { provider?: string | null } | null;
+  card?: { cardType?: string | null; installmentPlanMonths?: number | null } | null;
+};
+export function paymentLabel(p: TossMethodInfo | null | undefined): string | null {
+  if (!p?.method) return null;
+  const provider = p.easyPay?.provider?.trim();
+  let label = provider
+    ? provider
+    : p.method === "카드" && p.card?.cardType
+      ? `카드(${p.card.cardType})`
+      : p.method;
+  const months = p.card?.installmentPlanMonths ?? 0;
+  if (months > 0) label += ` · ${months}개월 할부`;
+  return label.slice(0, 60);
+}
+
+// 결제 수단 저장 — 비어 있을 때만(덮어쓰지 않음). 실패해도 결제 흐름은 그대로(표시용).
+async function savePaymentMethod(orderId: string, p: TossMethodInfo | null | undefined) {
+  const label = paymentLabel(p);
+  if (!label) return;
+  const { error } = await createAdminClient()
+    .from("orders")
+    .update({ payment_method: label })
+    .eq("id", orderId)
+    .is("payment_method", null);
+  if (error) console.error("[payments] 결제 수단 저장 실패 orderId=", orderId, error);
+}
+
+// 결제 수단이 비어 있는 주문을 토스 조회로 채운다(0082 이전 주문 — 관리자 주문 화면이
+// 열릴 때 한 번). 한 번에 최대 limit 건, 건당 8초 제한. 채운 값을 돌려줘 이번 화면에도 쓴다.
+export async function backfillPaymentMethods(
+  orderIds: string[],
+  limit = 10,
+): Promise<Record<string, string>> {
+  if (!process.env.TOSS_SECRET_KEY || !adminConfigured()) return {};
+  const filled: Record<string, string> = {};
+  await Promise.all(
+    orderIds.slice(0, limit).map(async (id) => {
+      const res = await fetch(`${TOSS_API}/orders/${id}`, {
+        headers: { Authorization: tossAuth() },
+        signal: AbortSignal.timeout(8_000),
+      }).catch(() => null);
+      if (!res?.ok) return;
+      const p = (await res.json().catch(() => null)) as TossMethodInfo | null;
+      const label = paymentLabel(p);
+      if (!label) return;
+      await savePaymentMethod(id, p);
+      filled[id] = label;
+    }),
+  );
+  return filled;
+}
+
 // final: 재시도해도 결과가 달라지지 않는 확정 실패(재고 소진·상태 불일치 등).
 // 웹훅이 이를 200 으로 수신 확인해 무의미한 토스 재시도를 끊는다.
 export type ConfirmResult = { ok: boolean; error?: string; final?: boolean };
@@ -47,8 +104,12 @@ export async function confirmPayment(
     headers: { Authorization: tossAuth(), "Content-Type": "application/json" },
     body: JSON.stringify({ paymentKey, orderId, amount: order.total_price }),
   });
+  // 승인된 결제 정보(결제 수단 표시용, 0082). 실패 응답이면 아래에서 다시 채운다.
+  let approved: TossMethodInfo | null = null;
 
-  if (!res.ok) {
+  if (res.ok) {
+    approved = (await res.json().catch(() => null)) as TossMethodInfo | null;
+  } else {
     const body = await res.json().catch(() => ({}));
     // 이미 승인된 결제(새로고침/웹훅 경합) → 실제 결제 내역을 조회해 검증
     if (body.code === "ALREADY_PROCESSED_PAYMENT") {
@@ -63,6 +124,7 @@ export async function confirmPayment(
         p.totalAmount !== order.total_price
       )
         return { ok: false, error: "결제 정보가 주문과 일치하지 않습니다." };
+      approved = p;
     } else {
       // 승인 거부의 실제 원인은 body.code 에 있다(message 는 고객용 요약뿐이라
       // "업체 사정으로 결제가 중지" 같은 모호한 문구로 원인이 가려진다). 로그에
@@ -117,6 +179,9 @@ export async function confirmPayment(
       final: !error,
       error: `주문 확정 실패(${result ?? error?.message})`,
     };
+
+  // 결제 수단 저장(0082) — 표시용이라 실패해도 확정은 그대로.
+  await savePaymentMethod(orderId, approved);
 
   // 주문 확인 메일 (#129) — 'confirmed'(최초 확정)일 때만 보낸다.
   // 성공 페이지와 웹훅이 같은 주문을 동시에 확정하려 하면 한쪽은 'already_paid' 를
