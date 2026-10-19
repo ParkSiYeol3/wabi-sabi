@@ -12,16 +12,18 @@ export function PasswordInput({
   onCompositionEnd,
   ...props
 }: Omit<React.ComponentProps<"input">, "type">) {
-  const [converted, setConverted] = useState(false);
+  // 한글 입력 상태 경고 — 한글을 바꿔 넣으면 켜고, 영문을 치기 시작하거나 칸을 비우면 끈다.
+  const [hangulMode, setHangulMode] = useState(false);
 
   function toQwerty(el: HTMLInputElement) {
     const v = el.value;
-    if (!hasHangul(v)) return;
+    if (!hasHangul(v)) return false;
     const caret = el.selectionStart ?? v.length;
     el.value = hangulToQwerty(v);
     const pos = hangulToQwerty(v.slice(0, caret)).length;
     el.setSelectionRange(pos, pos);
-    setConverted(true);
+    setHangulMode(true);
+    return true;
   }
 
   return (
@@ -34,7 +36,12 @@ export function PasswordInput({
         autoCorrect="off"
         spellCheck={false}
         onInput={(e) => {
-          if (!(e.nativeEvent as InputEvent).isComposing) toQwerty(e.currentTarget);
+          const ne = e.nativeEvent as InputEvent;
+          if (!ne.isComposing && !toQwerty(e.currentTarget)) {
+            if (!e.currentTarget.value || (ne.data && /^[\x20-\x7e]+$/.test(ne.data))) {
+              setHangulMode(false);
+            }
+          }
           onInput?.(e);
         }}
         onCompositionEnd={(e) => {
@@ -42,9 +49,11 @@ export function PasswordInput({
           onCompositionEnd?.(e);
         }}
       />
-      {converted && (
-        <p role="status" className="mt-1 text-xs text-wabi-fg-muted">
-          한글 자판으로 입력된 글자를 영문으로 바꿨어요.
+      {/* 꼭 알아야 하는 안내라 오류와 같은 빨간 글씨(시열님) */}
+      {hangulMode && (
+        <p role="status" className="mt-1 break-keep text-xs leading-5 text-red-700">
+          한글 입력 상태입니다. 영문으로 전환해 주세요. 이미 입력한 글자는 영문으로
+          바꿨습니다.
         </p>
       )}
     </>
