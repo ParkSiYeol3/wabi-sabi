@@ -4,6 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/account/password-input";
+import { PasswordMatchHint, PasswordRuleHint } from "@/components/account/password-hints";
 import { resetPassword, type ResetResult } from "@/app/auth/actions";
 
 // 링크의 토큰(#token_hash=…). # 뒤는 서버로 가지 않아 브라우저에서 읽는다. 주소창에서
@@ -29,6 +30,8 @@ export function ResetPasswordForm() {
   );
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ResetResult | null>(null);
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
 
   // 주소창·방문 기록에 토큰이 남지 않게 지운다.
   useEffect(() => {
@@ -114,10 +117,9 @@ export function ResetPasswordForm() {
           autoComplete="new-password"
           className="rounded-none font-numeric"
           aria-describedby="password-hint"
+          onValueChange={setPassword}
         />
-        <p id="password-hint" className="mt-1 font-numeric text-xs text-wabi-fg-muted">
-          8자 이상, 영문과 숫자를 포함해 주세요.
-        </p>
+        <PasswordRuleHint id="password-hint" value={password} />
       </div>
       <div>
         <label htmlFor="password2" className="mb-1.5 block text-xs text-wabi-fg-muted">
@@ -129,7 +131,9 @@ export function ResetPasswordForm() {
           required
           autoComplete="new-password"
           className="rounded-none font-numeric"
+          onValueChange={setConfirm}
         />
+        <PasswordMatchHint password={password} confirm={confirm} />
       </div>
       {result && !result.ok && (
         <p role="alert" className="font-numeric text-xs text-red-700">

@@ -10,8 +10,12 @@ import { hangulToQwerty, hasHangul } from "@/lib/hangul-keys";
 export function PasswordInput({
   onInput,
   onCompositionEnd,
+  onValueChange,
   ...props
-}: Omit<React.ComponentProps<"input">, "type">) {
+}: Omit<React.ComponentProps<"input">, "type"> & {
+  // 영문으로 바꾼 뒤의 값 — 칸 아래 실시간 확인(조건·일치)에 쓴다.
+  onValueChange?: (value: string) => void;
+}) {
   // 한글 입력 상태 경고 — 한글을 바꿔 넣으면 켜고, 영문을 치기 시작하거나 칸을 비우면 끈다.
   const [hangulMode, setHangulMode] = useState(false);
 
@@ -42,10 +46,12 @@ export function PasswordInput({
               setHangulMode(false);
             }
           }
+          onValueChange?.(e.currentTarget.value);
           onInput?.(e);
         }}
         onCompositionEnd={(e) => {
           toQwerty(e.currentTarget);
+          onValueChange?.(e.currentTarget.value);
           onCompositionEnd?.(e);
         }}
       />

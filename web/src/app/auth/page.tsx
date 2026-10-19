@@ -6,6 +6,7 @@ import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/account/password-input";
+import { PasswordMatchHint, PasswordRuleHint } from "@/components/account/password-hints";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store/auth";
@@ -81,6 +82,9 @@ function AuthForm() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
+  // 가입 비밀번호 실시간 확인(조건·일치)용 값.
+  const [password, setPassword] = useState("");
+  const [password2, setPassword2] = useState("");
 
   async function onOAuth(provider: "kakao" | "google") {
     setError(null);
@@ -178,6 +182,7 @@ function AuthForm() {
         if (!data.session) {
           setNotice("확인 메일을 보냈습니다. 메일의 링크로 인증을 완료해 주세요.");
           setTab("login");
+          setPassword2("");
         } else {
           router.push(redirect);
           router.refresh();
@@ -221,6 +226,8 @@ function AuthForm() {
               setTab(t);
               setError(null);
               setNotice(null);
+              // 확인 칸은 탭을 바꾸면 새로 그려져 비므로 값도 비운다.
+              setPassword2("");
             }}
             className={cn(
               "pb-3 text-sm transition-colors",
@@ -262,11 +269,10 @@ function AuthForm() {
             autoComplete={tab === "login" ? "current-password" : "new-password"}
             className="rounded-none font-numeric"
             aria-describedby={tab === "signup" ? "password-hint" : undefined}
+            onValueChange={setPassword}
           />
           {tab === "signup" ? (
-            <p id="password-hint" className="mt-1 font-numeric text-xs text-wabi-fg-muted">
-              8자 이상, 영문과 숫자를 포함해 주세요.
-            </p>
+            <PasswordRuleHint id="password-hint" value={password} />
           ) : (
             <p className="mt-1.5 text-right">
               <Link
@@ -286,7 +292,9 @@ function AuthForm() {
               required
               autoComplete="new-password"
               className="rounded-none font-numeric"
+              onValueChange={setPassword2}
             />
+            <PasswordMatchHint password={password} confirm={password2} />
           </Field>
         )}
 
