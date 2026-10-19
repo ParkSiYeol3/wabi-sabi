@@ -27,3 +27,12 @@ export function passwordPolicyError(password: string): string | null {
   }
   return null;
 }
+
+// 로그인·가입 뒤 이동할 주소 — 사이트 안 경로("/…")만 허용한다(open redirect 방지).
+// "//host" 와 "/\host" 는 브라우저가 다른 사이트 주소로 읽어서 막는다.
+export function safeInternalPath(raw: string | null | undefined, fallback = "/"): string {
+  if (!raw || !raw.startsWith("/")) return fallback;
+  if (raw.startsWith("//") || raw.startsWith("/\\")) return fallback;
+  if (/[\u0000-\u001f\u007f]/.test(raw)) return fallback;
+  return raw;
+}
