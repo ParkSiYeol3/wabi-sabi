@@ -41,7 +41,8 @@ function send(body: string) {
   }).catch(() => {});
 }
 
-// 유입 쿼리에서 일회용 토큰은 뺀다(비밀번호 재설정 메일 링크 /auth/reset?token_hash=…).
+// 유입 쿼리에서 일회용 토큰은 뺀다(비밀번호 재설정 링크는 # 뒤라 오지 않지만, 쿼리로
+// 붙어 와도 저장하지 않게).
 function withoutSecrets(search: string): string {
   if (!search) return "";
   const params = new URLSearchParams(search);

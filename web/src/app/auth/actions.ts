@@ -46,7 +46,7 @@ export async function loginGate(email: string): Promise<GateResult> {
 
 // ── 비밀번호 찾기 ─────────────────────────────────────────
 // 메일 링크는 Supabase 재설정 메일 템플릿(lib/emails/auth-templates.ts)이
-// /auth/reset?token_hash=… 로 만든다. 기본 템플릿의 PKCE 링크는 요청한 브라우저에서만
+// /auth/reset#token_hash=… 로 만든다. 기본 템플릿의 PKCE 링크는 요청한 브라우저에서만
 // 열려(PC 에서 요청하고 휴대폰 메일 앱에서 열면 실패) token_hash 방식으로 바꿨다.
 //
 // 세션을 남기지 않는 일회용 클라이언트 — 재설정은 쿠키 로그인 없이 끝내고, 끝나면 모든

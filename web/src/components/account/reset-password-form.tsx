@@ -1,23 +1,43 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/account/password-input";
 import { resetPassword, type ResetResult } from "@/app/auth/actions";
 
+// 링크의 토큰(#token_hash=…). # 뒤는 서버로 가지 않아 브라우저에서 읽는다. 주소창에서
+// 지운 뒤에도 쓰도록 처음 읽은 값을 붙잡아 둔다.
+let captured: string | null | undefined;
+function readToken(): string | null {
+  if (captured === undefined) {
+    const fromHash = new URLSearchParams(window.location.hash.slice(1)).get("token_hash");
+    const fromQuery = new URLSearchParams(window.location.search).get("token_hash");
+    captured = fromHash || fromQuery || null;
+  }
+  return captured;
+}
+const noSubscribe = () => () => {};
+
 // 메일 링크로 들어와 새 비밀번호를 정한다. 링크의 토큰은 이 제출 때 처음 확인한다.
-export function ResetPasswordForm({ tokenHash }: { tokenHash: string }) {
+export function ResetPasswordForm() {
+  // 서버 렌더에선 아직 모름(undefined) → 브라우저에서 토큰 또는 null.
+  const tokenHash = useSyncExternalStore<string | null | undefined>(
+    noSubscribe,
+    readToken,
+    () => undefined,
+  );
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ResetResult | null>(null);
 
-  // 주소창·방문 기록에 토큰이 남지 않게 지운다(값은 props 로 들고 있다).
+  // 주소창·방문 기록에 토큰이 남지 않게 지운다.
   useEffect(() => {
-    window.history.replaceState(null, "", "/auth/reset");
-  }, []);
+    if (tokenHash) window.history.replaceState(null, "", "/auth/reset");
+  }, [tokenHash]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!tokenHash) return;
     const form = new FormData(e.currentTarget);
     setLoading(true);
     try {
@@ -59,6 +79,24 @@ export function ResetPasswordForm({ tokenHash }: { tokenHash: string }) {
             <Link href="/auth">로그인하기</Link>
           </Button>
         )}
+      </div>
+    );
+  }
+
+  if (tokenHash === undefined) return <div className="min-h-48" aria-hidden />;
+  if (tokenHash === null) {
+    return (
+      <div className="space-y-3 text-sm leading-6">
+        <p className="break-keep text-wabi-fg-muted">
+          링크가 올바르지 않습니다. 메일의 버튼을 다시 눌러 주시거나, 비밀번호 찾기를 다시
+          요청해 주세요.
+        </p>
+        <Link
+          href="/auth/forgot"
+          className="inline-block text-xs text-wabi-fg-muted underline underline-offset-2 hover:text-wabi-fg"
+        >
+          비밀번호 찾기
+        </Link>
       </div>
     );
   }
