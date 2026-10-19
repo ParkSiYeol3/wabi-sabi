@@ -13,6 +13,7 @@ import {
   MOMENTS_PAGE_SIZE,
   type MomentCard,
 } from "@/lib/queries/moments";
+import { safeInternalPath } from "@/lib/auth-input";
 
 // "오늘의 와비사비" 게시 — 로그인 사용자, 사진 필수 + 짧은 글(선택).
 // 사진 업로드는 서버(service_role)에서 처리하므로 사용자 스토리지 RLS 불요.
@@ -135,9 +136,8 @@ export async function deleteMoment(formData: FormData) {
   revalidatePath(`/today/${id}`);
 
   // 상세에서 삭제한 경우 목록으로 복귀(그리드는 redirect 없이 revalidate 만).
-  const redirectTo = String(formData.get("redirect") || "");
-  if (redirectTo.startsWith("/") && !redirectTo.startsWith("//"))
-    redirect(redirectTo);
+  const redirectTo = safeInternalPath(String(formData.get("redirect") || ""), "");
+  if (redirectTo) redirect(redirectTo);
 }
 
 // 더보기 — 다음 페이지를 서버에서 받아 클라이언트가 이어붙인다(0039 페이지네이션).

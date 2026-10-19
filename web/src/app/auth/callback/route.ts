@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { recordSignupConsentOnce } from "@/lib/consent-record";
+import { safeInternalPath } from "@/lib/auth-input";
 
 // 소셜/매직링크 첫 로그인이면 동의 이력을 남긴다(이메일 가입은 트리거가 기록).
 // 콜백을 못 거친 로그인은 AuthProvider → recordLoginConsent 가 받친다(#813).
@@ -9,7 +10,8 @@ import { recordSignupConsentOnce } from "@/lib/consent-record";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const redirect = searchParams.get("redirect") || "/";
+  // 사이트 안 경로만 — "@host" 를 붙이면 `${origin}${redirect}` 가 다른 사이트 주소가 된다.
+  const redirect = safeInternalPath(searchParams.get("redirect"));
 
   // 소셜 계정 연결(linkIdentity) 흐름 표시 — 실패 시 로그인 실패와 다르게 안내한다.
   const isLink = searchParams.get("flow") === "link";
