@@ -13,6 +13,7 @@ import { isStaleSessionError } from "@/lib/auth-session";
 import { CONSENT_VERSIONS, privacyConsentVersion } from "@/lib/consent";
 import { loginGate } from "./actions";
 import { hangulToQwerty } from "@/lib/hangul-keys";
+import { isPlaceholderEmail, passwordPolicyError } from "@/lib/auth-input";
 import { cn } from "@/lib/utils";
 
 type Tab = "login" | "signup";
@@ -146,12 +147,9 @@ function AuthForm() {
         }
         // 비밀번호 정책(보안_체크리스트 P1) — 8자 이상 + 영문·숫자 포함.
         // 서버 강제는 Supabase 대시보드 Password Requirements 로 동일 기준 설정(👤).
-        if (password.length < 8) {
-          setError("비밀번호는 8자 이상이어야 합니다.");
-          return;
-        }
-        if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
-          setError("비밀번호는 영문과 숫자를 모두 포함해야 합니다.");
+        const policy = passwordPolicyError(password);
+        if (policy) {
+          setError(policy);
           return;
         }
         // 필수 동의(이용약관·개인정보) 미체크면 가입 차단.
@@ -265,9 +263,18 @@ function AuthForm() {
             className="rounded-none font-numeric"
             aria-describedby={tab === "signup" ? "password-hint" : undefined}
           />
-          {tab === "signup" && (
+          {tab === "signup" ? (
             <p id="password-hint" className="mt-1 font-numeric text-xs text-wabi-fg-muted">
               8자 이상, 영문과 숫자를 포함해 주세요.
+            </p>
+          ) : (
+            <p className="mt-1.5 text-right">
+              <Link
+                href="/auth/forgot"
+                className="text-xs text-wabi-fg-muted underline-offset-2 hover:text-wabi-fg hover:underline"
+              >
+                비밀번호를 잊으셨나요?
+              </Link>
             </p>
           )}
         </Field>
@@ -381,22 +388,6 @@ function AuthForm() {
       </div>
     </div>
   );
-}
-
-// 명백한 플레이스홀더/예약 도메인 — 실사용 이메일이 아니므로 가입·로그인 차단.
-// RFC 2606 예약 도메인/TLD(example.*·.test·.invalid·.localhost) + test.com.
-// (근본적인 유효성 확인은 Supabase '이메일 확인'(+Resend SMTP)이 담당한다.)
-function isPlaceholderEmail(email: string): boolean {
-  const domain = email.split("@")[1]?.toLowerCase() ?? "";
-  if (!domain) return false;
-  const blocked = new Set([
-    "test.com",
-    "example.com",
-    "example.net",
-    "example.org",
-  ]);
-  const blockedTld = [".test", ".invalid", ".example", ".localhost"];
-  return blocked.has(domain) || blockedTld.some((t) => domain.endsWith(t));
 }
 
 // 소셜 브랜드 로고 — 인라인 SVG(self-host, CSP·외부요청 없음). 각 브랜드 가이드라인
