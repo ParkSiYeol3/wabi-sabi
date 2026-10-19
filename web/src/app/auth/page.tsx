@@ -15,6 +15,7 @@ import { CONSENT_VERSIONS, privacyConsentVersion } from "@/lib/consent";
 import { loginGate } from "./actions";
 import { hangulToQwerty } from "@/lib/hangul-keys";
 import { isPlaceholderEmail, passwordPolicyError } from "@/lib/auth-input";
+import { rememberConfirmRedirect } from "@/components/account/confirm-email";
 import { cn } from "@/lib/utils";
 
 type Tab = "login" | "signup";
@@ -161,6 +162,8 @@ function AuthForm() {
           setError("이용약관과 개인정보 수집·이용에 동의해 주세요.");
           return;
         }
+        // 인증 메일 링크(/auth/confirm)는 같은 기기에서 열면 여기로 돌아간다(다른 기기면 홈).
+        rememberConfirmRedirect(redirect);
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
