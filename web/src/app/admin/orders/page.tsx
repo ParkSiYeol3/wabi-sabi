@@ -291,10 +291,17 @@ function ShipTo({ o }: { o: Order }) {
         </a>
       </p>
       <p className="break-keep text-wabi-fg">{o.address}</p>
+      {/* 배송 메모 — 공동현관 번호처럼 발송 때 꼭 봐야 하는 내용이라 회색 작은 글씨
+          대신 테두리 칸 + 먹색 표식으로 띄운다(대표님). */}
       {o.delivery_memo && (
-        <p className="break-keep text-xs text-wabi-fg-muted">
-          메모: {o.delivery_memo}
-        </p>
+        <div className="mt-2 border border-wabi-fg/40 bg-white/70 px-2.5 py-2">
+          <span className="inline-block bg-wabi-accent px-1.5 py-1 text-[11px] leading-none tracking-[0.04em] text-white">
+            배송 메모
+          </span>
+          <p className="mt-1.5 break-keep text-sm leading-6 font-medium wrap-anywhere text-wabi-fg">
+            {o.delivery_memo}
+          </p>
+        </div>
       )}
     </div>
   );
