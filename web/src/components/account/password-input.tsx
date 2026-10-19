@@ -6,8 +6,7 @@ import { hangulToQwerty, hasHangul } from "@/lib/hangul-keys";
 
 // 비밀번호 칸 — 한글 자판 상태로 쳐도 영문 글자로 바꿔 넣는다(#863, 시열님 제보:
 // 맞게 쳤는데 한글 상태라 틀렸다고 나옴). 조합 중인 글자는 건드리지 않고(자판이
-// 꼬인다) 글자가 확정된 뒤에 바꾼다. 컴퓨터 브라우저는 대개 비밀번호 칸을 이미
-// 영문으로 막지만, 휴대폰 자판은 한글이 그대로 들어온다.
+// 꼬인다) 글자가 확정된 뒤에 바꾼다.
 export function PasswordInput({
   onInput,
   onCompositionEnd,
