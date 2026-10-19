@@ -5,12 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/account/password-input";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store/auth";
 import { isStaleSessionError } from "@/lib/auth-session";
 import { CONSENT_VERSIONS, privacyConsentVersion } from "@/lib/consent";
 import { loginGate } from "./actions";
+import { hangulToQwerty } from "@/lib/hangul-keys";
 import { cn } from "@/lib/utils";
 
 type Tab = "login" | "signup";
@@ -98,7 +100,8 @@ function AuthForm() {
 
     const form = new FormData(e.currentTarget);
     const email = String(form.get("email") || "").trim();
-    const password = String(form.get("password") || "");
+    // 칸에서 이미 바꾸지만, 조합 중에 제출된 글자까지 한 번 더 영문으로(#863).
+    const password = hangulToQwerty(String(form.get("password") || ""));
     const supabase = createClient();
 
     // 명백한 플레이스홀더/예약 도메인(test.com·example.*·.test 등)은 실사용
@@ -136,7 +139,7 @@ function AuthForm() {
         router.refresh();
       } else {
         const name = String(form.get("name") || "").trim();
-        const password2 = String(form.get("password2") || "");
+        const password2 = hangulToQwerty(String(form.get("password2") || ""));
         if (password !== password2) {
           setError("비밀번호가 일치하지 않습니다.");
           return;
@@ -254,10 +257,9 @@ function AuthForm() {
           />
         </Field>
         <Field label="비밀번호" htmlFor="password">
-          <Input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
             required
             autoComplete={tab === "login" ? "current-password" : "new-password"}
             className="rounded-none font-numeric"
@@ -271,10 +273,9 @@ function AuthForm() {
         </Field>
         {tab === "signup" && (
           <Field label="비밀번호 확인" htmlFor="password2">
-            <Input
+            <PasswordInput
               id="password2"
               name="password2"
-              type="password"
               required
               autoComplete="new-password"
               className="rounded-none font-numeric"
