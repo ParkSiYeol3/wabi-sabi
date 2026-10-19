@@ -14,7 +14,11 @@ import { isStaleSessionError } from "@/lib/auth-session";
 import { CONSENT_VERSIONS, privacyConsentVersion } from "@/lib/consent";
 import { loginGate } from "./actions";
 import { hangulToQwerty } from "@/lib/hangul-keys";
-import { isPlaceholderEmail, passwordPolicyError } from "@/lib/auth-input";
+import {
+  isPlaceholderEmail,
+  passwordPolicyError,
+  safeInternalPath,
+} from "@/lib/auth-input";
 import { rememberConfirmRedirect } from "@/components/account/confirm-email";
 import { cn } from "@/lib/utils";
 
@@ -36,11 +40,7 @@ function AuthForm() {
   const router = useRouter();
   const params = useSearchParams();
   // open redirect 방지 — 내부 경로("/...")만 허용, "//host" 형태도 차단.
-  const rawRedirect = params.get("redirect") || "/";
-  const redirect =
-    rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
-      ? rawRedirect
-      : "/";
+  const redirect = safeInternalPath(params.get("redirect"));
 
   // 이미 로그인 상태면 로그인 폼 대신 목적지로 이동 (예: 장바구니→주문하기).
   //
