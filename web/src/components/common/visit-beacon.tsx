@@ -41,6 +41,15 @@ function send(body: string) {
   }).catch(() => {});
 }
 
+// 유입 쿼리에서 일회용 토큰은 뺀다(비밀번호 재설정 메일 링크 /auth/reset?token_hash=…).
+function withoutSecrets(search: string): string {
+  if (!search) return "";
+  const params = new URLSearchParams(search);
+  for (const key of ["token_hash", "token", "code"]) params.delete(key);
+  const rest = params.toString();
+  return rest ? `?${rest}` : "";
+}
+
 export function VisitBeacon() {
   const pathname = usePathname();
   // 관리자로 로그인해 있으면 보내지 않는다(서버도 한 번 더 거른다 — 권한 정보는
@@ -79,7 +88,7 @@ export function VisitBeacon() {
     };
     const body = JSON.stringify(
       first
-        ? { ...info, r: document.referrer || "", q: window.location.search || "" }
+        ? { ...info, r: document.referrer || "", q: withoutSecrets(window.location.search) }
         : info,
     );
     sent.current = true;
