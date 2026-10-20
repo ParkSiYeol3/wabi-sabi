@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { LegalPage, Article } from "@/components/layout/legal-layout";
 import { business } from "@/lib/site";
-import { privacyV2Active } from "@/lib/legal";
+import { PRIVACY_V3_DATE, koreanDate, privacyV2Active, privacyV3Active } from "@/lib/legal";
 
 export const metadata: Metadata = { title: "개인정보처리방침" };
 
@@ -19,10 +19,18 @@ export const revalidate = 3600;
 export default function PrivacyPage() {
   // 2026-10-12 개정: 비회원 이메일(선택)·방문 기록·메일 발송 위탁·소식 받기 동의.
   const v2 = privacyV2Active();
+  // 채팅 상담 개정(#881): 상담 내용·비회원 이메일(선택) 수집, 상담 응대 목적, 3년 보관.
+  const v3 = privacyV3Active();
   return (
     <LegalPage
       title="개인정보처리방침"
-      effectiveDate={v2 ? "2026년 10월 12일" : "2026년 7월 13일"}
+      effectiveDate={
+        v3 && PRIVACY_V3_DATE
+          ? koreanDate(PRIVACY_V3_DATE)
+          : v2
+            ? "2026년 10월 12일"
+            : "2026년 7월 13일"
+      }
     >
       <Article heading="1. 수집하는 개인정보 항목">
         <ul className="ml-4 list-disc space-y-1">
@@ -57,6 +65,14 @@ export default function PrivacyPage() {
               자체와 브라우저 정보 원문은 저장하지 않습니다.</strong>
             </li>
           )}
+          {v3 && (
+            <li>
+              <strong className="text-wabi-fg">채팅 상담</strong>: 상담 내용과 주고받은
+              시각. 비회원은 답변 연락을 위해 직접 남긴 이메일 주소(선택)와 대화를 이어
+              가기 위해 브라우저에 저장되는 임의의 상담 식별값. 회원은 계정으로 상담자를
+              확인합니다.
+            </li>
+          )}
         </ul>
       </Article>
 
@@ -68,6 +84,7 @@ export default function PrivacyPage() {
           <li>부정 이용 방지 및 서비스 오류 개선</li>
           {v2 && <li>방문 통계 분석 및 서비스 개선</li>}
           {v2 && <li>소식 받기에 동의한 경우에 한해 새 소식·혜택 안내</li>}
+          {v3 && <li>채팅 상담 응대</li>}
         </ul>
       </Article>
 
@@ -81,6 +98,12 @@ export default function PrivacyPage() {
           <li>대금결제 및 재화 등의 공급에 관한 기록: 5년 (전자상거래법)</li>
           <li>소비자의 불만 또는 분쟁처리에 관한 기록: 3년 (전자상거래법)</li>
           {v2 && <li>방문 기록: 수집일로부터 1년 후 파기</li>}
+          {v3 && (
+            <li>
+              채팅 상담 기록: 마지막 상담일로부터 3년 후 파기 (소비자의 불만 또는
+              분쟁처리에 관한 기록, 회원 탈퇴 후에도 이 기간 동안 보관)
+            </li>
+          )}
         </ul>
       </Article>
 

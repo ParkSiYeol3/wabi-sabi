@@ -1,4 +1,4 @@
-import { privacyV2Active } from "@/lib/legal";
+import { PRIVACY_V3_DATE, privacyV2Active, privacyV3Active } from "@/lib/legal";
 
 // 약관·개인정보처리방침 동의 버전. 문서를 개정하면 여기 날짜를 올린다 → 이후 가입자는
 // 새 버전으로 동의 이력이 남고, 기존 이력은 과거 버전 그대로 보존된다(동의 시점 추적).
@@ -11,6 +11,8 @@ export const CONSENT_VERSIONS = {
 } as const;
 
 // 처리방침은 개정판(#787)이 2026-10-12 0시에 시행된다. 가입 순간 시행 중인 판으로 남긴다(#813).
+// 채팅 상담 개정판(#881)도 시행일부터 그 날짜로.
 export function privacyConsentVersion(now: number = Date.now()): string {
+  if (PRIVACY_V3_DATE && privacyV3Active(now)) return PRIVACY_V3_DATE;
   return privacyV2Active(now) ? "2026-10-12" : CONSENT_VERSIONS.privacy;
 }

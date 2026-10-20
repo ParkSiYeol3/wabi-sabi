@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
+import { useDockHeight } from "@/lib/use-dock-height";
 import {
   couponLabel,
   signupOfferTerms,
@@ -131,12 +132,16 @@ function useSignupOfferBanner(): Banner | null {
 export function SignupCouponCard() {
   const banner = useSignupOfferBanner();
   const pathname = usePathname();
+  // 채팅 버튼(#881)이 이 카드 위로 비켜 서게 높이를 알린다.
+  const cardRef = useRef<HTMLElement>(null);
+  useDockHeight("coupon", cardRef, !!banner);
   if (!banner) return null;
   const { offer, label, signupHref, motion, dismiss } = banner;
   const onDetail = PRODUCT_DETAIL.test(pathname);
 
   return (
     <aside
+      ref={cardRef}
       aria-label="회원가입 혜택 안내"
       className={`fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 break-keep border border-wabi-border bg-wabi-bg p-5 shadow-[0_8px_30px_rgba(0,0,0,0.12)] md:inset-x-auto md:bottom-6 md:right-6 md:w-80 ${motion} ${
         onDetail ? "hidden md:block" : ""

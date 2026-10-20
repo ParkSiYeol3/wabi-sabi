@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Minus, Plus, ImageIcon } from "lucide-react";
@@ -12,6 +12,7 @@ import { won, type Addon } from "@/lib/addons";
 import type { OptionGroup, SelectedOption } from "@/lib/product-options";
 import { flyToCart } from "@/lib/fly-to-cart";
 import { cn } from "@/lib/utils";
+import { useDockHeight } from "@/lib/use-dock-height";
 
 // 1인 1상품 구매 수량 상한(공개). 실재고를 클라에 노출하지 않기 위해 스텝퍼는 이
 // 고정 상한까지만 늘어난다 — 재고보다 많이 담아도 서버 결제 단계에서 out_of_stock 로
@@ -101,6 +102,10 @@ export function ProductDetailActions({
     add(cartProduct, qty, selectedAddons, optionSnapshot());
     router.push("/cart");
   }
+
+  // 채팅 버튼(#881)이 모바일 구매 바 위로 비켜 서게 높이를 알린다.
+  const buyBarRef = useRef<HTMLDivElement>(null);
+  useDockHeight("buybar", buyBarRef);
 
   return (
     <div className="mt-8 space-y-4">
@@ -274,6 +279,7 @@ export function ProductDetailActions({
           떠 있게 하고, safe-area 로 아이폰 홈 인디케이터를 피한다. 바깥 래퍼는
           투명 여백이 스크롤을 막지 않게 pointer-events-none, 카드만 auto. */}
       <div
+        ref={buyBarRef}
         className="pointer-events-none fixed inset-x-0 bottom-0 z-30 md:hidden"
         style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
       >
