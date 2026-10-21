@@ -276,3 +276,17 @@
     animation: none;
   }
 }
+
+/* 채팅 상담 창 아래 여백(#881). 홈 화면에 추가한 '앱'(standalone)은 화면 맨 아래 홈 바
+   영역까지 내용이 깔리는데, viewport-fit=cover 가 아니라 env(safe-area-inset-bottom) 가
+   0 으로 나온다 → 맨 아래 안내가 홈 바에 가렸다(시열님). 앱 모드에선 홈 바 높이(34pt)
+   이상을 따로 비운다. 브라우저에선 도구 막대가 따로 있어 기본 여백이면 된다. */
+.chat-safe-bottom {
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+}
+
+@media (display-mode: standalone) {
+  .chat-safe-bottom {
+    padding-bottom: max(2.5rem, calc(0.75rem + env(safe-area-inset-bottom)));
+  }
+}

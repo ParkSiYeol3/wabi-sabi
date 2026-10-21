@@ -19,7 +19,7 @@ type Thread = {
   guest_key_hash: string | null;
   guest_email: string | null;
   created_at: string;
-  profiles: { name: string | null; email: string | null } | null;
+  profiles: { name: string | null; email: string | null; avatar_url: string | null } | null;
 };
 
 // 채팅 상담(#881) 대화 하나 — 손님 정보·대화·답장·삭제. 열면 읽음으로 바뀐다.
@@ -35,7 +35,9 @@ export default async function AdminChatThreadPage({
   const db = createAdminClient();
   const { data: thread } = await db
     .from("chat_threads")
-    .select("id, user_id, guest_key_hash, guest_email, created_at, profiles(name, email)")
+    .select(
+      "id, user_id, guest_key_hash, guest_email, created_at, profiles(name, email, avatar_url)",
+    )
     .eq("id", id)
     .maybeSingle<Thread>();
   if (!thread) notFound();
@@ -53,6 +55,9 @@ export default async function AdminChatThreadPage({
     .eq("id", id);
 
   const contact = thread.profiles?.email ?? thread.guest_email;
+  const kind = thread.user_id ? "회원" : thread.guest_key_hash ? "비회원" : "탈퇴한 회원";
+  // 말풍선 옆 이름은 짧게(회원 이름 → 이메일 → 구분).
+  const shortName = thread.profiles?.name || thread.profiles?.email || kind;
 
   return (
     <>
@@ -67,7 +72,7 @@ export default async function AdminChatThreadPage({
           </Link>
           <h1 className="truncate text-xl font-semibold text-wabi-fg">{chatWho(thread)}</h1>
           <p className="mt-1 break-all text-sm text-wabi-fg-muted">
-            {thread.user_id ? "회원" : thread.guest_key_hash ? "비회원" : "탈퇴한 회원"}
+            {kind}
             {contact && (
               <>
                 {" · "}
@@ -89,7 +94,12 @@ export default async function AdminChatThreadPage({
           triggerClassName={adminAction({ tone: "danger" })}
         />
       </div>
-      <ChatThread threadId={id} initial={(recent ?? []).reverse()} />
+      <ChatThread
+        threadId={id}
+        initial={(recent ?? []).reverse()}
+        theirName={shortName}
+        theirAvatarUrl={thread.profiles?.avatar_url ?? null}
+      />
     </>
   );
 }
