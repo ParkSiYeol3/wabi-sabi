@@ -5,14 +5,19 @@ import { adminLoadThread, adminSendChat } from "@/app/admin/chats/actions";
 import { mergeMessages, type ChatMessage } from "@/lib/chat-types";
 import { MessageList } from "@/components/chat/message-list";
 import { ChatComposer } from "@/components/chat/chat-composer";
+import { PersonAvatar } from "@/components/chat/chat-avatar";
 
 // 채팅 상담(#881) 대표님 대화 화면 — 3초마다 새 메시지를 묻고, 보고 있는 동안은 읽음.
 export function ChatThread({
   threadId,
   initial,
+  theirName,
+  theirAvatarUrl,
 }: {
   threadId: string;
   initial: ChatMessage[];
+  theirName: string;
+  theirAvatarUrl: string | null;
 }) {
   const [messages, setMessages] = useState(initial);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +67,8 @@ export function ChatThread({
         className="min-h-0 flex-1"
         messages={messages}
         mine="admin"
-        theirLabel="손님"
+        theirLabel={theirName}
+        theirAvatar={<PersonAvatar src={theirAvatarUrl} />}
       />
       <div className="border-t border-wabi-border bg-wabi-bg px-3 py-3">
         {error && (
