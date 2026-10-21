@@ -105,13 +105,23 @@ function ChatWidget({ member }: { member: boolean }) {
     void refresh(true);
   };
 
-  const closeChat = useCallback(() => {
-    setOpen(false);
-    launcher.current?.focus();
-  }, []);
+  const closeChat = useCallback(() => setOpen(false), []);
+
+  // 창을 닫으면 버튼이 다시 그려진 뒤 그 버튼으로 포커스를 돌린다(키보드·화면낭독기).
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (!open && wasOpen.current) launcher.current?.focus();
+    wasOpen.current = open;
+  }, [open]);
 
   const send = useCallback(async (text: string, email?: string) => {
-    const r = await sendChat({ body: text, email });
+    let r: Awaited<ReturnType<typeof sendChat>>;
+    try {
+      r = await sendChat({ body: text, email });
+    } catch {
+      setError("보내지 못했습니다. 연결을 확인하고 다시 보내 주세요.");
+      return false;
+    }
     if (!r.ok) {
       setError(r.error);
       return false;

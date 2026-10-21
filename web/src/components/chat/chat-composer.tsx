@@ -32,8 +32,12 @@ export function ChatComposer({
     const value = text.trim();
     if (!value || sending) return;
     setSending(true);
-    const ok = await onSend(value);
-    setSending(false);
+    let ok = false;
+    try {
+      ok = await onSend(value);
+    } finally {
+      setSending(false);
+    }
     if (ok) {
       setText("");
       if (inner.current) {

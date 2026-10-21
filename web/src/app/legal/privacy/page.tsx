@@ -5,9 +5,10 @@ import { PRIVACY_V3_DATE, koreanDate, privacyV2Active, privacyV3Active } from "@
 
 export const metadata: Metadata = { title: "개인정보처리방침" };
 
-// 개정판(#787)은 시행 시각(lib/legal PRIVACY_V2_FROM)부터 보인다. 정적 페이지라 1시간마다
-// 다시 그려 시행 시각을 넘기면 저절로 바뀐다(재배포 불필요).
-export const revalidate = 3600;
+// 개정판(#787·#881)은 시행 시각(lib/legal)부터 보인다(재배포 불필요). 요청마다 그린다:
+// 채팅 상담은 시행 시각이 되는 순간 열리므로, 캐시 때문에 그 뒤에도 옛 처리방침이 보이면
+// 안 된다(1시간 ISR 이던 것을 바꿈).
+export const dynamic = "force-dynamic";
 
 // ⚠ 초안 — 대표님 확인 및 필요 시 법률 검토 후 확정할 것 (#106).
 // 수집 항목·위탁사는 실제 구현 기준으로 작성했다(추측 금지):

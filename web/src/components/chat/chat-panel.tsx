@@ -28,6 +28,7 @@ export function ChatPanel({
 }) {
   const [email, setEmail] = useState("");
   const input = useRef<HTMLTextAreaElement>(null);
+  const dialog = useRef<HTMLElement>(null);
   const askEmail = !member && !guestEmail;
 
   useEffect(() => {
@@ -38,14 +39,16 @@ export function ChatPanel({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // 컴퓨터에선 바로 입력할 수 있게 포커스. 휴대폰은 키보드가 화면을 덮어 누를 때만.
-  // 휴대폰에선 창이 화면 전체라 뒤 페이지가 같이 스크롤되지 않게 잠근다.
+  // 컴퓨터에선 바로 입력할 수 있게 입력칸에 포커스. 휴대폰은 키보드가 화면을 덮으니
+  // 창 자체로 포커스만 옮긴다(화면낭독기가 창 안에서 시작). 휴대폰에선 창이 화면 전체라
+  // 뒤 페이지가 같이 스크롤되지 않게 잠근다.
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 768px)").matches;
     if (desktop) {
       input.current?.focus();
       return;
     }
+    dialog.current?.focus();
     const root = document.documentElement;
     const prev = root.style.overflow;
     root.style.overflow = "hidden";
@@ -66,9 +69,11 @@ export function ChatPanel({
 
   return (
     <section
+      ref={dialog}
+      tabIndex={-1}
       role="dialog"
       aria-labelledby="chat-title"
-      className="fixed inset-0 z-[55] flex flex-col bg-wabi-bg md:inset-auto md:bottom-6 md:right-6 md:h-[min(36rem,calc(100dvh-3rem))] md:w-[22.5rem] md:border md:border-wabi-border md:shadow-[0_12px_40px_rgba(0,0,0,0.18)]"
+      className="fixed inset-0 z-[55] flex flex-col bg-wabi-bg outline-none md:inset-auto md:bottom-6 md:right-6 md:h-[min(36rem,calc(100dvh-3rem))] md:w-[22.5rem] md:border md:border-wabi-border md:shadow-[0_12px_40px_rgba(0,0,0,0.18)]"
     >
       <header
         className="flex items-start justify-between gap-3 border-b border-wabi-border bg-wabi-subtle/60 px-4 pb-3"

@@ -37,7 +37,13 @@ export function ChatThread({
 
   const send = useCallback(
     async (text: string) => {
-      const r = await adminSendChat(threadId, text);
+      let r: Awaited<ReturnType<typeof adminSendChat>>;
+      try {
+        r = await adminSendChat(threadId, text);
+      } catch {
+        setError("보내지 못했습니다. 연결을 확인하고 다시 보내 주세요.");
+        return false;
+      }
       if (!r.ok) {
         setError(r.error);
         return false;
