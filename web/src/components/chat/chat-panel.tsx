@@ -56,6 +56,10 @@ export function ChatPanel({
 
     const phone = () => {
       if (!el) return () => {};
+      // iOS 는 입력칸을 누르면 그게 보이게 뒤 문서를 끝까지 내린다 → 닫으면 shop 맨 아래에
+      // 있었다(시열님). 연 순간 위치를 기억했다 같은 페이지에서 닫으면 되돌린다.
+      const scrollY = window.scrollY;
+      const path = location.pathname;
       const prev = root.style.overflow;
       root.style.overflow = "hidden";
       root.setAttribute("data-chat-open", "");
@@ -107,6 +111,7 @@ export function ChatPanel({
         vv?.removeEventListener("scroll", fit);
         el.style.top = el.style.height = el.style.bottom = "";
         el.removeAttribute("data-kb");
+        if (location.pathname === path) window.scrollTo(0, scrollY);
       };
     };
 
@@ -199,7 +204,14 @@ export function ChatPanel({
         />
         <p className="mt-2 break-keep text-[10px] leading-4 text-wabi-fg-muted">
           상담 내용은 응대를 위해 마지막 상담일로부터 3년간 보관합니다.{" "}
-          <Link href="/legal/privacy" className="underline underline-offset-2">
+          {/* 휴대폰 창은 화면 전체라 열린 채로 옮기면 처리방침이 안 보인다 → 닫고 간다 */}
+          <Link
+            href="/legal/privacy"
+            onClick={() => {
+              if (!window.matchMedia("(min-width: 768px)").matches) onClose();
+            }}
+            className="underline underline-offset-2"
+          >
             개인정보처리방침
           </Link>
         </p>
