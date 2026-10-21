@@ -45,6 +45,7 @@ export function ChatPanel({
   // 뒤 페이지가 같이 스크롤되지 않게 잠근다.
   // 또 휴대폰 창은 '실제로 보이는 영역'(visualViewport)에 맞춘다. 키보드가 올라오거나
   // 브라우저 주소창·도구 막대가 들고 나도 입력칸과 맨 아래 안내가 가려지지 않게.
+  // 키보드가 떠 있으면(data-kb) 홈 바 몫 아래 여백은 필요 없어 줄인다(globals.css).
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 768px)").matches;
     if (desktop) {
@@ -62,6 +63,7 @@ export function ChatPanel({
       el.style.top = `${vv.offsetTop}px`;
       el.style.height = `${vv.height}px`;
       el.style.bottom = "auto";
+      el.toggleAttribute("data-kb", root.clientHeight - vv.height > 120);
     };
     fit();
     vv?.addEventListener("resize", fit);
@@ -77,13 +79,15 @@ export function ChatPanel({
     "안녕하세요, 와비사비입니다.\n궁금한 점을 남겨 주시면 영업시간에 순서대로 답해 드리겠습니다." +
     (!member && !hasThread ? "\n창을 닫으셔도 대화는 이 브라우저에 남습니다." : "");
 
+  // 휴대폰에선 창 둘레를 크림 그림자로 덮는다. 창이 키보드 위로 줄어들면
+  // 그 아래가 비는데, iOS 키보드와 도구 막대가 반투명이라 뒤 페이지가 비쳐 헷갈렸다(시열님).
   return (
     <section
       ref={dialog}
       tabIndex={-1}
       role="dialog"
       aria-labelledby="chat-title"
-      className="fixed inset-0 z-[55] flex flex-col bg-wabi-bg outline-none md:inset-auto md:bottom-6 md:right-6 md:h-[min(36rem,calc(100dvh-3rem))] md:w-[22.5rem] md:border md:border-wabi-border md:shadow-[0_12px_40px_rgba(0,0,0,0.18)]"
+      className="fixed inset-0 z-[55] flex flex-col bg-wabi-bg shadow-[0_0_0_100vmax_var(--wabi-bg)] outline-none md:inset-auto md:bottom-6 md:right-6 md:h-[min(36rem,calc(100dvh-3rem))] md:w-[22.5rem] md:border md:border-wabi-border md:shadow-[0_12px_40px_rgba(0,0,0,0.18)]"
     >
       {/* 머리말은 메뉴와 같은 시스템 고딕 — 본문 붓 명조(Light 한 굵기)는 작은 글씨가
           흐려 보였다(시열님). */}

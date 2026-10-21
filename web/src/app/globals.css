@@ -290,3 +290,8 @@
     padding-bottom: max(2.5rem, calc(0.75rem + env(safe-area-inset-bottom)));
   }
 }
+
+/* 키보드가 떠 있으면 홈 바가 키보드 밑이라 그 몫을 비울 필요가 없다(chat-panel 이 data-kb). */
+[data-kb] .chat-safe-bottom {
+  padding-bottom: 0.75rem;
+}
