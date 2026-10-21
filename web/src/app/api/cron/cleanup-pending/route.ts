@@ -39,5 +39,15 @@ export async function GET(req: Request) {
     .slice(0, 10);
   await admin.from("page_views").delete().lt("day", yearAgo);
 
+  // 채팅 상담(0083)은 마지막 상담일로부터 3년 보관 후 파기(처리방침 3조, 윤년 여유 하루).
+  const chatCutoff = new Date(Date.now() - (3 * 365 + 1) * 86_400_000).toISOString();
+  const { error: chatError } = await admin
+    .from("chat_threads")
+    .delete()
+    .lt("last_message_at", chatCutoff);
+  if (chatError) {
+    return Response.json({ ok: false, error: chatError.message }, { status: 500 });
+  }
+
   return Response.json({ ok: true, cancelled: data?.length ?? 0 });
 }

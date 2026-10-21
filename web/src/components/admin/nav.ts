@@ -6,6 +6,7 @@ import {
   Tags,
   Megaphone,
   MessageCircle,
+  MessagesSquare,
   Star,
   Camera,
   FileText,
@@ -52,6 +53,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     heading: "고객",
     items: [
+      { href: "/admin/chats", label: "채팅 상담", icon: MessagesSquare },
       { href: "/admin/members", label: "회원 관리", icon: UserRound },
       { href: "/admin/inquiries", label: "문의", icon: MessageCircle },
       { href: "/admin/reviews", label: "리뷰", icon: Star },

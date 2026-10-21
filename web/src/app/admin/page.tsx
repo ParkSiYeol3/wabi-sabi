@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   Truck,
   MessageCircle,
+  MessagesSquare,
   Flag,
   PackageX,
   PackageCheck,
@@ -25,6 +26,7 @@ import {
 import { RevenueChart } from "@/components/admin/revenue-chart";
 import { VisitorChart, type VisitDay } from "@/components/admin/visitor-chart";
 import { QuickActions } from "@/components/admin/quick-actions";
+import { chatUnread } from "@/lib/chat-types";
 import { sourceLabel } from "@/lib/traffic-source";
 import { StaffDeviceToggle } from "@/components/admin/staff-device-toggle";
 import { instagramTokenStatus, type InstagramTokenStatus } from "@/lib/instagram-token";
@@ -138,6 +140,14 @@ async function loadDashboard() {
       .or(`shipped_at.lt."${checkCutoff}",and(shipped_at.is.null,ordered_at.lt."${checkCutoff}")`)
       .throwOnError(),
   ]);
+
+  // 채팅 상담(#881) — 손님이 말한 뒤 아직 열어 보지 않은 대화 수.
+  const { data: chatRows } = await db
+    .from("chat_threads")
+    .select("last_sender, last_message_at, admin_read_at")
+    .eq("last_sender", "customer")
+    .limit(500);
+  const newChats = (chatRows ?? []).filter(chatUnread).length;
   return {
     summary: summaryRes.data as Summary,
     trend: (trendRes.data as TrendDay[] | null) ?? [],
@@ -150,6 +160,7 @@ async function loadDashboard() {
     recentVisitors,
     instagram,
     deliveryCheck: deliveryCheckRes.count ?? 0,
+    newChats,
     // KST 오늘 — 최근 방문 목록의 "어제" 표기용(렌더 중 Date.now 금지라 여기서 계산).
     todayKst: new Date(Date.now() + 9 * 3_600_000).toISOString().slice(0, 10),
   };
@@ -183,6 +194,7 @@ export default async function AdminHome() {
     recentVisitors,
     instagram,
     deliveryCheck,
+    newChats,
     todayKst,
   } =
     await loadDashboard();
@@ -223,6 +235,13 @@ export default async function AdminHome() {
             label="미답변 문의"
             value={s.unanswered}
             icon={MessageCircle}
+            tone="alert"
+          />
+          <StatTile
+            href="/admin/chats"
+            label="새 채팅"
+            value={newChats}
+            icon={MessagesSquare}
             tone="alert"
           />
           <StatTile

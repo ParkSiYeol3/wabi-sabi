@@ -6,3 +6,21 @@ export const PRIVACY_V2_FROM = Date.parse("2026-10-12T00:00:00+09:00");
 export function privacyV2Active(now: number = Date.now()): boolean {
   return now >= PRIVACY_V2_FROM;
 }
+
+// 채팅 상담(#881) 개정 시행일(KST 날짜). 처리방침에 '채팅 상담 내용' 수집이 더해져
+// 7일 전 공지 뒤에만 켤 수 있다 → 공지일 + 7일로 정해지면 "YYYY-MM-DD" 를 넣는다.
+// null 이면 개정판도 채팅 버튼도 손님에게 보이지 않는다(관리자는 미리 써 볼 수 있다).
+export const PRIVACY_V3_DATE: string | null = null;
+
+const PRIVACY_V3_FROM =
+  PRIVACY_V3_DATE === null ? null : Date.parse(`${PRIVACY_V3_DATE}T00:00:00+09:00`);
+
+export function privacyV3Active(now: number = Date.now()): boolean {
+  return PRIVACY_V3_FROM !== null && now >= PRIVACY_V3_FROM;
+}
+
+// "2026-10-29" → "2026년 10월 29일"
+export function koreanDate(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${y}년 ${m}월 ${d}일`;
+}

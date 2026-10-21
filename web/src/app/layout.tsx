@@ -9,6 +9,7 @@ import { PrepNotice } from "@/components/layout/prep-notice";
 import { SignupOfferProvider } from "@/components/account/signup-offer-context";
 import { SignupCouponCard } from "@/components/account/signup-coupon-card";
 import { SignupCouponWelcome } from "@/components/account/signup-coupon-welcome";
+import { ChatLauncher } from "@/components/chat/chat-launcher";
 import { getSignupOffer } from "@/lib/queries/signup-offer";
 import { getPrepNotice } from "@/lib/queries/content";
 import { getCategoryTree } from "@/lib/queries/categories";
@@ -200,6 +201,8 @@ export default async function RootLayout({
             {/* 가입 축하 쿠폰 안내 — 비로그인 하단 카드 / 가입 직후 지급 알림(#722) */}
             <SignupCouponCard />
             <SignupCouponWelcome />
+            {/* 채팅 상담(#881) — 처리방침 시행일 전엔 관리자만 보인다 */}
+            <ChatLauncher />
             {/* 키보드 사용자용 본문 바로가기 (a11y) */}
             <a
               href="#main-content"
