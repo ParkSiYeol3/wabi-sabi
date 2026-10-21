@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 
 // 메시지 입력칸(#881). Enter 로 보내고 Shift+Enter 는 줄바꿈. 한글은 조합 중 Enter 가
 // 글자 확정이라 그때는 보내지 않는다(isComposing). 보내는 동안엔 잠근다.
+// 안내 문구는 textarea placeholder 대신 따로 겹쳐 그린다. iOS 는 보낸 뒤 칸을 비우면
+// 지운 글자 폭만큼만 다시 그려 placeholder 가 "메시지를 입" 처럼 잘려 보였다(시열님).
 export function ChatComposer({
   onSend,
   placeholder = "메시지를 입력해 주세요",
@@ -60,25 +62,35 @@ export function ChatComposer({
         <label className="sr-only" htmlFor="chat-input">
           메시지
         </label>
-        <textarea
-          id="chat-input"
-          ref={inner}
-          rows={1}
-          value={text}
-          autoFocus={autoFocus}
-          placeholder={placeholder}
-          onChange={(e) => {
-            setText(e.target.value);
-            grow(e.target);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-              e.preventDefault();
-              void submit();
-            }
-          }}
-          className="min-h-10 flex-1 resize-none border border-wabi-border bg-wabi-bg px-3 py-2 text-base leading-6 text-wabi-fg outline-none placeholder:text-wabi-fg-muted focus-visible:border-wabi-fg md:text-sm"
-        />
+        <div className="relative flex min-w-0 flex-1">
+          <textarea
+            id="chat-input"
+            ref={inner}
+            rows={1}
+            value={text}
+            autoFocus={autoFocus}
+            aria-placeholder={placeholder}
+            onChange={(e) => {
+              setText(e.target.value);
+              grow(e.target);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                void submit();
+              }
+            }}
+            className="min-h-10 w-full resize-none border border-wabi-border bg-wabi-bg px-3 py-2 text-base leading-6 text-wabi-fg outline-none focus-visible:border-wabi-fg md:text-sm"
+          />
+          {!text && (
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-0 truncate border border-transparent px-3 py-2 text-base leading-6 text-wabi-fg-muted md:text-sm"
+            >
+              {placeholder}
+            </span>
+          )}
+        </div>
         <button
           type="submit"
           disabled={sending || !text.trim() || over}
