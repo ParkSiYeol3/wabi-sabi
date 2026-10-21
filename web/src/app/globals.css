@@ -295,3 +295,17 @@
 [data-kb] .chat-safe-bottom {
   padding-bottom: 0.75rem;
 }
+
+/* 휴대폰 채팅 창이 열린 동안 뒤 페이지를 감춘다(chat-panel 이 data-chat-open). 크림 바탕만
+   남아 키보드·도구 막대 너머로 비치는 것도 크림이다. 감춘 요소는 눌리지도 않는다.
+   transition-all 인 요소(상품 카드 등장 효과)는 visibility 도 그 시간만큼 늦게 바뀌어
+   잠깐 비치므로 뒤 페이지의 전환은 끈다. */
+html[data-chat-open] body {
+  visibility: hidden;
+}
+html[data-chat-open] body *:not(.chat-sheet, .chat-sheet *) {
+  transition: none;
+}
+html[data-chat-open] .chat-sheet {
+  visibility: visible;
+}
