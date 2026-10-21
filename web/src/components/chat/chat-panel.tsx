@@ -46,32 +46,81 @@ export function ChatPanel({
   // 또 휴대폰 창은 '실제로 보이는 영역'(visualViewport)에 맞춘다. 키보드가 올라오거나
   // 브라우저 주소창·도구 막대가 들고 나도 입력칸과 맨 아래 안내가 가려지지 않게.
   // 키보드가 떠 있으면(data-kb) 홈 바 몫 아래 여백은 필요 없어 줄인다(globals.css).
+  // 창이 열린 동안 뒤 페이지는 통째로 감춘다(data-chat-open, globals.css). iOS 키보드와
+  // 도구 막대가 반투명이라 창 아래로 뒤 페이지가 비쳐 헷갈렸다(시열님).
+  // 휴대폰을 돌려 너비가 768px 을 넘나들면(가로 모드는 컴퓨터 창) 다시 맞춘다.
   useEffect(() => {
-    const desktop = window.matchMedia("(min-width: 768px)").matches;
-    if (desktop) {
-      input.current?.focus();
-      return;
-    }
     const el = dialog.current;
-    el?.focus();
     const root = document.documentElement;
-    const prev = root.style.overflow;
-    root.style.overflow = "hidden";
-    const vv = window.visualViewport;
-    const fit = () => {
-      if (!el || !vv) return;
-      el.style.top = `${vv.offsetTop}px`;
-      el.style.height = `${vv.height}px`;
-      el.style.bottom = "auto";
-      el.toggleAttribute("data-kb", root.clientHeight - vv.height > 120);
+    const mq = window.matchMedia("(min-width: 768px)");
+
+    const phone = () => {
+      if (!el) return () => {};
+      const prev = root.style.overflow;
+      root.style.overflow = "hidden";
+      root.setAttribute("data-chat-open", "");
+      // iOS 는 overflow:hidden 만으론 손가락 스크롤을 못 막아, 끌면 뒤 문서와 보이는 영역이
+      // 움직이고 창이 그걸 뒤쫓느라 방방 뛰었다(시열님). 창 안에서 실제로 더 스크롤할 수
+      // 있는 곳(지난 대화 목록)이 아니면 끄는 동작을 막는다. 입력칸은 글자 선택·커서 이동이
+      // 있어 그대로 둔다. 두 손가락(확대)도 그대로.
+      let lastY = 0;
+      const onTouchStart = (e: TouchEvent) => {
+        lastY = e.touches[0]?.clientY ?? 0;
+      };
+      const onTouchMove = (e: TouchEvent) => {
+        if (e.touches.length !== 1) return;
+        const y = e.touches[0].clientY;
+        const dy = y - lastY;
+        lastY = y;
+        const target = e.target instanceof Element ? e.target : null;
+        if (target?.closest("textarea, input")) return;
+        for (let n = target; n && n !== el; n = n.parentElement) {
+          if (!(n instanceof HTMLElement) || n.scrollHeight <= n.clientHeight) continue;
+          const { overflowY } = getComputedStyle(n);
+          if (overflowY !== "auto" && overflowY !== "scroll") continue;
+          const atTop = n.scrollTop <= 0;
+          const atBottom = n.scrollTop + n.clientHeight >= n.scrollHeight - 1;
+          if ((dy > 0 && !atTop) || (dy < 0 && !atBottom)) return;
+          break;
+        }
+        if (e.cancelable) e.preventDefault();
+      };
+      document.addEventListener("touchstart", onTouchStart, { passive: true });
+      document.addEventListener("touchmove", onTouchMove, { passive: false });
+      const vv = window.visualViewport;
+      const fit = () => {
+        if (!vv) return;
+        el.style.top = `${vv.offsetTop}px`;
+        el.style.height = `${vv.height}px`;
+        el.style.bottom = "auto";
+        el.toggleAttribute("data-kb", root.clientHeight - vv.height > 120);
+      };
+      fit();
+      vv?.addEventListener("resize", fit);
+      vv?.addEventListener("scroll", fit);
+      return () => {
+        root.style.overflow = prev;
+        root.removeAttribute("data-chat-open");
+        document.removeEventListener("touchstart", onTouchStart);
+        document.removeEventListener("touchmove", onTouchMove);
+        vv?.removeEventListener("resize", fit);
+        vv?.removeEventListener("scroll", fit);
+        el.style.top = el.style.height = el.style.bottom = "";
+        el.removeAttribute("data-kb");
+      };
     };
-    fit();
-    vv?.addEventListener("resize", fit);
-    vv?.addEventListener("scroll", fit);
+
+    if (mq.matches) input.current?.focus();
+    else el?.focus();
+    let undo = mq.matches ? () => {} : phone();
+    const onChange = () => {
+      undo();
+      undo = mq.matches ? () => {} : phone();
+    };
+    mq.addEventListener("change", onChange);
     return () => {
-      root.style.overflow = prev;
-      vv?.removeEventListener("resize", fit);
-      vv?.removeEventListener("scroll", fit);
+      mq.removeEventListener("change", onChange);
+      undo();
     };
   }, []);
 
@@ -79,15 +128,13 @@ export function ChatPanel({
     "안녕하세요, 와비사비입니다.\n궁금한 점을 남겨 주시면 영업시간에 순서대로 답해 드리겠습니다." +
     (!member && !hasThread ? "\n창을 닫으셔도 대화는 이 브라우저에 남습니다." : "");
 
-  // 휴대폰에선 창 둘레를 크림 그림자로 덮는다. 창이 키보드 위로 줄어들면
-  // 그 아래가 비는데, iOS 키보드와 도구 막대가 반투명이라 뒤 페이지가 비쳐 헷갈렸다(시열님).
   return (
     <section
       ref={dialog}
       tabIndex={-1}
       role="dialog"
       aria-labelledby="chat-title"
-      className="fixed inset-0 z-[55] flex flex-col bg-wabi-bg shadow-[0_0_0_100vmax_var(--wabi-bg)] outline-none md:inset-auto md:bottom-6 md:right-6 md:h-[min(36rem,calc(100dvh-3rem))] md:w-[22.5rem] md:border md:border-wabi-border md:shadow-[0_12px_40px_rgba(0,0,0,0.18)]"
+      className="fixed inset-0 z-[55] flex flex-col chat-sheet bg-wabi-bg outline-none md:inset-auto md:bottom-6 md:right-6 md:h-[min(36rem,calc(100dvh-3rem))] md:w-[22.5rem] md:border md:border-wabi-border md:shadow-[0_12px_40px_rgba(0,0,0,0.18)]"
     >
       {/* 머리말은 메뉴와 같은 시스템 고딕 — 본문 붓 명조(Light 한 굵기)는 작은 글씨가
           흐려 보였다(시열님). */}
