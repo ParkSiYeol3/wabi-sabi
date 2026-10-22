@@ -36,7 +36,22 @@ export async function updateSession(request: NextRequest) {
   );
 
   // getClaims/getUser 로 토큰을 검증·갱신 (이 호출 사이에 다른 로직 넣지 말 것).
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // 로그인 안 한 채 관리자 주소로 오면 그 주소를 들고 로그인으로 보낸다. 채팅 알림 메일의
+  // '채팅 상담 열기'로 왔는데 로그인 뒤 대시보드로만 갔다(시열님). requireAdmin 은 경로를
+  // 몰라 /admin 으로만 돌려보낸다. 화면 요청(GET)만, 서버 액션 POST 는 그대로 둔다.
+  const { pathname, search } = request.nextUrl;
+  if (!user && request.method === "GET" && /^\/admin(\/|$)/.test(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth";
+    url.search = `?redirect=${encodeURIComponent(pathname + search)}`;
+    const res = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((c) => res.cookies.set(c));
+    return res;
+  }
 
   return supabaseResponse;
 }
