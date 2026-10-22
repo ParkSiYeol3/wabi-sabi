@@ -63,6 +63,7 @@ export async function notifyNewInquiry(i: { title: string; isSecret: boolean }):
 // 새 채팅 상담(#881). 대화 내용은 메일에 싣지 않는다(문의 비밀글과 같은 원칙).
 // 대표님이 답하기 전엔 한 번만 보낸다(부르는 쪽이 admin_notified_at 으로 판단).
 // 로컬·프리뷰에서 시험한 대화로 대표님께 메일이 가지 않게 운영 배포에서만 보낸다.
+// CHAT_NOTIFY_EMAIL 이 있으면 채팅 알림만 그 주소로(오픈 전 시험용, 주문 알림은 그대로).
 export async function notifyNewChat(c: { threadId: string; member: boolean }): Promise<void> {
   if (process.env.VERCEL_ENV !== "production") return;
   await notifyShop(
@@ -76,5 +77,6 @@ export async function notifyNewChat(c: { threadId: string; member: boolean }): P
         label: "채팅 상담 열기",
       },
     }),
+    process.env.CHAT_NOTIFY_EMAIL,
   );
 }
