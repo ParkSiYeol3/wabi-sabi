@@ -26,6 +26,7 @@ import {
 import { RevenueChart } from "@/components/admin/revenue-chart";
 import { VisitorChart, type VisitDay } from "@/components/admin/visitor-chart";
 import { QuickActions } from "@/components/admin/quick-actions";
+import { loadMyShortcuts } from "./shortcuts";
 import { chatUnread } from "@/lib/chat-types";
 import { sourceLabel } from "@/lib/traffic-source";
 import { StaffDeviceToggle } from "@/components/admin/staff-device-toggle";
@@ -182,7 +183,7 @@ export default async function AdminHome() {
     );
   }
 
-  const {
+  const [{
     summary: s,
     trend,
     lowStock,
@@ -196,8 +197,7 @@ export default async function AdminHome() {
     deliveryCheck,
     newChats,
     todayKst,
-  } =
-    await loadDashboard();
+  }, shortcuts] = await Promise.all([loadDashboard(), loadMyShortcuts()]);
 
   return (
     <div className="space-y-10">
@@ -207,8 +207,8 @@ export default async function AdminHome() {
       />
 
       {/* 바로가기(대표님) — 대시보드에서 사이드바 없이 자주 쓰는 섹션으로 원탭 이동.
-          admin 진입 시 대시보드가 먼저 보이되(운영 현황), 이동은 빠르게. */}
-      <QuickActions />
+          admin 진입 시 대시보드가 먼저 보이되(운영 현황), 이동은 빠르게. 계정마다 편집(0084). */}
+      <QuickActions initial={shortcuts} />
 
       <InstagramTokenNotice status={instagram} />
 
