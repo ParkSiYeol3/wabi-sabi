@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { MessageCircle } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
-import { privacyV3Active } from "@/lib/legal";
+import { PRIVACY_V3_FROM, privacyV3Active } from "@/lib/legal";
 import { loadChat, sendChat } from "@/app/chat/actions";
 import { mergeMessages, type ChatMessage } from "@/lib/chat-types";
 
@@ -49,8 +49,23 @@ export function ChatLauncher() {
   const isAdmin = useAuthStore((s) => s.isAdmin);
   const uid = useAuthStore((s) => s.user?.id ?? null);
   const authLoading = useAuthStore((s) => s.loading);
+  // 시행 시각을 넘기는 순간 열려 있던 화면에도 버튼이 뜨게, 그 시각에 한 번 다시 그린다.
+  // (렌더할 때만 날짜를 보면 자정 전에 연 페이지는 이동이나 새로고침 전까지 버튼이 없다)
+  const [open, setOpen] = useState(() => privacyV3Active());
+  useEffect(() => {
+    if (open || PRIVACY_V3_FROM === null) return;
+    const from = PRIVACY_V3_FROM;
+    let t = 0;
+    // 일찍 깨거나(시계 보정) 브라우저 최대 대기(약 24일)를 넘는 날짜면 다시 기다린다.
+    const wait = () => {
+      if (privacyV3Active()) setOpen(true);
+      else t = window.setTimeout(wait, Math.min(Math.max(from - Date.now(), 0) + 1, 2_000_000_000));
+    };
+    t = window.setTimeout(wait, Math.min(Math.max(from - Date.now(), 0) + 1, 2_000_000_000));
+    return () => window.clearTimeout(t);
+  }, [open]);
   if (authLoading) return null;
-  if (!privacyV3Active() && !isAdmin) return null;
+  if (!open && !isAdmin) return null;
   if (hiddenOn(pathname)) return null;
   // 로그인·로그아웃으로 사람이 바뀌면 상태를 새로 시작한다.
   return <ChatWidget key={uid ?? "guest"} member={!!uid} />;
