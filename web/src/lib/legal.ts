@@ -10,7 +10,8 @@ export function privacyV2Active(now: number = Date.now()): boolean {
 // 채팅 상담(#881) 개정 시행일(KST 날짜). 처리방침에 '채팅 상담 내용' 수집이 더해져
 // 7일 전 공지 뒤에만 켤 수 있다 → 공지일 + 7일로 정해지면 "YYYY-MM-DD" 를 넣는다.
 // null 이면 개정판도 채팅 버튼도 손님에게 보이지 않는다(관리자는 미리 써 볼 수 있다).
-export const PRIVACY_V3_DATE: string | null = null;
+// 2026-10-23 대표님 사이트 공지 게시 → 2026-10-30 0시(KST)부터 손님에게 열린다.
+export const PRIVACY_V3_DATE: string | null = "2026-10-30";
 
 const PRIVACY_V3_FROM =
   PRIVACY_V3_DATE === null ? null : Date.parse(`${PRIVACY_V3_DATE}T00:00:00+09:00`);
