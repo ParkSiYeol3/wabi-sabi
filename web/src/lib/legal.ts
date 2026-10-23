@@ -13,7 +13,7 @@ export function privacyV2Active(now: number = Date.now()): boolean {
 // 2026-10-23 대표님 사이트 공지 게시 → 2026-10-30 0시(KST)부터 손님에게 열린다.
 export const PRIVACY_V3_DATE: string | null = "2026-10-30";
 
-const PRIVACY_V3_FROM =
+export const PRIVACY_V3_FROM =
   PRIVACY_V3_DATE === null ? null : Date.parse(`${PRIVACY_V3_DATE}T00:00:00+09:00`);
 
 export function privacyV3Active(now: number = Date.now()): boolean {
