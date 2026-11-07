@@ -1,8 +1,8 @@
-import { unstable_cache } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { getCategorySlugs } from "@/lib/queries/categories";
+import { soldOutLast } from "@/lib/inventory";
 import type { ProductCardData } from "@/components/product/product-card";
 import type { OptionGroup } from "@/lib/product-options";
 
@@ -146,19 +146,24 @@ export async function getProducts({
     image2: secondImage(p.images),
     category: p.categories?.name_en,
   }));
+  // 어느 정렬이든 품절은 뒤로(대표님 2026-11-07).
   if (sort === "popular" || sort === "likes") {
     const rank = await rankBy(
       supabase,
       cards.map((c) => c.id),
       sort === "popular" ? "order_count" : "like_count",
     );
-    return applyRank(cards, rank);
+    return soldOutLast(applyRank(cards, rank));
   }
-  return cards;
+  return soldOutLast(cards);
 }
 
-// /shop 탐색(검색어 없음) 전용 캐시 경로. 카테고리(약 10종)×정렬(3종)로 조합이 유한해
-// unstable_cache 로 묶는다. 검색(q)은 입력이 무한해 캐시하지 않고 기존 getProducts 를 쓴다.
+// /shop 탐색(검색어 없음) 경로. 검색(q)은 getProducts 를 쓴다.
+//
+// 예전엔 unstable_cache(120초)로 묶었는데, 2026-11-07 운영 기본 목록(전체·신상품순) 한 칸만
+// 이틀 넘게 옛 재고를 보여 줬다(DB 는 재고 20인데 품절 표시, 다른 정렬·카테고리 칸은 정상).
+// 그 칸만 갱신되지 않은 원인은 확정하지 못했다. 상품이 수십 개라 캐시 없는 검색 경로와 응답 시간이 같아서
+// (운영 실측 둘 다 약 0.27초) 캐시를 걷고 매번 읽는다 → 품절·재입고가 바로 반영된다.
 //
 // getProducts 와 달리 슬러그→id 를 얻는 categories 룩업(별도 왕복)을 없앤다: category!inner
 // 조인 + categories.slug 필터로 한 쿼리에 끝낸다(PostgREST 는 embed 필터가 부모행을 좁히려면
@@ -203,29 +208,23 @@ async function loadShopBrowse(
     image2: secondImage(p.images),
     category: p.categories?.name_en,
   }));
+  // 어느 정렬이든 품절은 뒤로(대표님 2026-11-07).
   if (sort === "popular" || sort === "likes") {
     const rank = await rankBy(
       db,
       cards.map((c) => c.id),
       sort === "popular" ? "order_count" : "like_count",
     );
-    return applyRank(cards, rank);
+    return soldOutLast(applyRank(cards, rank));
   }
-  return cards;
+  return soldOutLast(cards);
 }
 
-const getCachedShopBrowse = unstable_cache(
-  (category: string | null, sort: ProductSort) => loadShopBrowse(category, sort),
-  ["shop-browse"],
-  { revalidate: 120 },
-);
-
-// 어드민 상품 변경 시 revalidatePath("/shop") 로 무효화된다.
 export function getShopBrowse({
   category,
   sort = "newest",
 }: { category?: string; sort?: ProductSort } = {}): Promise<ProductCardData[]> {
-  return getCachedShopBrowse(category ?? null, sort);
+  return loadShopBrowse(category ?? null, sort);
 }
 
 // (getFeaturedProducts 는 구 홈 Featured Collection 용 — 헬릭스 리디자인(#197)으로
