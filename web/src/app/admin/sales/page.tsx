@@ -284,9 +284,12 @@ export default async function AdminSalesPage({
   const best = (bestData as BestSeller[] | null) ?? [];
   // 베스트셀러 사진·링크용 상품 정보(집계 RPC 는 id·이름·수량만 준다). 최대 10개 한 번에.
   const bestIds = best.map((b) => b.product_id).filter((id): id is string => !!id);
-  const { data: bestProducts } = bestIds.length
+  const { data: bestProducts, error: bestProductsErr } = bestIds.length
     ? await db.from("products").select("id, images, is_active").in("id", bestIds)
-    : { data: [] };
+    : { data: [], error: null };
+  // 실패하면 사진·링크 없이 이름만 보여 삭제된 상품과 같아 보인다 → 로그로 구분(CodeRabbit #903).
+  if (bestProductsErr)
+    console.error("[admin/sales] 베스트셀러 상품 조회 실패", bestProductsErr);
   const bestRef = new Map(
     ((bestProducts ?? []) as { id: string; images: unknown; is_active: boolean }[]).map(
       (p) => [p.id, { images: p.images, is_active: p.is_active }],
