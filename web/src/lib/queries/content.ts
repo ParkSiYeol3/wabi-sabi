@@ -113,6 +113,10 @@ export const DEFAULT_TODAY_INTRO = `와비사비의 기물이 당신의 일상�
 오늘의 식탁, 좋아하는 음식, 작은 레시피까지
 와비사비와 함께한 이야기를 자유롭게 남겨주세요.`;
 
+// 검색 화면 추천 검색어(대표님 2026-11-08). 쉼표나 줄바꿈으로 구분(lib/search parseKeywords).
+// 비어 있으면 상품이 있는 분류 이름으로 대신 보여 준다.
+export const SEARCH_KEYWORDS_KEY = "search_keywords";
+
 // 편집 가능한 전체 키 — 액션 enum·타입 안전의 단일 출처.
 export const CONTENT_KEYS = [
   PHILOSOPHY_KEY,
@@ -131,6 +135,7 @@ export const CONTENT_KEYS = [
   CARE_MAINTAIN_LABEL_KEY,
   CARE_MAINTAIN_KEY,
   TODAY_INTRO_KEY,
+  SEARCH_KEYWORDS_KEY,
 ] as const;
 export type ContentKey = (typeof CONTENT_KEYS)[number];
 

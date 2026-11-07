@@ -27,7 +27,10 @@ import {
   DEFAULT_SHIPPING_FEE,
   TODAY_INTRO_KEY,
   DEFAULT_TODAY_INTRO,
+  SEARCH_KEYWORDS_KEY,
 } from "@/lib/queries/content";
+import { getCategoryTree } from "@/lib/queries/categories";
+import { defaultKeywords, getSearchCatalog } from "@/lib/queries/search";
 import { PageHeader, SectionHeading } from "@/components/admin/ui";
 import { ContentField } from "@/components/admin/content-field";
 import { AboutImageField } from "@/components/admin/about-image-field";
@@ -65,6 +68,7 @@ const CONTENT_NAV = [
   { id: "g-about", label: "About (소개)" },
   { id: "g-product", label: "상품 상세" },
   { id: "g-today", label: "오늘의 와비사비" },
+  { id: "g-search", label: "검색" },
   { id: "g-global", label: "전역 설정" },
 ] as const;
 
@@ -93,6 +97,8 @@ export default async function AdminContentPage() {
     shippingInfo,
     shippingFee,
     todayIntro,
+    searchKeywords,
+    searchDefaults,
   ] = await Promise.all([
     getSiteContent(PHILOSOPHY_KEY),
     getSiteContent(HOME_PILLAR_LABEL_KEYS[0]),
@@ -116,6 +122,11 @@ export default async function AdminContentPage() {
     getSiteContent(SHIPPING_INFO_KEY),
     getSiteContent(SHIPPING_FEE_KEY),
     getSiteContent(TODAY_INTRO_KEY),
+    getSiteContent(SEARCH_KEYWORDS_KEY),
+    // 아직 안 정했을 때 손님 화면에 보이는 기본 추천어(상품이 있는 분류 이름).
+    getCategoryTree().then(async (tree) =>
+      defaultKeywords(tree, await getSearchCatalog(tree)),
+    ),
   ]);
 
   const criteria = [
@@ -361,6 +372,21 @@ export default async function AdminContentPage() {
             hint="줄을 바꾸면 화면에서도 그 자리에서 줄이 바뀝니다."
             value={todayIntro ?? DEFAULT_TODAY_INTRO}
             rows={4}
+          />
+        </PageBlock>
+
+        {/* ── 검색 (2026-11-08) ── */}
+        <PageBlock
+          id="g-search"
+          label="검색"
+          note="상단 돋보기를 누르면 열리는 검색 화면의 추천 검색어."
+        >
+          <ContentField
+            contentKey={SEARCH_KEYWORDS_KEY}
+            label="추천 검색어"
+            hint="쉼표(,)나 줄바꿈으로 구분합니다. 최대 12개, 한 단어는 20자까지 보입니다. 손님이 누르면 그 단어로 바로 검색됩니다."
+            value={searchKeywords ?? searchDefaults.join(", ")}
+            rows={3}
           />
         </PageBlock>
 

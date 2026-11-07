@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
 
 // 상품 목록 페이지네이션(대표님 — < 1 2 3 … >). 현재 필터(카테고리·정렬·검색)를
-// 그대로 두고 page 파라미터만 바꾼다. 목록은 캐시된 전체를 서버에서 슬라이스하므로
+// 그대로 두고 page 파라미터만 바꾼 주소를 linkFor 가 만든다(/shop·/search 공용). 목록은 캐시된 전체를 서버에서 슬라이스하므로
 // 이 컴포넌트는 링크만 그린다(추가 쿼리 없음). 페이지가 많으면 앞뒤 창만 노출.
 function pageWindow(current: number, total: number): (number | "…")[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
@@ -26,17 +25,16 @@ const arrowOn =
   "inline-flex size-9 items-center justify-center rounded-md border border-wabi-border text-wabi-fg-muted transition-colors hover:border-wabi-fg hover:text-wabi-fg";
 
 export function ShopPagination({
-  sp,
   page,
   totalPages,
+  linkFor,
 }: {
-  sp: ShopSP;
   page: number;
   totalPages: number;
+  linkFor: (n: number) => string;
 }) {
   if (totalPages <= 1) return null;
   const items = pageWindow(page, totalPages);
-  const linkFor = (n: number) => buildShopQuery(sp, { page: String(n) });
 
   return (
     <nav

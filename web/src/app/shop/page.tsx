@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { ProductCard } from "@/components/product/product-card";
 import { Reveal } from "@/components/common/reveal";
@@ -8,12 +7,8 @@ import { MobileCategoryTabs } from "@/components/shop/mobile-category-tabs";
 import { FeaturedShortcuts } from "@/components/shop/featured-shortcuts";
 import { SortSelect } from "@/components/shop/sort-select";
 import { ShopPagination } from "@/components/shop/shop-pagination";
-import { type ShopSP } from "@/lib/shop-url";
-import {
-  getProducts,
-  getShopBrowse,
-  type ProductSort,
-} from "@/lib/queries/products";
+import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
+import { getShopBrowse, type ProductSort } from "@/lib/queries/products";
 import { getCategoryTree } from "@/lib/queries/categories";
 
 export const metadata: Metadata = {
@@ -39,24 +34,21 @@ export default async function ShopPage({
   searchParams: Promise<SP>;
 }) {
   const sp = await searchParams;
-  const sort = (sp.sort as ProductSort) || "newest";
-  const query = sp.q?.trim();
-  // 카테고리 트리(이름은 DB 편집값 #246) — 상품 조회와 병렬.
+  const sort = sorts.some((s) => s.key === sp.sort)
+    ? (sp.sort as ProductSort)
+    : "newest";
+  // 카테고리 트리(이름은 DB 편집값 #246) — 상품 조회와 병렬. 검색(?q=)은 next.config
+  // 리다이렉트로 /search 가 맡는다(2026-11-08).
   const [tree, products] = await Promise.all([
     getCategoryTree(),
-    query
-      ? getProducts({ category: sp.category, q: sp.q, sort })
-      : getShopBrowse({ category: sp.category, sort }),
+    getShopBrowse({ category: sp.category, sort }),
   ]);
+  const sortOptions = sorts.map((s) => ({
+    ...s,
+    href: buildShopQuery(sp, { sort: s.key }),
+  }));
 
-  // 검색 결과가 없으면 이탈하지 않게 최신 상품을 추천한다(갭 분석 4). 캐시된
-  // 탐색 쿼리 재사용 — 검색 실패 시에만 실행하므로 정상 경로엔 부하가 없다.
-  const suggestions =
-    products.length === 0 && query
-      ? (await getShopBrowse({ sort: "newest" })).slice(0, 4)
-      : [];
-
-  // 페이지네이션(대표님) — 목록은 캐시된 전체를 여기서 슬라이스한다. 범위를 벗어난
+  // 페이지네이션(대표님) — 목록 전체를 여기서 슬라이스한다. 범위를 벗어난
   // page 는 마지막 페이지로 클램프. 필터/정렬을 바꾸면 buildShopQuery 가 page 를
   // 떨궈 1페이지로 리셋된다.
   const totalPages = Math.max(1, Math.ceil(products.length / PAGE_SIZE));
@@ -105,7 +97,7 @@ export default async function ShopPage({
           />
         </div>
         <div className="shrink-0">
-          <SortSelect sp={sp} sort={sort} options={sorts} />
+          <SortSelect value={sort} options={sortOptions} />
         </div>
       </div>
 
@@ -119,43 +111,17 @@ export default async function ShopPage({
 
         <div className="min-w-0 flex-1">
           {/* 데스크톱 툴바 — 정렬만 우측 정렬(모바일은 위 카테고리 줄로 올림). 구분선
-              제거(대표님 — 선 없는 게 담백). 검색창도 제거(웹·모바일 모두 노출 안 함).
-              직접 검색이 필요하면 ?q= URL 파라미터는 계속 동작한다(빈 결과 시 추천 노출). */}
+              제거(대표님 — 선 없는 게 담백). 검색창은 두지 않는다(대표님): 검색은 헤더
+              돋보기 → /search 화면(2026-11-08). */}
           <div className="hidden items-center justify-end pb-5 lg:flex">
-            <SortSelect sp={sp} sort={sort} options={sorts} />
+            <SortSelect value={sort} options={sortOptions} />
           </div>
 
           {products.length === 0 ? (
             <div className="mt-16 pb-10">
               <p className="text-center text-sm text-wabi-fg-muted">
-                {query
-                  ? `'${sp.q}' 검색 결과가 없습니다.`
-                  : "준비 중인 상품입니다."}
+                준비 중인 상품입니다.
               </p>
-              {query && (
-                <p className="mt-3 text-center">
-                  <Link
-                    href="/shop"
-                    className="text-xs text-wabi-fg-muted underline underline-offset-2 hover:text-wabi-fg"
-                  >
-                    전체 상품 보기 →
-                  </Link>
-                </p>
-              )}
-              {suggestions.length > 0 && (
-                <section className="mt-14">
-                  <h2 className="text-center text-sm font-medium">
-                    이런 상품은 어떠세요?
-                  </h2>
-                  <ul className="mt-8 grid grid-cols-2 gap-x-6 gap-y-7 sm:gap-y-10 md:grid-cols-4">
-                    {suggestions.map((p) => (
-                      <li key={p.id}>
-                        <ProductCard product={p} />
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
             </div>
           ) : (
             <ul className="mt-1 grid grid-cols-2 gap-x-6 gap-y-7 sm:mt-10 sm:gap-y-10 md:grid-cols-4">
@@ -183,9 +149,13 @@ export default async function ShopPage({
             </ul>
           )}
 
-          {/* 페이지 구분(대표님 — < 1 2 3 … >). 검색어 없는 목록에만, 2쪽 이상일 때. */}
+          {/* 페이지 구분(대표님 — < 1 2 3 … >). 2쪽 이상일 때. */}
           {products.length > 0 && (
-            <ShopPagination sp={sp} page={pageNum} totalPages={totalPages} />
+            <ShopPagination
+              page={pageNum}
+              totalPages={totalPages}
+              linkFor={(n) => buildShopQuery(sp, { page: String(n) })}
+            />
           )}
         </div>
       </div>

@@ -1,5 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { getCategorySlugs } from "@/lib/queries/categories";
 import { soldOutLast } from "@/lib/inventory";
@@ -67,7 +66,7 @@ export type ProductSort = "newest" | "popular" | "likes";
 // 주문/좋아요 정렬 — product_popularity 뷰(집계 숫자)에서 후보 상품의 순위를 받아
 // JS 로 재정렬한다. PostgREST 는 임베드 집계 컬럼으로 order 하기 까다롭고, 카탈로그가
 // 작고 캐시되므로 후처리 정렬이 간단·안전하다. anon/authenticated 모두 뷰 읽기 허용.
-async function rankBy(
+export async function rankBy(
   db: SupabaseClient,
   ids: string[],
   col: "order_count" | "like_count",
@@ -85,7 +84,7 @@ async function rankBy(
   );
 }
 
-function applyRank<T extends { id: string }>(
+export function applyRank<T extends { id: string }>(
   cards: T[],
   rank: Map<string, number>,
 ): T[] {
@@ -94,80 +93,18 @@ function applyRank<T extends { id: string }>(
   );
 }
 
-export interface ProductQuery {
-  category?: string;
-  q?: string;
-  sort?: ProductSort;
-}
-
-// WSB-007/008/009: 카테고리·검색·정렬 (공개 — RLS는 is_active=true 만 노출).
-export async function getProducts({
-  category,
-  q,
-  sort = "newest",
-}: ProductQuery = {}): Promise<ProductCardData[]> {
-  const supabase = await createClient();
-
-  const filterByCategory = !!category;
-
-  // 카테고리 필터는 slug→id 별도 조회 대신 !inner 조인 필터로 한 번에.
-  // 대분류 slug 는 하위 소분류까지 확장해 매칭한다(#193 2계층 트리).
-  let query = supabase
-    .from("products")
-    .select(
-      filterByCategory
-        ? "id, name, price, stock, sold_out, same_day, images, categories!inner(slug, name_en)"
-        : "id, name, price, stock, sold_out, same_day, images, categories(slug, name_en)",
-    )
-    .eq("is_active", true);
-
-  if (filterByCategory)
-    query = query.in("categories.slug", await getCategorySlugs(category!));
-  if (q && q.trim()) query = query.ilike("name", `%${q.trim()}%`);
-
-  // 기본 정렬은 최신순. 주문/좋아요순은 집계 뷰로 후처리 재정렬한다.
-  query = query.order("created_at", { ascending: false });
-
-  const { data, error } = await query.returns<ProductRow[]>();
-  if (error || !data) return [];
-
-  const cards = data.map((p) => ({
-    id: p.id,
-    name: p.name,
-    price: p.price,
-    stock: p.stock,
-    sold_out: p.sold_out,
-    same_day: p.same_day,
-    image: firstImage(p.images),
-    image2: secondImage(p.images),
-    category: p.categories?.name_en,
-  }));
-  // 어느 정렬이든 품절은 뒤로(대표님 2026-11-07).
-  if (sort === "popular" || sort === "likes") {
-    const rank = await rankBy(
-      supabase,
-      cards.map((c) => c.id),
-      sort === "popular" ? "order_count" : "like_count",
-    );
-    return soldOutLast(applyRank(cards, rank));
-  }
-  return soldOutLast(cards);
-}
-
-// /shop 탐색(검색어 없음) 경로. 검색(q)은 getProducts 를 쓴다.
+// /shop 탐색 경로. 검색은 /search(lib/queries/search.ts)가 따로 맡는다.
 //
 // 예전엔 unstable_cache(120초)로 묶었는데, 2026-11-07 운영 기본 목록(전체·신상품순) 한 칸만
 // 이틀 넘게 옛 재고를 보여 줬다(DB 는 재고 20인데 품절 표시, 다른 정렬·카테고리 칸은 정상).
 // 그 칸만 갱신되지 않은 원인은 확정하지 못했다. 상품이 수십 개라 캐시 없는 검색 경로와 응답 시간이 같아서
 // (운영 실측 둘 다 약 0.27초) 캐시를 걷고 매번 읽는다 → 품절·재입고가 바로 반영된다.
 //
-// getProducts 와 달리 슬러그→id 를 얻는 categories 룩업(별도 왕복)을 없앤다: category!inner
-// 조인 + categories.slug 필터로 한 쿼리에 끝낸다(PostgREST 는 embed 필터가 부모행을 좁히려면
-// inner 조인이어야 한다). 잘못된 슬러그는 매칭 카테고리가 없어 빈 배열(기존 동작과 동일).
+// 카테고리는 category!inner 조인 + categories.slug 필터로 거른다(PostgREST 는 embed 필터가
+// 부모행을 좁히려면 inner 조인이어야 한다). 잘못된 슬러그는 매칭 카테고리가 없어 빈 배열.
 //
 // anon 클라라 빌드 프리렌더에서 실행되면 공개 env 없이 throw 하지만, /shop 은 searchParams
-// prop 으로 선-dynamic 이라 빌드에서 호출되지 않는다. sitemap 이 쓰는 getProducts 는 서버
-// 클라 그대로 둬 이 함정에서 분리한다.
+// prop 으로 선-dynamic 이라 빌드에서 호출되지 않는다.
 async function loadShopBrowse(
   category: string | null,
   sort: ProductSort,

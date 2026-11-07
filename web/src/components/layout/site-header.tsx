@@ -12,6 +12,7 @@ import {
   Heart,
   Package,
   ChevronDown,
+  Search,
 } from "lucide-react";
 import { nav, site, type CategoryNode } from "@/lib/site";
 import { buildShopQuery } from "@/lib/shop-url";
@@ -121,6 +122,16 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
               </Link>
             </>
           )}
+          {/* 검색(대표님 2026-11-08: 쇼핑몰처럼). SHOP 목록 위 검색창 대신 어느 페이지에서나
+              돋보기 → /search 화면. 휴대폰에서도 보인다. */}
+          <Link
+            href="/search"
+            aria-label="검색"
+            aria-current={pathname === "/search" ? "page" : undefined}
+            className="rounded-md p-3 text-wabi-fg transition-colors hover:bg-wabi-muted"
+          >
+            <Search className="size-5" strokeWidth={1.5} />
+          </Link>
           <Link
             href="/cart"
             aria-label={`장바구니${mounted && count > 0 ? ` (${count}개)` : ""}`}

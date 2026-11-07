@@ -28,10 +28,42 @@ test("홈 — 헬릭스 곡선이 렌더된다", async ({ page }) => {
 test("shop — 상품 목록이 보인다", async ({ page }) => {
   await page.goto("/shop");
   await expect(page.getByRole("heading", { name: "Shop" })).toBeVisible();
-  // 검색창은 제거됨(대표님 — 선 없는 담백함, ?q= URL 은 계속 동작). 목록 노출만 검증.
+  // 목록 위 검색창은 두지 않는다(대표님). 검색은 헤더 돋보기 → /search(아래 테스트).
   // 상품 카드 링크 1개 이상
   const productLinks = page.locator('a[href^="/shop/"]');
   expect(await productLinks.count()).toBeGreaterThan(0);
+});
+
+test("검색 — 헤더 돋보기 → 자동완성 → 결과", async ({ page }) => {
+  // 검색어는 지금 있는 상품 이름의 첫 낱말에서 고른다(상품이 바뀌어도 깨지지 않게).
+  await page.goto("/shop");
+  // 카드 사진의 alt 가 상품 이름이다.
+  const firstName = await page
+    .locator('ul.grid a[href^="/shop/"] img[alt]')
+    .first()
+    .getAttribute("alt");
+  const word = firstName?.split(/\s+/).find((w) => /^[가-힣]{2,}$/.test(w));
+  test.skip(!word, "한글 상품 이름을 못 찾음");
+
+  await page.getByRole("link", { name: "검색", exact: true }).click();
+  await expect(page).toHaveURL(/\/search$/);
+  const input = page.getByRole("combobox", { name: "상품 검색" });
+  await expect(input).toBeFocused();
+
+  await input.pressSequentially(word!, { delay: 50 });
+  const list = page.getByRole("listbox", { name: "검색어 자동완성" });
+  await expect(list).toBeVisible();
+  expect(await list.getByRole("option").count()).toBeGreaterThan(1);
+
+  await input.press("Enter");
+  await expect(page).toHaveURL(/\/search\?q=/);
+  await expect(page.getByText(/검색 결과\s*\d+개/)).toBeVisible();
+  expect(await page.locator('ul.grid a[href^="/shop/"]').count()).toBeGreaterThan(0);
+});
+
+test("예전 검색 주소 /shop?q= 는 검색 화면으로 간다", async ({ page }) => {
+  await page.goto("/shop?q=%EC%A0%91%EC%8B%9C");
+  await expect(page).toHaveURL(/\/search\?q=%EC%A0%91%EC%8B%9C/);
 });
 
 test("상세 → 담기 → 장바구니 → 주문하기(auth 게이트)", async ({ page }) => {
