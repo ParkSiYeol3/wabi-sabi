@@ -98,7 +98,6 @@ export interface ProductQuery {
   category?: string;
   q?: string;
   sort?: ProductSort;
-  limit?: number;
 }
 
 // WSB-007/008/009: 카테고리·검색·정렬 (공개 — RLS는 is_active=true 만 노출).
@@ -106,7 +105,6 @@ export async function getProducts({
   category,
   q,
   sort = "newest",
-  limit,
 }: ProductQuery = {}): Promise<ProductCardData[]> {
   const supabase = await createClient();
 
@@ -129,8 +127,6 @@ export async function getProducts({
 
   // 기본 정렬은 최신순. 주문/좋아요순은 집계 뷰로 후처리 재정렬한다.
   query = query.order("created_at", { ascending: false });
-
-  if (limit) query = query.limit(limit);
 
   const { data, error } = await query.returns<ProductRow[]>();
   if (error || !data) return [];
