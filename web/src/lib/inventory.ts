@@ -23,6 +23,21 @@ export function isStockSoldOut(stock: number): boolean {
   return availableStock(stock) <= 0;
 }
 
+// 상품 카드 한 장의 품절 판정. 카드의 품절 표시와 목록 정렬(soldOutLast)이 같은 규칙을 쓴다.
+// 강제 품절(sold_out)은 재고와 무관하게 품절. stock 을 모르는 카드(관련상품 등)는 품절로 보지 않는다.
+export function isListingSoldOut(p: { stock?: number; sold_out?: boolean }): boolean {
+  return (p.stock !== undefined && isStockSoldOut(p.stock)) || p.sold_out === true;
+}
+
+// 손님 상품 목록에서 판매 중인 상품을 앞에, 품절은 뒤로(대표님 2026-11-07). 각 묶음 안의
+// 순서(신상품순·인기순·좋아요순)는 그대로 둔다. 다시 입고되면 원래 자리로 돌아온다.
+export function soldOutLast<T extends { stock?: number; sold_out?: boolean }>(items: T[]): T[] {
+  return [
+    ...items.filter((p) => !isListingSoldOut(p)),
+    ...items.filter((p) => isListingSoldOut(p)),
+  ];
+}
+
 // 저재고 = 판매 가능 수량이 남아 있으나 임계 이하. 품절(예약분 이하)은 별도로 다룬다.
 export function isLowStock(stock: number): boolean {
   return !isStockSoldOut(stock) && stock <= LOW_STOCK_THRESHOLD;
