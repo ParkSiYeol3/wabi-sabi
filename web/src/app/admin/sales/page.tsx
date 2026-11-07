@@ -1,5 +1,7 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
-import { Trophy, ChevronDown } from "lucide-react";
+import Image from "next/image";
+import { Trophy, ChevronDown, ImageIcon } from "lucide-react";
 import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
 import { won, formatDateKST } from "@/lib/orders";
 import {
@@ -23,7 +25,13 @@ type BestSeller = {
   qty: number;
   revenue: number;
 };
-type OrderItem = { product_name: string | null; quantity: number };
+type ProductRef = { images: unknown; is_active: boolean } | null;
+type OrderItem = {
+  product_id: string | null;
+  product_name: string | null;
+  quantity: number;
+  products: ProductRef;
+};
 type OrderRow = {
   order_number: string;
   ordered_at: string;
@@ -33,18 +41,86 @@ type OrderRow = {
   order_items: OrderItem[] | null;
 };
 
-// 주문 항목 셀 — 한 건이면 상품명, 여러 건이면 "첫상품 외 N건" + 펼쳐보기(대표님).
-// 네이티브 <details> 라 서버 컴포넌트에서 그대로 동작(클라 JS 불필요).
+function firstImage(images: unknown): string | null {
+  return Array.isArray(images) && typeof images[0] === "string" ? images[0] : null;
+}
+
+// 상품 사진 칸(대표님 2026-11-08: 정산 조회·베스트셀러에도 사진). 사진이 없거나
+// 상품이 삭제됐으면 빈 칸 아이콘.
+function Thumb({ src, size }: { src: string | null; size: "sm" | "md" }) {
+  const box = size === "md" ? "size-11" : "size-9";
+  return (
+    <span
+      className={`relative flex ${box} shrink-0 items-center justify-center overflow-hidden rounded-md bg-wabi-muted`}
+    >
+      {src ? (
+        <Image
+          src={src}
+          alt=""
+          aria-hidden
+          fill
+          sizes={size === "md" ? "44px" : "36px"}
+          className="object-cover"
+        />
+      ) : (
+        <ImageIcon className="size-4 text-wabi-fg-muted/40" strokeWidth={1} aria-hidden />
+      )}
+    </span>
+  );
+}
+
+// 상품 이름 → 상세 페이지(대표님 2026-11-08). 판매 중이면 손님이 보는 상세(/shop/id),
+// 비공개면 손님 상세가 404 라 관리자 상품 편집으로, 삭제된 상품은 링크 없이 이름만.
+// 같은 탭으로 연다: 정산 조회 조건이 주소에 있어 뒤로 가기로 그대로 돌아온다.
+function productHref(id: string | null, product: ProductRef): string | null {
+  if (!id || !product) return null;
+  return product.is_active ? `/shop/${id}` : `/admin/products/${id}`;
+}
+
+function ProductName({
+  href,
+  children,
+}: {
+  href: string | null;
+  children: ReactNode;
+}) {
+  if (!href) return <span>{children}</span>;
+  return (
+    <Link
+      href={href}
+      className="underline decoration-wabi-border underline-offset-4 transition-colors hover:decoration-wabi-fg"
+    >
+      {children}
+    </Link>
+  );
+}
+
+// 주문 항목 셀 — 한 건이면 사진·상품명, 여러 건이면 "첫상품 외 N건" + 펼쳐보기(대표님).
+// 펼치면 상품마다 사진·이름(상세 링크)·수량. 네이티브 <details> 라 서버 컴포넌트에서
+// 그대로 동작(클라 JS 불필요). 요약 줄은 펼침 토글이라 링크를 걸지 않는다.
 function ItemsCell({ items }: { items: OrderItem[] | null }) {
   const list = (items ?? []).filter(
     (i): i is OrderItem & { product_name: string } => Boolean(i.product_name),
   );
   if (list.length === 0) return <span>-</span>;
-  if (list.length === 1) return <span>{list[0].product_name}</span>;
+  if (list.length === 1) {
+    const it = list[0];
+    return (
+      <span className="flex items-center gap-3">
+        <Thumb src={firstImage(it.products?.images)} size="md" />
+        <span className="min-w-0 break-keep">
+          <ProductName href={productHref(it.product_id, it.products)}>
+            {it.product_name}
+          </ProductName>
+        </span>
+      </span>
+    );
+  }
   return (
     <details className="group">
-      <summary className="flex cursor-pointer list-none items-center gap-1 marker:content-none">
-        <span>
+      <summary className="flex cursor-pointer list-none items-center gap-3 marker:content-none">
+        <Thumb src={firstImage(list[0].products?.images)} size="md" />
+        <span className="min-w-0 break-keep">
           {list[0].product_name} 외 {list.length - 1}건
         </span>
         <ChevronDown
@@ -52,11 +128,16 @@ function ItemsCell({ items }: { items: OrderItem[] | null }) {
           aria-hidden
         />
       </summary>
-      <ul className="mt-1.5 space-y-0.5 text-xs text-wabi-fg-muted">
+      <ul className="mt-2.5 space-y-2 text-xs text-wabi-fg-muted">
         {list.map((it, i) => (
-          <li key={i}>
-            {it.product_name}{" "}
-            <span className="font-numeric">×{it.quantity}</span>
+          <li key={i} className="flex items-center gap-2.5">
+            <Thumb src={firstImage(it.products?.images)} size="sm" />
+            <span className="min-w-0 break-keep">
+              <ProductName href={productHref(it.product_id, it.products)}>
+                {it.product_name}
+              </ProductName>{" "}
+              <span className="font-numeric">×{it.quantity}</span>
+            </span>
           </li>
         ))}
       </ul>
@@ -183,7 +264,7 @@ export default async function AdminSalesPage({
   let settleQ = db
     .from("orders")
     .select(
-      "order_number, ordered_at, recipient, total_price, status, order_items(product_name, quantity)",
+      "order_number, ordered_at, recipient, total_price, status, order_items(product_id, product_name, quantity, products(images, is_active))",
     )
     .gte("ordered_at", fromISO)
     .lte("ordered_at", toISO)
@@ -201,6 +282,16 @@ export default async function AdminSalesPage({
   });
   if (bestErr) notReady = true;
   const best = (bestData as BestSeller[] | null) ?? [];
+  // 베스트셀러 사진·링크용 상품 정보(집계 RPC 는 id·이름·수량만 준다). 최대 10개 한 번에.
+  const bestIds = best.map((b) => b.product_id).filter((id): id is string => !!id);
+  const { data: bestProducts } = bestIds.length
+    ? await db.from("products").select("id, images, is_active").in("id", bestIds)
+    : { data: [] };
+  const bestRef = new Map(
+    ((bestProducts ?? []) as { id: string; images: unknown; is_active: boolean }[]).map(
+      (p) => [p.id, { images: p.images, is_active: p.is_active }],
+    ),
+  );
 
   return (
     <div className="space-y-10">
@@ -419,7 +510,20 @@ export default async function AdminSalesPage({
                     >
                       {i === 0 ? <Trophy className="size-3.5" /> : i + 1}
                     </span>
-                    <span className="truncate">{b.name}</span>
+                    <Thumb
+                      src={firstImage(bestRef.get(b.product_id ?? "")?.images)}
+                      size="md"
+                    />
+                    <span className="min-w-0 break-keep">
+                      <ProductName
+                        href={productHref(
+                          b.product_id,
+                          bestRef.get(b.product_id ?? "") ?? null,
+                        )}
+                      >
+                        {b.name}
+                      </ProductName>
+                    </span>
                   </span>
                   <span className="shrink-0 text-right">
                     <span className="block font-numeric">{b.qty}개</span>
