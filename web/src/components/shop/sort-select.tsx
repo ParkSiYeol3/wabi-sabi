@@ -2,30 +2,28 @@
 
 import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
-import { buildShopQuery, type ShopSP } from "@/lib/shop-url";
-import type { ProductSort } from "@/lib/queries/products";
 
-// 정렬 드롭다운(대표님 — 텍스트 링크 대신 셀렉트). 선택 시 현재 필터(카테고리·검색)를
-// 유지한 채 sort 파라미터만 바꿔 이동한다. 네이티브 셀렉트의 넓은 여백·이중 화살표
-// 대신 appearance-none + 커스텀 아래 화살표 하나로 폭을 내용에 맞춘다(대표님).
+// 정렬 드롭다운(대표님 — 텍스트 링크 대신 셀렉트). 선택지마다 이동할 주소(href)를 서버가
+// 미리 만들어 넘긴다: 현재 필터(카테고리·검색어 등)는 그대로, 정렬만 바뀐 주소. /shop·/search 공용.
+// 네이티브 셀렉트의 넓은 여백·이중 화살표 대신 appearance-none + 커스텀 아래 화살표 하나로
+// 폭을 내용에 맞춘다(대표님).
 export function SortSelect({
-  sp,
-  sort,
+  value,
   options,
 }: {
-  sp: ShopSP;
-  sort: ProductSort;
-  options: { key: ProductSort; label: string }[];
+  value: string;
+  options: { key: string; label: string; href: string }[];
 }) {
   const router = useRouter();
   return (
     <div className="relative inline-flex items-center">
       <select
-        value={sort}
+        value={value}
         aria-label="정렬"
-        onChange={(e) =>
-          router.push(buildShopQuery(sp, { sort: e.target.value as ProductSort }))
-        }
+        onChange={(e) => {
+          const next = options.find((o) => o.key === e.target.value);
+          if (next) router.push(next.href);
+        }}
         className="cursor-pointer appearance-none rounded-md border border-wabi-border bg-wabi-bg/60 py-1.5 pl-3 pr-7 text-xs text-wabi-fg outline-none transition-colors focus:border-wabi-fg"
       >
         {options.map((o) => (

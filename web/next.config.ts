@@ -94,6 +94,14 @@ const nextConfig: NextConfig = {
     return [
       // /contact 를 소개(SHOWROOM)로 합침(0037, 대표님) — 기존 링크·북마크 영구 이전.
       { source: "/contact", destination: "/about", permanent: true },
+      // 예전 검색 주소(/shop?q=)는 검색 화면으로(2026-11-08). 쿼리는 그대로 넘어간다.
+      // 페이지 안 redirect() 는 /shop 의 loading.tsx 스트리밍 때문에 meta 태그 이동이 돼서 여기서 한다.
+      {
+        source: "/shop",
+        has: [{ type: "query", key: "q" }],
+        destination: "/search",
+        permanent: false,
+      },
       // 캐노니컬 강제: Vercel 배포 URL(wabi-sabi-nu.vercel.app)로 들어오면 정식
       // 도메인 wasa.kr 로 301. 네이버·구글이 vercel.app URL 을 색인·노출하던 문제
       // (검색 결과 링크가 vercel.app 로 뜸) 해소 — 도메인 하나로 통합(SEO·브랜드).

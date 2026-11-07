@@ -27,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let productRoutes: MetadataRoute.Sitemap = [];
   try {
     // 경량 직접 조회 — lastModified 는 실제 등록일(created_at), image 는 대표 사진.
-    // (getProducts 반환엔 created_at 이 없어 sitemap 전용으로 최소 컬럼만 읽는다.)
+    // (목록 조회 함수는 created_at 을 돌려주지 않아 sitemap 전용으로 최소 컬럼만 읽는다.)
     const db = createPublicClient();
     const { data } = await db
       .from("products")
