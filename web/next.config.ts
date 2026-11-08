@@ -98,7 +98,8 @@ const nextConfig: NextConfig = {
       // 페이지 안 redirect() 는 /shop 의 loading.tsx 스트리밍 때문에 meta 태그 이동이 돼서 여기서 한다.
       {
         source: "/shop",
-        has: [{ type: "query", key: "q" }],
+        // 검색어가 빈 옛 주소(/shop?q=)는 목록을 그대로 보여 준다(QA 11/08).
+        has: [{ type: "query", key: "q", value: "(?<q>.+)" }],
         destination: "/search",
         permanent: false,
       },

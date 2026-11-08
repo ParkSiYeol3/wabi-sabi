@@ -67,8 +67,9 @@ function Chip({
       )}
     >
       {children}
+      {/* 안 고른 칩 숫자를 흐리게(opacity) 하면 대비가 4.5:1 아래로 떨어져(axe, QA 11/08) 고른 칩만 흐림 */}
       {count !== undefined && (
-        <span className={cn("font-numeric lining-nums", active ? "opacity-80" : "opacity-60")}>
+        <span className={cn("font-numeric lining-nums", active && "opacity-80")}>
           {count}
         </span>
       )}
