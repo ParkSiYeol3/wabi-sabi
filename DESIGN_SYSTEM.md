@@ -96,7 +96,9 @@ Featured 카드 `scale` stagger · Philosophy 좌우(`left`/`right`) 모임 · V
 
 ## 6. 컴포넌트 인벤토리
 
-**레이아웃·브랜드**: Header(로고+nav: Shop/About/Contact) · Footer(사업자정보 — 값 있을 때만 렌더) · Container
+**레이아웃·브랜드**: Header(로고 + nav: HOME·SHOP·SHOWROOM·NOTICE·Q&A, 관리자면 Admin + 아이콘: 검색 돋보기·장바구니·계정, 로그인하면 위시리스트·주문 아이콘은 1024px 부터. 768~1023px 은 nav 간격 24px, 768px 미만은 햄버거 → 오른쪽 드로어. 홈·관리자에서는 숨김) · Footer(사업자정보: 값 있을 때만 렌더) · Container
+
+**검색(2026-11-08)**: SearchBox(밑줄 입력칸 16px·자동완성 목록: 사진 44px·이름·가격·품절, 마지막 줄 전체 결과 보기, 결과 화면에서 비우면 최근 검색어) · 필터 칩(높이 32px 둥근 테두리, 고른 칩은 먹색 바탕, 휴대폰은 한 줄 가로 스크롤) · 추천·최근 검색어 칩(높이 36px). 숫자는 대비 4.5:1 이상(흐리게 하지 않음).
 
 **상품**: ProductCard(이미지/카테고리/이름/₩가격 + 품절 오버레이) · ProductGallery(썸네일 클릭 → 메인 전환) · ProductDetailActions(수량·장바구니·바로구매) · AddToCartButton(품절 시 비활성) · WishlistButton · RestockButton(품절 시 재입고 알림)
 
