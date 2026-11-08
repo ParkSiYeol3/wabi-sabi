@@ -1,12 +1,13 @@
 // 상품 검색 규칙(대표님 2026-11-08: 쇼핑몰처럼 검색). 서버(검색 결과)와 브라우저(자동완성)가
 // 같은 함수를 써서 입력 중에 보이는 상품과 결과 화면이 어긋나지 않는다.
 //
-// 찾는 곳: 상품 이름·분류(한글·영어, 상위 분류 포함)·소재. 설명은 넣지 않는다(시열님 결정:
-// "접시와 어울리는" 같은 문장 때문에 엉뚱한 상품이 섞인다).
+// 찾는 곳: 상품 이름·분류(한글·영어, 상위 분류 포함)·소재·원산지. 설명은 넣지 않는다(시열님 결정:
+// "접시와 어울리는" 같은 문장 때문에 엉뚱한 상품이 섞인다). 원산지는 11/08 점검 뒤 추가("일본").
 // - 띄어쓰기·대소문자·기호 무시: "나눔접시" = "나눔 접시"
 // - 여러 단어는 모두 들어 있어야 한다: "우드 커트러리"
 // - 한영 동의어: 우드 = Wood = 나무, 접시 = 플레이트 = Plate ...
-// - 초성: "ㅈㅅ" → 접시. 입력 중인 마지막 글자도 맞춘다("저" → 접시, "접ㅅ" → 접시).
+// - 초성: "ㅈㅅ" → 접시. 자동완성에선 입력 중인 마지막 글자도 맞춘다("저" → 접시, "접ㅅ" → 접시).
+//   결과 화면은 다 친 검색어라 이 규칙을 끈다("그레이"가 "그레인"에 걸리지 않게).
 //
 // 상품이 수십 개라 DB 전문 검색 대신 한 번 읽어 와 여기서 거른다.
 
@@ -20,21 +21,37 @@ export type SearchFields = {
   categoryEn?: string | null;
   parentKo?: string | null;
   parentEn?: string | null;
+  origin?: string | null;
 };
 
 // 같은 뜻으로 보는 낱말 묶음. 손님이 이 중 하나를 그대로 치면 묶음 전체로 찾는다.
 // 상품 이름·소재 표기가 한글·영어로 섞여 있어서(우드/Wood, 도자기/Ceramic) 필요하다.
+// 11/08 점검: 손님이 칠 만한 말 54개 중 그릇·식기·밥그릇·앞접시·숟가락·유리잔·소스·티·
+// 색 이름(검정·회색)·일본이 0개라 더했다. 한 낱말은 한 묶음에만 둔다.
 const SYNONYMS: readonly (readonly string[])[] = [
-  ["접시", "플레이트", "plate", "dish"],
-  ["볼", "보울", "bowl"],
-  ["컵", "잔", "머그", "cup", "mug"],
-  ["커트러리", "cutlery", "flatware"],
-  ["다기", "찻잔", "teaware"],
+  // 그릇 가게라 가장 먼저 칠 말 → TABLEWARE(상위 분류) 전체
+  ["그릇", "식기", "테이블웨어", "tableware"],
+  ["접시", "앞접시", "플레이트", "plate", "dish"],
+  ["볼", "보울", "밥그릇", "국그릇", "공기", "대접", "bowl"],
+  ["컵", "잔", "머그", "유리잔", "cup", "mug"],
+  ["커트러리", "숟가락", "스푼", "cutlery", "flatware", "spoon"],
+  ["다기", "찻잔", "티", "tea", "teaware"],
+  ["종지", "소스", "소스볼", "소스그릇", "miniplate"],
   ["우드", "나무", "원목", "wood", "wooden"],
   ["도자기", "세라믹", "도기", "ceramic", "ceramics"],
   ["유리", "글라스", "glass"],
   ["스테인리스", "스테인레스", "스텐", "stainless"],
   ["한지", "hanji"],
+  // 색: 상품 이름은 블랙·그레이·브라운처럼 외래어로 쓴다
+  ["블랙", "검정", "검정색", "검은색", "black"],
+  ["그레이", "회색", "gray", "grey"],
+  ["화이트", "흰색", "하얀색", "white"],
+  ["브라운", "갈색", "brown"],
+  // 원산지: DB 값이 "Made in Japan" 같은 영어라
+  ["일본", "일본산", "japan"],
+  ["한국", "국산", "국내산", "korea"],
+  ["중국", "중국산", "china"],
+  ["베트남", "베트남산", "vietnam"],
 ];
 
 // 띄어쓰기·기호·대소문자를 걷어 낸 비교용 문자열.
@@ -72,7 +89,7 @@ function syllableIndex(ch: string): number {
   return c >= SYLLABLE_FIRST && c <= SYLLABLE_LAST ? c - SYLLABLE_FIRST : -1;
 }
 
-// q(검색어 한 글자)가 h(상품 쪽 한 글자)에 맞는가. last = 검색어의 마지막 글자(입력 중일 수 있음).
+// q(검색어 한 글자)가 h(상품 쪽 한 글자)에 맞는가. last = 자동완성에서 검색어의 마지막 글자(입력 중).
 function charMatches(q: string, h: string, last: boolean): boolean {
   if (q === h) return true;
   const hi = syllableIndex(h);
@@ -88,12 +105,12 @@ function charMatches(q: string, h: string, last: boolean): boolean {
 }
 
 // hay 안에서 token 이 시작하는 위치(없으면 -1). 초성·입력 중 글자를 허용한다.
-function findLoose(hay: string, token: string): number {
+function findLoose(hay: string, token: string, typing: boolean): number {
   const n = token.length;
   for (let i = 0; i + n <= hay.length; i++) {
     let ok = true;
     for (let j = 0; j < n; j++) {
-      if (!charMatches(token[j], hay[i + j], j === n - 1)) {
+      if (!charMatches(token[j], hay[i + j], typing && j === n - 1)) {
         ok = false;
         break;
       }
@@ -103,7 +120,12 @@ function findLoose(hay: string, token: string): number {
   return -1;
 }
 
-export type PreparedFields = { name: string; category: string; material: string };
+export type PreparedFields = {
+  name: string;
+  category: string;
+  material: string;
+  origin: string;
+};
 
 // 상품 한 개의 비교용 문자열을 미리 만든다(입력할 때마다 다시 만들지 않게).
 export function prepareFields(f: SearchFields): PreparedFields {
@@ -115,35 +137,39 @@ export function prepareFields(f: SearchFields): PreparedFields {
     name: normalize(f.name),
     category,
     material: normalize(f.material ?? ""),
+    origin: normalize(f.origin ?? ""),
   };
 }
 
-// 낱말 하나의 점수: 이름 4(이름 첫머리면 +1) > 분류 2 > 소재 1. 못 찾으면 0.
-function tokenScore(p: PreparedFields, token: string): number {
+// 낱말 하나의 점수. 이름에 친 글자 그대로 4(이름 첫머리면 5) > 이름에 동의어·입력 중 글자 3 >
+// 분류 2 > 소재·원산지 1. 못 찾으면 0. "플레이트"를 치면 이름에 플레이트가 있는 상품이 "접시" 상품보다 앞.
+function tokenScore(p: PreparedFields, token: string, typing: boolean): number {
   const synonyms = SYNONYM_OF.get(token);
-  const find = (hay: string) => {
-    if (!hay) return -1;
-    const at = findLoose(hay, token);
-    if (at >= 0 || !synonyms) return at;
-    for (const s of synonyms) {
-      const i = hay.indexOf(s);
-      if (i >= 0) return i;
-    }
-    return -1;
-  };
-  const inName = find(p.name);
-  if (inName >= 0) return inName === 0 ? 5 : 4;
-  if (find(p.category) >= 0) return 2;
-  if (find(p.material) >= 0) return 1;
+  const hasSynonym = (hay: string) => !!synonyms?.some((s) => hay.includes(s));
+  const found = (hay: string) =>
+    !!hay && (findLoose(hay, token, typing) >= 0 || hasSynonym(hay));
+
+  const exact = findLoose(p.name, token, false);
+  if (exact >= 0) return exact === 0 ? 5 : 4;
+  // 입력 중 글자로만 맞은 이름("그레이" → 그레인)은 다 맞은 이름보다 뒤
+  if (typing && findLoose(p.name, token, true) >= 0) return 3;
+  if (hasSynonym(p.name)) return 3;
+  if (found(p.category)) return 2;
+  if (found(p.material) || found(p.origin)) return 1;
   return 0;
 }
 
 // 상품 점수. 낱말 중 하나라도 못 찾으면 0(결과에서 빠짐). 낱말이 없으면 0.
-export function scoreProduct(p: PreparedFields, tokens: string[]): number {
+// typing = 자동완성(입력 중). 마지막 글자를 받침 전 글자로도 맞춘다.
+export function scoreProduct(
+  p: PreparedFields,
+  tokens: string[],
+  { typing = false }: { typing?: boolean } = {},
+): number {
   if (tokens.length === 0) return 0;
   let total = 0;
   for (const t of tokens) {
-    const s = tokenScore(p, t);
+    const s = tokenScore(p, t, typing);
     if (s === 0) return 0;
     total += s;
   }
