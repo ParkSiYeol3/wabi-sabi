@@ -195,7 +195,7 @@ export default function CheckoutPage() {
   const total = merchandise + shipping - discount;
 
   // 비회원 가입 안내(#722) — 가입 축하 쿠폰이 **이 주문에 실제로 쓰일 때만** 보인다.
-  // 무료배송 쿠폰이면 5만~10만원 구간(10만원↑은 원래 무료, 5만원 미만은 조건 미달).
+  // 무료배송 쿠폰이면 5~10만원 구간(10만원↑은 원래 무료, 5만원 미만은 조건 미달).
   // 판정·금액은 결제와 같은 함수(couponUsable·couponDiscount)라 안내와 실제가 어긋나지 않는다.
   const signupSaving =
     !authLoading &&
