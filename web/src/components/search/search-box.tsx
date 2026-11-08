@@ -2,7 +2,6 @@
 
 import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Clock, ImageIcon, Search, X } from "lucide-react";
 import { Price } from "@/components/product/price";
@@ -108,7 +107,7 @@ export function SearchBox({
       setActive((i) => (i <= 0 ? optionCount - 1 : i - 1));
     } else if (e.key === "Escape") {
       setOpen(false);
-    } else if (e.key === "Enter" && recentMode && active >= 0) {
+    } else if (e.key === "Enter" && recentMode && active >= 0 && active < recent.length) {
       e.preventDefault();
       go(`/search?q=${encodeURIComponent(recent[active])}`);
     } else if (e.key === "Enter" && suggestMode && active >= 0 && active < suggestions.length) {
@@ -203,23 +202,20 @@ export function SearchBox({
       >
         {recentMode &&
           recent.map((q, i) => (
-            <li key={q} id={optionId(i)} role="option" aria-selected={active === i}>
-              <Link
-                href={`/search?q=${encodeURIComponent(q)}`}
-                tabIndex={-1}
-                onClick={(e) => {
-                  e.preventDefault();
-                  go(`/search?q=${encodeURIComponent(q)}`);
-                }}
-                onMouseEnter={() => setActive(i)}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 text-sm text-wabi-fg",
-                  active === i && "bg-wabi-muted/70",
-                )}
-              >
-                <Clock className="size-4 shrink-0 text-wabi-fg-muted" strokeWidth={1.6} aria-hidden />
-                <span className="min-w-0 truncate">{q}</span>
-              </Link>
+            <li
+              key={q}
+              id={optionId(i)}
+              role="option"
+              aria-selected={active === i}
+              onClick={() => go(`/search?q=${encodeURIComponent(q)}`)}
+              onMouseEnter={() => setActive(i)}
+              className={cn(
+                "flex cursor-pointer items-center gap-3 px-3 py-2.5 text-sm text-wabi-fg",
+                active === i && "bg-wabi-muted/70",
+              )}
+            >
+              <Clock className="size-4 shrink-0 text-wabi-fg-muted" strokeWidth={1.6} aria-hidden />
+              <span className="min-w-0 truncate">{q}</span>
             </li>
           ))}
         {suggestMode &&
@@ -229,20 +225,13 @@ export function SearchBox({
             id={optionId(i)}
             role="option"
             aria-selected={active === i}
+            onClick={() => go(`/shop/${it.id}`)}
+            onMouseEnter={() => setActive(i)}
+            className={cn(
+              "flex cursor-pointer items-center gap-3 px-3 py-2",
+              active === i && "bg-wabi-muted/70",
+            )}
           >
-            <Link
-              href={`/shop/${it.id}`}
-              tabIndex={-1}
-              onClick={(e) => {
-                e.preventDefault();
-                go(`/shop/${it.id}`);
-              }}
-              onMouseEnter={() => setActive(i)}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2",
-                active === i && "bg-wabi-muted/70",
-              )}
-            >
               <span className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-md bg-wabi-muted">
                 {it.image ? (
                   <Image
@@ -270,7 +259,6 @@ export function SearchBox({
                   {it.soldOut && <span className="text-wabi-fg-muted">품절</span>}
                 </span>
               </span>
-            </Link>
           </li>
         ))}
         {suggestMode && (
@@ -278,23 +266,19 @@ export function SearchBox({
             id={optionId(suggestions.length)}
             role="option"
             aria-selected={active === suggestions.length}
-            className={cn(suggestions.length > 0 && "mt-1 border-t border-wabi-border pt-1")}
+            onClick={submit}
+            onMouseEnter={() => setActive(suggestions.length)}
+            className={cn(
+              "flex cursor-pointer items-center justify-between gap-3 px-3 py-2.5 text-sm text-wabi-fg-muted",
+              suggestions.length > 0 && "mt-1 border-t border-wabi-border",
+              active === suggestions.length && "bg-wabi-muted/70 text-wabi-fg",
+            )}
           >
-            <button
-              type="submit"
-              tabIndex={-1}
-              onMouseEnter={() => setActive(suggestions.length)}
-              className={cn(
-                "flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm text-wabi-fg-muted",
-                active === suggestions.length && "bg-wabi-muted/70 text-wabi-fg",
-              )}
-            >
               <span className="min-w-0 truncate">
                 {suggestions.length === 0 ? "맞는 상품이 없습니다. " : ""}
                 <span className="text-wabi-fg">&lsquo;{trimmed}&rsquo;</span> 전체 결과 보기
               </span>
               <ArrowRight className="size-4 shrink-0" strokeWidth={1.6} aria-hidden />
-            </button>
           </li>
         )}
       </ul>

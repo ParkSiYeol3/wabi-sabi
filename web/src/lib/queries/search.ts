@@ -161,12 +161,14 @@ export async function searchCatalog(
   };
 }
 
-// 추천 검색어 기본값(관리자가 아직 안 정했을 때): 상품이 2개 이상인 소분류 한글 이름, 분류
+// 추천 검색어 기본값(관리자가 아직 안 정했을 때): 판매 중 상품이 2개 이상인 소분류 한글 이름, 분류
 // 순서대로. 1개뿐인 분류(쇼핑백 등)는 추천으로 어색해서 뺀다(11/08 점검).
 export function defaultKeywords(tree: CategoryNode[], catalog: SearchItem[]): string[] {
   const count = new Map<string, number>();
+  // 판매 중 상품만 센다(품절뿐인 분류를 추천하지 않게, CodeRabbit #909).
   for (const c of catalog)
-    if (c.categorySlug) count.set(c.categorySlug, (count.get(c.categorySlug) ?? 0) + 1);
+    if (c.categorySlug && !isListingSoldOut(c))
+      count.set(c.categorySlug, (count.get(c.categorySlug) ?? 0) + 1);
   return tree
     .flatMap((top) => top.children ?? [])
     .filter((c) => (count.get(c.slug) ?? 0) >= 2)
