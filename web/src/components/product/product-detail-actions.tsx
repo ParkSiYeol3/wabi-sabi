@@ -13,6 +13,7 @@ import type { OptionGroup, SelectedOption } from "@/lib/product-options";
 import { flyToCart } from "@/lib/fly-to-cart";
 import { cn } from "@/lib/utils";
 import { useDockHeight } from "@/lib/use-dock-height";
+import { trackProductEvent } from "@/components/common/visit-beacon";
 
 // 1인 1상품 구매 수량 상한(공개). 실재고를 클라에 노출하지 않기 위해 스텝퍼는 이
 // 고정 상한까지만 늘어난다 — 재고보다 많이 담아도 서버 결제 단계에서 out_of_stock 로
@@ -58,7 +59,9 @@ export function ProductDetailActions({
   const [added, setAdded] = useState(false);
 
   const optionsChosen = options.every((g) => !!selectedOptions[g.name]);
-  const canBuy = !soldOut && optionsChosen;
+  // 옵션을 안 고른 채 담기·구매를 누른 적이 있으면 안내를 눈에 띄게 한다.
+  const [optionNudge, setOptionNudge] = useState(false);
+  const optionsRef = useRef<HTMLDivElement>(null);
 
   function clamp(n: number) {
     return Math.max(1, Math.min(MAX_QTY, n));
@@ -89,17 +92,38 @@ export function ProductDetailActions({
     .reduce((s, a) => s + a.price, 0);
   const total = unitPrice * qty + addonSum;
 
+  // 옵션을 안 고르고 누르면 옵션 칸으로 보낸다(11/08). 예전엔 버튼이 회색으로 잠겨
+  // 눌러도 반응이 없었고, 휴대폰에선 옵션 칸이 하단 구매 바 뒤에 가려 있었다.
+  // 품절은 고를 게 없으니 지금처럼 버튼을 잠근다.
+  function guideToOptions() {
+    setOptionNudge(true);
+    trackProductEvent("need_option", product.id);
+    const box = optionsRef.current;
+    if (!box) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    box.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+    const firstOpen = options.findIndex((g) => !selectedOptions[g.name]);
+    box
+      .querySelectorAll<HTMLFieldSetElement>("fieldset")
+      [firstOpen]?.querySelector<HTMLButtonElement>("button:not(:disabled)")
+      ?.focus({ preventScroll: true });
+  }
+
   function addToCart(e?: React.MouseEvent<HTMLButtonElement>) {
-    if (!canBuy) return;
+    if (soldOut) return;
+    if (!optionsChosen) return guideToOptions();
     add(cartProduct, qty, selectedAddons, optionSnapshot());
+    trackProductEvent("add", product.id);
     // 담기 → 장바구니 고스트 비행(대표님 인터랙션). 버튼 위치에서 헤더 장바구니로.
     if (e) flyToCart(e.currentTarget.getBoundingClientRect(), product.image ?? null);
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1500);
   }
   function buyNow() {
-    if (!canBuy) return;
+    if (soldOut) return;
+    if (!optionsChosen) return guideToOptions();
     add(cartProduct, qty, selectedAddons, optionSnapshot());
+    trackProductEvent("buy", product.id);
     router.push("/cart");
   }
 
@@ -110,9 +134,9 @@ export function ProductDetailActions({
   return (
     <div className="mt-8 space-y-4">
       {/* 커스텀 옵션(색상·모양 등, #253 확장) — 손님이 상세에서 선택. 그룹마다 하나씩
-          고른다(선택만 — 가격 영향 없음). 미선택 시 담기/구매 비활성. */}
+          고른다. 안 고르고 담기·구매를 누르면 여기로 스크롤한다. */}
       {options.length > 0 && (
-        <div className="space-y-3">
+        <div ref={optionsRef} className="scroll-mt-24 space-y-3">
           {options.map((g) => (
             <fieldset key={g.name}>
               <legend className="text-sm text-wabi-fg-muted">{g.name}</legend>
@@ -156,9 +180,19 @@ export function ProductDetailActions({
               </div>
             </fieldset>
           ))}
-          {!optionsChosen && !soldOut && (
-            <p className="text-xs text-wabi-accent">옵션을 선택해 주세요.</p>
-          )}
+          <p
+            aria-live="polite"
+            className={cn(
+              "empty:hidden",
+              optionNudge ? "text-sm font-medium text-red-700" : "text-xs text-wabi-accent",
+            )}
+          >
+            {!optionsChosen && !soldOut
+              ? optionNudge
+                ? "옵션을 먼저 선택해 주세요."
+                : "옵션을 선택해 주세요."
+              : null}
+          </p>
         </div>
       )}
 
@@ -256,7 +290,7 @@ export function ProductDetailActions({
         <Button
           type="button"
           variant="outline"
-          disabled={!canBuy}
+          disabled={soldOut}
           onClick={(e) => addToCart(e)}
           aria-live="polite"
           className="flex-1 rounded-none border-wabi-fg"
@@ -265,7 +299,7 @@ export function ProductDetailActions({
         </Button>
         <Button
           type="button"
-          disabled={!canBuy}
+          disabled={soldOut}
           onClick={buyNow}
           className="flex-1 rounded-none bg-wabi-accent hover:bg-wabi-accent/90"
         >
@@ -295,7 +329,7 @@ export function ProductDetailActions({
           <Button
             type="button"
             variant="outline"
-            disabled={!canBuy}
+            disabled={soldOut}
             onClick={(e) => addToCart(e)}
             aria-live="polite"
             className="rounded-none border-wabi-fg px-4"
@@ -304,7 +338,7 @@ export function ProductDetailActions({
           </Button>
           <Button
             type="button"
-            disabled={!canBuy}
+            disabled={soldOut}
             onClick={buyNow}
             className="rounded-none bg-wabi-accent px-5 hover:bg-wabi-accent/90"
           >
