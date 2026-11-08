@@ -165,8 +165,8 @@ export function parseKeywords(text: string | null | undefined): string[] {
 // 가격대 필터. 상품 가격이 4천원대~7만원이라 네 칸으로 나눈다.
 export const PRICE_BANDS = [
   { key: "lt10k", label: "1만원 미만", min: 0, max: 10000 },
-  { key: "10k-30k", label: "1만~3만원", min: 10000, max: 30000 },
-  { key: "30k-50k", label: "3만~5만원", min: 30000, max: 50000 },
+  { key: "10k-30k", label: "1~3만원", min: 10000, max: 30000 },
+  { key: "30k-50k", label: "3~5만원", min: 30000, max: 50000 },
   { key: "50k+", label: "5만원 이상", min: 50000, max: Infinity },
 ] as const;
 export type PriceBandKey = (typeof PRICE_BANDS)[number]["key"];
