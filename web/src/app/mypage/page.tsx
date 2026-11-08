@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Trash2 } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { SubmitButton } from "@/components/common/submit-button";
@@ -105,6 +106,20 @@ export default async function MyPage({
       {/* 주문·배송(#754). 첫 실주문 때 마이페이지에서 주문 내역·배송조회로 가는 길이
           없었다(헤더 아이콘·모바일 메뉴뿐). 맨 위는 과하다(시열님 10/3) → 배송지 바로 위. */}
       <RecentOrders orders={recentOrders ?? []} />
+
+      {/* 위시리스트. 헤더 하트는 1024px 부터, 휴대폰은 메뉴 안이라 태블릿(768~1023px)에서
+          가는 길이 없었다(CodeRabbit #911). 주문·배송과 같은 모양의 바로가기. */}
+      <section className="mt-14">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-lg font-medium">위시리스트</h2>
+          <Link
+            href="/mypage/wishlist"
+            className="text-sm text-wabi-fg-muted underline-offset-4 transition-colors hover:text-wabi-fg hover:underline"
+          >
+            위시리스트 보기 →
+          </Link>
+        </div>
+      </section>
 
       {/* 배송지 */}
       <section className="mt-14">
