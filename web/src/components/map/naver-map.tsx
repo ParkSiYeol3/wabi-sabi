@@ -132,9 +132,11 @@ export function NaverMap({ clientId }: { clientId: string }) {
   if (failed) return <GoogleMapEmbed />;
 
   return (
+    // role="region": 지도 SDK 가 확대·축소 같은 조작 버튼을 안에 넣어서 role="img" 로 감싸면
+    // 화면 읽기 프로그램이 그 버튼에 닿지 못한다(axe nested-interactive, QA 11/08).
     <div
       ref={ref}
-      role="img"
+      role="region"
       aria-label={`${site.place} 위치 지도: ${site.roadAddress}`}
       className="h-full w-full"
     />

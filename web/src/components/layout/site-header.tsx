@@ -78,7 +78,7 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
 
         {/* 데스크톱 내비 = Pretendard(대표님) */}
         <nav
-          className="hidden md:flex md:items-center md:gap-10 [font-family:var(--font-pretendard)]"
+          className="hidden md:flex md:items-center md:gap-6 lg:gap-10 [font-family:var(--font-pretendard)]"
           aria-label="주요 메뉴"
         >
           {nav.map((item) => (
@@ -103,20 +103,22 @@ export function SiteHeader({ tree }: { tree: CategoryNode[] }) {
         {/* 우측 액션 */}
         <div className="flex items-center gap-1">
           {/* 로그인 시 위시리스트·주문내역 바로가기(대표님 — 눈에 띄게 아이콘).
-              모바일에선 공간이 좁아(로고 2줄) 상단에서 빼고 메뉴 안에 넣는다 → 데스크톱만. */}
+              모바일에선 공간이 좁아(로고 2줄) 상단에서 빼고 메뉴 안에 넣는다 → 데스크톱만.
+              태블릿(768~1023px)은 메뉴 글자와 아이콘이 한 줄에 다 안 들어가 겹쳐서(QA 11/08)
+              1024px 부터 보인다. 그 사이엔 마이페이지에서 들어간다. */}
           {mounted && user && (
             <>
               <Link
                 href="/mypage/wishlist"
                 aria-label="위시리스트"
-                className="hidden rounded-md p-3 text-wabi-fg transition-colors hover:bg-wabi-muted md:inline-flex"
+                className="hidden rounded-md p-3 text-wabi-fg transition-colors hover:bg-wabi-muted lg:inline-flex"
               >
                 <Heart className="size-5" strokeWidth={1.5} />
               </Link>
               <Link
                 href="/mypage/orders"
                 aria-label="주문 내역"
-                className="hidden rounded-md p-3 text-wabi-fg transition-colors hover:bg-wabi-muted md:inline-flex"
+                className="hidden rounded-md p-3 text-wabi-fg transition-colors hover:bg-wabi-muted lg:inline-flex"
               >
                 <Package className="size-5" strokeWidth={1.5} />
               </Link>
