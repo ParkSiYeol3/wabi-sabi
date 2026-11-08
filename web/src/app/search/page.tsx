@@ -176,7 +176,7 @@ export default async function SearchPage({
             &lsquo;{q}&rsquo;에 맞는 상품이 없습니다.
           </p>
           <p className="mt-2 break-keep text-xs text-wabi-fg-muted">
-            낱말을 줄이거나 다른 이름(예: 플레이트 → 접시)으로 찾아보세요.
+            검색어를 줄이거나 다른 말로 찾아보세요.
           </p>
           {keywords.length > 0 && (
             <KeywordChips keywords={keywords} className="mt-6 justify-center" />

@@ -30,6 +30,7 @@ type Row = {
   same_day: boolean;
   images: unknown;
   material: string | null;
+  origin: string | null;
   categories: { slug: string; name_ko: string; name_en: string } | null;
 };
 
@@ -46,7 +47,7 @@ export async function getSearchCatalog(tree: CategoryNode[]): Promise<SearchItem
   const { data, error } = await db
     .from("products")
     .select(
-      "id, name, price, stock, sold_out, same_day, images, material, categories(slug, name_ko, name_en)",
+      "id, name, price, stock, sold_out, same_day, images, material, origin, categories(slug, name_ko, name_en)",
     )
     .eq("is_active", true)
     .order("created_at", { ascending: false })
@@ -72,6 +73,7 @@ export async function getSearchCatalog(tree: CategoryNode[]): Promise<SearchItem
       fields: {
         name: p.name,
         material: p.material,
+        origin: p.origin,
         categoryKo: p.categories?.name_ko,
         categoryEn: p.categories?.name_en,
         parentKo: parent?.ko,
@@ -159,12 +161,15 @@ export async function searchCatalog(
   };
 }
 
-// 추천 검색어 기본값(관리자가 아직 안 정했을 때): 상품이 있는 소분류 한글 이름, 분류 순서대로.
+// 추천 검색어 기본값(관리자가 아직 안 정했을 때): 상품이 2개 이상인 소분류 한글 이름, 분류
+// 순서대로. 1개뿐인 분류(쇼핑백 등)는 추천으로 어색해서 뺀다(11/08 점검).
 export function defaultKeywords(tree: CategoryNode[], catalog: SearchItem[]): string[] {
-  const used = new Set(catalog.map((c) => c.categorySlug));
+  const count = new Map<string, number>();
+  for (const c of catalog)
+    if (c.categorySlug) count.set(c.categorySlug, (count.get(c.categorySlug) ?? 0) + 1);
   return tree
     .flatMap((top) => top.children ?? [])
-    .filter((c) => used.has(c.slug))
+    .filter((c) => (count.get(c.slug) ?? 0) >= 2)
     .map((c) => c.ko.trim())
     .filter(Boolean)
     .slice(0, 12);

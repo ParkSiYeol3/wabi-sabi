@@ -4,7 +4,7 @@ import { useEffect, useId, useMemo, useRef, useState, useTransition } from "reac
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ImageIcon, Search, X } from "lucide-react";
+import { ArrowRight, Clock, ImageIcon, Search, X } from "lucide-react";
 import { Price } from "@/components/product/price";
 import {
   MAX_QUERY_LENGTH,
@@ -13,7 +13,7 @@ import {
   tokenize,
   type SearchFields,
 } from "@/lib/search";
-import { addRecentSearch } from "@/lib/recent-searches";
+import { addRecentSearch, useRecentSearches } from "@/lib/recent-searches";
 import { cn } from "@/lib/utils";
 
 // 검색 입력 + 자동완성(대표님 2026-11-08: 쇼핑몰처럼). 치는 동안 맞는 상품을 사진·가격과
@@ -62,7 +62,7 @@ export function SearchBox({
     const tokens = tokenize(text);
     if (tokens.length === 0) return [];
     return prepared
-      .map(({ it, f }) => ({ it, s: scoreProduct(f, tokens) }))
+      .map(({ it, f }) => ({ it, s: scoreProduct(f, tokens, { typing: true }) }))
       .filter((r) => r.s > 0)
       .sort((a, b) => Number(a.it.soldOut) - Number(b.it.soldOut) || b.s - a.s)
       .slice(0, MAX_SUGGESTIONS)
@@ -70,9 +70,18 @@ export function SearchBox({
   }, [prepared, text]);
 
   const trimmed = text.trim();
-  const showList = open && trimmed !== "" && trimmed !== initialQuery;
-  // 마지막 줄 = "'검색어' 전체 결과 보기"
-  const optionCount = showList ? suggestions.length + 1 : 0;
+  // 결과 화면에서 입력칸을 비우면 최근 검색어를 띄운다(쇼핑몰처럼, 11/08 점검). 지금 검색어는
+  // 이미 화면에 있으니 뺀다. 검색어 없는 첫 화면은 아래에 최근 검색어가 따로 있어 띄우지 않는다.
+  const allRecent = useRecentSearches();
+  const recent = useMemo(
+    () => allRecent.filter((q) => q !== initialQuery),
+    [allRecent, initialQuery],
+  );
+  const recentMode = open && trimmed === "" && initialQuery !== "" && recent.length > 0;
+  const suggestMode = open && trimmed !== "" && trimmed !== initialQuery;
+  const showList = recentMode || suggestMode;
+  // 자동완성은 마지막 줄 = "'검색어' 전체 결과 보기"
+  const optionCount = recentMode ? recent.length : suggestMode ? suggestions.length + 1 : 0;
 
   const go = (href: string) => {
     setOpen(false);
@@ -99,7 +108,10 @@ export function SearchBox({
       setActive((i) => (i <= 0 ? optionCount - 1 : i - 1));
     } else if (e.key === "Escape") {
       setOpen(false);
-    } else if (e.key === "Enter" && active >= 0 && active < suggestions.length) {
+    } else if (e.key === "Enter" && recentMode && active >= 0) {
+      e.preventDefault();
+      go(`/search?q=${encodeURIComponent(recent[active])}`);
+    } else if (e.key === "Enter" && suggestMode && active >= 0 && active < suggestions.length) {
       e.preventDefault();
       go(`/shop/${suggestions[active].id}`);
     }
@@ -183,13 +195,35 @@ export function SearchBox({
       <ul
         id={listId}
         role="listbox"
-        aria-label="검색어 자동완성"
+        aria-label={recentMode ? "최근 검색어" : "검색어 자동완성"}
         hidden={!showList}
         // 목록을 누르는 동안 입력칸이 blur 돼 목록이 먼저 닫히지 않게
         onMouseDown={(e) => e.preventDefault()}
         className="absolute inset-x-0 top-full z-30 mt-2 max-h-[min(28rem,60vh)] overflow-y-auto rounded-lg border border-wabi-border bg-wabi-bg py-1 shadow-lg"
       >
-        {suggestions.map((it, i) => (
+        {recentMode &&
+          recent.map((q, i) => (
+            <li key={q} id={optionId(i)} role="option" aria-selected={active === i}>
+              <Link
+                href={`/search?q=${encodeURIComponent(q)}`}
+                tabIndex={-1}
+                onClick={(e) => {
+                  e.preventDefault();
+                  go(`/search?q=${encodeURIComponent(q)}`);
+                }}
+                onMouseEnter={() => setActive(i)}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 text-sm text-wabi-fg",
+                  active === i && "bg-wabi-muted/70",
+                )}
+              >
+                <Clock className="size-4 shrink-0 text-wabi-fg-muted" strokeWidth={1.6} aria-hidden />
+                <span className="min-w-0 truncate">{q}</span>
+              </Link>
+            </li>
+          ))}
+        {suggestMode &&
+          suggestions.map((it, i) => (
           <li
             key={it.id}
             id={optionId(i)}
@@ -239,28 +273,30 @@ export function SearchBox({
             </Link>
           </li>
         ))}
-        <li
-          id={optionId(suggestions.length)}
-          role="option"
-          aria-selected={active === suggestions.length}
-          className={cn(suggestions.length > 0 && "mt-1 border-t border-wabi-border pt-1")}
-        >
-          <button
-            type="submit"
-            tabIndex={-1}
-            onMouseEnter={() => setActive(suggestions.length)}
-            className={cn(
-              "flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm text-wabi-fg-muted",
-              active === suggestions.length && "bg-wabi-muted/70 text-wabi-fg",
-            )}
+        {suggestMode && (
+          <li
+            id={optionId(suggestions.length)}
+            role="option"
+            aria-selected={active === suggestions.length}
+            className={cn(suggestions.length > 0 && "mt-1 border-t border-wabi-border pt-1")}
           >
-            <span className="min-w-0 truncate">
-              {suggestions.length === 0 ? "맞는 상품이 아직 없습니다. " : ""}
-              <span className="text-wabi-fg">&lsquo;{trimmed}&rsquo;</span> 전체 결과 보기
-            </span>
-            <ArrowRight className="size-4 shrink-0" strokeWidth={1.6} aria-hidden />
-          </button>
-        </li>
+            <button
+              type="submit"
+              tabIndex={-1}
+              onMouseEnter={() => setActive(suggestions.length)}
+              className={cn(
+                "flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm text-wabi-fg-muted",
+                active === suggestions.length && "bg-wabi-muted/70 text-wabi-fg",
+              )}
+            >
+              <span className="min-w-0 truncate">
+                {suggestions.length === 0 ? "맞는 상품이 없습니다. " : ""}
+                <span className="text-wabi-fg">&lsquo;{trimmed}&rsquo;</span> 전체 결과 보기
+              </span>
+              <ArrowRight className="size-4 shrink-0" strokeWidth={1.6} aria-hidden />
+            </button>
+          </li>
+        )}
       </ul>
     </form>
   );
