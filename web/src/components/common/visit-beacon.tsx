@@ -41,6 +41,16 @@ function send(body: string) {
   }).catch(() => {});
 }
 
+// 상품 상세 버튼 기록(0085) — 담기·바로 구매·옵션 미선택으로 막힘. 방문 비콘과 같은
+// 길(/api/track)과 같은 제외 조건(운영 도메인만·관리자·직원 기기 제외)을 쓴다.
+export type ProductEventKind = "add" | "buy" | "need_option";
+
+export function trackProductEvent(kind: ProductEventKind, productId: string) {
+  if (typeof window === "undefined" || window.location.hostname !== "wasa.kr") return;
+  if (useAuthStore.getState().isAdmin || isStaffDevice()) return;
+  send(JSON.stringify({ k: kind, id: productId }));
+}
+
 // 유입 쿼리에서 일회용 토큰은 뺀다(비밀번호 재설정 링크는 # 뒤라 오지 않지만, 쿼리로
 // 붙어 와도 저장하지 않게).
 function withoutSecrets(search: string): string {

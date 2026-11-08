@@ -36,6 +36,11 @@ function kstDay(): string {
 const BOT_RE =
   /bot|crawl|spider|slurp|bingpreview|facebookexternalhit|headless|preview|scanner|monitor|uptime|lighthouse|pagespeed|ahrefs|semrush|mj12|dotbot|petalbot|applebot|yandex|baiduspider|duckduckbot|whatsapp|telegrambot|discordbot|slackbot|twitterbot|python-requests|axios|node-fetch|\bcurl\b|wget|go-http|okhttp|wasae2e/i;
 
+// 상품 상세 버튼 기록 종류(0085 check 제약과 같게).
+const EVENT_KINDS = new Set(["add", "buy", "need_option"]);
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // 짧은 문자열만 받는다 — 비콘 값은 무엇이든 보낼 수 있으니 길이·형식을 자른다.
 function short(v: unknown, max = 40): string | null {
   return typeof v === "string" && v.length > 0 ? v.slice(0, max) : null;
@@ -115,6 +120,8 @@ export async function POST(req: Request) {
     z?: unknown; // 시간대
     w?: unknown; // navigator.webdriver(자동화 표시)
     e?: unknown; // 조작 신호 — 이 방문자가 클릭·터치·키 입력을 했다
+    k?: unknown; // 상품 상세 버튼 기록(0085) — add·buy·need_option
+    id?: unknown; // 그 상품 id
   };
   try {
     payload = JSON.parse(raw);
@@ -137,6 +144,22 @@ export async function POST(req: Request) {
     const day = kstDay();
     const admin = createAdminClient();
     const visitor = visitorHash(ip, ua, day);
+
+    // 상품 상세 버튼 기록(0085) — 방문 줄이 아니라 product_events 에 따로 쌓는다
+    // (page_views 에 섞으면 대시보드 페이지뷰가 부풀려진다).
+    if (payload.k !== undefined) {
+      const kind = typeof payload.k === "string" ? payload.k : "";
+      const productId = typeof payload.id === "string" ? payload.id : "";
+      if (!EVENT_KINDS.has(kind) || !UUID_RE.test(productId))
+        return new Response(null, { status: 400 });
+      await admin.from("product_events").insert({
+        visitor_id: visitor,
+        product_id: productId,
+        kind,
+        day,
+      });
+      return new Response(null, { status: 204 });
+    }
 
     // 조작 신호 — 새 줄을 쌓지 않고, 이 방문자의 오늘 기록에 "사람이 조작함"을 표시한다.
     if (payload.e === 1) {

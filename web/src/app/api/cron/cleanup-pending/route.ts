@@ -38,6 +38,8 @@ export async function GET(req: Request) {
     .toISOString()
     .slice(0, 10);
   await admin.from("page_views").delete().lt("day", yearAgo);
+  // 상품 상세 버튼 기록(0085)도 같은 기한.
+  await admin.from("product_events").delete().lt("day", yearAgo);
 
   // 채팅 상담(0083)은 마지막 상담일로부터 3년 보관 후 파기(처리방침 3조, 윤년 여유 하루).
   const chatCutoff = new Date(Date.now() - (3 * 365 + 1) * 86_400_000).toISOString();
