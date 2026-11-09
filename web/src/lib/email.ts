@@ -22,6 +22,8 @@ export async function sendMail(input: {
   to: string;
   subject: string;
   html: string;
+  // 광고 메일의 List-Unsubscribe 등(#919). 메일 앱이 '구독 취소' 버튼을 띄운다.
+  headers?: Record<string, string>;
 }): Promise<boolean> {
   if (!mailConfigured()) {
     console.warn("[email] RESEND_API_KEY 미설정: 발송 건너뜀:", input.subject);
@@ -40,6 +42,7 @@ export async function sendMail(input: {
         to: [input.to],
         subject: input.subject,
         html: input.html,
+        ...(input.headers ? { headers: input.headers } : {}),
       }),
     });
 

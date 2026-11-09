@@ -251,6 +251,32 @@ ${note(
   };
 }
 
+// 리뷰 요청(#919) — 배송완료 3일 뒤, 마케팅 수신 동의 회원에게만 한 통. 배송완료 메일에도
+// 리뷰 버튼이 있지만 받는 날엔 아직 써 보기 전이다. 리뷰 요청은 광고로 볼 여지가 있어
+// 정보통신망법 광고 표기를 지킨다(KISA 안내서): 제목 맨 앞 (광고), 하단에 상호·주소·
+// 전화·이메일(공용 틀), 로그인 없이 되는 수신거부 링크를 한글·영문으로.
+export function reviewReminderMail(o: {
+  items: MailItem[];
+  reviewHref: string;
+  unsubscribeHref: string;
+}): Mail {
+  const unsub = `이 메일은 소식 받기(마케팅 정보 수신)에 동의하신 분께 보내는 광고 메일입니다. 더 받지 않으시려면 ${link(o.unsubscribeHref, "수신거부")}를 눌러 주세요. 주문·배송 안내 메일은 그대로 발송됩니다.<br>
+<span lang="en">You received this promotional email because you opted in to WABI-SABI news. ${link(o.unsubscribeHref, "Unsubscribe")}</span>`;
+  return {
+    subject: `(광고) [${site.name}] 받으신 기물은 어떠셨나요?`,
+    html: layout({
+      preheader: "별점과 짧은 한 줄이면 충분합니다.",
+      title: "받으신 기물은 어떠셨나요?",
+      intro:
+        "며칠 곁에 두고 써 보셨을까요. 직접 써 보신 이야기는 같은 기물을 고르는 분들께 큰 도움이 됩니다. 별점과 짧은 한 줄이면 충분합니다.",
+      body: `${section("리뷰를 기다리는 상품", itemRows(o.items))}
+${button(o.reviewHref, "리뷰 남기기")}
+${note(`쓰시다 불편한 점이 있었다면 ${link(`${BASE}/inquiry`, "문의 게시판")}으로 알려 주세요.`)}`,
+      footer: unsub,
+    }),
+  };
+}
+
 // ── 대표님 알림(가게용) ───────────────────────────────────
 // 손님이 아니라 가게 메일함으로 가는 운영 알림(#780 환불 실패, 새 주문·새 문의).
 // 짧게: 무슨 일인지 + 바로 가는 버튼. 개인정보는 최소(받는 분 이름 정도).
