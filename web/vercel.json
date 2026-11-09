@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/check-deliveries",
       "schedule": "17 0-13 * * *"
+    },
+    {
+      "path": "/api/cron/review-reminders",
+      "schedule": "0 2 * * *"
     }
   ],
   "regions": [

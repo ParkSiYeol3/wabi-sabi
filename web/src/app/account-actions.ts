@@ -3,9 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient, adminConfigured } from "@/lib/supabase/admin";
-import { CONSENT_VERSIONS } from "@/lib/consent";
-import { recordSignupConsentOnce } from "@/lib/consent-record";
+import { recordMarketingConsent, recordSignupConsentOnce } from "@/lib/consent-record";
 
 // 닉네임 설정(개인정보보호) — 가입 후 표시 이름을 실명 대신 별명으로. profiles.name
 // 을 갱신하고 nickname_set=true 로 표시해 모달이 다시 뜨지 않게 한다. RLS(update own)로
@@ -53,26 +51,6 @@ export async function setNickname(
   return { ok: true, message: "저장되었습니다." };
 }
 
-// 마케팅 동의 이력 한 행 추가. user_consents(0050)는 insert 정책이 없어 service_role
-// 전용이다 — 사용자가 직접 쓸 수 없고 서버만 기록한다. 이력이라 update 하지 않고
-// 매번 append 하며, 최신 행이 현재 상태다(동의·철회 모두 남는다).
-async function recordMarketingConsent(
-  userId: string,
-  agreed: boolean,
-): Promise<boolean> {
-  if (!adminConfigured()) return false;
-  const { error } = await createAdminClient().from("user_consents").insert({
-    user_id: userId,
-    type: "marketing",
-    version: CONSENT_VERSIONS.marketing,
-    agreed,
-  });
-  if (error) {
-    console.error("[consent] 마케팅 동의 기록 실패", error);
-    return false;
-  }
-  return true;
-}
 
 // 마케팅 수신 동의 켜고 끄기(#671) — 마이페이지 토글. 정보통신망법상 수신 거부(철회)
 // 수단이 있어야 하므로 끄는 것도 같은 경로로 기록한다.

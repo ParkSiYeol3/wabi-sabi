@@ -120,6 +120,9 @@ export function layout(input: {
   title: string;
   intro?: string;
   body: string;
+  // 하단 사업자 정보 아래 한 단락(html). 광고 메일의 수신거부 안내(#919)용 — 호출부에서
+  // 사용자 입력을 넣지 말 것.
+  footer?: string;
 }): string {
   const b = business;
   const biz = [
@@ -170,7 +173,7 @@ export function layout(input: {
           <td style="padding:24px 4px 0;font-size:11px;line-height:1.8;color:${C.faint};word-break:keep-all">
             ${esc(biz)}<br>
             ${esc(b.address)}<br>
-            문의 ${esc(b.email)}${b.phone ? ` · ${esc(b.phone)}` : ""}
+            문의 ${esc(b.email)}${b.phone ? ` · ${esc(b.phone)}` : ""}${input.footer ? `<br><br>${input.footer}` : ""}
           </td>
         </tr>
       </table>
